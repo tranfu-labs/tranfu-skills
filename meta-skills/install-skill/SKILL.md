@@ -1,7 +1,7 @@
 ---
 name: install-skill
-description: 当用户说"装公司 skill X 到 ___"时, 从缓存复制到 user 或 project scope; external 时走 source_url 拉最新并回写 cache stub
-version: 0.1.0
+description: 当用户说"装公司 skill X 到 ___"时, 从缓存 own-skills/external-skills 子目录复制到 user 或 project scope (扁平); external 时走 source_url 拉最新并回写 cache stub
+version: 0.1.1
 author: aquarius-wing
 updated_at: 2026-05-09
 origin: own
@@ -19,21 +19,32 @@ origin: own
 ## Constants
 
 - 缓存路径: `~/.aistore-labs/claude-skills/`
-- user 级路径: `~/.claude/skills/`
-- project 级路径: `<cwd>/.claude/skills/`
+- 缓存内子目录: `meta-skills/`, `own-skills/`, `external-skills/`
+- user 级路径 (扁平): `~/.claude/skills/`
+- project 级路径 (扁平): `<cwd>/.claude/skills/`
+- **install-skill 不装 meta-skill** — meta-skill 走 update-skills 同步, 不走 install-skill。如果用户要求装 meta-skill 名 (publish-skill / search-skills / install-skill / update-skills), 直接告诉用户用 update-skills。
 
 ## Steps
 
-### 1. 确认 skill 在缓存
+### 1. 确认 skill 在缓存 (跨 own-skills / external-skills 找)
 
 ```bash
-ls "~/.aistore-labs/claude-skills/<name>/SKILL.md"
+# 在 own-skills 和 external-skills 下查 (跳过 meta-skills, install-skill 不装 meta)
+for cat in own-skills external-skills; do
+  if [ -f ~/.aistore-labs/claude-skills/$cat/<name>/SKILL.md ]; then
+    found_category=$cat
+    break
+  fi
+done
 ```
 
 不存在 → 提示用户:
-> "缓存里没有 '<name>'. 要不要先 update-skills 拉最新? 或检查名字拼写?"
+> "缓存里没有 '<name>' (查了 own-skills/ 和 external-skills/). 要不要先 update-skills 拉最新? 或检查名字拼写?"
 
-读该 SKILL.md frontmatter 拿 origin / source_url.
+如果用户给的 name 命中 meta-skill 名单 → 提示:
+> "<name> 是 meta-skill, 不通过 install-skill 装. 跑 update-skills 即可同步到 ~/.claude/skills/."
+
+读 `~/.aistore-labs/claude-skills/$found_category/<name>/SKILL.md` frontmatter 拿 origin / source_url.
 
 ### 2. 强制问 scope
 
@@ -66,9 +77,9 @@ ls "<target>/<name>/" 2>/dev/null
 
 #### 4a. origin=own
 
-直接 cp:
+直接 cp (从 own-skills/ 拍扁到 target):
 ```bash
-cp -r ~/.aistore-labs/claude-skills/<name>/ <target>/<name>/
+cp -r ~/.aistore-labs/claude-skills/own-skills/<name>/ <target>/<name>/
 ```
 
 #### 4b. origin=external
@@ -103,8 +114,8 @@ rm -rf "$tmp"
 读步骤 4b 拉到的最新 SKILL.md frontmatter, 抽 name / description / version.
 
 ```bash
-# 比对 cache stub
-cache_stub=~/.aistore-labs/claude-skills/<name>/SKILL.md
+# 比对 cache stub (external 一定在 external-skills/ 下)
+cache_stub=~/.aistore-labs/claude-skills/external-skills/<name>/SKILL.md
 # 抽 cache stub 的 name/description/version
 
 # 若任一不同 → patch cache stub frontmatter (仅 frontmatter, 保留 body 薄指针文案)
@@ -127,8 +138,8 @@ ts=$(date +%s)
 git checkout -b "refresh/<name>-$ts"
 
 # patch frontmatter 后:
-git add "<name>/SKILL.md"
-git commit -m "refresh: <name> metadata from upstream"
+git add "external-skills/<name>/SKILL.md"
+git commit -m "refresh: external-skills/<name> metadata from upstream"
 
 gh pr create \
   --title "refresh: <name> metadata from upstream" \

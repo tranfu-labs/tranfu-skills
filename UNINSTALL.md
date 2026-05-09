@@ -5,7 +5,7 @@
 ## 卸载范围 (默认)
 
 - `~/.claude/skills/` 下的 4 个 meta-skill: `publish-skill` / `search-skills` / `install-skill` / `update-skills`
-- `~/.aistore-labs/claude-skills/` 整个缓存目录 (含 `.git` + 所有 skill 副本 + `.dogfood-*.log`)
+- `~/.aistore-labs/claude-skills/` 整个缓存目录 (含 `.git` + meta-skills/ + own-skills/ + external-skills/ + `.dogfood-*.log`)
 
 ## 默认保留 (不动)
 

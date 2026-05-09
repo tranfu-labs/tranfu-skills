@@ -24,14 +24,15 @@ else
 fi
 ```
 
-### 2. cp 4 个 meta-skill 到 user 级
+### 2. cp 4 个 meta-skill 到 user 级 (从 meta-skills/ 子目录拍扁)
 
 ```bash
 for s in publish-skill search-skills install-skill update-skills; do
-  rm -rf ~/.claude/skills/$s
-  cp -r ~/.aistore-labs/claude-skills/$s ~/.claude/skills/$s
+  cp -r ~/.aistore-labs/claude-skills/meta-skills/$s/ ~/.claude/skills/$s/
 done
 ```
+
+**注**: 缓存仓库里 skill 按类目分文件夹 (meta-skills / own-skills / external-skills), 但 Claude Code 的 `~/.claude/skills/` 必须扁平加载, 所以 cp 时自动拍扁, 没有 `meta-skills/` 中间层。
 
 ### 3. 验证
 

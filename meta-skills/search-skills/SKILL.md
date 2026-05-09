@@ -1,7 +1,7 @@
 ---
 name: search-skills
-description: 当用户说"搜公司 skill 关于 X / 看看公司库有没有 Y / 列一下公司 skill"时, grep 缓存仓库 SKILL.md frontmatter 返回匹配项
-version: 0.1.0
+description: 当用户说"搜公司 skill 关于 X / 看看公司库有没有 Y / 列一下公司 skill"时, grep 缓存仓库 SKILL.md frontmatter (跨 meta-skills / own-skills / external-skills 三个子目录) 返回匹配项
+version: 0.1.1
 author: aquarius-wing
 updated_at: 2026-05-09
 origin: own
@@ -20,8 +20,9 @@ origin: own
 ## Constants
 
 - 缓存路径: `~/.aistore-labs/claude-skills/`
-- 跳过的目录: `publish-skill`, `search-skills`, `install-skill`, `update-skills` (4 个 meta-skill 自身)
-- 跳过的目录: 任何 `.` 或 `_` 开头的目录
+- 三个子目录都搜: `meta-skills/`, `own-skills/`, `external-skills/`
+- meta-skills 默认**包含**在结果里, 但条目末尾标 `[meta]` (用户搜 "publish" 时找得到 publish-skill, 不藏)
+- 跳过任何 `.` 或 `_` 开头的目录, 跳过 `external-skills/.gitkeep` 这类占位文件
 
 ## Steps
 
@@ -36,20 +37,23 @@ origin: own
 - "搜公司 skill 关于 UI 设计的" → `["ui", "设计"]`
 - "公司库有没有 ts 类型推断" → `["ts", "类型推断"]` (类型推断作为整词)
 
-### 2. 列出候选 skill 目录
+### 2. 列出候选 skill 目录 (跨 3 个子目录)
 
 ```bash
 cd ~/.aistore-labs/claude-skills/
-ls -1 | grep -v '^\.' | grep -v '^_' \
-  | grep -vE '^(publish-skill|search-skills|install-skill|update-skills)$'
+ls -1 meta-skills/ own-skills/ external-skills/ 2>/dev/null \
+  | grep -E '/$' \
+  || find meta-skills own-skills external-skills -maxdepth 1 -mindepth 1 -type d 2>/dev/null
 ```
+
+实务: 直接 glob `meta-skills/*/ own-skills/*/ external-skills/*/` 拿目录列表, 每条记录 `<category>/<skill-name>` 两段。
 
 ### 3. 读每个 SKILL.md frontmatter
 
-对每个候选目录 D:
+对每个候选目录 `<category>/<skill-name>`:
 
 ```bash
-cat "$D/SKILL.md" | sed -n '1,/^---$/p; /^---$/,/^---$/p' | head -30
+cat "<category>/<skill-name>/SKILL.md" | sed -n '1,/^---$/p; /^---$/,/^---$/p' | head -30
 ```
 
 抽 `name` / `description` / `version` / `author` / `origin` 字段.
@@ -71,17 +75,19 @@ cat "$D/SKILL.md" | sed -n '1,/^---$/p; /^---$/,/^---$/p' | head -30
 
 ### 6. 返回 top N (N = min(命中数, 10))
 
-格式:
+格式 (meta-skill 末尾标 `[meta]`):
 
 ```
 找到 N 个相关 skill:
 
-1. <name>  (v<version>, by <author>, origin=<own|external>)
+1. <name>  (v<version>, by <author>, origin=<own|external>) [meta]?
    <description>
 
 2. <name>  (...)
    ...
 ```
+
+`[meta]` 标只在 category=meta-skills 时显示, 提示用户这是仓库自带的, 不需要 install (用 update-skills 拉就有)。
 
 ### 7. 提示下一步
 
