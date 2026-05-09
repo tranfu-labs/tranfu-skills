@@ -4,15 +4,13 @@
 
 ## 一次性 bootstrap
 
-```bash
-git clone git@github.com:aistore-labs/claude-skills.git ~/.aistore-labs/claude-skills
+复制下面这段提示词，粘贴给 Claude Code（任意目录开会话即可）：
 
-for s in publish-skill search-skills install-skill update-skills; do
-  cp -r ~/.aistore-labs/claude-skills/$s ~/.claude/skills/$s
-done
-```
+> 请帮我安装 aistore-labs 公司 skill 库到本地。
+> 第一步：把 `git@github.com:aistore-labs/claude-skills.git` clone 到 `~/.aistore-labs/claude-skills`（已存在则 `git pull --ff-only`）。
+> 第二步：阅读 `~/.aistore-labs/claude-skills/INSTALL.md`，按其中步骤执行（cp 4 个 meta-skill + 验证 + 通知我）。
 
-完成后重启 Claude Code，4 个 meta-skill 自动加载。
+Claude Code 会自己跑 git clone + cp + 自检，结束后告诉你重启即可。具体细节看 [INSTALL.md](./INSTALL.md)。
 
 ## 4 个使用场景
 

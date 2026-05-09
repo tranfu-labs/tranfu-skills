@@ -1,7 +1,7 @@
 ---
 name: publish-skill
-description: 当用户说"把本地 skill X 发到公司库 / 共享出去 / 推上去 aistore-labs"时, 完成发布流程 — 检测/补全 frontmatter, 复制到缓存仓库, 创建 PR, 回填本地标记
-version: 0.1.0
+description: 当用户说"把本地 skill X 发到公司库 / 共享出去 / 推上去 aistore-labs"时, 完成发布流程 — 检测/补全 frontmatter, 补 README.md, 复制到缓存仓库, 按 checklist 模板创建 PR, 回填本地标记
+version: 0.1.1
 author: aquarius-wing
 updated_at: 2026-05-09
 origin: own
@@ -54,6 +54,41 @@ origin: own
 
 **不写** `published_to / published_version / published_at` — 步骤 8 才回填.
 
+### 3.5. README.md 补全 (使用者视角)
+
+SKILL.md 是给 LLM 读的; 仓库 PR body 是给 reviewer 读的. **README.md 是给用户读的** —— 单独检查/补全:
+
+读 `<local-skill-path>/README.md`:
+
+- **不存在** → AI 直接基于 SKILL.md 起一稿, 询问用户确认 (不让用户从零写)
+- **存在但缺章节** → 补缺的; 已有的不动
+
+README.md 必含以下 4 段 (用户视角, 不是开发者视角):
+
+```markdown
+# <skill-name>
+
+<1-2 句话, 它解决什么问题. 不写"实现细节", 写"用户能拿它干什么">
+
+## 什么时候用它
+
+<具体场景描述, 比 frontmatter description 详细一点>
+
+## 怎么用 (触发示例)
+
+跟 Claude 说:
+
+- "<触发语 1>"
+- "<触发语 2>"
+- "<触发语 3>"
+
+## 你会看到什么
+
+<它跑完后用户能观察到的输出 / 副作用. e.g. "终端打印 X / 仓库多一个 PR / 文件夹多了 Y">
+```
+
+补完让用户**确认或改**, 不强推. 确认后写到 `<local-skill-path>/README.md`.
+
 ### 4. 更新发布的 bump 决策
 
 - 默认 patch +1 (e.g. 0.1.0 → 0.1.1)
@@ -96,26 +131,46 @@ prefix=""
 git commit -m "${prefix}<skill-name>: <description-one-liner ≤ 70 字>"
 ```
 
-### 7. 创建 PR
+### 7. 创建 PR (checklist 模板, 直接填)
+
+PR body 是给 **reviewer** 看的 —— 是检查项, 不是介绍文. 用户视角的介绍在 skill 自带的 README.md.
+
+模板按下面顺序逐项填; 不存在的项写 N/A, 不要删项:
 
 ```bash
 gh pr create \
-  --title "${prefix}<skill-name>: <same as commit message>" \
+  --title "${prefix}<skill-name>: <≤70字 一句话>" \
   --body "$(cat <<'EOF'
-## 这个 skill 干什么
-<2–3 句, 从 description 扩展>
+## 元信息
 
-## 为什么写它 / 推荐它
-<用户提供的动机, 一段>
+- skill: <name>
+- version: <version> (此次: <new vs old, 或 first publish>)
+- origin: <own | external>
+- author (frontmatter): <handle>
+- source_url (external 必填): <url 或 N/A>
 
-## 触发场景
-<1–3 个用户语句例子>
+## 自检清单 (作者勾)
 
-## 谁可能受益
-<角色: 前端 / 设计 / 运维 / ...>
+- [ ] frontmatter 5 必填齐全: name / description / version / author / updated_at
+- [ ] description ≤ 100 字, 包含触发场景
+- [ ] origin 字段正确 (external 须含 source_url + recommend_reason)
+- [ ] README.md 存在且含 4 段: 介绍 / 什么时候用 / 触发示例 ≥3 / 期望输出
+- [ ] SKILL.md 含 When to use / Steps / What NOT to do
+- [ ] 触发语写法是用户视角 (不是 "调用此 skill 当...", 而是"用户说 ...")
+- [ ] 本地 dogfood: 至少跑过 1 次完整流程, 输出符合预期
+- [ ] 不在子目录嵌套其他 skill, 不引入需要额外手动安装的二进制
 
-## origin
-<own | external + source_url + recommend_reason>
+## 不在范围 (告诉 reviewer 不用查)
+
+- <e.g. 不需要测网络异常 / 不依赖 API key / 不修改用户原文件 ...>
+
+## 风险点 (有则填, 无则 N/A)
+
+- <e.g. 这个 skill 会 git push, reviewer 注意确认目标分支>
+
+## 推荐理由 (1 段, external 时填 recommend_reason 原文)
+
+<...>
 EOF
 )"
 ```
