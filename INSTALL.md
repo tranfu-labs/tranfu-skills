@@ -50,7 +50,9 @@ ls -1 ~/.claude/skills/ | grep -E '^(publish-skill|search-skills|install-skill|u
 >  - search-skills — 搜公司库
 >  - install-skill — 装公司 skill 到本地
 >  - update-skills — 拉最新
-> 之后跟 Claude 说 '搜公司 skill 关于 X' / '把本地 X 发到公司库' 之类自然语言即可。"
+> 之后跟 Claude 说 '搜公司 skill 关于 X' / '把本地 X 发到公司库' 之类自然语言即可。
+> 想拉后续更新 → 跟 Claude 说 '更新公司 skill 缓存' (触发 update-skills)。
+> 想卸载 → 看仓库 README.md 的卸载段。"
 
 ## 失败模式
 

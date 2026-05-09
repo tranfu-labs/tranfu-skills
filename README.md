@@ -64,6 +64,20 @@ update-skills/SKILL.md       meta-skill #4
 
 `published_*` 字段仅写在**本地** skill 的 SKILL.md（由 publish-skill 回填）, 不进本仓库。
 
+## 怎么拉更新
+
+跟 Claude Code 说: **"更新公司 skill 缓存"** → 触发 `update-skills`。它会 `git pull` 本仓库 + 自动覆盖 `~/.claude/skills/` 下 4 个 meta-skill (有 bump 时), 并报告普通 skill 的新增/更新由用户决定要不要 install。
+
+最近改了什么 → 看 [CHANGELOG.md](./CHANGELOG.md)。
+
+## 怎么完整卸载
+
+复制下面这段提示词, 粘贴给 Claude Code:
+
+> 请帮我完整卸载 aistore-labs 公司 skill 库。阅读 `~/.aistore-labs/claude-skills/UNINSTALL.md`, 按其中步骤执行 (二次确认后再删 4 个 meta-skill + 缓存目录)。
+
+具体细节看 [UNINSTALL.md](./UNINSTALL.md)。
+
 ## 探针期声明
 
 本仓库目前在 r2 探针阶段（2026-05-09 起）。设计与决策记录见 [aquarius-wing/goal-claude](https://github.com/aquarius-wing/) 仓库下 `company-agent-plan/goal-docs/`。
