@@ -8,6 +8,11 @@
 
 ## 2026-05-09
 
+- **仓库结构重组** — skill 按 `origin` 分文件夹: `meta-skills/` (4 个生命周期管理器), `own-skills/` (公司原创), `external-skills/` (外部薄指针). user 级加载点保持扁平, install / bootstrap cp 时去掉 category 中间层. ([#5](https://github.com/aistore-labs/claude-skills/pull/5))
+- **publish-skill** 0.1.1 → 0.1.2 — 按 origin 决定落 own-skills/ 或 external-skills/, 拒绝发布 meta-skill 名 (强制走仓库直接 PR 路径). ([#5](https://github.com/aistore-labs/claude-skills/pull/5))
+- **search-skills** 0.1.0 → 0.1.1 — 跨 3 子目录搜, meta-skill 结果末尾标 `[meta]` 标. ([#5](https://github.com/aistore-labs/claude-skills/pull/5))
+- **install-skill** 0.1.0 → 0.1.1 — 在 own-skills + external-skills 下查找 (跳过 meta-skills, 拒装 meta-skill 名). ([#5](https://github.com/aistore-labs/claude-skills/pull/5))
+- **update-skills** 0.1.0 → 0.1.1 — meta-skill 缓存源路径从根改为 `meta-skills/`, 拍扁 cp 到 `~/.claude/skills/`. ([#5](https://github.com/aistore-labs/claude-skills/pull/5))
 - **publish-skill** 0.1.0 → 0.1.1 — 加 §3.5 README.md 补全步骤 (给使用者), §7 PR body 改 checklist 模板 (给 reviewer); 视角分离. ([#2](https://github.com/aistore-labs/claude-skills/pull/2))
 - **bootstrap 流程改造** — `README.md` 安装区从 bash 脚本改为提示词驱动, 实际步骤搬到 [`INSTALL.md`](./INSTALL.md) 由 Claude Code 本地读取执行. ([#2](https://github.com/aistore-labs/claude-skills/pull/2))
 - **credibility-review** 0.1.0 — 首次发布. 文章可信度审稿 skill (踩坑记/养成记 dual-track + anti-pattern 检测). ([#1](https://github.com/aistore-labs/claude-skills/pull/1))

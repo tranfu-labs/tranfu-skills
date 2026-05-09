@@ -1,7 +1,7 @@
 ---
 name: update-skills
-description: 当用户说"更新公司 skill 缓存 / 同步公司库 / 拉最新"时, git pull 缓存仓库, 并把更新后的 4 个 meta-skill 副本覆盖到 ~/.claude/skills/
-version: 0.1.0
+description: 当用户说"更新公司 skill 缓存 / 同步公司库 / 拉最新"时, git pull 缓存仓库, 并把更新后的 4 个 meta-skill 副本 (从 meta-skills/ 子目录拍扁) 覆盖到 ~/.claude/skills/
+version: 0.1.1
 author: aquarius-wing
 updated_at: 2026-05-09
 origin: own
@@ -22,8 +22,9 @@ origin: own
 ## Constants
 
 - 缓存路径: `~/.aistore-labs/claude-skills/`
-- 4 个 meta-skill 名: `publish-skill`, `search-skills`, `install-skill`, `update-skills`
-- Claude Code 加载点: `~/.claude/skills/`
+- 缓存内仓库结构: `meta-skills/`, `own-skills/`, `external-skills/` 三个子目录
+- 4 个 meta-skill 缓存源路径: `~/.aistore-labs/claude-skills/meta-skills/{publish-skill,search-skills,install-skill,update-skills}/`
+- Claude Code 加载点 (扁平): `~/.claude/skills/{publish-skill,search-skills,install-skill,update-skills}/`
 
 ## Steps
 
@@ -54,21 +55,21 @@ git pull --ff-only
 
 ```bash
 cd ~/.aistore-labs/claude-skills/
-git diff HEAD@{1}..HEAD --name-only -- '*/SKILL.md' | sort -u
+git diff HEAD@{1}..HEAD --name-only -- '*/*/SKILL.md' | sort -u
 ```
 
-按 path 解析: `<dir>/SKILL.md` → skill = `<dir>`.
+按 path 解析: `<category>/<skill-name>/SKILL.md` → skill = `<skill-name>`, category ∈ {meta-skills, own-skills, external-skills}.
 
 分类:
 - 之前不存在 SKILL.md, 现在存在 = 新增
 - 之前存在, version 字段变化 = 更新
 
-### 4. 升级 4 个 meta-skill 副本
+### 4. 升级 4 个 meta-skill 副本 (从 meta-skills/ 拍扁到 ~/.claude/skills/)
 
 for skill in publish-skill search-skills install-skill update-skills:
 
 ```bash
-cache_path=~/.aistore-labs/claude-skills/$skill
+cache_path=~/.aistore-labs/claude-skills/meta-skills/$skill
 local_path=~/.claude/skills/$skill
 
 # 取 version
@@ -76,8 +77,7 @@ cache_v=$(grep -E '^version:' "$cache_path/SKILL.md" | head -1 | awk '{print $2}
 local_v=$(grep -E '^version:' "$local_path/SKILL.md" | head -1 | awk '{print $2}' 2>/dev/null || echo "missing")
 
 if [ "$cache_v" != "$local_v" ]; then
-  # 升级 (覆盖)
-  rm -rf "$local_path"
+  # 升级 (cp 覆盖, 不 rm)
   cp -r "$cache_path/" "$local_path/"
 
   meta_upgraded+=("$skill: $local_v -> $cache_v")
