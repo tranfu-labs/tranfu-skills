@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1200">
+  <defs>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}</style>
+    <marker id="aBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="aOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d97706"/></marker>
+    <marker id="aBlue2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/></marker>
+    <marker id="aGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15803d"/></marker>
+    <marker id="aRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/></marker>
+    <marker id="aGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+    <filter id="ds" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1400" height="1200" fill="#ffffff"/>
+  <text x="700.0" y="42" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">credibility-review · 双轨审稿工作流</text>
+  <text x="700.0" y="68" text-anchor="middle" font-size="12.5" fill="#64748b">A 轨：预期 set ↔ 章节流 匹配过程 · B 轨：多 rule 筛查 fan-in 严重度桶 · 三态合判</text>
+  <g filter="url(#ds)"><rect x="40" y="100" width="120" height="68" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/></g>
+  <text x="100" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">草稿 .md</text>
+  <text x="100" y="148" text-anchor="middle" font-size="11" fill="#64748b">tag: 踩坑 / 养成 / 其它</text>
+  <line x1="162" y1="134" x2="218" y2="134" stroke="#2563eb" stroke-width="2" marker-end="url(#aBlue)"/>
+  <g filter="url(#ds)"><rect x="220" y="96" width="280" height="80" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/></g>
+  <text x="360.0" y="118" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">主 agent · Step 1 + Step 2</text>
+  <text x="360.0" y="138" text-anchor="middle" font-size="11.5" fill="#1e40af">① 识别体裁 (frontmatter / 时间跨度)</text>
+  <text x="360.0" y="156" text-anchor="middle" font-size="11.5" fill="#1e40af">② 并发起 fresh sonnet sub-agent · A + B</text>
+  <rect x="540" y="96" width="240" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="552" y="118" font-size="11.5" font-weight="700" fill="#475569">体裁与双轴起点</text>
+  <text x="552" y="136" font-size="11" fill="#64748b">踩坑记 · 耐心 100 / 信任 100</text>
+  <text x="552" y="152" font-size="11" fill="#64748b">养成记 · 耐心 80 / 信任 100</text>
+  <text x="552" y="168" font-size="11" fill="#64748b">其它 · 耐心 90 / 信任 100</text>
+  <rect x="800" y="96" width="320" height="80" rx="8" fill="#fff7ed" stroke="#fb923c" stroke-width="1"/>
+  <text x="812" y="118" font-size="11.5" font-weight="700" fill="#9a3412">硬约束</text>
+  <text x="812" y="136" font-size="11" fill="#7c2d12">A prompt 不得含 §4 · B prompt 不得含 §3</text>
+  <text x="812" y="152" font-size="11" fill="#7c2d12">两 sub-agent 互不可见对方 prompt + output</text>
+  <text x="812" y="168" font-size="11" fill="#7c2d12">主 agent 不重写、不美化、不发明第四态</text>
+  <g filter="url(#ds)"><rect x="40" y="210" width="660" height="680" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="1.8"/></g>
+  <g filter="url(#ds)"><rect x="720" y="210" width="660" height="680" rx="14" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/></g>
+  <path d="M 40,224 A 14,14 0 0 1 54,210 L 686,210 A 14,14 0 0 1 700,224 L 700,258 L 40,258 Z" fill="#fde68a"/>
+  <text x="62" y="240" font-size="15" font-weight="700" fill="#92400e">A 轨 · 预期 set ↔ 章节流 匹配过程</text>
+  <text x="678" y="240" text-anchor="end" font-size="11.5" fill="#7c2d12">读者素读 · 不查词表</text>
+  <path d="M 720,224 A 14,14 0 0 1 734,210 L 1366,210 A 14,14 0 0 1 1380,224 L 1380,258 L 720,258 Z" fill="#dbeafe"/>
+  <text x="742" y="240" font-size="15" font-weight="700" fill="#1e3a8a">B 轨 · 多 rule 筛查 → 严重度桶</text>
+  <text x="1340" y="240" text-anchor="end" font-size="11.5" fill="#1e40af">语言层枚举</text>
+  <path d="M 360.0,176 L 360.0,188 L 370.0,188 L 370.0,208" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#aBlue)"/>
+  <path d="M 360.0,176 L 360.0,188 L 1050.0,188 L 1050.0,208" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#aBlue)"/>
+  <line x1="710.0" y1="234" x2="710.0" y2="866" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6,5"/>
+  <text x="710.0" y="555.0" text-anchor="middle" font-size="11" font-weight="600" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3">独立 context · 互不可见</text>
+  <rect x="64" y="286" width="96" height="56" rx="6" fill="#dcfce7" stroke="#15803d" stroke-width="1.5" />
+  <text x="74" y="302" font-size="10" fill="#15803d">✓</text>
+  <text x="112.0" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">具体场景</text>
+  <text x="112.0" y="326" text-anchor="middle" font-size="10" fill="#166534">前 100 字</text>
+  <rect x="168" y="286" width="96" height="56" rx="6" fill="#dcfce7" stroke="#15803d" stroke-width="1.5" />
+  <text x="178" y="302" font-size="10" fill="#15803d">✓</text>
+  <text x="216.0" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">具名错误</text>
+  <text x="216.0" y="326" text-anchor="middle" font-size="10" fill="#166534">报错原文</text>
+  <rect x="272" y="286" width="96" height="56" rx="6" fill="#dcfce7" stroke="#15803d" stroke-width="1.5" />
+  <text x="282" y="302" font-size="10" fill="#15803d">✓</text>
+  <text x="320.0" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">试错链</text>
+  <text x="320.0" y="326" text-anchor="middle" font-size="10" fill="#166534">≥ 2 步</text>
+  <rect x="376" y="286" width="96" height="56" rx="6" fill="#dcfce7" stroke="#15803d" stroke-width="1.5" />
+  <text x="386" y="302" font-size="10" fill="#15803d">✓</text>
+  <text x="424.0" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">真相段</text>
+  <text x="424.0" y="326" text-anchor="middle" font-size="10" fill="#166534">+ 为何没看到</text>
+  <rect x="480" y="286" width="96" height="56" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="528.0" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">模型版本</text>
+  <text x="528.0" y="326" text-anchor="middle" font-size="10" fill="#64748b">具名到版本号</text>
+  <rect x="584" y="286" width="96" height="56" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="632.0" y="310" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">量化数字</text>
+  <text x="632.0" y="326" text-anchor="middle" font-size="10" fill="#64748b">带基数</text>
+  <text x="64" y="280" font-size="11" font-weight="700" fill="#92400e">未满足预期 set（dynamic · 边读边 retire）</text>
+  <rect x="64" y="430" width="88" height="60" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1.4"/>
+  <text x="108.0" y="454" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">lead</text>
+  <text x="108.0" y="472" text-anchor="middle" font-size="10" fill="#64748b">前 100 字</text>
+  <text x="108.0" y="508" text-anchor="middle" font-size="10.5" font-weight="600" fill="#15803d">✓ 进场景</text>
+  <rect x="164" y="430" width="88" height="60" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1.4"/>
+  <text x="208.0" y="454" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">假设 1</text>
+  <text x="208.0" y="472" text-anchor="middle" font-size="10" fill="#64748b">我以为…</text>
+  <text x="208.0" y="508" text-anchor="middle" font-size="10.5" font-weight="600" fill="#15803d">✓ 具名报错</text>
+  <rect x="264" y="430" width="88" height="60" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1.4"/>
+  <text x="308.0" y="454" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">假设 2</text>
+  <text x="308.0" y="472" text-anchor="middle" font-size="10" fill="#64748b">怀疑…</text>
+  <text x="308.0" y="508" text-anchor="middle" font-size="10.5" font-weight="600" fill="#15803d">✓ 试错链</text>
+  <rect x="364" y="430" width="88" height="60" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1.4"/>
+  <text x="408.0" y="454" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">段落 N</text>
+  <text x="408.0" y="472" text-anchor="middle" font-size="10" fill="#64748b">升华段</text>
+  <text x="408.0" y="508" text-anchor="middle" font-size="10.5" font-weight="600" fill="#94a3b8">悬空 ░</text>
+  <rect x="464" y="430" width="88" height="60" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1.4"/>
+  <text x="508.0" y="454" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">真相段</text>
+  <text x="508.0" y="472" text-anchor="middle" font-size="10" fill="#64748b">其实是…</text>
+  <text x="508.0" y="508" text-anchor="middle" font-size="10.5" font-weight="600" fill="#15803d">✓ 真相</text>
+  <rect x="564" y="430" width="88" height="60" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1.4"/>
+  <text x="608.0" y="454" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">结尾</text>
+  <text x="608.0" y="472" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+  <text x="608.0" y="508" text-anchor="middle" font-size="10.5" font-weight="600" fill="#94a3b8">—</text>
+  <text x="64" y="424" font-size="11" font-weight="700" fill="#92400e">文章章节流（线性读取 →）</text>
+  <line x1="108.0" y1="428" x2="112.0" y2="344" stroke="#15803d" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#aGreen)" opacity="0.85"/>
+  <line x1="208.0" y1="428" x2="216.0" y2="344" stroke="#15803d" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#aGreen)" opacity="0.85"/>
+  <line x1="308.0" y1="428" x2="320.0" y2="344" stroke="#15803d" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#aGreen)" opacity="0.85"/>
+  <line x1="408.0" y1="428" x2="408.0" y2="416" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="2,3"/>
+  <text x="408.0" y="412" text-anchor="middle" font-size="9.5" fill="#94a3b8">未匹配</text>
+  <line x1="508.0" y1="428" x2="424.0" y2="344" stroke="#15803d" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#aGreen)" opacity="0.85"/>
+  <line x1="608.0" y1="428" x2="608.0" y2="416" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="2,3"/>
+  <text x="608.0" y="412" text-anchor="middle" font-size="9.5" fill="#94a3b8">未匹配</text>
+  <rect x="64" y="570" width="612" height="130" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="74" y="564" font-size="11" font-weight="700" fill="#92400e">双轴 trajectory（沿章节推进，扣加分实例）</text>
+  <line x1="102" y1="592.9090909090909" x2="660" y2="592.9090909090909" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="98" y="595.9090909090909" text-anchor="end" font-size="9" fill="#94a3b8">100</text>
+  <line x1="102" y1="637.4545454545455" x2="660" y2="637.4545454545455" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="98" y="640.4545454545455" text-anchor="end" font-size="9" fill="#94a3b8">50</text>
+  <line x1="102" y1="682.0" x2="660" y2="682.0" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="98" y="685.0" text-anchor="end" font-size="9" fill="#94a3b8">0</text>
+  <line x1="106" y1="646.3636363636364" x2="660" y2="646.3636363636364" stroke="#fb923c" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>
+  <text x="664" y="649.3636363636364" font-size="9" fill="#ea580c">耐心阈 40</text>
+  <line x1="106" y1="637.4545454545455" x2="660" y2="637.4545454545455" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>
+  <polyline points="106.0,592.9090909090909 216.8,592.9090909090909 327.6,592.9090909090909 438.4,592.9090909090909 549.2,597.3636363636364 660.0,610.7272727272727" fill="none" stroke="#d97706" stroke-width="2"/>
+  <polyline points="106.0,592.9090909090909 216.8,588.4545454545455 327.6,579.5454545454545 438.4,579.5454545454545 549.2,597.3636363636364 660.0,588.4545454545455" fill="none" stroke="#0284c7" stroke-width="2"/>
+  <circle cx="106.0" cy="592.9090909090909" r="3" fill="#d97706"/>
+  <circle cx="106.0" cy="592.9090909090909" r="3" fill="#0284c7"/>
+  <circle cx="216.8" cy="592.9090909090909" r="3" fill="#d97706"/>
+  <circle cx="216.8" cy="588.4545454545455" r="3" fill="#0284c7"/>
+  <circle cx="327.6" cy="592.9090909090909" r="3" fill="#d97706"/>
+  <circle cx="327.6" cy="579.5454545454545" r="3" fill="#0284c7"/>
+  <circle cx="438.4" cy="592.9090909090909" r="3" fill="#d97706"/>
+  <circle cx="438.4" cy="579.5454545454545" r="3" fill="#0284c7"/>
+  <circle cx="549.2" cy="597.3636363636364" r="3" fill="#d97706"/>
+  <circle cx="549.2" cy="597.3636363636364" r="3" fill="#0284c7"/>
+  <circle cx="660.0" cy="610.7272727272727" r="3" fill="#d97706"/>
+  <circle cx="660.0" cy="588.4545454545455" r="3" fill="#0284c7"/>
+  <text x="106.0" y="694" text-anchor="middle" font-size="9" fill="#475569">lead</text>
+  <text x="216.8" y="694" text-anchor="middle" font-size="9" fill="#475569">假设 1</text>
+  <text x="327.6" y="694" text-anchor="middle" font-size="9" fill="#475569">假设 2</text>
+  <text x="438.4" y="694" text-anchor="middle" font-size="9" fill="#475569">段落 N</text>
+  <text x="549.2" y="694" text-anchor="middle" font-size="9" fill="#475569">真相段</text>
+  <text x="660.0" y="694" text-anchor="middle" font-size="9" fill="#475569">结尾</text>
+  <line x1="476" y1="580" x2="496" y2="580" stroke="#d97706" stroke-width="2"/>
+  <text x="500" y="583" font-size="10" fill="#92400e">耐心</text>
+  <line x1="546" y1="580" x2="566" y2="580" stroke="#0284c7" stroke-width="2"/>
+  <text x="570" y="583" font-size="10" fill="#0c4a6e">信任</text>
+  <text x="668.0" y="613.7272727272727" font-size="10" font-weight="700" fill="#d97706">80</text>
+  <text x="668.0" y="591.4545454545455" font-size="10" font-weight="700" fill="#0284c7">105</text>
+  <rect x="64" y="716" width="612" height="86" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="76" y="736" font-size="11.5" font-weight="700" fill="#92400e">走完全文 · 计算终局</text>
+  <text x="76" y="756" font-size="11" fill="#78350f">未 retire 预期：<tspan font-weight="700">2 条</tspan>（模型版本号 / 量化数字） → 耐心 −15 × 2 = <tspan font-weight="700">−30</tspan></text>
+  <text x="76" y="774" font-size="11" fill="#78350f">悬空段落"段 N 升华"未被回填 → 一次性 <tspan font-weight="700">−50 耐心</tspan>（示例已部分体现）</text>
+  <text x="76" y="792" font-size="11" fill="#78350f">扣分原则：教程腔 H2 −50 · 文末 CTA −80 · 隐蔽 hero −20 · 藏名 −15 ｜ 加分：具名报错 +10 · 真原话 +10 · 自承错 +10</text>
+  <rect x="52" y="846" width="636" height="32" rx="6" fill="#d97706"/>
+  <text x="370.0" y="867" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">PASS = 耐心 &gt; 40  ∧  信任 &gt; 50（任一跌穿即 FAIL）</text>
+  <rect x="920" y="294" width="90" height="532" rx="6" fill="#ffffff" stroke="#1e40af" stroke-width="1.5"/>
+  <text x="965.0" y="290" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">文章</text>
+  <line x1="928" y1="310.0" x2="1002" y2="310.0" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="337.8888888888889" x2="1002" y2="337.8888888888889" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="365.77777777777777" x2="1002" y2="365.77777777777777" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="393.6666666666667" x2="988" y2="393.6666666666667" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="421.55555555555554" x2="1002" y2="421.55555555555554" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="449.44444444444446" x2="1002" y2="449.44444444444446" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="477.33333333333337" x2="1002" y2="477.33333333333337" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="505.22222222222223" x2="988" y2="505.22222222222223" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="533.1111111111111" x2="1002" y2="533.1111111111111" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="561.0" x2="1002" y2="561.0" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="588.8888888888889" x2="1002" y2="588.8888888888889" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="616.7777777777778" x2="988" y2="616.7777777777778" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="644.6666666666667" x2="1002" y2="644.6666666666667" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="672.5555555555555" x2="1002" y2="672.5555555555555" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="700.4444444444445" x2="1002" y2="700.4444444444445" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="728.3333333333333" x2="988" y2="728.3333333333333" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="756.2222222222222" x2="1002" y2="756.2222222222222" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="928" y1="784.1111111111111" x2="1002" y2="784.1111111111111" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="1060" y="310.0" width="310" height="160.66666666666666" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.8"/>
+  <text x="1074" y="334.0" font-size="14" font-weight="700" fill="#b91c1c">退稿</text>
+  <text x="1074" y="360.0" font-size="10.5" fill="#b91c1c">教程腔 H2 / 文末 CTA / 缺结构 / 同 §≥3 裸百分比</text>
+  <rect x="1060" y="486.66666666666663" width="310" height="160.66666666666666" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.8"/>
+  <text x="1074" y="510.66666666666663" font-size="14" font-weight="700" fill="#b45309">必改</text>
+  <text x="1074" y="536.6666666666666" font-size="10.5" fill="#b45309">PR 腔子型 / 隐蔽 hero / 藏名 / 缺证据</text>
+  <rect x="1060" y="663.3333333333333" width="310" height="160.66666666666666" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.8"/>
+  <text x="1074" y="687.3333333333333" font-size="14" font-weight="700" fill="#475569">建议</text>
+  <text x="1074" y="713.3333333333333" font-size="10.5" fill="#475569">单次升华虚词且句义独立</text>
+  <rect x="734" y="303.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="309.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="323.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">§2.1</text>
+  <text x="788" y="322.0" font-size="11" font-weight="700" fill="#0f172a">抽象代具体</text>
+  <text x="788" y="338.0" font-size="10" fill="#64748b">形容词 / 升华</text>
+  <line x1="900" y1="332.5" x2="920" y2="332.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,332.5 L 1030,332.5 L 1030,567.0 L 1054,567.0" stroke="#b45309" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aOrange)"/>
+  <rect x="734" y="368.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="374.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="388.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">§2.2</text>
+  <text x="788" y="387.0" font-size="11" font-weight="700" fill="#0f172a">PR 腔</text>
+  <text x="788" y="403.0" font-size="10" fill="#64748b">搬到发布稿无缝</text>
+  <line x1="900" y1="397.5" x2="920" y2="397.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,397.5 L 1030,397.5 L 1030,567.0 L 1054,567.0" stroke="#b45309" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aOrange)"/>
+  <rect x="734" y="433.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="439.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="453.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">§2.3</text>
+  <text x="788" y="452.0" font-size="11" font-weight="700" fill="#0f172a">教程模板 H2</text>
+  <text x="788" y="468.0" font-size="10" fill="#64748b">问题分析 / 探索期</text>
+  <line x1="900" y1="462.5" x2="920" y2="462.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,462.5 L 1030,462.5 L 1030,390.3333333333333 L 1054,390.3333333333333" stroke="#b91c1c" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aRed)"/>
+  <rect x="734" y="498.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="504.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="518.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">§2.4</text>
+  <text x="788" y="517.0" font-size="11" font-weight="700" fill="#0f172a">藏名 / 含糊</text>
+  <text x="788" y="533.0" font-size="10" fill="#64748b">某主流 / 某客户</text>
+  <line x1="900" y1="527.5" x2="920" y2="527.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,527.5 L 1030,527.5 L 1030,567.0 L 1054,567.0" stroke="#b45309" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aOrange)"/>
+  <rect x="734" y="563.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="569.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="583.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">§2.5</text>
+  <text x="788" y="582.0" font-size="11" font-weight="700" fill="#0f172a">Happy ending</text>
+  <text x="788" y="598.0" font-size="10" fill="#64748b">删尾 2 段还成立?</text>
+  <line x1="900" y1="592.5" x2="920" y2="592.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,592.5 L 1030,592.5 L 1030,390.3333333333333 L 1054,390.3333333333333" stroke="#b91c1c" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aRed)"/>
+  <rect x="734" y="628.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="634.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="648.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">§2.6</text>
+  <text x="788" y="647.0" font-size="11" font-weight="700" fill="#0f172a">缺证据</text>
+  <text x="788" y="663.0" font-size="10" fill="#64748b">无 fenced / 引语</text>
+  <line x1="900" y1="657.5" x2="920" y2="657.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,657.5 L 1030,657.5 L 1030,567.0 L 1054,567.0" stroke="#b45309" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aOrange)"/>
+  <rect x="734" y="693.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="699.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="713.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">结构</text>
+  <text x="788" y="712.0" font-size="11" font-weight="700" fill="#0f172a">结构核对</text>
+  <text x="788" y="728.0" font-size="10" fill="#64748b">踩坑 6 / 养成 9</text>
+  <line x1="900" y1="722.5" x2="920" y2="722.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,722.5 L 1030,722.5 L 1030,390.3333333333333 L 1054,390.3333333333333" stroke="#b91c1c" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aRed)"/>
+  <rect x="734" y="758.0" width="166" height="59.0" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <rect x="740" y="764.0" width="40" height="20" rx="3" fill="#1d4ed8"/>
+  <text x="760" y="778.0" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">grep</text>
+  <text x="788" y="777.0" font-size="11" font-weight="700" fill="#0f172a">守护 + 后处理</text>
+  <text x="788" y="793.0" font-size="10" fill="#64748b">时间 / 藏名 / CTA / 百分比</text>
+  <line x1="900" y1="787.5" x2="920" y2="787.5" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#aBlue2)" opacity="0.8"/>
+  <path d="M 1012,787.5 L 1030,787.5 L 1030,567.0 L 1054,567.0" stroke="#b45309" stroke-width="1.3" fill="none" opacity="0.55" marker-end="url(#aOrange)"/>
+  <text x="734" y="286" font-size="11" font-weight="700" fill="#1e3a8a">8 条 rule（按列扫文章）</text>
+  <text x="1060" y="286" font-size="11" font-weight="700" fill="#1e3a8a">命中按严重度落桶</text>
+  <rect x="732" y="846" width="636" height="32" rx="6" fill="#1d4ed8"/>
+  <text x="1050.0" y="867" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">PASS = 0 退稿级（必改 / 建议条数不影响 PASS）</text>
+  <g filter="url(#ds)"><path d="M 700,910.0 L 770.0,950 L 700,990.0 L 630.0,950 Z" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.8"/></g>
+  <text x="700" y="936" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">Step 3</text>
+  <text x="700" y="956" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">三态合判</text>
+  <text x="700" y="974" text-anchor="middle" font-size="10" fill="#475569">A × B → verdict</text>
+  <path d="M 370.0,894 L 370.0,950 L 627.0,950" stroke="#d97706" stroke-width="2" fill="none" marker-end="url(#aOrange)"/>
+  <rect x="378.0" y="910" width="62" height="18" rx="3" fill="#ffffff" stroke="#fcd34d" stroke-width="0.8" opacity="0.95"/>
+  <text x="409.0" y="923" text-anchor="middle" font-size="11" font-weight="600" fill="#92400e">A verdict</text>
+  <path d="M 1050.0,894 L 1050.0,950 L 773.0,950" stroke="#1d4ed8" stroke-width="2" fill="none" marker-end="url(#aBlue2)"/>
+  <rect x="980.0" y="910" width="62" height="18" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="0.8" opacity="0.95"/>
+  <text x="1011.0" y="923" text-anchor="middle" font-size="11" font-weight="600" fill="#1e3a8a">B verdict</text>
+  <rect x="80" y="1040" width="320" height="60" rx="12" fill="#dcfce7" stroke="#15803d" stroke-width="1.8" filter="url(#ds)"/>
+  <text x="240.0" y="1066" text-anchor="middle" font-size="15" font-weight="700" fill="#15803d">可发</text>
+  <text x="240.0" y="1088" text-anchor="middle" font-size="11" fill="#15803d">两轨都过；按建议改后即可发</text>
+  <rect x="540" y="1040" width="320" height="60" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="1.8" filter="url(#ds)"/>
+  <text x="700.0" y="1066" text-anchor="middle" font-size="15" font-weight="700" fill="#b45309">待审查</text>
+  <text x="700.0" y="1088" text-anchor="middle" font-size="11" fill="#b45309">意见不一致；值得人审 — fluent-empty / 内容硬违规</text>
+  <rect x="1000" y="1040" width="320" height="60" rx="12" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.8" filter="url(#ds)"/>
+  <text x="1160.0" y="1066" text-anchor="middle" font-size="15" font-weight="700" fill="#b91c1c">退稿</text>
+  <text x="1160.0" y="1088" text-anchor="middle" font-size="11" fill="#b91c1c">语言垃圾 + 读起来空 — 经典 PR 通稿型</text>
+  <line x1="700" y1="990.0" x2="700" y2="1037" stroke="#b45309" stroke-width="2" marker-end="url(#aOrange)"/>
+  <rect x="715" y="991" width="103" height="18" rx="3" fill="#ffffff" stroke="#e2e8f0" stroke-width="0.8" opacity="0.95"/>
+  <text x="766.5" y="1004" text-anchor="middle" font-size="11" font-weight="600" fill="#b45309">(P,F) | (F,P)</text>
+  <path d="M 700,990.0 L 700,1015 L 240,1015 L 240,1037" stroke="#15803d" stroke-width="2" fill="none" marker-end="url(#aGreen)"/>
+  <rect x="440" y="1006" width="60" height="18" rx="3" fill="#ffffff" stroke="#e2e8f0" stroke-width="0.8" opacity="0.95"/>
+  <text x="470" y="1019" text-anchor="middle" font-size="11" font-weight="600" fill="#15803d">(P,P)</text>
+  <path d="M 700,990.0 L 700,1015 L 1160,1015 L 1160,1037" stroke="#b91c1c" stroke-width="2" fill="none" marker-end="url(#aRed)"/>
+  <rect x="900" y="1006" width="60" height="18" rx="3" fill="#ffffff" stroke="#e2e8f0" stroke-width="0.8" opacity="0.95"/>
+  <text x="930" y="1019" text-anchor="middle" font-size="11" font-weight="600" fill="#b91c1c">(F,F)</text>
+  <rect x="40" y="1120" width="1320" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="58" y="1142" font-size="12" font-weight="700" fill="#0f172a">为什么双轨</text>
+  <text x="58" y="1162" font-size="11" fill="#475569">B 轨能抓"语言层有违规"（PR 套话 / 教程标题 / 隐蔽 hero），但 0 命中 ≠ 文章有内容 — fluent 的 PR 写手能写一篇全部避开反模式但全空的文章。</text>
+  <text x="58" y="1178" font-size="11" fill="#475569">A 轨抓的就是这种"语言干净但读起来空"——预期 set 里 retire 不下来，耐心 / 信任在读的过程中怎么消耗。两件事互补，缺一不可。</text>
+</svg>
