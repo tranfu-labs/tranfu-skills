@@ -6,6 +6,15 @@
 
 ---
 
+## 2026-05-12
+
+- **OpenAI Codex CLI 支持** — bootstrap / install / uninstall / update / publish 全链路都按当前 runtime 自适应 skill 目录: Claude Code → `~/.claude/skills/`, Codex CLI → `~/.codex/skills/` (即 `$CODEX_HOME/skills/`)。agent 默认自报身份, 兜底问用户; 不靠 env var 自动猜 (Codex CLI 无稳定标记)。
+- **新增 [`RUNTIME.md`](./RUNTIME.md)** — runtime 表 + 检测算法 + 加新 runtime 标准的单一真相; INSTALL / UNINSTALL / 4 个 meta-skill 都引用它, 改一处即全链路生效。
+- **install-skill** 0.1.1 → 0.2.0 — 目标路径按 runtime 自适应 (`$TARGET_SKILLS_USER` / `$TARGET_SKILLS_PROJECT`); scope 二次确认文案路径实化; dogfood log 加 `runtime` 字段。
+- **update-skills** 0.1.1 → 0.2.0 — meta-skill 副本同步目标改为 `$TARGET_SKILLS_USER`, 不再硬编码 `~/.claude/skills/`; dogfood log 加 `runtime` 字段。
+- **publish-skill** — 本地 skill 定位路径按 runtime 自适应 (优先 `$TARGET_SKILLS_USER`, fallback `$TARGET_SKILLS_PROJECT`); 不 bump version (改动属于环境适配, 行为对 Claude Code 用户透明等价)。
+- **search-skills** — 第 7 步提示文案去硬编码, 不再写死 `~/.claude/skills/` 给用户看; 不 bump version。
+
 ## 2026-05-09
 
 - **仓库结构重组** — skill 按 `origin` 分文件夹: `meta-skills/` (4 个生命周期管理器), `own-skills/` (公司原创), `external-skills/` (外部薄指针). user 级加载点保持扁平, install / bootstrap cp 时去掉 category 中间层. ([#5](https://github.com/aistore-labs/claude-skills/pull/5))
@@ -22,11 +31,11 @@
 
 ## 怎么拉更新
 
-跟 Claude Code 说: **"更新公司 skill 缓存"** → 触发 `update-skills`。
+跟你的 agentic CLI (Claude Code / Codex CLI) 说: **"更新公司 skill 缓存"** → 触发 `update-skills`。
 
 它做的事:
 - `git pull --ff-only` 本仓库缓存
-- 检测 4 个 meta-skill 哪些 bump 了, 自动覆盖到 `~/.claude/skills/`
+- 检测 4 个 meta-skill 哪些 bump 了, 自动覆盖到当前 runtime 的 user 级 skill 目录 (Claude Code → `~/.claude/skills/`, Codex CLI → `~/.codex/skills/`)
 - 报告普通 skill 的新增/更新, 由用户决定要不要 `install-skill`
 
 ## 通知通道 (探针期)

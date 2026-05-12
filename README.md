@@ -4,15 +4,17 @@
 
 ## 一次性 bootstrap
 
-复制下面这段提示词，粘贴给 Claude Code（任意目录开会话即可）：
+支持 **Claude Code** 和 **OpenAI Codex CLI** — 两边都能跑同一段提示词, agent 会自己识别 runtime 并装到对应目录 (Claude Code → `~/.claude/skills/`, Codex CLI → `~/.codex/skills/`)。
+
+复制下面这段提示词, 粘贴给当前在用的 agentic CLI (任意目录开会话即可)：
 
 ```text
 请帮我安装 aistore-labs 公司 skill 库到本地。
 第一步：把 git@github.com:aistore-labs/claude-skills.git clone 到 ~/.aistore-labs/claude-skills（已存在则 git pull --ff-only）。
-第二步：阅读 ~/.aistore-labs/claude-skills/INSTALL.md，按其中步骤执行（cp 4 个 meta-skill + 验证 + 通知我）。
+第二步：阅读 ~/.aistore-labs/claude-skills/INSTALL.md，按其中步骤执行（识别你自己的 runtime → cp 4 个 meta-skill → 验证 → 通知我）。
 ```
 
-Claude Code 会自己跑 git clone + cp + 自检，结束后告诉你重启即可。具体细节看 [INSTALL.md](./INSTALL.md)。
+CLI 会自己跑 git clone + cp + 自检, 结束后告诉你重启即可。具体细节看 [INSTALL.md](./INSTALL.md)。
 
 ## 4 个使用场景
 
@@ -75,7 +77,7 @@ external-skills/              外部推荐薄指针 (frontmatter origin: externa
   ...
 ```
 
-> Claude Code 的 `~/.claude/skills/` 必须扁平加载, install / bootstrap cp 时自动去掉子目录中间层 (e.g. `meta-skills/publish-skill/` → `~/.claude/skills/publish-skill/`)。规模到 20+ own skill 后再考虑二级分类 (e.g. `own-skills/content/`, `own-skills/engineering/`), 现在不过早设计。
+> user 级 skill 目录必须扁平加载, install / bootstrap cp 时自动去掉子目录中间层 (e.g. `meta-skills/publish-skill/` → `$TARGET_SKILLS_USER/publish-skill/`)。具体路径按 runtime: Claude Code → `~/.claude/skills/`, OpenAI Codex CLI → `~/.codex/skills/` (详见 [RUNTIME.md](./RUNTIME.md))。规模到 20+ own skill 后再考虑二级分类 (e.g. `own-skills/content/`, `own-skills/engineering/`), 现在不过早设计。
 
 ## frontmatter 字段
 
@@ -100,7 +102,7 @@ external-skills/              外部推荐薄指针 (frontmatter origin: externa
 更新公司 skill 缓存
 ```
 
-→ 触发 `update-skills`。它会 `git pull` 本仓库 + 自动覆盖 `~/.claude/skills/` 下 4 个 meta-skill (有 bump 时), 并报告普通 skill 的新增/更新由用户决定要不要 install。
+→ 触发 `update-skills`。它会 `git pull` 本仓库 + 自动覆盖当前 runtime user 级 skill 目录下的 4 个 meta-skill (有 bump 时), 并报告普通 skill 的新增/更新由用户决定要不要 install。
 
 最近改了什么 → 看 [CHANGELOG.md](./CHANGELOG.md)。
 

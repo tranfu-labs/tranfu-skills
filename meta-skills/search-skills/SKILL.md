@@ -92,7 +92,7 @@ cat "<category>/<skill-name>/SKILL.md" | sed -n '1,/^---$/p; /^---$/,/^---$/p' |
 ### 7. 提示下一步
 
 ```
-想装哪个? 我可以帮你装到 user 级 (~/.claude/skills/) 或当前 project (.claude/skills/).
+想装哪个? 我可以帮你装到 user 级 或当前 project 级 (具体路径按当前 runtime 决定, 见 RUNTIME.md).
 说 "装第 N 个到 user/project" 触发 install-skill.
 ```
 

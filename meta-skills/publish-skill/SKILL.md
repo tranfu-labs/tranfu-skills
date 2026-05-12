@@ -29,6 +29,11 @@ origin: own
 - case 落点: `<cache>/external-skills/<name>/cases/<recommender>.md`
 - dogfood log: `<cache>/.dogfood-r1.log`
 - 模板 (同目录): `templates/pr-body.md`, `templates/case-file.md`
+- 本地 skill 查找路径按 runtime 自适应: `$TARGET_SKILLS_USER/<name>/` (Claude Code → `~/.claude/skills/`, Codex CLI → `~/.codex/skills/`), fallback `$TARGET_SKILLS_PROJECT/<name>/`。详见 [RUNTIME.md](../../RUNTIME.md)
+
+## §0. 运行时识别
+
+按 [RUNTIME.md](../../RUNTIME.md) 第 2 节识别你自己, 取 `$TARGET_SKILLS_USER` / `$TARGET_SKILLS_PROJECT`。默认自报身份, 别问用户。
 
 ## §1. 入口路由 (必跑, 决定走哪条路径)
 
@@ -50,7 +55,7 @@ Step 1.2 — 候选 skill 推断
 
 Step 1.3 — origin 检测 (决定走 A 还是 B)
   对已定的 <name>:
-    - 本地查: ls ~/.claude/skills/<name>/SKILL.md, 读 frontmatter author
+    - 本地查: ls $TARGET_SKILLS_USER/<name>/SKILL.md (按 §0 runtime), 读 frontmatter author
     - gh api user -q .login 拿当前 user handle
     - 网搜判定 (可选): 是否在公开 GitHub / NPM / blog 命中
   判定矩阵:
@@ -180,7 +185,7 @@ AI 一次列出问, 用户顺序作答 (短/长皆可) / 单条 `skip` / `skip a
 
 ### 步骤
 
-1. **定位本地 skill**: 优先 `~/.claude/skills/<name>/SKILL.md`, fallback 当前 project `.claude/skills/<name>/SKILL.md`. 读 frontmatter.
+1. **定位本地 skill**: 优先 `$TARGET_SKILLS_USER/<name>/SKILL.md` (按 §0 runtime), fallback `$TARGET_SKILLS_PROJECT/<name>/SKILL.md`. 读 frontmatter.
 2. **检测发布历史**: frontmatter 含 `published_to: aistore-labs/claude-skills` → 走"更新"分支 (步骤 4 bump); 否则走"全新"分支 (步骤 3).
 3. **全新字段补全** — 缺啥 AI 自己补 / 推, 用户只确认:
 
