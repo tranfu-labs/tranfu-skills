@@ -45,6 +45,11 @@ reason_kind: {enum}
 - [ ] §同类 Skill 对比 section 已写入 SKILL.md (When to use 段之后)
 - [ ] §同类对比: 公司库内/外部各 ≤3 条 (0 条则"暂无"), 链接可点, 差异化句具体不空话
 - [ ] §同类对比: 本 skill 独特价值 ≤3 句, 每句 ≤30 字
+- [ ] §使用技巧 section 已写入 SKILL.md (§同类 Skill 对比 之后)
+- [ ] §使用技巧: 3 子段结构 (材料方案 / 推荐用法 / 已知限制), 每子段 ≤3 bullet, 全段 ≤9 bullet ≤500 字
+- [ ] §使用技巧: 引导设问 ≥3 ≤5 条, 设问具体 (不是 "你有什么经验吗" 空问)
+- [ ] §使用技巧: 整合无加料无丢信息无空话, 用户已签字 (或 skip all 写"暂无 (推荐者跳过)")
+- [ ] §使用技巧 与 §同类对比 内容互不引用, 焦点严格区分 (横向 vs 纵向)
 - [ ] 触发语写法是用户视角 (不是 "调用此 skill 当...", 而是 "用户说 ...")
 - [ ] 本地 dogfood: 至少跑过 1 次完整流程
 - [ ] 不在子目录嵌套其他 skill, 不引入需要额外手动安装的二进制
@@ -53,13 +58,18 @@ reason_kind: {enum}
 - [ ] §同类 Skill 对比 section 已 append 到 stub body 末尾
 - [ ] §同类对比: 公司库内/外部各 ≤3 条 (0 条则"暂无"), 链接可点, 差异化句具体不空话
 - [ ] §同类对比: 本 skill 独特价值 ≤3 句, 每句 ≤30 字
+- [ ] §使用技巧 section 已 append 到 stub body 末尾 (§同类 Skill 对比 之后)
+- [ ] §使用技巧: 3 子段结构 (材料方案 / 推荐用法 / 已知限制), 每子段 ≤3 bullet, 全段 ≤9 bullet ≤500 字
+- [ ] §使用技巧: 引导设问 ≥3 ≤5 条, 设问具体 (基于推荐者使用经验, 不是替原作者代答)
+- [ ] §使用技巧: 整合无加料无丢信息无空话, 用户已签字 (或 skip all 写"暂无 (推荐者跳过)")
+- [ ] §使用技巧 与 §同类对比 内容互不引用, 焦点严格区分
 - [ ] frontmatter origin: external + source_url 有效
 - [ ] case 文件 frontmatter 三必填齐: recommender / recommended_at / reason_kind
 - [ ] case body 不空话, 有具体场景描述
 - [ ] 图 (如有) ≤ 1MB
 - [ ] source_url 可访问, 指向真实 skill (不是 vaporware)
 {variant: add-case}
-- [ ] 不改 external-skills/{name}/SKILL.md (本 PR 只动 cases/, 不触发 §1.5)
+- [ ] 不改 external-skills/{name}/SKILL.md (本 PR 只动 cases/, 不触发 §1.5 / §1.6)
 - [ ] case 文件 frontmatter 三必填齐
 - [ ] 图 (如有) ≤ 1MB
 
