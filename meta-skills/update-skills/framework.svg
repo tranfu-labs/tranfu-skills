@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 950" font-family="system-ui, -apple-system, &quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif">
+  <defs>
+    <style>text{font-family:system-ui,-apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;}</style>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#059669"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#ea580c"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#ca8a04"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#dc2626"/>
+    </marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#0f172a" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+  <rect width="1400" height="950" fill="#ffffff"/>
+  <text x="700" y="42" text-anchor="middle" font-size="24" font-weight="700" fill="#0f172a">update-skills — 框架图</text>
+  <text x="700" y="68" text-anchor="middle" font-size="13" fill="#64748b">v0.1.0 · git pull --ff-only → diff → 4 个 meta-skill 自我升级 · 仅用户主动触发</text>
+  <rect x="80" y="92" width="1240" height="58" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="100" y="115" font-size="13" font-weight="600" fill="#475569">用户触发短语</text>
+  <text x="100" y="136" font-size="12" fill="#334155">"更新公司 skill 缓存" · "拉公司库最新" · "同步 aistore-labs" · "看看公司库有什么新东西"</text>
+  <rect x="1148" y="104" width="150" height="22" rx="11" fill="#fef3c7" stroke="#ca8a04" stroke-width="1"/>
+  <text x="1223" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#854d0e">⚠ 仅用户主动触发</text>
+  <line x1="700" y1="150" x2="700" y2="170" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+  <rect x="80" y="178" width="1240" height="84" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="1.3"/>
+  <text x="100" y="202" font-size="14" font-weight="700" fill="#9a3412">§1 预检查 git status</text>
+  <text x="100" y="222" font-size="12" fill="#334155">cd ~/.aistore-labs/claude-skills/  &amp;&amp;  git status -s</text>
+  <text x="100" y="241" font-size="11" fill="#9a3412">非空 (publish 中态) → 提示 "有 uncommitted 变更, 先完成 publish 还是 stash?"</text>
+  <text x="100" y="256" font-size="11" fill="#64748b">不强制处理, 由用户决定</text>
+  <line x1="700" y1="262" x2="700" y2="282" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+  <rect x="80" y="290" width="1240" height="84" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="100" y="314" font-size="14" font-weight="700" fill="#991b1b">§2 git fetch + pull --ff-only  (失败大声报错, 完整输出给用户)</text>
+  <text x="100" y="334" font-size="12" fill="#334155">git fetch  &amp;&amp;  git pull --ff-only</text>
+  <text x="100" y="353" font-size="11" fill="#7f1d1d">网络失败 / 非 ff (本地未推 commit) → 完整 stderr 给用户, 不静默</text>
+  <text x="100" y="368" font-size="11" fill="#64748b">用户主动触发, 知道发生了什么是必要的</text>
+  <line x1="700" y1="374" x2="700" y2="394" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <rect x="80" y="402" width="1240" height="84" rx="10" fill="#f8fafc" stroke="#475569" stroke-width="1.3"/>
+  <text x="100" y="426" font-size="14" font-weight="700" fill="#0f172a">§3 Diff 出新增 / 更新 skill</text>
+  <text x="100" y="446" font-size="12" fill="#334155">git diff HEAD@{1}..HEAD --name-only -- '*/SKILL.md'  |  sort -u</text>
+  <text x="100" y="464" font-size="11" fill="#475569">分类: 之前无 SKILL.md 现在有 = 新增   ·   之前有 + version 变 = 更新</text>
+  <text x="100" y="480" font-size="11" fill="#64748b">解析 path: &lt;dir&gt;/SKILL.md → skill = &lt;dir&gt;</text>
+  <line x1="700" y1="486" x2="700" y2="506" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+  <rect x="80" y="514" width="1240" height="160" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="100" y="538" font-size="14" font-weight="700" fill="#6d28d9">§4 4 个 meta-skill 自我升级 (publish · search · install · update)</text>
+  <text x="100" y="558" font-size="12" fill="#334155">for skill in 4 meta: 取 cache_v 和 local_v (~/.claude/skills/$skill/SKILL.md 的 version 字段)</text>
+  <text x="100" y="578" font-size="12" fill="#334155">cache_v != local_v →  rm -rf $local_path  &amp;&amp;  cp -r $cache_path $local_path</text>
+  <rect x="110" y="594" width="280" height="32" rx="16" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+  <text x="250" y="614" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">publish-skill</text>
+  <rect x="410" y="594" width="280" height="32" rx="16" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+  <text x="550" y="614" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">search-skills</text>
+  <rect x="710" y="594" width="280" height="32" rx="16" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+  <text x="850" y="614" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">install-skill</text>
+  <rect x="1010" y="594" width="280" height="32" rx="16" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+  <text x="1150" y="614" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">update-skills</text>
+  <text x="100" y="650" font-size="11" fill="#64748b">通知用户: "meta-skill 自我升级: publish 0.1.0→0.1.1, search 0.1.0→0.2.0  下次会话生效"</text>
+  <text x="100" y="666" font-size="11" fill="#7c2d12">⚠ git pull 未成功 → 跳过 cp (避免覆盖到旧版); 某 cp 失败 → 其他继续, 末尾汇报失败列表</text>
+  <line x1="700" y1="674" x2="700" y2="694" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+  <rect x="80" y="702" width="1240" height="80" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.3"/>
+  <text x="100" y="726" font-size="14" font-weight="700" fill="#0f172a">§5 报告普通 skill 新增 / 更新</text>
+  <text x="100" y="746" font-size="12" fill="#334155">"公司库本次更新:  新增 [name1, name2]   更新 [name3 (0.1.2→0.1.3)]   想装哪个? 用 install-skill 触发."</text>
+  <text x="100" y="765" font-size="11" fill="#64748b">无变化 → "公司库没有变化."   ·  不主动 install 任何非 meta-skill</text>
+  <line x1="700" y1="782" x2="700" y2="798" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+  <rect x="80" y="806" width="1240" height="58" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1"/>
+  <text x="100" y="828" font-size="13" font-weight="700" fill="#0f172a">§6 dogfood log</text>
+  <text x="100" y="850" font-size="11" fill="#475569">append .dogfood-r1.log: {ts, actor, event=update, ok=true, new=N1, updated=N2, meta_upgraded=[list]}</text>
+  <rect x="80" y="878" width="1240" height="60" rx="8" fill="#0f172a"/>
+  <text x="100" y="902" font-size="13" font-weight="700" fill="#f1f5f9">⛔ 关键约束 (What NOT to do)</text>
+  <text x="100" y="922" font-size="12" fill="#cbd5e1">❌ 不自动定时跑 / 不 SessionStart 跑 · ❌ 不在 pull 失败时 cp meta · ❌ 不主动 install 非 meta · ❌ 不静默任何错误 · ❌ 不调子 Agent · ❌ 不 git push (只读 pull) · ❌ 不改 frontmatter</text>
+</svg>
