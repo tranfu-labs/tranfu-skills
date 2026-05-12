@@ -1,0 +1,7 @@
+interface:
+  display_name: "Skill Reverse Engineer"
+  short_description: "Analyze and improve agent skills"
+  default_prompt: "Use $skill-reverse-engineer to analyze this SKILL.md and suggest concrete improvements."
+
+policy:
+  allow_implicit_invocation: true
