@@ -1,9 +1,9 @@
 ---
 name: install-skill
-description: 当用户说"装公司 skill X 到 ___"时, 从缓存 own-skills/external-skills 子目录复制到 user 或 project scope (扁平); external 时走 source_url 拉最新并回写 cache stub
-version: 0.1.1
+description: 当用户说"装公司 skill X 到 ___"时, 从缓存 own-skills/external-skills 子目录复制到 user 或 project scope (扁平, 自动适配 Claude Code / Codex CLI); external 时走 source_url 拉最新并回写 cache stub
+version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-05-09
+updated_at: 2026-05-12
 origin: own
 ---
 
@@ -20,9 +20,19 @@ origin: own
 
 - 缓存路径: `~/.aistore-labs/claude-skills/`
 - 缓存内子目录: `meta-skills/`, `own-skills/`, `external-skills/`
-- user 级路径 (扁平): `~/.claude/skills/`
-- project 级路径 (扁平): `<cwd>/.claude/skills/`
+- **目标路径按 runtime 自适应** — 见 `~/.aistore-labs/claude-skills/RUNTIME.md` 第 1 节查表:
+  - Claude Code: user `~/.claude/skills/` / project `<cwd>/.claude/skills/`
+  - Codex CLI: user `~/.codex/skills/` / project `<cwd>/.codex/skills/`
 - **install-skill 不装 meta-skill** — meta-skill 走 update-skills 同步, 不走 install-skill。如果用户要求装 meta-skill 名 (publish-skill / search-skills / install-skill / update-skills), 直接告诉用户用 update-skills。
+
+## 0. 运行时识别 (每次 install 都做)
+
+按 [RUNTIME.md](../../RUNTIME.md) 第 2 节识别你自己, 拿到:
+
+- `$TARGET_SKILLS_USER` — 例 `~/.claude/skills` 或 `~/.codex/skills`
+- `$TARGET_SKILLS_PROJECT` — 例 `<cwd>/.claude/skills` 或 `<cwd>/.codex/skills`
+
+默认自报身份, 别问用户。后续 "user 级 / project 级" 都代入对应变量。
 
 ## Steps
 
@@ -42,21 +52,21 @@ done
 > "缓存里没有 '<name>' (查了 own-skills/ 和 external-skills/). 要不要先 update-skills 拉最新? 或检查名字拼写?"
 
 如果用户给的 name 命中 meta-skill 名单 → 提示:
-> "<name> 是 meta-skill, 不通过 install-skill 装. 跑 update-skills 即可同步到 ~/.claude/skills/."
+> "<name> 是 meta-skill, 不通过 install-skill 装. 跑 update-skills 即可同步到 `$TARGET_SKILLS_USER` (当前 runtime 的 user 级 skill 目录)."
 
 读 `~/.aistore-labs/claude-skills/$found_category/<name>/SKILL.md` frontmatter 拿 origin / source_url.
 
 ### 2. 强制问 scope
 
-无论用户是否在请求里写了 scope, **明确二次确认**:
+无论用户是否在请求里写了 scope, **明确二次确认** (路径代入步骤 0 的实化值):
 
 ```
 装到哪里?
-① user 级 (~/.claude/skills/, 所有项目都能用)
-② 当前 project 级 (<cwd>/.claude/skills/, 仅本 project)
+① user 级 ($TARGET_SKILLS_USER, 所有项目都能用)
+② 当前 project 级 ($TARGET_SKILLS_PROJECT, 仅本 project)
 ```
 
-(如果用户已经在请求里说了 "user 级", 这一问可以快速 "你说 user 级, 确认?")
+(如果用户已经在请求里说了 "user 级", 这一问可以快速 "你说 user 级 (= `$TARGET_SKILLS_USER`), 确认?")
 
 ### 3. 检测目标冲突
 
@@ -161,7 +171,7 @@ EOF
 ### 6. 告知用户
 
 ```
-已装到 <target>/<name>/. 重启 Claude Code 或新会话即可触发该 skill.
+已装到 <target>/<name>/. 重启当前 CLI 或新会话即可触发该 skill.
 
 [若 external 触发了 cache stub refresh 自动 PR:]
 顺便: 检测到 upstream 有更新, 已自动开 PR <url> refresh cache stub.
@@ -173,7 +183,7 @@ EOF
 extra=""
 [ "<origin>" = "external" ] && extra=",\"cache_refresh\":\"<status: none|local-patch|pr-opened>\""
 
-echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"actor\":\"$(gh api user -q .login)\",\"event\":\"install\",\"skill\":\"<name>\",\"scope\":\"<user|project>\",\"origin\":\"<origin>\"$extra}" \
+echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"actor\":\"$(gh api user -q .login)\",\"event\":\"install\",\"skill\":\"<name>\",\"scope\":\"<user|project>\",\"runtime\":\"<claude-code|codex-cli>\",\"origin\":\"<origin>\"$extra}" \
   >> ~/.aistore-labs/claude-skills/.dogfood-r1.log
 ```
 
