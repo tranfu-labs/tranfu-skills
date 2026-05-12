@@ -33,7 +33,7 @@ jobs:
             exit 1
           fi
 
-          SKILL_RE='^(own|external|meta)-skills/[^/]+/SKILL\.md$'
+          SKILL_LINE_RE='^[a-z]+	(own|external|meta)-skills/[^/]+/SKILL\.md$'
 
           # 1. Collect skill file changes from the PR. Each line: "<status>\t<path>".
           #    For synchronize, only consider files changed in this push so we
@@ -42,13 +42,13 @@ jobs:
             mapfile -t changes < <(
               gh api "repos/$REPO/compare/$PUSH_BEFORE...$PUSH_AFTER" \
                 --jq '.files[]? | "\(.status)\t\(.filename)"' \
-                | grep -E "	$SKILL_RE" || true
+                | grep -E "$SKILL_LINE_RE" || true
             )
           else
             mapfile -t changes < <(
               gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
                 --jq '.[] | "\(.status)\t\(.filename)"' \
-                | grep -E "	$SKILL_RE" || true
+                | grep -E "$SKILL_LINE_RE" || true
             )
           fi
 
