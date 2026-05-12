@@ -1,4 +1,4 @@
-name: Notify Lark on new original skill
+name: Notify Lark on skill changes
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Detect new own-skills subdirectory and notify Lark
+      - name: Detect skill changes and notify Lark
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LARK_WEBHOOK_URL: ${{ secrets.LARK_WEBHOOK_URL }}
@@ -21,7 +21,10 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ACTION: ${{ github.event.action }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
         run: |
           set -euo pipefail
 
@@ -30,61 +33,156 @@ jobs:
             exit 1
           fi
 
-          # Added own-skills/<name>/SKILL.md paths in this PR
-          mapfile -t skill_files < <(
-            gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
-              --jq '.[] | select(.status == "added") | .filename' \
-              | grep -E '^own-skills/[^/]+/SKILL\.md$' || true
-          )
+          SKILL_RE='^(own|external|meta)-skills/[^/]+/SKILL\.md$'
 
-          if [ "${#skill_files[@]}" -eq 0 ]; then
-            echo "No new own-skills/*/SKILL.md added; skipping notification."
+          # 1. Collect skill file changes from the PR. Each line: "<status>\t<path>".
+          #    For synchronize, only consider files changed in this push so we
+          #    don't re-announce on every commit.
+          if [ "$ACTION" = "synchronize" ]; then
+            mapfile -t changes < <(
+              gh api "repos/$REPO/compare/$PUSH_BEFORE...$PUSH_AFTER" \
+                --jq '.files[]? | "\(.status)\t\(.filename)"' \
+                | grep -E "	$SKILL_RE" || true
+            )
+          else
+            mapfile -t changes < <(
+              gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
+                --jq '.[] | "\(.status)\t\(.filename)"' \
+                | grep -E "	$SKILL_RE" || true
+            )
+          fi
+
+          if [ "${#changes[@]}" -eq 0 ]; then
+            echo "No SKILL.md changes in scope; skipping notification."
             exit 0
           fi
 
-          # On synchronize, only notify when SKILL.md was added in the latest push,
-          # so we don't re-announce on every commit to the same PR.
-          if [ "$ACTION" = "synchronize" ]; then
-            BEFORE="${{ github.event.before }}"
-            AFTER="${{ github.event.after }}"
-            mapfile -t pushed_added < <(
-              gh api "repos/$REPO/compare/$BEFORE...$AFTER" \
-                --jq '.files[]? | select(.status == "added") | .filename' \
-                | grep -E '^own-skills/[^/]+/SKILL\.md$' || true
-            )
-            if [ "${#pushed_added[@]}" -eq 0 ]; then
-              echo "Synchronize push did not add a new SKILL.md; skipping."
-              exit 0
-            fi
-            skill_files=("${pushed_added[@]}")
+          # cap to keep the bot from spamming on bulk PRs
+          MAX=10
+          if [ "${#changes[@]}" -gt "$MAX" ]; then
+            echo "::warning::Truncating ${#changes[@]} skill changes to first $MAX"
+            changes=("${changes[@]:0:$MAX}")
           fi
 
-          for path in "${skill_files[@]}"; do
-            echo "::group::Process $path"
+          fetch_frontmatter_field() {
+            # $1 = ref, $2 = path, $3 = field
+            gh api "repos/$REPO/contents/$2?ref=$1" --jq '.content' 2>/dev/null \
+              | base64 -d 2>/dev/null \
+              | awk 'BEGIN{n=0} /^---[[:space:]]*$/{n++; next} n==1{print} n>=2{exit}' \
+              | sed -nE "s/^$3:[[:space:]]+(.*)\$/\\1/p" \
+              | head -n1 \
+              | sed -E "s/^[\"\']//; s/[\"\']\$//"
+          }
 
-            content=$(gh api "repos/$REPO/contents/$path?ref=$HEAD_SHA" \
-              --jq '.content' | base64 -d)
+          for line in "${changes[@]}"; do
+            status="${line%%	*}"
+            path="${line#*	}"
+            echo "::group::$status $path"
 
-            # Extract YAML frontmatter (between the first two `---` lines)
-            fm=$(printf '%s\n' "$content" \
-              | awk 'BEGIN{n=0} /^---[[:space:]]*$/{n++; next} n==1{print} n>=2{exit}')
+            # category from path
+            top="${path%%/*}"               # own-skills | external-skills | meta-skills
+            rest="${path#*/}"               # <name>/SKILL.md
+            skill_name="${rest%/SKILL.md}"
 
-            name=$(printf '%s\n' "$fm" | sed -nE 's/^name:[[:space:]]+(.*)$/\1/p' | head -n1)
-            description=$(printf '%s\n' "$fm" | sed -nE 's/^description:[[:space:]]+(.*)$/\1/p' | head -n1)
+            case "$top" in
+              own-skills)      category="原创";     cat_emoji="🧩" ;;
+              external-skills) category="推荐";     cat_emoji="🌐" ;;
+              meta-skills)     category="Meta";    cat_emoji="🛠"  ;;
+              *)               category="$top";    cat_emoji="📦"  ;;
+            esac
 
-            # Strip surrounding quotes if present
-            name="${name%\"}"; name="${name#\"}"; name="${name%\'}"; name="${name#\'}"
-            description="${description%\"}"; description="${description#\"}"
-            description="${description%\'}"; description="${description#\'}"
+            # event-specific header (title + Lark template color)
+            case "$status" in
+              added)
+                action_label="新增${category} Skill"
+                color="blue"
+                [ "$category" = "推荐" ] && color="green"
+                [ "$category" = "Meta" ] && color="purple"
+                ;;
+              removed)
+                action_label="删除${category} Skill"; color="red" ;;
+              modified)
+                action_label="更新${category} Skill"; color="grey" ;;
+              renamed|copied)
+                action_label="重命名${category} Skill"; color="orange" ;;
+              *)
+                action_label="${status} ${category} Skill"; color="grey" ;;
+            esac
 
-            : "${name:=${path#own-skills/}}"
-            name="${name%/SKILL.md}"
-            : "${description:=(未填 description)}"
+            # Read frontmatter from the appropriate ref.
+            # - added/modified/renamed: read from HEAD
+            # - removed: read from BASE (file no longer at HEAD)
+            if [ "$status" = "removed" ]; then
+              ref="$BASE_SHA"
+            else
+              ref="$HEAD_SHA"
+            fi
+            name=$(fetch_frontmatter_field "$ref" "$path" name      || true)
+            desc=$(fetch_frontmatter_field "$ref" "$path" description || true)
+            version=$(fetch_frontmatter_field "$ref" "$path" version || true)
+            author_fm=$(fetch_frontmatter_field "$ref" "$path" author || true)
 
-            text=$(printf '【新增原创Skill】\n提交者：@%s\n名称：%s\n描述：%s\nPR：%s' \
-              "$PR_AUTHOR" "$name" "$description" "$PR_URL")
+            : "${name:=$skill_name}"
+            : "${desc:=(未填 description)}"
 
-            payload=$(jq -n --arg text "$text" '{msg_type:"text", content:{text:$text}}')
+            # For modified: show old → new version when both exist and differ
+            version_display="$version"
+            if [ "$status" = "modified" ]; then
+              old_version=$(fetch_frontmatter_field "$BASE_SHA" "$path" version || true)
+              if [ -n "$old_version" ] && [ -n "$version" ] && [ "$old_version" != "$version" ]; then
+                version_display="$old_version → $version"
+              fi
+            fi
+
+            header_title="${cat_emoji} ${action_label} · ${name}"
+
+            payload=$(jq -n \
+              --arg header_title "$header_title" \
+              --arg color "$color" \
+              --arg pr_author "$PR_AUTHOR" \
+              --arg category "$category" \
+              --arg author_fm "$author_fm" \
+              --arg version "$version_display" \
+              --arg path "$path" \
+              --arg desc "$desc" \
+              --arg pr_url "$PR_URL" \
+              --arg pr_number "$PR_NUMBER" \
+              --arg repo "$REPO" \
+              '
+              def f(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
+
+              ("@" + $pr_author
+                + (if $author_fm != "" and $author_fm != $pr_author
+                   then "\n_(frontmatter: " + $author_fm + ")_"
+                   else "" end)) as $submitter |
+
+              ([f("提交者"; $submitter), f("类别"; $category)]
+                + (if $version != "" then [f("版本"; $version)] else [] end)
+                + [f("文件"; "`" + $path + "`")]) as $fields |
+
+              {
+                msg_type: "interactive",
+                card: {
+                  config: {wide_screen_mode: true},
+                  header: {
+                    title: {tag: "plain_text", content: $header_title},
+                    template: $color
+                  },
+                  elements: [
+                    {tag: "div", fields: $fields},
+                    {tag: "div", text: {tag: "lark_md", content: ("**描述**\n" + $desc)}},
+                    {tag: "hr"},
+                    {tag: "note", elements: [{tag: "plain_text",
+                      content: ($repo + " · PR #" + $pr_number)}]},
+                    {tag: "action", actions: [
+                      {tag: "button",
+                       text: {tag: "plain_text", content: "Open PR"},
+                       type: "primary", url: $pr_url}
+                    ]}
+                  ]
+                }
+              }
+              ')
 
             echo "Payload:"
             echo "$payload"
