@@ -1,19 +1,8 @@
-name: Notify Lark on PR activity
+name: Notify Lark on new original skill
 
 on:
   pull_request:
-    types:
-      - opened
-      - edited
-      - closed
-      - reopened
-      - synchronize
-      - ready_for_review
-      - converted_to_draft
-  pull_request_review:
-    types: [submitted, edited, dismissed]
-  pull_request_review_comment:
-    types: [created, edited, deleted]
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: read
@@ -23,185 +12,100 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Build payload and send to Lark
+      - name: Detect new own-skills subdirectory and notify Lark
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LARK_WEBHOOK_URL: ${{ secrets.LARK_WEBHOOK_URL }}
-          EVENT_NAME: ${{ github.event_name }}
-          ACTION: ${{ github.event.action }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_STATE: ${{ github.event.pull_request.state }}
-          PR_DRAFT: ${{ github.event.pull_request.draft }}
-          PR_MERGED: ${{ github.event.pull_request.merged }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          PR_BASE: ${{ github.event.pull_request.base.ref }}
-          PR_HEAD: ${{ github.event.pull_request.head.ref }}
-          PR_ADDITIONS: ${{ github.event.pull_request.additions }}
-          PR_DELETIONS: ${{ github.event.pull_request.deletions }}
-          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
-          PR_COMMITS: ${{ github.event.pull_request.commits }}
-          SENDER: ${{ github.event.sender.login }}
-          REVIEW_STATE: ${{ github.event.review.state }}
-          REVIEW_BODY: ${{ github.event.review.body }}
-          REVIEW_URL: ${{ github.event.review.html_url }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          COMMENT_PATH: ${{ github.event.comment.path }}
-          COMMENT_URL: ${{ github.event.comment.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ACTION: ${{ github.event.action }}
         run: |
           set -euo pipefail
 
           if [ -z "${LARK_WEBHOOK_URL:-}" ]; then
-            echo "::error::LARK_WEBHOOK_URL secret is not set. Add it in Settings → Secrets and variables → Actions."
+            echo "::error::LARK_WEBHOOK_URL secret is not set."
             exit 1
           fi
 
-          # --- derive event label + header color -----------------------------
-          label="$EVENT_NAME / $ACTION"
-          color="grey"
+          # Added own-skills/<name>/SKILL.md paths in this PR
+          mapfile -t skill_files < <(
+            gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
+              --jq '.[] | select(.status == "added") | .filename' \
+              | grep -E '^own-skills/[^/]+/SKILL\.md$' || true
+          )
 
-          case "$EVENT_NAME:$ACTION" in
-            pull_request:opened)              label="Opened";            color="blue" ;;
-            pull_request:reopened)            label="Reopened";          color="green" ;;
-            pull_request:synchronize)         label="New commits";       color="wathet" ;;
-            pull_request:edited)              label="Edited";            color="grey" ;;
-            pull_request:ready_for_review)    label="Ready for review";  color="turquoise" ;;
-            pull_request:converted_to_draft)  label="Marked draft";      color="grey" ;;
-            pull_request:closed)
-              if [ "$PR_MERGED" = "true" ]; then label="Merged"; color="purple"
-              else                               label="Closed"; color="red"
-              fi ;;
-            pull_request_review:submitted)
-              case "$REVIEW_STATE" in
-                approved)          label="Approved";          color="green" ;;
-                changes_requested) label="Changes requested"; color="red" ;;
-                commented)         label="Review commented";  color="yellow" ;;
-                *)                 label="Review $REVIEW_STATE"; color="grey" ;;
-              esac ;;
-            pull_request_review:edited)        label="Review edited";    color="grey" ;;
-            pull_request_review:dismissed)     label="Review dismissed"; color="grey" ;;
-            pull_request_review_comment:created) label="New review comment"; color="yellow" ;;
-            pull_request_review_comment:edited)  label="Comment edited";     color="grey" ;;
-            pull_request_review_comment:deleted) label="Comment deleted";    color="grey" ;;
-          esac
+          if [ "${#skill_files[@]}" -eq 0 ]; then
+            echo "No new own-skills/*/SKILL.md added; skipping notification."
+            exit 0
+          fi
 
-          draft_badge=""
-          if [ "$PR_DRAFT" = "true" ]; then draft_badge=" 🚧"; fi
-
-          header_title="[$REPO] PR #$PR_NUMBER · $label$draft_badge"
-
-          # Trim long review/comment bodies so the card stays readable
-          truncate() {
-            local s="$1" max="${2:-500}"
-            if [ "${#s}" -gt "$max" ]; then
-              printf '%s…' "${s:0:max}"
-            else
-              printf '%s' "$s"
+          # On synchronize, only notify when SKILL.md was added in the latest push,
+          # so we don't re-announce on every commit to the same PR.
+          if [ "$ACTION" = "synchronize" ]; then
+            BEFORE="${{ github.event.before }}"
+            AFTER="${{ github.event.after }}"
+            mapfile -t pushed_added < <(
+              gh api "repos/$REPO/compare/$BEFORE...$AFTER" \
+                --jq '.files[]? | select(.status == "added") | .filename' \
+                | grep -E '^own-skills/[^/]+/SKILL\.md$' || true
+            )
+            if [ "${#pushed_added[@]}" -eq 0 ]; then
+              echo "Synchronize push did not add a new SKILL.md; skipping."
+              exit 0
             fi
-          }
-
-          REVIEW_BODY_TRIM=$(truncate "${REVIEW_BODY:-}" 500)
-          COMMENT_BODY_TRIM=$(truncate "${COMMENT_BODY:-}" 500)
-
-          # --- build card via jq ---------------------------------------------
-          payload=$(jq -n \
-            --arg header_title "$header_title" \
-            --arg color "$color" \
-            --arg repo "$REPO" \
-            --arg pr_title "$PR_TITLE" \
-            --arg pr_url "$PR_URL" \
-            --arg pr_author "$PR_AUTHOR" \
-            --arg sender "$SENDER" \
-            --arg pr_head "$PR_HEAD" \
-            --arg pr_base "$PR_BASE" \
-            --arg pr_state "$PR_STATE" \
-            --arg pr_merged "$PR_MERGED" \
-            --arg pr_draft "$PR_DRAFT" \
-            --arg pr_add "$PR_ADDITIONS" \
-            --arg pr_del "$PR_DELETIONS" \
-            --arg pr_files "$PR_CHANGED_FILES" \
-            --arg pr_commits "$PR_COMMITS" \
-            --arg event_name "$EVENT_NAME" \
-            --arg review_state "$REVIEW_STATE" \
-            --arg review_body "$REVIEW_BODY_TRIM" \
-            --arg review_url "$REVIEW_URL" \
-            --arg comment_body "$COMMENT_BODY_TRIM" \
-            --arg comment_path "$COMMENT_PATH" \
-            --arg comment_url "$COMMENT_URL" \
-            '
-            def field(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
-            def actor: (if $pr_author == $sender then $pr_author else ($pr_author + " (by " + $sender + ")") end);
-            def quote(s): ("\n> " + (s | gsub("\n"; "\n> ")));
-
-            ($pr_state
-              + (if $pr_merged == "true" then " · merged" else "" end)
-              + (if $pr_draft  == "true" then " · draft"  else "" end)) as $state_str |
-
-            [
-              field("Author"; actor),
-              field("Branch"; ($pr_head + " → " + $pr_base)),
-              field("State"; $state_str),
-              field("Diff"; ("+" + $pr_add + " / -" + $pr_del + "  ·  " + $pr_files + " files  ·  " + $pr_commits + " commits"))
-            ] as $fields |
-
-            [
-              {tag: "div", fields: $fields},
-              {tag: "div", text: {tag: "lark_md", content: ("**" + $pr_title + "**")}}
-            ] as $base |
-
-            (if $event_name == "pull_request_review" then
-               [{tag: "hr"},
-                {tag: "div", text: {tag: "lark_md",
-                  content: ("**Review · " + $review_state + "**"
-                    + (if $review_body != "" then quote($review_body) else "" end))}}]
-             elif $event_name == "pull_request_review_comment" then
-               [{tag: "hr"},
-                {tag: "div", text: {tag: "lark_md",
-                  content: ("**Comment on** `" + $comment_path + "`"
-                    + (if $comment_body != "" then quote($comment_body) else "" end))}}]
-             else [] end) as $extra |
-
-            ([{tag: "button", text: {tag: "plain_text", content: "Open PR"}, type: "primary", url: $pr_url}]
-              + (if $event_name == "pull_request_review" and $review_url != "" then
-                   [{tag: "button", text: {tag: "plain_text", content: "Open review"}, type: "default", url: $review_url}]
-                 elif $event_name == "pull_request_review_comment" and $comment_url != "" then
-                   [{tag: "button", text: {tag: "plain_text", content: "Open comment"}, type: "default", url: $comment_url}]
-                 else [] end)) as $buttons |
-
-            {
-              msg_type: "interactive",
-              card: {
-                config: {wide_screen_mode: true},
-                header: {
-                  title: {tag: "plain_text", content: $header_title},
-                  template: $color
-                },
-                elements: ($base + $extra + [{tag: "action", actions: $buttons}])
-              }
-            }
-            ')
-
-          echo "Sending payload:"
-          echo "$payload"
-
-          response=$(curl -sS -w "\n%{http_code}" -X POST \
-            -H "Content-Type: application/json" \
-            -d "$payload" \
-            "$LARK_WEBHOOK_URL")
-
-          body=$(echo "$response" | sed '$d')
-          code=$(echo "$response" | tail -n1)
-
-          echo "HTTP $code"
-          echo "$body"
-
-          if [ "$code" != "200" ]; then
-            echo "::error::Lark webhook returned HTTP $code"
-            exit 1
+            skill_files=("${pushed_added[@]}")
           fi
 
-          if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
-            echo "::error::Lark API error: $body"
-            exit 1
-          fi
+          for path in "${skill_files[@]}"; do
+            echo "::group::Process $path"
+
+            content=$(gh api "repos/$REPO/contents/$path?ref=$HEAD_SHA" \
+              --jq '.content' | base64 -d)
+
+            # Extract YAML frontmatter (between the first two `---` lines)
+            fm=$(printf '%s\n' "$content" \
+              | awk 'BEGIN{n=0} /^---[[:space:]]*$/{n++; next} n==1{print} n>=2{exit}')
+
+            name=$(printf '%s\n' "$fm" | sed -nE 's/^name:[[:space:]]+(.*)$/\1/p' | head -n1)
+            description=$(printf '%s\n' "$fm" | sed -nE 's/^description:[[:space:]]+(.*)$/\1/p' | head -n1)
+
+            # Strip surrounding quotes if present
+            name="${name%\"}"; name="${name#\"}"; name="${name%\'}"; name="${name#\'}"
+            description="${description%\"}"; description="${description#\"}"
+            description="${description%\'}"; description="${description#\'}"
+
+            : "${name:=${path#own-skills/}}"
+            name="${name%/SKILL.md}"
+            : "${description:=(未填 description)}"
+
+            text=$(printf '【新增原创Skill】\n提交者：@%s\n名称：%s\n描述：%s\nPR：%s' \
+              "$PR_AUTHOR" "$name" "$description" "$PR_URL")
+
+            payload=$(jq -n --arg text "$text" '{msg_type:"text", content:{text:$text}}')
+
+            echo "Payload:"
+            echo "$payload"
+
+            response=$(curl -sS -w "\n%{http_code}" -X POST \
+              -H "Content-Type: application/json" \
+              -d "$payload" "$LARK_WEBHOOK_URL")
+            body=$(echo "$response" | sed '$d')
+            code=$(echo "$response" | tail -n1)
+
+            echo "HTTP $code"
+            echo "$body"
+
+            if [ "$code" != "200" ]; then
+              echo "::error::Lark webhook returned HTTP $code"
+              exit 1
+            fi
+            if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
+              echo "::error::Lark API error: $body"
+              exit 1
+            fi
+
+            echo "::endgroup::"
+          done
