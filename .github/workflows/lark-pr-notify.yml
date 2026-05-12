@@ -1,0 +1,116 @@
+name: Notify Lark on PR activity
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - closed
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build payload and send to Lark
+        env:
+          LARK_WEBHOOK_URL: ${{ secrets.LARK_WEBHOOK_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_STATE: ${{ github.event.pull_request.state }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          PR_ADDITIONS: ${{ github.event.pull_request.additions }}
+          PR_DELETIONS: ${{ github.event.pull_request.deletions }}
+          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+          PR_COMMITS: ${{ github.event.pull_request.commits }}
+          SENDER: ${{ github.event.sender.login }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+          REVIEW_BODY: ${{ github.event.review.body }}
+          REVIEW_URL: ${{ github.event.review.html_url }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_PATH: ${{ github.event.comment.path }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${LARK_WEBHOOK_URL:-}" ]; then
+            echo "::error::LARK_WEBHOOK_URL secret is not set. Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+          title="[$REPO] PR #$PR_NUMBER $EVENT_NAME/$ACTION"
+
+          lines=()
+          lines+=("Repo: $REPO")
+          lines+=("Event: $EVENT_NAME / $ACTION")
+          lines+=("PR #$PR_NUMBER: $PR_TITLE")
+          lines+=("Author: $PR_AUTHOR  |  Triggered by: $SENDER")
+          lines+=("Branch: $PR_HEAD → $PR_BASE")
+          lines+=("State: $PR_STATE  |  Draft: $PR_DRAFT  |  Merged: $PR_MERGED")
+          lines+=("Diff: +$PR_ADDITIONS / -$PR_DELETIONS  |  Files: $PR_CHANGED_FILES  |  Commits: $PR_COMMITS")
+          lines+=("URL: $PR_URL")
+
+          if [ "$EVENT_NAME" = "pull_request_review" ]; then
+            lines+=("---")
+            lines+=("Review state: $REVIEW_STATE")
+            lines+=("Review URL: $REVIEW_URL")
+            if [ -n "${REVIEW_BODY:-}" ]; then
+              lines+=("Review body: $REVIEW_BODY")
+            fi
+          fi
+
+          if [ "$EVENT_NAME" = "pull_request_review_comment" ]; then
+            lines+=("---")
+            lines+=("Comment on: $COMMENT_PATH")
+            lines+=("Comment URL: $COMMENT_URL")
+            if [ -n "${COMMENT_BODY:-}" ]; then
+              lines+=("Comment: $COMMENT_BODY")
+            fi
+          fi
+
+          text=$(printf "%s\n" "${lines[@]}")
+
+          payload=$(jq -n --arg text "$text" '{msg_type:"text", content:{text:$text}}')
+
+          echo "Sending payload:"
+          echo "$payload"
+
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$LARK_WEBHOOK_URL")
+
+          body=$(echo "$response" | sed '$d')
+          code=$(echo "$response" | tail -n1)
+
+          echo "HTTP $code"
+          echo "$body"
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Lark webhook returned HTTP $code"
+            exit 1
+          fi
+
+          if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
+            echo "::error::Lark API error: $body"
+            exit 1
+          fi
