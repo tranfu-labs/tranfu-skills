@@ -12,6 +12,11 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout (for .github/collaborators.json)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Detect skill changes and notify Lark
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,6 +37,20 @@ jobs:
             echo "::error::LARK_WEBHOOK_URL secret is not set."
             exit 1
           fi
+
+          # Resolve PR author -> 昵称 via .github/collaborators.json (flat login→昵称 map).
+          # Falls back to "@<login>" when no mapping exists or the file is missing.
+          COLLAB_FILE=".github/collaborators.json"
+          author_nick=""
+          if [ -f "$COLLAB_FILE" ]; then
+            author_nick=$(jq -r --arg k "$PR_AUTHOR" '.[$k] // empty' "$COLLAB_FILE" 2>/dev/null || true)
+          fi
+          if [ -n "$author_nick" ]; then
+            DISPLAY_AUTHOR="$author_nick"
+          else
+            DISPLAY_AUTHOR="@$PR_AUTHOR"
+          fi
+          echo "PR author: $PR_AUTHOR -> display: $DISPLAY_AUTHOR"
 
           SKILL_LINE_RE='^[a-z]+	(own|external|meta)-skills/[^/]+/SKILL\.md$'
 
@@ -140,6 +159,7 @@ jobs:
               --arg header_title "$header_title" \
               --arg color "$color" \
               --arg pr_author "$PR_AUTHOR" \
+              --arg display_author "$DISPLAY_AUTHOR" \
               --arg category "$category" \
               --arg author_fm "$author_fm" \
               --arg version "$version_display" \
@@ -151,8 +171,8 @@ jobs:
               '
               def f(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
 
-              ("@" + $pr_author
-                + (if $author_fm != "" and $author_fm != $pr_author
+              ($display_author
+                + (if $author_fm != "" and $author_fm != $pr_author and $author_fm != $display_author
                    then "\n_(frontmatter: " + $author_fm + ")_"
                    else "" end)) as $submitter |
 
