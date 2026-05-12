@@ -42,18 +42,24 @@ reason_kind: {enum}
 - [ ] origin: own (本 PR 不应出现 source_url)
 - [ ] README.md 存在且含 4 段: 介绍 / 什么时候用 / 触发示例 ≥3 / 期望输出
 - [ ] SKILL.md 含 When to use / Steps / What NOT to do
+- [ ] §同类 Skill 对比 section 已写入 SKILL.md (When to use 段之后)
+- [ ] §同类对比: 公司库内/外部各 ≤3 条 (0 条则"暂无"), 链接可点, 差异化句具体不空话
+- [ ] §同类对比: 本 skill 独特价值 ≤3 句, 每句 ≤30 字
 - [ ] 触发语写法是用户视角 (不是 "调用此 skill 当...", 而是 "用户说 ...")
 - [ ] 本地 dogfood: 至少跑过 1 次完整流程
 - [ ] 不在子目录嵌套其他 skill, 不引入需要额外手动安装的二进制
 {variant: external}
 - [ ] SKILL.md 是薄指针, body 含 "完整内容见 source_url"
+- [ ] §同类 Skill 对比 section 已 append 到 stub body 末尾
+- [ ] §同类对比: 公司库内/外部各 ≤3 条 (0 条则"暂无"), 链接可点, 差异化句具体不空话
+- [ ] §同类对比: 本 skill 独特价值 ≤3 句, 每句 ≤30 字
 - [ ] frontmatter origin: external + source_url 有效
 - [ ] case 文件 frontmatter 三必填齐: recommender / recommended_at / reason_kind
 - [ ] case body 不空话, 有具体场景描述
 - [ ] 图 (如有) ≤ 1MB
 - [ ] source_url 可访问, 指向真实 skill (不是 vaporware)
 {variant: add-case}
-- [ ] 不改 external-skills/{name}/SKILL.md (本 PR 只动 cases/)
+- [ ] 不改 external-skills/{name}/SKILL.md (本 PR 只动 cases/, 不触发 §1.5)
 - [ ] case 文件 frontmatter 三必填齐
 - [ ] 图 (如有) ≤ 1MB
 
