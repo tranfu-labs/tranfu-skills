@@ -6,35 +6,51 @@
 
 复制下面这段提示词，粘贴给 Claude Code（任意目录开会话即可）：
 
-> 请帮我安装 aistore-labs 公司 skill 库到本地。
-> 第一步：把 `git@github.com:aistore-labs/claude-skills.git` clone 到 `~/.aistore-labs/claude-skills`（已存在则 `git pull --ff-only`）。
-> 第二步：阅读 `~/.aistore-labs/claude-skills/INSTALL.md`，按其中步骤执行（cp 4 个 meta-skill + 验证 + 通知我）。
+```text
+请帮我安装 aistore-labs 公司 skill 库到本地。
+第一步：把 git@github.com:aistore-labs/claude-skills.git clone 到 ~/.aistore-labs/claude-skills（已存在则 git pull --ff-only）。
+第二步：阅读 ~/.aistore-labs/claude-skills/INSTALL.md，按其中步骤执行（cp 4 个 meta-skill + 验证 + 通知我）。
+```
 
 Claude Code 会自己跑 git clone + cp + 自检，结束后告诉你重启即可。具体细节看 [INSTALL.md](./INSTALL.md)。
 
 ## 4 个使用场景
 
 ### 1. 我想发布本地 skill 到公司库
-跟 Claude 说：**"把本地 X skill 发到公司库"**
+
+```text
+把本地 X skill 发到公司库
+```
 
 → 触发 `publish-skill`：自动检测/补全 frontmatter、复制到缓存仓库、`gh pr create`、回填本地 `published_*` 标记。
 
 ### 2. 我想用公司 skill
-跟 Claude 说：**"搜公司 skill 关于 Y 的"**
+
+```text
+搜公司 skill 关于 Y 的
+```
 
 → 触发 `search-skills` 模糊匹配 description+name 返回 top N。
 
-然后说：**"装第 N 个到 user 级（或 当前 project）"**
+```text
+装第 N 个到 user 级（或 当前 project）
+```
 
 → 触发 `install-skill`：强制问 scope，复制到目标位置。
 
 ### 3. 我想推荐外部 skill
-跟 Claude 说：**"推荐这个外部 skill 到公司库"** + 提供 URL
+
+```text
+推荐这个外部 skill 到公司库：<URL>
+```
 
 → 触发 `publish-skill --origin external`：仓库里仅存薄指针 (frontmatter + source_url)，install 时 `install-skill` 才走 source_url 拉最新内容并回写本仓库 stub 元数据。
 
 ### 4. 我想拿最新
-跟 Claude 说：**"更新公司 skill 缓存"**
+
+```text
+更新公司 skill 缓存
+```
 
 → 触发 `update-skills`：`git pull --ff-only` + 自动升级 4 个 meta-skill 副本。
 
@@ -78,7 +94,13 @@ external-skills/              外部推荐薄指针 (frontmatter origin: externa
 
 ## 怎么拉更新
 
-跟 Claude Code 说: **"更新公司 skill 缓存"** → 触发 `update-skills`。它会 `git pull` 本仓库 + 自动覆盖 `~/.claude/skills/` 下 4 个 meta-skill (有 bump 时), 并报告普通 skill 的新增/更新由用户决定要不要 install。
+复制下面这段提示词，粘贴给 Claude Code：
+
+```text
+更新公司 skill 缓存
+```
+
+→ 触发 `update-skills`。它会 `git pull` 本仓库 + 自动覆盖 `~/.claude/skills/` 下 4 个 meta-skill (有 bump 时), 并报告普通 skill 的新增/更新由用户决定要不要 install。
 
 最近改了什么 → 看 [CHANGELOG.md](./CHANGELOG.md)。
 
@@ -86,7 +108,9 @@ external-skills/              外部推荐薄指针 (frontmatter origin: externa
 
 复制下面这段提示词, 粘贴给 Claude Code:
 
-> 请帮我完整卸载 aistore-labs 公司 skill 库。阅读 `~/.aistore-labs/claude-skills/UNINSTALL.md`, 按其中步骤执行 (二次确认后再删 4 个 meta-skill + 缓存目录)。
+```text
+请帮我完整卸载 aistore-labs 公司 skill 库。阅读 ~/.aistore-labs/claude-skills/UNINSTALL.md, 按其中步骤执行（二次确认后再删 4 个 meta-skill + 缓存目录）。
+```
 
 具体细节看 [UNINSTALL.md](./UNINSTALL.md)。
 
