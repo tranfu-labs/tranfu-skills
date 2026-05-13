@@ -21,6 +21,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LARK_WEBHOOK_URL: ${{ secrets.LARK_WEBHOOK_URL }}
+          # JSON map: { "<github-login>": "ou_<lark_open_id>", ... }
+          # 缺省 / 缺 key → 不 @ (仅纯文字 fallback). 维护方式: gh secret set LARK_USER_IDS_JSON
+          LARK_USER_IDS_JSON: ${{ secrets.LARK_USER_IDS_JSON }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_URL: ${{ github.event.pull_request.html_url }}
@@ -61,20 +64,19 @@ jobs:
             -e 's/^([[:space:]]*[-*+][[:space:]]+)\[ \]/\1☐/g' \
             -e 's/^([[:space:]]*[-*+][[:space:]]+)\[[xX]\]/\1☑/g')
 
-          # Resolve PR author -> {nick, lark_id} via .github/collaborators.json.
-          # Schema: login → {"nick": "...", "lark_id": "ou_..."} (lark_id 可缺省).
-          # 兼容旧的 login → "昵称" 字符串形式 (jq fallback 取 .[$k] 当作 nick).
-          # Fallback to "@<login>" when no mapping exists.
+          # Resolve PR author 昵称 (file, PR-friendly) + lark_id (Secret, 不进 git).
+          # - 昵称: .github/collaborators.json 里的 login → "昵称" 字符串映射
+          # - lark_id: Secret LARK_USER_IDS_JSON, JSON map { "<login>": "ou_xxx", ... }
+          # 任一缺失都安全降级: 缺 nick → "@login"; 缺 lark_id → 不 @ (纯文字).
           COLLAB_FILE=".github/collaborators.json"
           author_nick=""
           author_lark_id=""
           if [ -f "$COLLAB_FILE" ]; then
-            author_nick=$(jq -r --arg k "$PR_AUTHOR" \
-              '(.[$k] | if type=="object" then .nick elif type=="string" then . else null end) // empty' \
-              "$COLLAB_FILE" 2>/dev/null || true)
-            author_lark_id=$(jq -r --arg k "$PR_AUTHOR" \
-              '(.[$k] | if type=="object" then (.lark_id // "") else "" end) // empty' \
-              "$COLLAB_FILE" 2>/dev/null || true)
+            author_nick=$(jq -r --arg k "$PR_AUTHOR" '.[$k] // empty' "$COLLAB_FILE" 2>/dev/null || true)
+          fi
+          if [ -n "${LARK_USER_IDS_JSON:-}" ]; then
+            author_lark_id=$(printf '%s' "$LARK_USER_IDS_JSON" \
+              | jq -r --arg k "$PR_AUTHOR" '.[$k] // empty' 2>/dev/null || true)
           fi
           if [ -n "$author_nick" ]; then
             DISPLAY_AUTHOR="$author_nick"
