@@ -54,19 +54,34 @@ jobs:
             -e 's/^([[:space:]]*[-*+][[:space:]]+)\[ \]/\1☐/g' \
             -e 's/^([[:space:]]*[-*+][[:space:]]+)\[[xX]\]/\1☑/g')
 
-          # Resolve PR author -> 昵称 via .github/collaborators.json (flat login→昵称 map).
-          # Falls back to "@<login>" when no mapping exists or the file is missing.
+          # Resolve PR author -> {nick, lark_id} via .github/collaborators.json.
+          # Schema: login → {"nick": "...", "lark_id": "ou_..."} (lark_id 可缺省).
+          # 兼容旧的 login → "昵称" 字符串形式 (jq fallback 取 .[$k] 当作 nick).
+          # Fallback to "@<login>" when no mapping exists.
           COLLAB_FILE=".github/collaborators.json"
           author_nick=""
+          author_lark_id=""
           if [ -f "$COLLAB_FILE" ]; then
-            author_nick=$(jq -r --arg k "$PR_AUTHOR" '.[$k] // empty' "$COLLAB_FILE" 2>/dev/null || true)
+            author_nick=$(jq -r --arg k "$PR_AUTHOR" \
+              '(.[$k] | if type=="object" then .nick elif type=="string" then . else null end) // empty' \
+              "$COLLAB_FILE" 2>/dev/null || true)
+            author_lark_id=$(jq -r --arg k "$PR_AUTHOR" \
+              '(.[$k] | if type=="object" then (.lark_id // "") else "" end) // empty' \
+              "$COLLAB_FILE" 2>/dev/null || true)
           fi
           if [ -n "$author_nick" ]; then
             DISPLAY_AUTHOR="$author_nick"
           else
             DISPLAY_AUTHOR="@$PR_AUTHOR"
           fi
-          echo "PR author: $PR_AUTHOR -> display: $DISPLAY_AUTHOR"
+
+          # Lark @ mention: 仅在 PR 合并事件且作者填了 lark_id 时使用.
+          # 语法 (Card v2 markdown): <at id=ou_xxxx></at>. 没填 id 就退回纯文字 DISPLAY_AUTHOR.
+          AT_MENTION=""
+          if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ] && [ -n "$author_lark_id" ]; then
+            AT_MENTION="<at id=${author_lark_id}></at>"
+          fi
+          echo "PR author: $PR_AUTHOR -> display: $DISPLAY_AUTHOR (lark_id: ${author_lark_id:-none}, at: ${AT_MENTION:-none})"
 
           SKILL_LINE_RE='^[a-z]+	(own|external|meta)-skills/[^/]+/SKILL\.md$'
 
@@ -133,6 +148,7 @@ jobs:
               --arg header_title "$other_header_title" \
               --arg color "$other_color" \
               --arg display_author "$DISPLAY_AUTHOR" \
+              --arg at_mention "$AT_MENTION" \
               --arg file_count "$other_count" \
               --arg preview "$preview" \
               --arg pr_title "$PR_TITLE" \
@@ -144,6 +160,26 @@ jobs:
               def col(content): {tag: "column", width: "weighted", weight: 1,
                                  elements: [{tag: "markdown", content: content}]};
 
+              ((if $at_mention != ""
+                then [{tag: "markdown", content: ($at_mention + " 已合并 🎉")}]
+                else [] end)
+               + [
+                {tag: "column_set", columns: [
+                  col("**提交者**\n" + $display_author),
+                  col("**类别**\n其它"),
+                  col("**文件数**\n" + $file_count + " 个")
+                ]},
+                {tag: "markdown", content: ("**变更文件 (≤5)**\n" + $preview)},
+                {tag: "markdown", content:
+                  ("**PR 描述**\n"
+                   + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))},
+                {tag: "hr"},
+                {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
+                {tag: "button",
+                 text: {tag: "plain_text", content: "Open PR"},
+                 type: "primary", width: "fill", url: $pr_url}
+              ]) as $elements |
+
               {
                 msg_type: "interactive",
                 card: {
@@ -152,24 +188,7 @@ jobs:
                     title: {tag: "plain_text", content: $header_title},
                     template: $color
                   },
-                  body: {
-                    elements: [
-                      {tag: "column_set", columns: [
-                        col("**提交者**\n" + $display_author),
-                        col("**类别**\n其它"),
-                        col("**文件数**\n" + $file_count + " 个")
-                      ]},
-                      {tag: "markdown", content: ("**变更文件 (≤5)**\n" + $preview)},
-                      {tag: "markdown", content:
-                        ("**PR 描述**\n"
-                         + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))},
-                      {tag: "hr"},
-                      {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
-                      {tag: "button",
-                       text: {tag: "plain_text", content: "Open PR"},
-                       type: "primary", width: "fill", url: $pr_url}
-                    ]
-                  }
+                  body: {elements: $elements}
                 }
               }
               ')
@@ -300,6 +319,7 @@ jobs:
               --arg color "$color" \
               --arg pr_author "$PR_AUTHOR" \
               --arg display_author "$DISPLAY_AUTHOR" \
+              --arg at_mention "$AT_MENTION" \
               --arg category "$category" \
               --arg author_fm "$author_fm" \
               --arg version "$version_display" \
@@ -324,6 +344,26 @@ jobs:
                 + (if $version != "" then [col("**版本**\n" + $version)] else [] end)
               ) as $cols |
 
+              ((if $at_mention != ""
+                then [{tag: "markdown", content: ($at_mention + " 已合并 🎉")}]
+                else [] end)
+               + [
+                {tag: "column_set", columns: $cols},
+                {tag: "markdown", content: ("**文件**\n`" + $path + "`")},
+                (if $unmapped == "1"
+                 then {tag: "markdown", content:
+                   ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
+                    + "**标题**: " + $pr_title + "\n\n"
+                    + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}
+                 else {tag: "markdown", content: ("**描述**\n" + $desc)}
+                 end),
+                {tag: "hr"},
+                {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
+                {tag: "button",
+                 text: {tag: "plain_text", content: "Open PR"},
+                 type: "primary", width: "fill", url: $pr_url}
+              ]) as $elements |
+
               {
                 msg_type: "interactive",
                 card: {
@@ -332,24 +372,7 @@ jobs:
                     title: {tag: "plain_text", content: $header_title},
                     template: $color
                   },
-                  body: {
-                    elements: [
-                      {tag: "column_set", columns: $cols},
-                      {tag: "markdown", content: ("**文件**\n`" + $path + "`")},
-                      (if $unmapped == "1"
-                       then {tag: "markdown", content:
-                         ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
-                          + "**标题**: " + $pr_title + "\n\n"
-                          + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}
-                       else {tag: "markdown", content: ("**描述**\n" + $desc)}
-                       end),
-                      {tag: "hr"},
-                      {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
-                      {tag: "button",
-                       text: {tag: "plain_text", content: "Open PR"},
-                       type: "primary", width: "fill", url: $pr_url}
-                    ]
-                  }
+                  body: {elements: $elements}
                 }
               }
               ')
