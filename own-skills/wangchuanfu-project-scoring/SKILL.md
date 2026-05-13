@@ -34,9 +34,9 @@ Use this skill when the user asks to:
 - AI startup idea validator agents — 评估创业想法的市场、竞争和 SWOT; **本 skill 区别**: 先做立项访谈, 信息不足时主动追问, 不对两句话想法直接评分。
 
 ### 本 skill 独特价值
+- 先访谈, 再评分。
 - 内部立项有专用权重。
-- 低信息输入先追问。
-- 输出 7 天验证实验。
+- 输出唯一下一步和 7 天验证。
 
 ## 使用技巧
 
@@ -44,14 +44,14 @@ Use this skill when the user asks to:
 > 帮助阅读者纵向上手 — tacit knowledge 在此. 横向同类对比见上方 §同类 Skill 对比.
 
 ### 材料方案
-- 先做成 skill, 不做复杂网页。
-- 权重按项目类型切换。
+- Skill-first, 网页只做 demo。
+- 按项目类型切换权重。
 - 缺数据降置信度, 不判差。
 
 ### 推荐用法
-- 先给项目背景和目标用户。
-- 信息不足时接受 3-5 个追问。
-- 内部立项请声明 projectType。
+- 先给用户、场景、替代方案。
+- 允许它先问 3-5 个问题。
+- 内部立项注明 projectType。
 
 ### 已知限制
 - 不替代正式投委会。
