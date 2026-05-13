@@ -47,6 +47,13 @@ jobs:
             exit 0
           fi
 
+          # Feishu Card v2 markdown 支持 headers / tables / lists / code blocks,
+          # 但仍不支持 task lists ([ ]/[x]). 转成 unicode (☐/☑) 让卡片可读.
+          # 用一次, 后面 per-file / 其它两张卡都用 $pr_body_normalized.
+          pr_body_normalized=$(printf '%s' "$PR_BODY" | sed -E \
+            -e 's/^([[:space:]]*[-*+][[:space:]]+)\[ \]/\1☐/g' \
+            -e 's/^([[:space:]]*[-*+][[:space:]]+)\[[xX]\]/\1☑/g')
+
           # Resolve PR author -> 昵称 via .github/collaborators.json (flat login→昵称 map).
           # Falls back to "@<login>" when no mapping exists or the file is missing.
           COLLAB_FILE=".github/collaborators.json"
@@ -123,10 +130,6 @@ jobs:
             fi
             other_header_title="📦 ${other_action_label} · ${PR_TITLE}"
 
-            # Feishu markdown element 不渲染 ATX headers (# / ## / ###),
-            # 但支持 **bold**. 把 headers 转成粗体, 其余 markdown 原样.
-            pr_body_normalized=$(printf '%s' "$PR_BODY" | sed -E 's/^[[:space:]]*#{1,6}[[:space:]]+(.+)$/**\1**/')
-
             other_payload=$(jq -n \
               --arg header_title "$other_header_title" \
               --arg color "$other_color" \
@@ -139,36 +142,36 @@ jobs:
               --arg pr_number "$PR_NUMBER" \
               --arg repo "$REPO" \
               '
-              def f(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
+              def col(content): {tag: "column", width: "weighted", weight: 1,
+                                 elements: [{tag: "markdown", content: content}]};
 
               {
                 msg_type: "interactive",
                 card: {
-                  config: {wide_screen_mode: true},
+                  schema: "2.0",
                   header: {
                     title: {tag: "plain_text", content: $header_title},
                     template: $color
                   },
-                  elements: [
-                    {tag: "div", fields: [
-                      f("提交者"; $display_author),
-                      f("类别"; "其它"),
-                      f("文件数"; ($file_count + " 个"))
-                    ]},
-                    {tag: "div", text: {tag: "lark_md", content: "**变更文件 (≤5)**"}},
-                    {tag: "markdown", content: $preview},
-                    {tag: "div", text: {tag: "lark_md", content: "**PR 描述**"}},
-                    {tag: "markdown", content:
-                      (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end)},
-                    {tag: "hr"},
-                    {tag: "note", elements: [{tag: "plain_text",
-                      content: ($repo + " · PR #" + $pr_number)}]},
-                    {tag: "action", actions: [
+                  body: {
+                    elements: [
+                      {tag: "column_set", columns: [
+                        col("**提交者**\n" + $display_author),
+                        col("**类别**\n其它"),
+                        col("**文件数**\n" + $file_count + " 个")
+                      ]},
+                      {tag: "markdown", content: ("**变更文件 (≤5)**\n" + $preview)},
+                      {tag: "markdown", content:
+                        ("**PR 描述**\n"
+                         + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))},
+                      {tag: "hr"},
+                      {tag: "note", content: [{tag: "plain_text",
+                        content: ($repo + " · PR #" + $pr_number)}]},
                       {tag: "button",
                        text: {tag: "plain_text", content: "Open PR"},
-                       type: "primary", url: $pr_url}
-                    ]}
-                  ]
+                       type: "primary", width: "fill", url: $pr_url}
+                    ]
+                  }
                 }
               }
               ')
@@ -309,45 +312,47 @@ jobs:
               --arg repo "$REPO" \
               --arg unmapped "$unmapped_author" \
               --arg pr_title "$PR_TITLE" \
-              --arg pr_body "$PR_BODY" \
+              --arg pr_body "$pr_body_normalized" \
               '
-              def f(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
+              def col(content): {tag: "column", width: "weighted", weight: 1,
+                                 elements: [{tag: "markdown", content: content}]};
 
               ($display_author
                 + (if $author_fm != "" and $author_fm != $pr_author and $author_fm != $display_author
                    then "\n_(frontmatter: " + $author_fm + ")_"
                    else "" end)) as $submitter |
 
-              ([f("提交者"; $submitter), f("类别"; $category)]
-                + (if $version != "" then [f("版本"; $version)] else [] end)
-                + [f("文件"; "`" + $path + "`")]) as $fields |
+              ([col("**提交者**\n" + $submitter), col("**类别**\n" + $category)]
+                + (if $version != "" then [col("**版本**\n" + $version)] else [] end)
+              ) as $cols |
 
               {
                 msg_type: "interactive",
                 card: {
-                  config: {wide_screen_mode: true},
+                  schema: "2.0",
                   header: {
                     title: {tag: "plain_text", content: $header_title},
                     template: $color
                   },
-                  elements: [
-                    {tag: "div", fields: $fields},
-                    (if $unmapped == "1"
-                     then {tag: "div", text: {tag: "lark_md", content:
-                       ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
-                        + "**标题**: " + $pr_title + "\n\n"
-                        + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}}
-                     else {tag: "div", text: {tag: "lark_md", content: ("**描述**\n" + $desc)}}
-                     end),
-                    {tag: "hr"},
-                    {tag: "note", elements: [{tag: "plain_text",
-                      content: ($repo + " · PR #" + $pr_number)}]},
-                    {tag: "action", actions: [
+                  body: {
+                    elements: [
+                      {tag: "column_set", columns: $cols},
+                      {tag: "markdown", content: ("**文件**\n`" + $path + "`")},
+                      (if $unmapped == "1"
+                       then {tag: "markdown", content:
+                         ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
+                          + "**标题**: " + $pr_title + "\n\n"
+                          + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}
+                       else {tag: "markdown", content: ("**描述**\n" + $desc)}
+                       end),
+                      {tag: "hr"},
+                      {tag: "note", content: [{tag: "plain_text",
+                        content: ($repo + " · PR #" + $pr_number)}]},
                       {tag: "button",
                        text: {tag: "plain_text", content: "Open PR"},
-                       type: "primary", url: $pr_url}
-                    ]}
-                  ]
+                       type: "primary", width: "fill", url: $pr_url}
+                    ]
+                  }
                 }
               }
               ')
