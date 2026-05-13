@@ -1,8 +1,8 @@
-# Tranfu Project Scoring Framework
+# Project Scoring Framework
 
 ## Positioning
 
-The Tranfu Project Scoring framework evaluates whether an AI workflow project deserves current investment in validation, demo development, or co-creation. It does not predict guaranteed success.
+The Project Scoring framework evaluates whether an AI workflow project deserves current investment in validation, demo development, or co-creation. It does not predict guaranteed success.
 
 ## Scoring Dimensions
 

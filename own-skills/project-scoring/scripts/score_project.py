@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local pre-scorer for Tranfu project ideas.
+"""Local pre-scorer for project ideas.
 
 Reads JSON from stdin or a file path argument. By default it returns
 clarification questions for thin inputs and a conservative JSON pre-score for

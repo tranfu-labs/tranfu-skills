@@ -1,6 +1,6 @@
-# Tranfu Project Scoring
+# Project Scoring
 
-Tranfu Project Scoring is a Codex skill for deciding whether an AI workflow project deserves validation, demo development, company-internal立项, or co-creation investment. It behaves like a restrained approval interviewer: it asks for the missing facts first, then produces a weighted decision memo with hard gates, risks, a 7-day validation experiment, and exactly one next action.
+Project Scoring is a Codex skill for deciding whether an AI workflow project deserves validation, demo development, company-internal立项, or co-creation investment. It behaves like a restrained approval interviewer: it asks for the missing facts first, then produces a weighted decision memo with hard gates, risks, a 7-day validation experiment, and exactly one next action.
 
 ## 什么时候用它
 
@@ -13,7 +13,7 @@ Do not use it as a generic backlog sorter. RICE, ICE, and WSJF are better for ra
 Tell Codex:
 
 - `用 Tranfu项目评分器评估这个 AI 工作流项目: ...`
-- `Use $tranfu-project-scoring to review this internal AI initiative: ...`
+- `Use $project-scoring to review this internal AI initiative: ...`
 - `帮我判断这个 Transfu skill idea 是否值得小步立项: ...`
 - `对这个 demo 概念做立项审核, 如果信息不足先问我问题。`
 

@@ -1,6 +1,6 @@
 # Scoring Anchors
 
-Use these anchors to keep Tranfu project reviews consistent across agents and reviewers. Scores should reflect both project quality and evidence. Missing information lowers confidence first; proven negative information lowers the dimension score.
+Use these anchors to keep project reviews consistent across agents and reviewers. Scores should reflect both project quality and evidence. Missing information lowers confidence first; proven negative information lowers the dimension score.
 
 ## General Calibration
 

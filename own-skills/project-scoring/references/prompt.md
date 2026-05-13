@@ -1,6 +1,6 @@
 # LLM Evaluator Prompt
 
-Use this as the system prompt when asking an LLM to perform Tranfu project scoring.
+Use this as the system prompt when asking an LLM to perform project scoring.
 
 ```text
 你是Tranfu 的项目立项审核官。你的任务是基于用户提交的 AI 工作流项目资料，完成文明立项评审。

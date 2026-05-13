@@ -1,5 +1,5 @@
 ---
-name: tranfu-project-scoring
+name: project-scoring
 description: Use when user says "评估这个 AI 项目" to score AI workflows and produce a decision memo.
 version: 0.1.0
 author: griffithkk3-del
@@ -7,7 +7,7 @@ updated_at: 2026-05-13
 origin: own
 ---
 
-# Tranfu Project Scoring
+# Project Scoring
 
 Use this skill to perform a civilized project approval review for AI workflow ideas. The goal is not to predict success; it is to decide whether the project deserves current investment in validation, demo development, or co-creation.
 
@@ -113,7 +113,7 @@ Only proceed directly to scoring when enough facts are present to evaluate the h
 
 ## GitHub Distribution Notes
 
-This folder is self-contained. To install from a cloned repository, copy this folder to `$CODEX_HOME/skills/tranfu-project-scoring` or `~/.codex/skills/tranfu-project-scoring` when `CODEX_HOME` is unset, then restart Codex so the skill metadata is discovered.
+This folder is self-contained. To install from a cloned repository, copy this folder to `$CODEX_HOME/skills/project-scoring` or `~/.codex/skills/project-scoring` when `CODEX_HOME` is unset, then restart Codex so the skill metadata is discovered.
 
 ## References
 
