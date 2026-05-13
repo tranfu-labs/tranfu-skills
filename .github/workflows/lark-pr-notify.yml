@@ -151,10 +151,11 @@ jobs:
                       f("类别"; "其它"),
                       f("文件数"; ($file_count + " 个"))
                     ]},
-                    {tag: "div", text: {tag: "lark_md", content: ("**变更文件 (≤5)**\n" + $preview)}},
-                    {tag: "div", text: {tag: "lark_md", content:
-                      ("**PR 描述**\n"
-                       + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}},
+                    {tag: "div", text: {tag: "lark_md", content: "**变更文件 (≤5)**"}},
+                    {tag: "markdown", content: $preview},
+                    {tag: "div", text: {tag: "lark_md", content: "**PR 描述**"}},
+                    {tag: "markdown", content:
+                      (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end)},
                     {tag: "hr"},
                     {tag: "note", elements: [{tag: "plain_text",
                       content: ($repo + " · PR #" + $pr_number)}]},
