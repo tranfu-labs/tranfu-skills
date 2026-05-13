@@ -81,7 +81,113 @@ jobs:
           fi
 
           if [ "${#changes[@]}" -eq 0 ]; then
-            echo "No SKILL.md changes in scope; skipping notification."
+            echo "No SKILL.md changes in scope; sending '其它' card."
+
+            # Collect ALL changed files (any path) so the card can show what
+            # this PR is actually about (CI / docs / templates / configs).
+            if [ "$ACTION" = "synchronize" ]; then
+              mapfile -t other_files < <(
+                gh api "repos/$REPO/compare/$PUSH_BEFORE...$PUSH_AFTER" \
+                  --jq '.files[]?.filename' || true
+              )
+            else
+              mapfile -t other_files < <(
+                gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
+                  --jq '.[].filename' || true
+              )
+            fi
+
+            other_count="${#other_files[@]}"
+            if [ "$other_count" -eq 0 ]; then
+              echo "No file changes at all; truly skipping."
+              exit 0
+            fi
+
+            # First 5 paths as preview; show "+N more" if truncated.
+            preview=""
+            for f in "${other_files[@]:0:5}"; do
+              preview="${preview}- \`${f}\`\n"
+            done
+            more_count=$((other_count - 5))
+            if [ "$more_count" -gt 0 ]; then
+              preview="${preview}- _(还有 ${more_count} 个文件)_"
+            fi
+
+            # Header + color
+            other_action_label="其它变更"
+            other_color="grey"
+            [ -z "$author_nick" ] && other_color="yellow"
+            if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
+              other_action_label="已合并 · ${other_action_label}"
+              other_color="green"
+            fi
+            other_header_title="📦 ${other_action_label} · ${PR_TITLE}"
+
+            other_payload=$(jq -n \
+              --arg header_title "$other_header_title" \
+              --arg color "$other_color" \
+              --arg display_author "$DISPLAY_AUTHOR" \
+              --arg file_count "$other_count" \
+              --arg preview "$preview" \
+              --arg pr_title "$PR_TITLE" \
+              --arg pr_body "$PR_BODY" \
+              --arg pr_url "$PR_URL" \
+              --arg pr_number "$PR_NUMBER" \
+              --arg repo "$REPO" \
+              '
+              def f(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
+
+              {
+                msg_type: "interactive",
+                card: {
+                  config: {wide_screen_mode: true},
+                  header: {
+                    title: {tag: "plain_text", content: $header_title},
+                    template: $color
+                  },
+                  elements: [
+                    {tag: "div", fields: [
+                      f("提交者"; $display_author),
+                      f("类别"; "其它"),
+                      f("文件数"; ($file_count + " 个"))
+                    ]},
+                    {tag: "div", text: {tag: "lark_md", content: ("**变更文件 (≤5)**\n" + $preview)}},
+                    {tag: "div", text: {tag: "lark_md", content:
+                      ("**PR 描述**\n"
+                       + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}},
+                    {tag: "hr"},
+                    {tag: "note", elements: [{tag: "plain_text",
+                      content: ($repo + " · PR #" + $pr_number)}]},
+                    {tag: "action", actions: [
+                      {tag: "button",
+                       text: {tag: "plain_text", content: "Open PR"},
+                       type: "primary", url: $pr_url}
+                    ]}
+                  ]
+                }
+              }
+              ')
+
+            echo "Other-card payload:"
+            echo "$other_payload"
+
+            response=$(curl -sS -w "\n%{http_code}" -X POST \
+              -H "Content-Type: application/json" \
+              -d "$other_payload" "$LARK_WEBHOOK_URL")
+            body=$(echo "$response" | sed '$d')
+            code=$(echo "$response" | tail -n1)
+
+            echo "HTTP $code"
+            echo "$body"
+
+            if [ "$code" != "200" ]; then
+              echo "::error::Lark webhook returned HTTP $code"
+              exit 1
+            fi
+            if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
+              echo "::error::Lark API error: $body"
+              exit 1
+            fi
             exit 0
           fi
 
