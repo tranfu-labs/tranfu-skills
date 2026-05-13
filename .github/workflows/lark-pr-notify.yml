@@ -123,6 +123,10 @@ jobs:
             fi
             other_header_title="📦 ${other_action_label} · ${PR_TITLE}"
 
+            # Feishu markdown element 不渲染 ATX headers (# / ## / ###),
+            # 但支持 **bold**. 把 headers 转成粗体, 其余 markdown 原样.
+            pr_body_normalized=$(printf '%s' "$PR_BODY" | sed -E 's/^[[:space:]]*#{1,6}[[:space:]]+(.+)$/**\1**/')
+
             other_payload=$(jq -n \
               --arg header_title "$other_header_title" \
               --arg color "$other_color" \
@@ -130,7 +134,7 @@ jobs:
               --arg file_count "$other_count" \
               --arg preview "$preview" \
               --arg pr_title "$PR_TITLE" \
-              --arg pr_body "$PR_BODY" \
+              --arg pr_body "$pr_body_normalized" \
               --arg pr_url "$PR_URL" \
               --arg pr_number "$PR_NUMBER" \
               --arg repo "$REPO" \
