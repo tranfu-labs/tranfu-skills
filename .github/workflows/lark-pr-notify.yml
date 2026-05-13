@@ -25,6 +25,8 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ACTION: ${{ github.event.action }}
@@ -110,6 +112,15 @@ jobs:
               *)               category="$top";    cat_emoji="📦"  ;;
             esac
 
+            # Author fallback: PR author 不在 collaborators.json 时, 整张卡片归为"其它"
+            # 类别, 描述字段换成 PR title + body 原文 (让人工 review 判断).
+            unmapped_author=0
+            if [ -z "$author_nick" ]; then
+              category="其它"
+              cat_emoji="❓"
+              unmapped_author=1
+            fi
+
             # event-specific header (title + Lark template color)
             case "$status" in
               added)
@@ -127,6 +138,8 @@ jobs:
               *)
                 action_label="${status} ${category} Skill"; color="grey" ;;
             esac
+            # 未映射作者一律用 yellow, 视觉上提示需要人工 review
+            [ "$unmapped_author" = "1" ] && color="yellow"
 
             # Read frontmatter from the appropriate ref.
             # - added/modified/renamed: read from HEAD
@@ -168,6 +181,9 @@ jobs:
               --arg pr_url "$PR_URL" \
               --arg pr_number "$PR_NUMBER" \
               --arg repo "$REPO" \
+              --arg unmapped "$unmapped_author" \
+              --arg pr_title "$PR_TITLE" \
+              --arg pr_body "$PR_BODY" \
               '
               def f(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
 
@@ -190,7 +206,13 @@ jobs:
                   },
                   elements: [
                     {tag: "div", fields: $fields},
-                    {tag: "div", text: {tag: "lark_md", content: ("**描述**\n" + $desc)}},
+                    (if $unmapped == "1"
+                     then {tag: "div", text: {tag: "lark_md", content:
+                       ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
+                        + "**标题**: " + $pr_title + "\n\n"
+                        + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}}
+                     else {tag: "div", text: {tag: "lark_md", content: ("**描述**\n" + $desc)}}
+                     end),
                     {tag: "hr"},
                     {tag: "note", elements: [{tag: "plain_text",
                       content: ($repo + " · PR #" + $pr_number)}]},
