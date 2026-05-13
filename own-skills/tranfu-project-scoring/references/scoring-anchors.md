@@ -1,6 +1,6 @@
 # Scoring Anchors
 
-Use these anchors to keep Wangchuanfu project reviews consistent across agents and reviewers. Scores should reflect both project quality and evidence. Missing information lowers confidence first; proven negative information lowers the dimension score.
+Use these anchors to keep Tranfu project reviews consistent across agents and reviewers. Scores should reflect both project quality and evidence. Missing information lowers confidence first; proven negative information lowers the dimension score.
 
 ## General Calibration
 
@@ -102,7 +102,7 @@ Required evidence: model cost, latency, human review time, data preparation cost
 
 Required evidence: domain risk, data sensitivity, human review, auditability, prohibited claims.
 
-## 10. Wangchuanfu Fit
+## 10. Tranfu Fit
 
 - 0-20: Not aligned with AI workflow validation, demo development, or co-creation.
 - 21-40: Interesting idea but not a good fit for current assets or audience.

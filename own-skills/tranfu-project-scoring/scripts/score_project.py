@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local pre-scorer for Wangchuanfu project ideas.
+"""Local pre-scorer for Tranfu project ideas.
 
 Reads JSON from stdin or a file path argument. By default it returns
 clarification questions for thin inputs and a conservative JSON pre-score for
@@ -25,7 +25,7 @@ DEFAULT_WEIGHTS = {
     "reuseRetention": 8,
     "costStructure": 8,
     "riskResponsibility": 8,
-    "wangchuanfuFit": 8,
+    "tranfuFit": 8,
 }
 
 WEIGHT_PROFILES = {
@@ -41,9 +41,9 @@ WEIGHT_PROFILES = {
         "reuseRetention": 12,
         "costStructure": 6,
         "riskResponsibility": 6,
-        "wangchuanfuFit": 6,
+        "tranfuFit": 6,
     },
-    "transfu_skill": {
+    "tranfu_skill": {
         "demandReality": 18,
         "aiWorkflowFit": 16,
         "technicalFeasibility": 12,
@@ -53,7 +53,7 @@ WEIGHT_PROFILES = {
         "reuseRetention": 14,
         "costStructure": 6,
         "riskResponsibility": 6,
-        "wangchuanfuFit": 8,
+        "tranfuFit": 8,
     },
     "public_demo": {
         "demandReality": 16,
@@ -65,7 +65,7 @@ WEIGHT_PROFILES = {
         "reuseRetention": 10,
         "costStructure": 6,
         "riskResponsibility": 8,
-        "wangchuanfuFit": 10,
+        "tranfuFit": 10,
     },
     "research_probe": {
         "demandReality": 18,
@@ -77,7 +77,7 @@ WEIGHT_PROFILES = {
         "reuseRetention": 10,
         "costStructure": 8,
         "riskResponsibility": 8,
-        "wangchuanfuFit": 8,
+        "tranfuFit": 8,
     },
 }
 
@@ -93,7 +93,7 @@ LABELS = {
     "reuseRetention": "复用与留存",
     "costStructure": "成本结构",
     "riskResponsibility": "风险与责任",
-    "wangchuanfuFit": "望船夫适配度",
+    "tranfuFit": "Tranfu 适配度",
 }
 
 EVIDENCE_COEFFICIENT = {
@@ -137,8 +137,8 @@ def infer_project_type(payload: Dict[str, Any]) -> str:
         str(project.get(k, ""))
         for k in ["name", "description", "targetUser", "currentSolution", "aiRole", "extraContext"]
     ).lower()
-    if any(term in text for term in ["transfu", "望船夫", "skill", "codex", "agent", "方法论资产"]):
-        return "transfu_skill"
+    if any(term in text for term in ["transfu", "Tranfu", "skill", "codex", "agent", "方法论资产"]):
+        return "tranfu_skill"
     if any(term in text for term in ["内部", "公司内部", "团队", "同事", "提效", "立项"]):
         return "internal_initiative"
     if any(term in text for term in ["demo", "演示", "公开案例"]):
@@ -179,7 +179,7 @@ def get_dimension_scores(payload: Dict[str, Any], weights: Dict[str, int]) -> Tu
         "reuseRetention": ["usageFrequency", "templateability", "adjacentTransfer", "retentionDriver"],
         "costStructure": ["timeCost", "modelCost", "maintenanceCost", "humanCost"],
         "riskResponsibility": ["privacyBoundary", "complianceRisk", "humanReview", "dataMinimization"],
-        "wangchuanfuFit": ["publicBuildFit", "coCreationFit", "caseValue", "methodAsset"],
+        "tranfuFit": ["publicBuildFit", "coCreationFit", "caseValue", "methodAsset"],
     }
 
     for key, fields in aliases.items():

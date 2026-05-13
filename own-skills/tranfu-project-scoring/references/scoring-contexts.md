@@ -8,7 +8,7 @@ The scoring framework must first identify the project context. Do not apply one 
 |---|---|---|
 | `commercial_product` | The project seeks external users, revenue, or market validation. | Should this become a product or MVP? |
 | `internal_initiative` | The project is proposed inside a company/team to improve work, create reusable capability, or support internal decision making. | Should the team invest internal time now? |
-| `transfu_skill` | The project is mainly a reusable Codex/agent skill, workflow template, demo asset, or co-creation method asset. | Should this become a Tranfu/Wangchuanfu skill asset? |
+| `tranfu_skill` | The project is mainly a reusable Codex/agent skill, workflow template, demo asset, or co-creation method asset. | Should this become a Tranfu skill asset? |
 | `public_demo` | The project is primarily an external demo, story, or public learning artifact. | Is it worth building as a visible demo? |
 | `research_probe` | The project is exploratory and evidence is intentionally thin. | Is it worth a small learning experiment? |
 
@@ -29,7 +29,7 @@ Weights sum to 100. Use the default profile only when the context is unknown.
 | Reuse and retention | 8 | 12 | 14 |
 | Cost structure | 8 | 6 | 6 |
 | Risk and responsibility | 8 | 6 | 6 |
-| Wangchuanfu fit | 8 | 6 | 8 |
+| Tranfu fit | 8 | 6 | 8 |
 
 For internal and Tranfu-skill contexts, reinterpret `Business/value recovery` as internal or asset value:
 

@@ -1,8 +1,8 @@
-# Wangchuanfu Project Scoring Framework
+# Tranfu Project Scoring Framework
 
 ## Positioning
 
-The Wangchuanfu Project Scoring framework evaluates whether an AI workflow project deserves current investment in validation, demo development, or co-creation. It does not predict guaranteed success.
+The Tranfu Project Scoring framework evaluates whether an AI workflow project deserves current investment in validation, demo development, or co-creation. It does not predict guaranteed success.
 
 ## Scoring Dimensions
 
@@ -22,7 +22,7 @@ The default table below is for unknown or commercial-product contexts. For compa
 | Reuse and retention | 8 | Will it be repeatedly used or templateable? |
 | Cost structure | 8 | Are time, money, model, maintenance, and human costs controlled? |
 | Risk and responsibility | 8 | Are privacy, copyright, compliance, harm, and brand risks bounded? |
-| Wangchuanfu fit | 8 | Can it become a public case, workflow, template, tool, or co-creation asset? |
+| Tranfu fit | 8 | Can it become a public case, workflow, template, tool, or co-creation asset? |
 
 ## Context and Weighting
 
@@ -30,11 +30,11 @@ The evaluator must not use one fixed commercial weighting for every project. Fir
 
 - `commercial_product`: external product or market MVP
 - `internal_initiative`: company-internal project立项
-- `transfu_skill`: reusable Codex/agent skill or Tranfu method asset
+- `tranfu_skill`: reusable Codex/agent skill or Tranfu method asset
 - `public_demo`: demo or public case
 - `research_probe`: small learning experiment
 
-For `internal_initiative` and `transfu_skill`, demand reality, AI workflow fit, technical feasibility, reuse/template value, and Wangchuanfu fit should receive more weight. Business/payment, broad distribution, risk, and cost should receive lower weight unless they are the decisive bottleneck.
+For `internal_initiative` and `tranfu_skill`, demand reality, AI workflow fit, technical feasibility, reuse/template value, and Tranfu fit should receive more weight. Business/payment, broad distribution, risk, and cost should receive lower weight unless they are the decisive bottleneck.
 
 If payment is intentionally out of scope, reinterpret `Business/value recovery` as internal value, method asset value, reusable skill value, or decision-quality improvement. Do not score it low merely because there is no external payment plan.
 
@@ -47,7 +47,7 @@ If payment is intentionally out of scope, reinterpret `Business/value recovery` 
 | 先验证 | 60-74 | Do interviews, landing page, concierge test, or sample test first. |
 | 重构方向 | 45-59 | Rewrite user, scene, boundary, delivery, or business model. |
 | 观察入池 | 35-59 | Put into observation pool, track timing/evidence. |
-| 暂不立项 | 0-44 | Do not invest Wangchuanfu resources now. |
+| 暂不立项 | 0-44 | Do not invest Tranfu resources now. |
 
 `重构方向` and `观察入池` can overlap. Use `重构方向` for structural flaws; use `观察入池` for valuable but premature or under-evidenced ideas.
 

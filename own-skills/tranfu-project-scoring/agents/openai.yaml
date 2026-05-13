@@ -1,0 +1,7 @@
+interface:
+  display_name: "Tranfu 立项评分器"
+  short_description: "评审 AI 工作流项目能否进入验证或共创"
+  brand_color: "#2563EB"
+  default_prompt: "Use $tranfu-project-scoring to evaluate this AI workflow project and produce a project decision memo."
+policy:
+  allow_implicit_invocation: true
