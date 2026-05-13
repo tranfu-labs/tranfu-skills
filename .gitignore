@@ -1,1 +1,3 @@
 .dogfood-*.log
+.env
+.env.local
