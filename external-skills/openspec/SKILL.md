@@ -10,7 +10,7 @@ source_url: https://github.com/Fission-AI/OpenSpec
 
 # openspec
 
-> 本 skill 由 aistore-labs 推荐, 完整内容 / 装法见 source_url.
+> 本 skill 由 tranfu-labs 推荐, 完整内容 / 装法见 source_url.
 
 ## 完整内容见 source_url
 

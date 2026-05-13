@@ -1,6 +1,6 @@
 # publish-skill
 
-把本地 skill 发布 / 推荐 / 加案例到公司库 `aistore-labs/claude-skills`. 路径由 AI 在入口路由自动选, 不需用户指明.
+把本地 skill 发布 / 推荐 / 加案例到公司库 `tranfu-labs/claude-skills`. 路径由 AI 在入口路由自动选, 不需用户指明.
 
 ![框架图](./framework.png)
 
@@ -10,7 +10,7 @@
 
 | 路径 | 触发语示例 | 适用 |
 |---|---|---|
-| **A · own 直路发布** | "把本地 my-cool-skill 发到公司库" / "publish X" / "推到 aistore-labs" | 自己写的 skill |
+| **A · own 直路发布** | "把本地 my-cool-skill 发到公司库" / "publish X" / "推到 tranfu-labs" | 自己写的 skill |
 | **B · external in-context 推荐** | "这个 skill 不错, 分享给公司" / "把刚才那个推上去" | 上下文里刚用过的 external |
 | **C · external cold-start 推荐** | "给公司推荐 https://github.com/foo/bar-skill" | 听说 / 看到, 未必用过 |
 | **D · 加案例** | "我也用过 X, 给它加个案例" | 已在 `external-skills/` 的 skill |
@@ -21,7 +21,7 @@
 
 **副作用**
 
-- 在 `~/.aistore-labs/claude-skills/` 创建分支 + commit + `gh pr create`.
+- 在 `~/.tranfu-labs/claude-skills/` 创建分支 + commit + `gh pr create`.
   - own → `own-skills/<name>/`
   - external → `external-skills/<name>/` (薄指针 SKILL.md + `cases/<recommender>.md`)
   - 加案例 → 仅追加 `external-skills/<name>/cases/<recommender>.md`
@@ -62,7 +62,7 @@
 
 ## 依赖
 
-- 公司仓库 push 权限 + 缓存仓库 `~/.aistore-labs/claude-skills/` (由 `update-skills` 维护).
+- 公司仓库 push 权限 + 缓存仓库 `~/.tranfu-labs/claude-skills/` (由 `update-skills` 维护).
 - `gh` CLI, `git`, `WebFetch` (路径 C 拉 URL 内容).
 
 ## 配套 skill (互相不调用)

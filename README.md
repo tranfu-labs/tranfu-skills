@@ -9,9 +9,9 @@
 复制下面这段提示词, 粘贴给当前在用的 agentic CLI (任意目录开会话即可)：
 
 ```text
-请帮我安装 aistore-labs 公司 skill 库到本地。
-第一步：把 git@github.com:aistore-labs/claude-skills.git clone 到 ~/.aistore-labs/claude-skills（已存在则 git pull --ff-only）。
-第二步：阅读 ~/.aistore-labs/claude-skills/INSTALL.md，按其中步骤执行（识别你自己的 runtime → cp 4 个 meta-skill → 验证 → 通知我）。
+请帮我安装 tranfu-labs 公司 skill 库到本地。
+第一步：把 git@github.com:tranfu-labs/claude-skills.git clone 到 ~/.tranfu-labs/claude-skills（已存在则 git pull --ff-only）。
+第二步：阅读 ~/.tranfu-labs/claude-skills/INSTALL.md，按其中步骤执行（识别你自己的 runtime → cp 4 个 meta-skill → 验证 → 通知我）。
 ```
 
 CLI 会自己跑 git clone + cp + 自检, 结束后告诉你重启即可。具体细节看 [INSTALL.md](./INSTALL.md)。
@@ -111,7 +111,7 @@ external-skills/              外部推荐薄指针 (frontmatter origin: externa
 复制下面这段提示词, 粘贴给 Claude Code:
 
 ```text
-请帮我完整卸载 aistore-labs 公司 skill 库。阅读 ~/.aistore-labs/claude-skills/UNINSTALL.md, 按其中步骤执行（二次确认后再删 4 个 meta-skill + 缓存目录）。
+请帮我完整卸载 tranfu-labs 公司 skill 库。阅读 ~/.tranfu-labs/claude-skills/UNINSTALL.md, 按其中步骤执行（二次确认后再删 4 个 meta-skill + 缓存目录）。
 ```
 
 具体细节看 [UNINSTALL.md](./UNINSTALL.md)。

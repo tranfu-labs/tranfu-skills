@@ -1,30 +1,46 @@
 ---
 name: search-skills
 description: 当用户说"搜公司 skill 关于 X / 看看公司库有没有 Y / 列一下公司 skill"时, grep 缓存仓库 SKILL.md frontmatter (跨 meta-skills / own-skills / external-skills 三个子目录) 返回匹配项
-version: 0.1.1
+version: 0.1.2
 author: aquarius-wing
-updated_at: 2026-05-09
+updated_at: 2026-05-13
 origin: own
 ---
 
-# Search aistore-labs/claude-skills cache
+# Search tranfu-labs/claude-skills cache
 
 ## When to use
 
 用户问公司库里是否有某类 skill. 触发语示例:
 - "搜公司 skill 关于 UI 设计的"
 - "公司库有没有 typescript 类型推断的 skill"
-- "看看 aistore-labs 有什么 skill"
+- "看看 tranfu-labs 有什么 skill"
 - "列一下公司 skill"
 
 ## Constants
 
-- 缓存路径: `~/.aistore-labs/claude-skills/`
+- 缓存路径: `~/.tranfu-labs/claude-skills/`
 - 三个子目录都搜: `meta-skills/`, `own-skills/`, `external-skills/`
 - meta-skills 默认**包含**在结果里, 但条目末尾标 `[meta]` (用户搜 "publish" 时找得到 publish-skill, 不藏)
 - 跳过任何 `.` 或 `_` 开头的目录, 跳过 `external-skills/.gitkeep` 这类占位文件
 
 ## Steps
+
+### 0.5. 旧缓存路径迁移 (一次性兼容)
+
+公司库从 `aistore-labs` 改名到 `tranfu-labs`. 如检测到旧 `~/.aistore-labs/claude-skills/`, 新路径不在, 静默迁移:
+
+```bash
+if [ -d ~/.aistore-labs/claude-skills ] && [ ! -d ~/.tranfu-labs/claude-skills ]; then
+  mkdir -p ~/.tranfu-labs
+  mv ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills
+  cd ~/.tranfu-labs/claude-skills && \
+    git remote get-url origin 2>/dev/null | grep -q aistore-labs && \
+    git remote set-url origin git@github.com:tranfu-labs/claude-skills.git
+fi
+```
+
+新装用户条件不满足, 静默跳过.
 
 ### 1. 解析关键词
 
@@ -40,7 +56,7 @@ origin: own
 ### 2. 列出候选 skill 目录 (跨 3 个子目录)
 
 ```bash
-cd ~/.aistore-labs/claude-skills/
+cd ~/.tranfu-labs/claude-skills/
 ls -1 meta-skills/ own-skills/ external-skills/ 2>/dev/null \
   | grep -E '/$' \
   || find meta-skills own-skills external-skills -maxdepth 1 -mindepth 1 -type d 2>/dev/null
@@ -109,7 +125,7 @@ cat "<category>/<skill-name>/SKILL.md" | sed -n '1,/^---$/p; /^---$/,/^---$/p' |
 
 ```bash
 echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"actor\":\"$(gh api user -q .login)\",\"event\":\"search\",\"query\":\"<关键词以逗号 join>\",\"matches\":<N>}" \
-  >> ~/.aistore-labs/claude-skills/.dogfood-r1.log
+  >> ~/.tranfu-labs/claude-skills/.dogfood-r1.log
 ```
 
 ## Failure modes

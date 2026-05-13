@@ -10,7 +10,7 @@ source_url: https://github.com/obra/superpowers
 
 # superpowers
 
-> 本 skill 由 aistore-labs 推荐, 完整内容见 source_url.
+> 本 skill 由 tranfu-labs 推荐, 完整内容见 source_url.
 > 首次 install 时由 install-skill 从 source_url 拉最新到目标 scope,
 > 完成后回写本 stub 的 name/description/version. 推荐场景见 cases/.
 
