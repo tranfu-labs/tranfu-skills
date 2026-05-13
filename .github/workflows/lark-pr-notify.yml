@@ -165,8 +165,7 @@ jobs:
                         ("**PR 描述**\n"
                          + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))},
                       {tag: "hr"},
-                      {tag: "note", content: [{tag: "plain_text",
-                        content: ($repo + " · PR #" + $pr_number)}]},
+                      {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
                       {tag: "button",
                        text: {tag: "plain_text", content: "Open PR"},
                        type: "primary", width: "fill", url: $pr_url}
@@ -346,8 +345,7 @@ jobs:
                        else {tag: "markdown", content: ("**描述**\n" + $desc)}
                        end),
                       {tag: "hr"},
-                      {tag: "note", content: [{tag: "plain_text",
-                        content: ($repo + " · PR #" + $pr_number)}]},
+                      {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
                       {tag: "button",
                        text: {tag: "plain_text", content: "Open PR"},
                        type: "primary", width: "fill", url: $pr_url}
