@@ -2,7 +2,7 @@ name: Notify Lark on skill changes
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, closed]
 
 permissions:
   contents: read
@@ -30,6 +30,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ACTION: ${{ github.event.action }}
+          MERGED: ${{ github.event.pull_request.merged }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.event.after }}
         run: |
@@ -39,6 +40,19 @@ jobs:
             echo "::error::LARK_WEBHOOK_URL secret is not set."
             exit 1
           fi
+
+          # Closed-but-not-merged PRs are abandoned; no consumer cares — skip silently.
+          if [ "$ACTION" = "closed" ] && [ "$MERGED" != "true" ]; then
+            echo "PR closed without merge; skipping notification."
+            exit 0
+          fi
+
+          # Feishu Card v2 markdown 支持 headers / tables / lists / code blocks,
+          # 但仍不支持 task lists ([ ]/[x]). 转成 unicode (☐/☑) 让卡片可读.
+          # 用一次, 后面 per-file / 其它两张卡都用 $pr_body_normalized.
+          pr_body_normalized=$(printf '%s' "$PR_BODY" | sed -E \
+            -e 's/^([[:space:]]*[-*+][[:space:]]+)\[ \]/\1☐/g' \
+            -e 's/^([[:space:]]*[-*+][[:space:]]+)\[[xX]\]/\1☑/g')
 
           # Resolve PR author -> 昵称 via .github/collaborators.json (flat login→昵称 map).
           # Falls back to "@<login>" when no mapping exists or the file is missing.
@@ -74,7 +88,114 @@ jobs:
           fi
 
           if [ "${#changes[@]}" -eq 0 ]; then
-            echo "No SKILL.md changes in scope; skipping notification."
+            echo "No SKILL.md changes in scope; sending '其它' card."
+
+            # Collect ALL changed files (any path) so the card can show what
+            # this PR is actually about (CI / docs / templates / configs).
+            if [ "$ACTION" = "synchronize" ]; then
+              mapfile -t other_files < <(
+                gh api "repos/$REPO/compare/$PUSH_BEFORE...$PUSH_AFTER" \
+                  --jq '.files[]?.filename' || true
+              )
+            else
+              mapfile -t other_files < <(
+                gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
+                  --jq '.[].filename' || true
+              )
+            fi
+
+            other_count="${#other_files[@]}"
+            if [ "$other_count" -eq 0 ]; then
+              echo "No file changes at all; truly skipping."
+              exit 0
+            fi
+
+            # First 5 paths as preview; show "+N more" if truncated.
+            preview=""
+            for f in "${other_files[@]:0:5}"; do
+              preview="${preview}- \`${f}\`\n"
+            done
+            more_count=$((other_count - 5))
+            if [ "$more_count" -gt 0 ]; then
+              preview="${preview}- _(还有 ${more_count} 个文件)_"
+            fi
+
+            # Header + color
+            other_action_label="其它变更"
+            other_color="grey"
+            [ -z "$author_nick" ] && other_color="yellow"
+            if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
+              other_action_label="已合并 · ${other_action_label}"
+              other_color="green"
+            fi
+            other_header_title="📦 ${other_action_label} · ${PR_TITLE}"
+
+            other_payload=$(jq -n \
+              --arg header_title "$other_header_title" \
+              --arg color "$other_color" \
+              --arg display_author "$DISPLAY_AUTHOR" \
+              --arg file_count "$other_count" \
+              --arg preview "$preview" \
+              --arg pr_title "$PR_TITLE" \
+              --arg pr_body "$pr_body_normalized" \
+              --arg pr_url "$PR_URL" \
+              --arg pr_number "$PR_NUMBER" \
+              --arg repo "$REPO" \
+              '
+              def col(content): {tag: "column", width: "weighted", weight: 1,
+                                 elements: [{tag: "markdown", content: content}]};
+
+              {
+                msg_type: "interactive",
+                card: {
+                  schema: "2.0",
+                  header: {
+                    title: {tag: "plain_text", content: $header_title},
+                    template: $color
+                  },
+                  body: {
+                    elements: [
+                      {tag: "column_set", columns: [
+                        col("**提交者**\n" + $display_author),
+                        col("**类别**\n其它"),
+                        col("**文件数**\n" + $file_count + " 个")
+                      ]},
+                      {tag: "markdown", content: ("**变更文件 (≤5)**\n" + $preview)},
+                      {tag: "markdown", content:
+                        ("**PR 描述**\n"
+                         + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))},
+                      {tag: "hr"},
+                      {tag: "note", content: [{tag: "plain_text",
+                        content: ($repo + " · PR #" + $pr_number)}]},
+                      {tag: "button",
+                       text: {tag: "plain_text", content: "Open PR"},
+                       type: "primary", width: "fill", url: $pr_url}
+                    ]
+                  }
+                }
+              }
+              ')
+
+            echo "Other-card payload:"
+            echo "$other_payload"
+
+            response=$(curl -sS -w "\n%{http_code}" -X POST \
+              -H "Content-Type: application/json" \
+              -d "$other_payload" "$LARK_WEBHOOK_URL")
+            body=$(echo "$response" | sed '$d')
+            code=$(echo "$response" | tail -n1)
+
+            echo "HTTP $code"
+            echo "$body"
+
+            if [ "$code" != "200" ]; then
+              echo "::error::Lark webhook returned HTTP $code"
+              exit 1
+            fi
+            if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
+              echo "::error::Lark API error: $body"
+              exit 1
+            fi
             exit 0
           fi
 
@@ -141,6 +262,14 @@ jobs:
             # 未映射作者一律用 yellow, 视觉上提示需要人工 review
             [ "$unmapped_author" = "1" ] && color="yellow"
 
+            # Merge event: prepend "已合并" badge and force green to visually
+            # distinguish from open/synchronize cards. Consumer signal: 现在可以
+            # 跑 update-skills 拉到这一变更.
+            if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
+              action_label="已合并 · ${action_label}"
+              color="green"
+            fi
+
             # Read frontmatter from the appropriate ref.
             # - added/modified/renamed: read from HEAD
             # - removed: read from BASE (file no longer at HEAD)
@@ -183,45 +312,47 @@ jobs:
               --arg repo "$REPO" \
               --arg unmapped "$unmapped_author" \
               --arg pr_title "$PR_TITLE" \
-              --arg pr_body "$PR_BODY" \
+              --arg pr_body "$pr_body_normalized" \
               '
-              def f(n; v): {is_short: true, text: {tag: "lark_md", content: ("**" + n + "**\n" + v)}};
+              def col(content): {tag: "column", width: "weighted", weight: 1,
+                                 elements: [{tag: "markdown", content: content}]};
 
               ($display_author
                 + (if $author_fm != "" and $author_fm != $pr_author and $author_fm != $display_author
                    then "\n_(frontmatter: " + $author_fm + ")_"
                    else "" end)) as $submitter |
 
-              ([f("提交者"; $submitter), f("类别"; $category)]
-                + (if $version != "" then [f("版本"; $version)] else [] end)
-                + [f("文件"; "`" + $path + "`")]) as $fields |
+              ([col("**提交者**\n" + $submitter), col("**类别**\n" + $category)]
+                + (if $version != "" then [col("**版本**\n" + $version)] else [] end)
+              ) as $cols |
 
               {
                 msg_type: "interactive",
                 card: {
-                  config: {wide_screen_mode: true},
+                  schema: "2.0",
                   header: {
                     title: {tag: "plain_text", content: $header_title},
                     template: $color
                   },
-                  elements: [
-                    {tag: "div", fields: $fields},
-                    (if $unmapped == "1"
-                     then {tag: "div", text: {tag: "lark_md", content:
-                       ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
-                        + "**标题**: " + $pr_title + "\n\n"
-                        + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}}
-                     else {tag: "div", text: {tag: "lark_md", content: ("**描述**\n" + $desc)}}
-                     end),
-                    {tag: "hr"},
-                    {tag: "note", elements: [{tag: "plain_text",
-                      content: ($repo + " · PR #" + $pr_number)}]},
-                    {tag: "action", actions: [
+                  body: {
+                    elements: [
+                      {tag: "column_set", columns: $cols},
+                      {tag: "markdown", content: ("**文件**\n`" + $path + "`")},
+                      (if $unmapped == "1"
+                       then {tag: "markdown", content:
+                         ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
+                          + "**标题**: " + $pr_title + "\n\n"
+                          + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}
+                       else {tag: "markdown", content: ("**描述**\n" + $desc)}
+                       end),
+                      {tag: "hr"},
+                      {tag: "note", content: [{tag: "plain_text",
+                        content: ($repo + " · PR #" + $pr_number)}]},
                       {tag: "button",
                        text: {tag: "plain_text", content: "Open PR"},
-                       type: "primary", url: $pr_url}
-                    ]}
-                  ]
+                       type: "primary", width: "fill", url: $pr_url}
+                    ]
+                  }
                 }
               }
               ')
