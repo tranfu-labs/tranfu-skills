@@ -1,5 +1,5 @@
 ---
-name: wangchuanfu-project-scoring
+name: project-scoring
 description: Use when user says "评估这个 AI 项目" to score AI workflows and produce a decision memo.
 version: 0.1.0
 author: griffithkk3-del
@@ -7,7 +7,7 @@ updated_at: 2026-05-13
 origin: own
 ---
 
-# Wangchuanfu Project Scoring
+# Project Scoring
 
 Use this skill to perform a civilized project approval review for AI workflow ideas. The goal is not to predict success; it is to decide whether the project deserves current investment in validation, demo development, or co-creation.
 
@@ -15,7 +15,7 @@ Use this skill to perform a civilized project approval review for AI workflow id
 
 Use this skill when the user asks to:
 - score or review an AI workflow project idea
-- decide whether a project should enter Wangchuanfu demo development, observation, or co-creation pool
+- decide whether a project should enter Tranfu demo development, observation, or co-creation pool
 - analyze demand, technology, heat/distribution, time cost, funding cost, or responsibility risk
 - compare several candidate projects and rank priority
 - generate a 7-day validation plan before implementation
@@ -34,9 +34,9 @@ Use this skill when the user asks to:
 - AI startup idea validator agents — 评估创业想法的市场、竞争和 SWOT; **本 skill 区别**: 先做立项访谈, 信息不足时主动追问, 不对两句话想法直接评分。
 
 ### 本 skill 独特价值
+- 先访谈, 再评分。
 - 内部立项有专用权重。
-- 低信息输入先追问。
-- 输出 7 天验证实验。
+- 输出唯一下一步和 7 天验证。
 
 ## 使用技巧
 
@@ -44,14 +44,14 @@ Use this skill when the user asks to:
 > 帮助阅读者纵向上手 — tacit knowledge 在此. 横向同类对比见上方 §同类 Skill 对比.
 
 ### 材料方案
-- 先做成 skill, 不做复杂网页。
-- 权重按项目类型切换。
+- Skill-first, 网页只做 demo。
+- 按项目类型切换权重。
 - 缺数据降置信度, 不判差。
 
 ### 推荐用法
-- 先给项目背景和目标用户。
-- 信息不足时接受 3-5 个追问。
-- 内部立项请声明 projectType。
+- 先给用户、场景、替代方案。
+- 允许它先问 3-5 个问题。
+- 内部立项注明 projectType。
 
 ### 已知限制
 - 不替代正式投委会。
@@ -62,7 +62,7 @@ Use this skill when the user asks to:
 
 Do not score a slogan. Before scoring, collect enough project facts to make the judgment evidence-bearing rather than imagined. The core inputs are:
 - project name
-- project context: `commercial_product`, `internal_initiative`, `transfu_skill`, `public_demo`, or `research_probe` when known
+- project context: `commercial_product`, `internal_initiative`, `tranfu_skill`, `public_demo`, or `research_probe` when known
 - one-sentence description
 - target user and specific usage scene
 - current workaround or substitute solution
@@ -87,11 +87,11 @@ Only proceed directly to scoring when enough facts are present to evaluate the h
 ## Workflow
 
 1. Choose review mode: `quick` for thin ideas, `standard` by default, `strict` before real build investment.
-2. Identify project context. Use `internal_initiative` for company-internal立项, `transfu_skill` for reusable Tranfu/Codex skill assets, `commercial_product` for external product/MVP decisions. If unclear and it affects weights, ask one context question.
+2. Identify project context. Use `internal_initiative` for company-internal立项, `tranfu_skill` for reusable Tranfu/Codex skill assets, `commercial_product` for external product/MVP decisions. If unclear and it affects weights, ask one context question.
 3. Run the clarification gate. If core facts are missing, ask focused questions first and stop.
 4. Clarify the project enough to avoid scoring an abstract slogan.
 5. Select the weight profile from `references/scoring-contexts.md`. Do not over-penalize internal or skill projects for lacking payment evidence.
-6. Score the project across 10 dimensions: demand reality, AI workflow fit, technical feasibility, validation feasibility, distribution reachability, business/value recovery, reuse and retention, cost structure, risk and responsibility, Wangchuanfu fit.
+6. Score the project across 10 dimensions: demand reality, AI workflow fit, technical feasibility, validation feasibility, distribution reachability, business/value recovery, reuse and retention, cost structure, risk and responsibility, Tranfu fit.
 7. Use `references/scoring-anchors.md` to calibrate 0-20, 21-40, 41-60, 61-80, and 81-100 scores.
 8. Apply hard gates: user gate, demand gate, AI-fit gate, responsibility gate.
 9. Apply evidence confidence and weak-link downgrade. Low evidence limits decision confidence; for internal立项 it should usually cap scope, not automatically否定项目.
@@ -113,7 +113,7 @@ Only proceed directly to scoring when enough facts are present to evaluate the h
 
 ## GitHub Distribution Notes
 
-This folder is self-contained. To install from a cloned repository, copy this folder to `$CODEX_HOME/skills/wangchuanfu-project-scoring` or `~/.codex/skills/wangchuanfu-project-scoring` when `CODEX_HOME` is unset, then restart Codex so the skill metadata is discovered.
+This folder is self-contained. To install from a cloned repository, copy this folder to `$CODEX_HOME/skills/project-scoring` or `~/.codex/skills/project-scoring` when `CODEX_HOME` is unset, then restart Codex so the skill metadata is discovered.
 
 ## References
 

@@ -45,7 +45,7 @@ Use this shape for tools, APIs, and agent-to-agent handoff.
   "schemaVersion": "1.0",
   "type": "score",
   "reviewMode": "quick|standard|strict",
-  "projectType": "commercial_product|internal_initiative|transfu_skill|public_demo|research_probe",
+  "projectType": "commercial_product|internal_initiative|tranfu_skill|public_demo|research_probe",
   "weightProfile": {
     "demandReality": 16,
     "aiWorkflowFit": 12,
@@ -56,7 +56,7 @@ Use this shape for tools, APIs, and agent-to-agent handoff.
     "reuseRetention": 8,
     "costStructure": 8,
     "riskResponsibility": 8,
-    "wangchuanfuFit": 8
+    "tranfuFit": 8
   },
   "inputSummary": {
     "name": "Project name",
@@ -111,7 +111,7 @@ Use this shape for tools, APIs, and agent-to-agent handoff.
 
 - `type` must be `clarification` when core facts are missing and the user has not requested an immediate provisional score.
 - `type` must be `score` only when enough facts exist or the user explicitly asks to skip clarification.
-- `projectType` records the scoring context. Use `internal_initiative` for company-internal立项 and `transfu_skill` for reusable Tranfu/Codex skill assets.
+- `projectType` records the scoring context. Use `internal_initiative` for company-internal立项 and `tranfu_skill` for reusable Tranfu/Codex skill assets.
 - `weightProfile` must expose the exact dimension weights used, because different project contexts should not share one fixed formula.
 - `scoreBeforeConfidence` is the weighted score before evidence and missing-information penalties.
 - `informationCompleteness` is the weighted share of dimensions supported by the available facts, from 0 to 1.
