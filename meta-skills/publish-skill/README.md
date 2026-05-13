@@ -36,6 +36,14 @@
 - ❌ 不用 Claude hook 实现"延迟案例" (B.3 PENDING).
 - ❌ external SKILL.md 必须是薄指针 (不复制上游正文).
 - ❌ 同 recommender 单 case 文件 append (不为同一人开多份).
+- ❌ 不跳 §1.7 预览门禁直接 `gh pr create`, 不跳 §1.8 发布后回查.
+- ❌ 不把"`gh pr create` 成功 / PR open" 当完成标准.
+
+## 完成标准
+
+发布完成 = §1.7 预览门禁 pass + `gh pr create` 成功 + §1.8 回查全 pass.
+
+PR open 只是中间一步, **不是**完成. 历史教训: PR #37 用 GitHub 通用 `## Summary / ## Validation` 习惯写法替代了 `templates/pr-body.md` 模板段, merge 后才发现. 详见 SKILL.md `## 完成标准` 和 §1.7 / §1.8.
 
 ## §1 入口路由 (核心)
 

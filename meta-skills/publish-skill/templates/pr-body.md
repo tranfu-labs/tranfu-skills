@@ -77,7 +77,12 @@ reason_kind: {enum}
 
 - {示例: 不需要测网络异常 / 不依赖 API key / 不验证 source_url 上游 skill 自身代码质量}
 
-{variant: own}
-## 风险点 (有则填, 无则 N/A)
+## 风险点 (所有 variant 必填, 无则 N/A; **不**允许整段删除)
 
-- {示例: 这个 skill 会 git push, reviewer 注意目标分支}
+- 本地校验 vs 公司库规范冲突: {N/A 或具体描述, eg "本地源码 frontmatter 保留 metadata 嵌套以通过 Codex quick_validate; 公司库副本展开为顶层 version/author/updated_at/origin 以符合 own-skill 规范"}
+{variant: own}
+- 该 skill 是否会 git push / 改本地状态 / 调外部 API: {N/A 或描述}
+{variant: external}
+- source_url 上游 skill 的稳定性 (vaporware / 长期不维护): {N/A 或描述}
+{variant: add-case}
+- {N/A 或描述, case-only PR 一般 N/A}
