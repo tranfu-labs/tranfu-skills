@@ -9,12 +9,10 @@
 复制下面这段提示词, 粘贴给当前在用的 agentic CLI (任意目录开会话即可)：
 
 ```text
-请帮我安装 tranfu-labs 公司 skill 库到本地。
-第一步：把 git@github.com:tranfu-labs/tranfu-skills.git clone 到 ~/.tranfu-labs/tranfu-skills（已存在则 git pull --ff-only）。
-第二步：阅读 ~/.tranfu-labs/tranfu-skills/INSTALL.md，按其中步骤执行（识别你自己的 runtime → cp 4 个 meta-skill → 验证 → 通知我）。
+请阅读 https://github.com/tranfu-labs/tranfu-skills/blob/main/INSTALL.md 并按文档步骤帮我安装公司 skill 库。
 ```
 
-CLI 会自己跑 git clone + cp + 自检, 结束后告诉你重启即可。具体细节看 [INSTALL.md](./INSTALL.md)。
+CLI 会自己 WebFetch 文档, 按里面的步骤跑 git clone + cp + 自检, 结束后告诉你重启即可。具体细节看 [INSTALL.md](./INSTALL.md)。
 
 ## 4 个使用场景
 
@@ -108,10 +106,10 @@ external-skills/              外部推荐薄指针 (frontmatter origin: externa
 
 ## 怎么完整卸载
 
-复制下面这段提示词, 粘贴给 Claude Code:
+复制下面这段提示词, 粘贴给当前在用的 agentic CLI:
 
 ```text
-请帮我完整卸载 tranfu-labs 公司 skill 库。阅读 ~/.tranfu-labs/tranfu-skills/UNINSTALL.md, 按其中步骤执行（二次确认后再删 4 个 meta-skill + 缓存目录）。
+请阅读 https://github.com/tranfu-labs/tranfu-skills/blob/main/UNINSTALL.md 并按文档步骤帮我卸载公司 skill 库。
 ```
 
 具体细节看 [UNINSTALL.md](./UNINSTALL.md)。
