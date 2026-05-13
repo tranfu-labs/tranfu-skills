@@ -111,10 +111,9 @@ jobs:
             fi
 
             # First 5 paths as preview; show "+N more" if truncated.
-            preview=""
-            for f in "${other_files[@]:0:5}"; do
-              preview="${preview}- \`${f}\`\n"
-            done
+            # NOTE: bash 双引号里 "\n" 是字面量, 不会展开. printf '\n' 才会
+            # 真正写入换行字符; 否则卡片渲染时显示成 "...\n- ..." 字面.
+            preview=$(printf -- '- `%s`\n' "${other_files[@]:0:5}")
             more_count=$((other_count - 5))
             if [ "$more_count" -gt 0 ]; then
               preview="${preview}- _(还有 ${more_count} 个文件)_"
