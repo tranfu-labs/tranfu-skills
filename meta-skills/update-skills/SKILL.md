@@ -7,7 +7,7 @@ updated_at: 2026-05-13
 origin: own
 ---
 
-# Update local cache of tranfu-labs/claude-skills
+# Update local cache of tranfu-labs/tranfu-skills
 
 ## When to use
 
@@ -21,9 +21,9 @@ origin: own
 
 ## Constants
 
-- 缓存路径: `~/.tranfu-labs/claude-skills/`
+- 缓存路径: `~/.tranfu-labs/tranfu-skills/`
 - 缓存内仓库结构: `meta-skills/`, `own-skills/`, `external-skills/` 三个子目录
-- 4 个 meta-skill 缓存源路径: `~/.tranfu-labs/claude-skills/meta-skills/{publish-skill,search-skills,install-skill,update-skills}/`
+- 4 个 meta-skill 缓存源路径: `~/.tranfu-labs/tranfu-skills/meta-skills/{publish-skill,search-skills,install-skill,update-skills}/`
 - 加载点 (扁平, 按 runtime): `$TARGET_SKILLS_USER/{publish-skill,search-skills,install-skill,update-skills}/`, 详见 [RUNTIME.md](../../RUNTIME.md) 第 1 节
 
 ## Steps
@@ -34,16 +34,18 @@ origin: own
 
 ### 0.5. 旧缓存路径迁移 (一次性兼容)
 
-公司库从 `aistore-labs` 改名到 `tranfu-labs`. 缓存路径相应从 `~/.aistore-labs/claude-skills/` 迁到 `~/.tranfu-labs/claude-skills/`. 如检测到旧路径在, 新路径不在, 静默迁移 + 改 git remote:
+公司库经历两次改名: `aistore-labs/claude-skills` → `tranfu-labs/claude-skills` → `tranfu-labs/tranfu-skills`. 如检测到任一老缓存且新路径不在, 静默迁移并修 git remote:
 
 ```bash
-if [ -d ~/.aistore-labs/claude-skills ] && [ ! -d ~/.tranfu-labs/claude-skills ]; then
-  mkdir -p ~/.tranfu-labs
-  mv ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills
-  cd ~/.tranfu-labs/claude-skills && \
-    git remote get-url origin 2>/dev/null | grep -q aistore-labs && \
-    git remote set-url origin git@github.com:tranfu-labs/claude-skills.git
-fi
+for old in ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills; do
+  if [ -d "$old" ] && [ ! -d ~/.tranfu-labs/tranfu-skills ]; then
+    mkdir -p ~/.tranfu-labs
+    mv "$old" ~/.tranfu-labs/tranfu-skills
+    cd ~/.tranfu-labs/tranfu-skills && \
+      git remote set-url origin git@github.com:tranfu-labs/tranfu-skills.git
+    break
+  fi
+done
 ```
 
 新装用户两个条件之一不满足, 整块静默跳过 — 无影响.
@@ -51,7 +53,7 @@ fi
 ### 1. 预检查
 
 ```bash
-cd ~/.tranfu-labs/claude-skills/
+cd ~/.tranfu-labs/tranfu-skills/
 status=$(git status -s)
 ```
 
@@ -64,7 +66,7 @@ status=$(git status -s)
 ### 2. git pull (失败大声报错)
 
 ```bash
-cd ~/.tranfu-labs/claude-skills/
+cd ~/.tranfu-labs/tranfu-skills/
 git fetch
 git pull --ff-only
 ```
@@ -74,7 +76,7 @@ git pull --ff-only
 ### 3. Diff 出新增/更新 skill
 
 ```bash
-cd ~/.tranfu-labs/claude-skills/
+cd ~/.tranfu-labs/tranfu-skills/
 git diff HEAD@{1}..HEAD --name-only -- '*/*/SKILL.md' | sort -u
 ```
 
@@ -89,7 +91,7 @@ git diff HEAD@{1}..HEAD --name-only -- '*/*/SKILL.md' | sort -u
 for skill in publish-skill search-skills install-skill update-skills:
 
 ```bash
-cache_path=~/.tranfu-labs/claude-skills/meta-skills/$skill
+cache_path=~/.tranfu-labs/tranfu-skills/meta-skills/$skill
 local_path=$TARGET_SKILLS_USER/$skill
 
 # 取 version
@@ -131,7 +133,7 @@ fi
 
 ```bash
 echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"actor\":\"$(gh api user -q .login)\",\"event\":\"update\",\"runtime\":\"<claude-code|codex-cli>\",\"ok\":true,\"new\":<N1>,\"updated\":<N2>,\"meta_upgraded\":[<list>]}" \
-  >> ~/.tranfu-labs/claude-skills/.dogfood-r1.log
+  >> ~/.tranfu-labs/tranfu-skills/.dogfood-r1.log
 ```
 
 ## Failure modes

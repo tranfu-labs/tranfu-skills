@@ -7,7 +7,7 @@ updated_at: 2026-05-13
 origin: own
 ---
 
-# Search tranfu-labs/claude-skills cache
+# Search tranfu-labs/tranfu-skills cache
 
 ## When to use
 
@@ -19,7 +19,7 @@ origin: own
 
 ## Constants
 
-- 缓存路径: `~/.tranfu-labs/claude-skills/`
+- 缓存路径: `~/.tranfu-labs/tranfu-skills/`
 - 三个子目录都搜: `meta-skills/`, `own-skills/`, `external-skills/`
 - meta-skills 默认**包含**在结果里, 但条目末尾标 `[meta]` (用户搜 "publish" 时找得到 publish-skill, 不藏)
 - 跳过任何 `.` 或 `_` 开头的目录, 跳过 `external-skills/.gitkeep` 这类占位文件
@@ -28,16 +28,18 @@ origin: own
 
 ### 0.5. 旧缓存路径迁移 (一次性兼容)
 
-公司库从 `aistore-labs` 改名到 `tranfu-labs`. 如检测到旧 `~/.aistore-labs/claude-skills/`, 新路径不在, 静默迁移:
+公司库经历两次改名: `aistore-labs/claude-skills` → `tranfu-labs/claude-skills` → `tranfu-labs/tranfu-skills`. 如检测到任一老缓存且新路径不在, 静默迁移并修 git remote:
 
 ```bash
-if [ -d ~/.aistore-labs/claude-skills ] && [ ! -d ~/.tranfu-labs/claude-skills ]; then
-  mkdir -p ~/.tranfu-labs
-  mv ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills
-  cd ~/.tranfu-labs/claude-skills && \
-    git remote get-url origin 2>/dev/null | grep -q aistore-labs && \
-    git remote set-url origin git@github.com:tranfu-labs/claude-skills.git
-fi
+for old in ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills; do
+  if [ -d "$old" ] && [ ! -d ~/.tranfu-labs/tranfu-skills ]; then
+    mkdir -p ~/.tranfu-labs
+    mv "$old" ~/.tranfu-labs/tranfu-skills
+    cd ~/.tranfu-labs/tranfu-skills && \
+      git remote set-url origin git@github.com:tranfu-labs/tranfu-skills.git
+    break
+  fi
+done
 ```
 
 新装用户条件不满足, 静默跳过.
@@ -56,7 +58,7 @@ fi
 ### 2. 列出候选 skill 目录 (跨 3 个子目录)
 
 ```bash
-cd ~/.tranfu-labs/claude-skills/
+cd ~/.tranfu-labs/tranfu-skills/
 ls -1 meta-skills/ own-skills/ external-skills/ 2>/dev/null \
   | grep -E '/$' \
   || find meta-skills own-skills external-skills -maxdepth 1 -mindepth 1 -type d 2>/dev/null
@@ -125,7 +127,7 @@ cat "<category>/<skill-name>/SKILL.md" | sed -n '1,/^---$/p; /^---$/,/^---$/p' |
 
 ```bash
 echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"actor\":\"$(gh api user -q .login)\",\"event\":\"search\",\"query\":\"<关键词以逗号 join>\",\"matches\":<N>}" \
-  >> ~/.tranfu-labs/claude-skills/.dogfood-r1.log
+  >> ~/.tranfu-labs/tranfu-skills/.dogfood-r1.log
 ```
 
 ## Failure modes

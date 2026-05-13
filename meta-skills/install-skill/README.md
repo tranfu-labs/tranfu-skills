@@ -18,9 +18,9 @@
 
 **副作用**
 
-- 复制 `~/.tranfu-labs/claude-skills/<name>/` 到目标 (`~/.claude/skills/` 或 `<cwd>/.claude/skills/`).
+- 复制 `~/.tranfu-labs/tranfu-skills/<name>/` 到目标 (`~/.claude/skills/` 或 `<cwd>/.claude/skills/`).
 - 若 origin=external + source_url 有实质变化 → 自动开 refresh PR 更新 cache stub frontmatter.
-- 末尾 append 一行 `~/.tranfu-labs/claude-skills/.dogfood-r1.log`.
+- 末尾 append 一行 `~/.tranfu-labs/tranfu-skills/.dogfood-r1.log`.
 
 **不会**
 
@@ -38,7 +38,7 @@
 
 ## 依赖
 
-- 缓存仓库 `~/.tranfu-labs/claude-skills/` (由 `update-skills` 维护).
+- 缓存仓库 `~/.tranfu-labs/tranfu-skills/` (由 `update-skills` 维护).
 - `gh` CLI (external refresh PR).
 - `curl` / `git` / `mktemp`.
 

@@ -18,9 +18,9 @@ origin: own
 
 ## Constants
 
-- 缓存路径: `~/.tranfu-labs/claude-skills/`
+- 缓存路径: `~/.tranfu-labs/tranfu-skills/`
 - 缓存内子目录: `meta-skills/`, `own-skills/`, `external-skills/`
-- **目标路径按 runtime 自适应** — 见 `~/.tranfu-labs/claude-skills/RUNTIME.md` 第 1 节查表:
+- **目标路径按 runtime 自适应** — 见 `~/.tranfu-labs/tranfu-skills/RUNTIME.md` 第 1 节查表:
   - Claude Code: user `~/.claude/skills/` / project `<cwd>/.claude/skills/`
   - Codex CLI: user `~/.codex/skills/` / project `<cwd>/.codex/skills/`
 - **install-skill 不装 meta-skill** — meta-skill 走 update-skills 同步, 不走 install-skill。如果用户要求装 meta-skill 名 (publish-skill / search-skills / install-skill / update-skills), 直接告诉用户用 update-skills。
@@ -36,16 +36,18 @@ origin: own
 
 ## 0.5. 旧缓存路径迁移 (一次性兼容)
 
-公司库从 `aistore-labs` 改名到 `tranfu-labs`. 如检测到旧 `~/.aistore-labs/claude-skills/`, 新路径不在, 静默迁移:
+公司库经历两次改名: `aistore-labs/claude-skills` → `tranfu-labs/claude-skills` → `tranfu-labs/tranfu-skills`. 如检测到任一老缓存且新路径不在, 静默迁移并修 git remote:
 
 ```bash
-if [ -d ~/.aistore-labs/claude-skills ] && [ ! -d ~/.tranfu-labs/claude-skills ]; then
-  mkdir -p ~/.tranfu-labs
-  mv ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills
-  cd ~/.tranfu-labs/claude-skills && \
-    git remote get-url origin 2>/dev/null | grep -q aistore-labs && \
-    git remote set-url origin git@github.com:tranfu-labs/claude-skills.git
-fi
+for old in ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills; do
+  if [ -d "$old" ] && [ ! -d ~/.tranfu-labs/tranfu-skills ]; then
+    mkdir -p ~/.tranfu-labs
+    mv "$old" ~/.tranfu-labs/tranfu-skills
+    cd ~/.tranfu-labs/tranfu-skills && \
+      git remote set-url origin git@github.com:tranfu-labs/tranfu-skills.git
+    break
+  fi
+done
 ```
 
 新装用户条件不满足, 静默跳过.
@@ -57,7 +59,7 @@ fi
 ```bash
 # 在 own-skills 和 external-skills 下查 (跳过 meta-skills, install-skill 不装 meta)
 for cat in own-skills external-skills; do
-  if [ -f ~/.tranfu-labs/claude-skills/$cat/<name>/SKILL.md ]; then
+  if [ -f ~/.tranfu-labs/tranfu-skills/$cat/<name>/SKILL.md ]; then
     found_category=$cat
     break
   fi
@@ -70,7 +72,7 @@ done
 如果用户给的 name 命中 meta-skill 名单 → 提示:
 > "<name> 是 meta-skill, 不通过 install-skill 装. 跑 update-skills 即可同步到 `$TARGET_SKILLS_USER` (当前 runtime 的 user 级 skill 目录)."
 
-读 `~/.tranfu-labs/claude-skills/$found_category/<name>/SKILL.md` frontmatter 拿 origin / source_url.
+读 `~/.tranfu-labs/tranfu-skills/$found_category/<name>/SKILL.md` frontmatter 拿 origin / source_url.
 
 ### 2. 强制问 scope
 
@@ -105,7 +107,7 @@ ls "<target>/<name>/" 2>/dev/null
 
 直接 cp (从 own-skills/ 拍扁到 target):
 ```bash
-cp -r ~/.tranfu-labs/claude-skills/own-skills/<name>/ <target>/<name>/
+cp -r ~/.tranfu-labs/tranfu-skills/own-skills/<name>/ <target>/<name>/
 ```
 
 #### 4b. origin=external
@@ -141,7 +143,7 @@ rm -rf "$tmp"
 
 ```bash
 # 比对 cache stub (external 一定在 external-skills/ 下)
-cache_stub=~/.tranfu-labs/claude-skills/external-skills/<name>/SKILL.md
+cache_stub=~/.tranfu-labs/tranfu-skills/external-skills/<name>/SKILL.md
 # 抽 cache stub 的 name/description/version
 
 # 若任一不同 → patch cache stub frontmatter (仅 frontmatter, 保留 body 薄指针文案)
@@ -158,7 +160,7 @@ cache_stub=~/.tranfu-labs/claude-skills/external-skills/<name>/SKILL.md
 #### 5b. 自动 PR (实质变化)
 
 ```bash
-cd ~/.tranfu-labs/claude-skills/
+cd ~/.tranfu-labs/tranfu-skills/
 git checkout main && git pull --ff-only
 ts=$(date +%s)
 git checkout -b "refresh/<name>-$ts"
@@ -200,7 +202,7 @@ extra=""
 [ "<origin>" = "external" ] && extra=",\"cache_refresh\":\"<status: none|local-patch|pr-opened>\""
 
 echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"actor\":\"$(gh api user -q .login)\",\"event\":\"install\",\"skill\":\"<name>\",\"scope\":\"<user|project>\",\"runtime\":\"<claude-code|codex-cli>\",\"origin\":\"<origin>\"$extra}" \
-  >> ~/.tranfu-labs/claude-skills/.dogfood-r1.log
+  >> ~/.tranfu-labs/tranfu-skills/.dogfood-r1.log
 ```
 
 ## Failure modes

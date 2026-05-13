@@ -42,7 +42,7 @@
 
 ## 依赖
 
-- 缓存仓库 `~/.tranfu-labs/claude-skills/` (由 `update-skills` 维护).
+- 缓存仓库 `~/.tranfu-labs/tranfu-skills/` (由 `update-skills` 维护).
 - `gh api user` (dogfood log actor 字段).
 
 ## 参考
