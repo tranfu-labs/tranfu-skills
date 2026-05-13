@@ -2,7 +2,7 @@ name: Notify Lark on skill changes
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, closed]
 
 permissions:
   contents: read
@@ -30,6 +30,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ACTION: ${{ github.event.action }}
+          MERGED: ${{ github.event.pull_request.merged }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.event.after }}
         run: |
@@ -38,6 +39,12 @@ jobs:
           if [ -z "${LARK_WEBHOOK_URL:-}" ]; then
             echo "::error::LARK_WEBHOOK_URL secret is not set."
             exit 1
+          fi
+
+          # Closed-but-not-merged PRs are abandoned; no consumer cares — skip silently.
+          if [ "$ACTION" = "closed" ] && [ "$MERGED" != "true" ]; then
+            echo "PR closed without merge; skipping notification."
+            exit 0
           fi
 
           # Resolve PR author -> 昵称 via .github/collaborators.json (flat login→昵称 map).
@@ -140,6 +147,14 @@ jobs:
             esac
             # 未映射作者一律用 yellow, 视觉上提示需要人工 review
             [ "$unmapped_author" = "1" ] && color="yellow"
+
+            # Merge event: prepend "已合并" badge and force green to visually
+            # distinguish from open/synchronize cards. Consumer signal: 现在可以
+            # 跑 update-skills 拉到这一变更.
+            if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
+              action_label="已合并 · ${action_label}"
+              color="green"
+            fi
 
             # Read frontmatter from the appropriate ref.
             # - added/modified/renamed: read from HEAD
