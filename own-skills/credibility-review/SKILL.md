@@ -5,7 +5,7 @@ version: 0.1.2
 author: aquarius-wing
 updated_at: 2026-05-11
 origin: own
-published_to: tranfu-labs/claude-skills
+published_to: tranfu-labs/tranfu-skills
 published_version: 0.1.2
 published_at: 2026-05-11
 ---

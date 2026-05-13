@@ -8,7 +8,7 @@
 
 ## 2026-05-13
 
-- **组织改名 `aistore-labs` → `tranfu-labs`** — 仓库 URL / 缓存路径 / 文案 / SVG 全链路替换. 4 个 meta-skill + INSTALL.md 顶部加 `§0.5 旧缓存路径迁移` 一次性兼容块: 检测 `~/.aistore-labs/claude-skills/` 在且 `~/.tranfu-labs/claude-skills/` 不在时, 静默 `mv` + 修 git remote URL. UNINSTALL.md 加双路径兜底删. 老用户首次 `update-skills` 后自动迁完, 后续无感; 新用户条件不满足, 整块静默跳过. (CLI 化下载后 `~/.tranfu-labs/` 也会废弃.)
+- **组织改名 `aistore-labs` → `tranfu-labs`** — 仓库 URL / 缓存路径 / 文案 / SVG 全链路替换. 4 个 meta-skill + INSTALL.md 顶部加 `§0.5 旧缓存路径迁移` 一次性兼容块: 检测 `~/.aistore-labs/claude-skills/` 在且 `~/.tranfu-labs/tranfu-skills/` 不在时, 静默 `mv` + 修 git remote URL. UNINSTALL.md 加双路径兜底删. 老用户首次 `update-skills` 后自动迁完, 后续无感; 新用户条件不满足, 整块静默跳过. (CLI 化下载后 `~/.tranfu-labs/` 也会废弃.)
 - **install-skill** 0.2.0 → 0.2.1 — 加 §0.5 迁移.
 - **update-skills** 0.2.0 → 0.2.1 — 加 §0.5 迁移.
 - **search-skills** 0.1.1 → 0.1.2 — 加 §0.5 迁移.
@@ -25,14 +25,14 @@
 
 ## 2026-05-09
 
-- **仓库结构重组** — skill 按 `origin` 分文件夹: `meta-skills/` (4 个生命周期管理器), `own-skills/` (公司原创), `external-skills/` (外部薄指针). user 级加载点保持扁平, install / bootstrap cp 时去掉 category 中间层. ([#5](https://github.com/tranfu-labs/claude-skills/pull/5))
-- **publish-skill** 0.1.1 → 0.1.2 — 按 origin 决定落 own-skills/ 或 external-skills/, 拒绝发布 meta-skill 名 (强制走仓库直接 PR 路径). ([#5](https://github.com/tranfu-labs/claude-skills/pull/5))
-- **search-skills** 0.1.0 → 0.1.1 — 跨 3 子目录搜, meta-skill 结果末尾标 `[meta]` 标. ([#5](https://github.com/tranfu-labs/claude-skills/pull/5))
-- **install-skill** 0.1.0 → 0.1.1 — 在 own-skills + external-skills 下查找 (跳过 meta-skills, 拒装 meta-skill 名). ([#5](https://github.com/tranfu-labs/claude-skills/pull/5))
-- **update-skills** 0.1.0 → 0.1.1 — meta-skill 缓存源路径从根改为 `meta-skills/`, 拍扁 cp 到 `~/.claude/skills/`. ([#5](https://github.com/tranfu-labs/claude-skills/pull/5))
-- **publish-skill** 0.1.0 → 0.1.1 — 加 §3.5 README.md 补全步骤 (给使用者), §7 PR body 改 checklist 模板 (给 reviewer); 视角分离. ([#2](https://github.com/tranfu-labs/claude-skills/pull/2))
-- **bootstrap 流程改造** — `README.md` 安装区从 bash 脚本改为提示词驱动, 实际步骤搬到 [`INSTALL.md`](./INSTALL.md) 由 Claude Code 本地读取执行. ([#2](https://github.com/tranfu-labs/claude-skills/pull/2))
-- **credibility-review** 0.1.0 — 首次发布. 文章可信度审稿 skill (踩坑记/养成记 dual-track + anti-pattern 检测). ([#1](https://github.com/tranfu-labs/claude-skills/pull/1))
+- **仓库结构重组** — skill 按 `origin` 分文件夹: `meta-skills/` (4 个生命周期管理器), `own-skills/` (公司原创), `external-skills/` (外部薄指针). user 级加载点保持扁平, install / bootstrap cp 时去掉 category 中间层. ([#5](https://github.com/tranfu-labs/tranfu-skills/pull/5))
+- **publish-skill** 0.1.1 → 0.1.2 — 按 origin 决定落 own-skills/ 或 external-skills/, 拒绝发布 meta-skill 名 (强制走仓库直接 PR 路径). ([#5](https://github.com/tranfu-labs/tranfu-skills/pull/5))
+- **search-skills** 0.1.0 → 0.1.1 — 跨 3 子目录搜, meta-skill 结果末尾标 `[meta]` 标. ([#5](https://github.com/tranfu-labs/tranfu-skills/pull/5))
+- **install-skill** 0.1.0 → 0.1.1 — 在 own-skills + external-skills 下查找 (跳过 meta-skills, 拒装 meta-skill 名). ([#5](https://github.com/tranfu-labs/tranfu-skills/pull/5))
+- **update-skills** 0.1.0 → 0.1.1 — meta-skill 缓存源路径从根改为 `meta-skills/`, 拍扁 cp 到 `~/.claude/skills/`. ([#5](https://github.com/tranfu-labs/tranfu-skills/pull/5))
+- **publish-skill** 0.1.0 → 0.1.1 — 加 §3.5 README.md 补全步骤 (给使用者), §7 PR body 改 checklist 模板 (给 reviewer); 视角分离. ([#2](https://github.com/tranfu-labs/tranfu-skills/pull/2))
+- **bootstrap 流程改造** — `README.md` 安装区从 bash 脚本改为提示词驱动, 实际步骤搬到 [`INSTALL.md`](./INSTALL.md) 由 Claude Code 本地读取执行. ([#2](https://github.com/tranfu-labs/tranfu-skills/pull/2))
+- **credibility-review** 0.1.0 — 首次发布. 文章可信度审稿 skill (踩坑记/养成记 dual-track + anti-pattern 检测). ([#1](https://github.com/tranfu-labs/tranfu-skills/pull/1))
 - **claude-skills** 仓库初始化 — 4 个 meta-skill (publish-skill / search-skills / install-skill / update-skills) + README. (root commit `85fa516`)
 
 ---

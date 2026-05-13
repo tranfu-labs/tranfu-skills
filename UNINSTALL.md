@@ -1,4 +1,4 @@
-# UNINSTALL — 完整卸载 tranfu-labs/claude-skills
+# UNINSTALL — 完整卸载 tranfu-labs/tranfu-skills
 
 > 这份文档是给 **agentic CLI** 看的 (Claude Code / OpenAI Codex CLI)。用户复制 README.md 里的卸载提示词后, CLI 读到这份 UNINSTALL.md, 按下面流程执行。
 
@@ -9,7 +9,7 @@
 ## 卸载范围 (默认)
 
 - `$TARGET_SKILLS` 下的 4 个 meta-skill: `publish-skill` / `search-skills` / `install-skill` / `update-skills`
-- `~/.tranfu-labs/claude-skills/` 整个缓存目录 (含 `.git` + meta-skills/ + own-skills/ + external-skills/ + `.dogfood-*.log`)
+- `~/.tranfu-labs/tranfu-skills/` 整个缓存目录 (含 `.git` + meta-skills/ + own-skills/ + external-skills/ + `.dogfood-*.log`)
 
 ## 默认保留 (不动)
 
@@ -27,15 +27,16 @@
 明确列出要删的内容 (路径用步骤 0 选定的 `$TARGET_SKILLS` 实化), 让用户最后确认一次:
 
 ```
-要卸载 tranfu-labs/claude-skills (当前 runtime: <Claude Code / Codex CLI>):
+要卸载 tranfu-labs/tranfu-skills (当前 runtime: <Claude Code / Codex CLI>):
 
 会删:
 - $TARGET_SKILLS/publish-skill/
 - $TARGET_SKILLS/search-skills/
 - $TARGET_SKILLS/install-skill/
 - $TARGET_SKILLS/update-skills/
-- ~/.tranfu-labs/claude-skills/  (含 git 历史 + dogfood log; 如存在)
-- ~/.aistore-labs/claude-skills/  (改名前的旧缓存; 如存在)
+- ~/.tranfu-labs/tranfu-skills/  (含 git 历史 + dogfood log; 如存在)
+- ~/.tranfu-labs/claude-skills/  (一次改名前的中间缓存; 如存在)
+- ~/.aistore-labs/claude-skills/  (两次改名前的旧缓存; 如存在)
 
 会保留:
 - 本地 skill 里 published_* frontmatter 标记
@@ -51,8 +52,9 @@
 ### 2. 预检查缓存里的未提交工作
 
 ```bash
-# 优先看新路径; 老用户可能仍在旧路径
-cache=~/.tranfu-labs/claude-skills
+# 优先看新路径; 老用户可能仍在中间/旧路径
+cache=~/.tranfu-labs/tranfu-skills
+[ -d "$cache" ] || cache=~/.tranfu-labs/claude-skills
 [ -d "$cache" ] || cache=~/.aistore-labs/claude-skills
 cd "$cache" 2>/dev/null && git status -s
 ```
@@ -77,18 +79,19 @@ done
 ### 4. 删缓存目录 (新路径 + 老路径都清)
 
 ```bash
+rm -rf "$HOME/.tranfu-labs/tranfu-skills"
+# 兼容: 老用户可能还残留中间/旧路径 (没走过 0.5 迁移)
 rm -rf "$HOME/.tranfu-labs/claude-skills"
-# 兼容: 老用户可能还残留 aistore-labs 旧路径 (改名前 bootstrap 装的, 没走过 0.5 迁移)
 rm -rf "$HOME/.aistore-labs/claude-skills"
 ```
 
-注: 只删 `claude-skills` 子目录, 不删 `~/.tranfu-labs/` / `~/.aistore-labs/` 本身 (将来可能放别的资源)。
+注: 只删 `tranfu-skills` / `claude-skills` 这几个子目录, 不删 `~/.tranfu-labs/` / `~/.aistore-labs/` 本身 (将来可能放别的资源)。
 
 ### 5. 验证
 
 ```bash
 present=$(ls -1 "$TARGET_SKILLS" 2>/dev/null | grep -E '^(publish-skill|search-skills|install-skill|update-skills)$' | wc -l | tr -d ' ')
-[ -d ~/.tranfu-labs/claude-skills ] || [ -d ~/.aistore-labs/claude-skills ] && cache=exists || cache=gone
+{ [ -d ~/.tranfu-labs/tranfu-skills ] || [ -d ~/.tranfu-labs/claude-skills ] || [ -d ~/.aistore-labs/claude-skills ]; } && cache=exists || cache=gone
 echo "user-meta-remaining=$present cache=$cache"
 ```
 
@@ -111,7 +114,7 @@ echo "user-meta-remaining=$present cache=$cache"
 
 - `rm` 报权限 → 让用户用 `sudo` 自己跑, 不代办
 - `$TARGET_SKILLS` 整个不存在 → 当成幂等 success, 跳到下一步
-- 缓存目录有 uncommitted 但用户选"先 push" → 引导用户 `cd ~/.tranfu-labs/claude-skills && gh pr create`, 等用户处理完再回来重跑
+- 缓存目录有 uncommitted 但用户选"先 push" → 引导用户 `cd <实际缓存路径> && gh pr create` (用步骤 2 检测到的 `$cache`), 等用户处理完再回来重跑
 
 ## What NOT to do
 
@@ -120,5 +123,5 @@ echo "user-meta-remaining=$present cache=$cache"
 - ❌ 不动另一个 runtime 的目录 — 只清当前 runtime
 - ❌ 不改/删本地任何 skill SKILL.md 的 frontmatter
 - ❌ 不动 `~/.zshrc` / 环境变量 / shell config (从来没写过, 没东西要清)
-- ❌ 不递归删 `~/.tranfu-labs/` 本身, 只删 `claude-skills` 子目录
+- ❌ 不递归删 `~/.tranfu-labs/` 本身, 只删 `tranfu-skills` / `claude-skills` 子目录
 - ❌ 不调子 LLM

@@ -21,7 +21,7 @@
 
 **副作用**
 
-- `git fetch && git pull --ff-only` on `~/.tranfu-labs/claude-skills/`.
+- `git fetch && git pull --ff-only` on `~/.tranfu-labs/tranfu-skills/`.
 - 比对 4 个 meta-skill 的 `version` 字段, 不同则 `rm -rf` + `cp -r` 覆盖到 `~/.claude/skills/<meta>/`.
 - 末尾 append `.dogfood-r1.log` (含 `meta_upgraded` 列表).
 
