@@ -1,0 +1,47 @@
+name: Claude (interactive)
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  claude:
+    # Only react to @claude mentions on comments; always run on issue open/assign
+    if: >-
+      github.event_name == 'issues' ||
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mount own-skills + meta-skills into Claude Code's skill directory so the
+      # action can dispatch publish-skill / search-skills / install-skill / update-skills
+      # exactly as a local Claude Code session would.
+      - name: Mount own-skills + meta-skills
+        run: |
+          set -euo pipefail
+          mkdir -p .claude/skills
+          for d in own-skills/*/ meta-skills/*/; do
+            [ -d "$d" ] || continue
+            name=$(basename "$d")
+            cp -r "$d" ".claude/skills/$name"
+          done
+          echo "Mounted skills:"
+          ls .claude/skills/
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: |
+            --max-turns 15
