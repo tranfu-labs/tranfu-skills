@@ -1,0 +1,72 @@
+name: Claude Skill Lint
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - 'own-skills/**/SKILL.md'
+      - 'external-skills/**/SKILL.md'
+      - 'meta-skills/**/SKILL.md'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint:
+    # Fork PRs can't read secrets — skip cleanly instead of 401-ing
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Only mount meta-skills here — lint just needs publish-skill's templates
+      # and search-skills' discovery logic. Avoids dragging in unrelated own-skills
+      # context and keeps the prompt cheap.
+      - name: Mount meta-skills
+        run: |
+          set -euo pipefail
+          mkdir -p .claude/skills
+          for d in meta-skills/*/; do
+            [ -d "$d" ] || continue
+            name=$(basename "$d")
+            cp -r "$d" ".claude/skills/$name"
+          done
+          ls .claude/skills/
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            你是 ${{ github.repository }} 的 PR 审查员, 复用 publish-skill 的规范.
+
+            本 PR (#${{ github.event.pull_request.number }}) 改动了 SKILL.md.
+            请按下面 4 条逐项检查, 输出一条 review comment 贴回 PR.
+
+            1. **frontmatter 完整性** — name / description / version / author / updated_at / license 是否齐全, description 是否包含 "当用户说 X 时" 的触发语 + "Do NOT trigger when" 反例 (参考 meta-skills/publish-skill/templates/section-frontmatter.md)
+            2. **§同类 Skill 对比** — 是否存在该章节, 是否给出内/外候选 (≤3+3) + 独特价值一句话
+            3. **§使用技巧** — 是否含 材料方案 / 推荐用法 / 已知限制 三个子段
+            4. **cases/** — 是否至少有 1 个案例文件, 案例是否引用真实场景
+
+            输出格式 (Markdown):
+            ```
+            ## Claude Skill Lint
+
+            | 检查项 | 结果 |
+            |---|---|
+            | frontmatter   | ✅ / ❌ + 一行原因 |
+            | 同类 Skill 对比 | ✅ / ❌ + 一行原因 |
+            | 使用技巧       | ✅ / ❌ + 一行原因 |
+            | cases/         | ✅ / ❌ + 一行原因 |
+
+            **结论**: 建议合并 / 需修改
+            ```
+
+            只读 + 评论, 不要直接改文件.
+          claude_args: |
+            --max-turns 20
+            --allowedTools Read,Grep,Glob,Bash
