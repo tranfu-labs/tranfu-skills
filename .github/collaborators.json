@@ -1,7 +1,7 @@
 {
-  "//": "GitHub login → {nick, lark_id?}. 未列出回退 @<login> 不 @. lark_id 是 Lark open_id (ou_...), 仅在 PR merge 卡里 @ 提交者. 仅给本 repo 的 workflows 使用.",
-  "aquarius-wing":   {"nick": "Wing", "lark_id": "ou_969dabfe1d5cc965efde923cc9e306e2"},
-  "BruceL017":       {"nick": "小北"},
-  "griffithkk3-del": {"nick": "空空"},
-  "cnrandomgod-jpg": {"nick": "哪吒"}
+  "//": "GitHub login → 卡片显示昵称. 未列出回退 @<login>. lark_id 单独走 Secret LARK_USER_IDS_JSON, 不在此文件 (避免敏感数据进 git). 仅给本 repo 的 workflows 使用.",
+  "aquarius-wing": "Wing",
+  "BruceL017": "小北",
+  "griffithkk3-del": "空空",
+  "cnrandomgod-jpg": "哪吒"
 }
