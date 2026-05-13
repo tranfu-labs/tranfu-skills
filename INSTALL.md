@@ -1,4 +1,4 @@
-# INSTALL — bootstrap aistore-labs/claude-skills 到本地
+# INSTALL — bootstrap tranfu-labs/claude-skills 到本地
 
 > 这份文档不是给人看流水的，是给 **agentic CLI** 看的 (目前支持 Claude Code 和 OpenAI Codex CLI)。用户复制 README.md 里那段提示词后, CLI 会克隆本仓库, 读到这份 INSTALL.md, 按下面步骤执行。
 
@@ -11,20 +11,36 @@
 执行前先确认:
 
 - `gh auth status` 已登录 GitHub (用来 clone 私仓 + 后续 PR)
-- `~/.aistore-labs/` 目录可写
+- `~/.tranfu-labs/` 目录可写
 - `$TARGET_SKILLS` 目录存在 (按步骤 0 选定, 详见 RUNTIME.md 第 3 节)
 
 任一不满足 → 停下来告诉用户具体哪一项, 不静默修。目录不存在 → 提示用户先初始化对应 CLI, **不替它建目录**。
 
 ## 步骤
 
+### 0.5. 旧缓存路径迁移 (一次性兼容, 仅老用户)
+
+公司库从 `aistore-labs` 改名到 `tranfu-labs`. 如检测到老缓存 `~/.aistore-labs/claude-skills/` 且新路径还不在, 静默 `mv` 过去并修 git remote:
+
+```bash
+if [ -d ~/.aistore-labs/claude-skills ] && [ ! -d ~/.tranfu-labs/claude-skills ]; then
+  mkdir -p ~/.tranfu-labs
+  mv ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills
+  cd ~/.tranfu-labs/claude-skills && \
+    git remote get-url origin 2>/dev/null | grep -q aistore-labs && \
+    git remote set-url origin git@github.com:tranfu-labs/claude-skills.git
+fi
+```
+
+新装用户条件不满足, 整块静默跳过, 不影响首装.
+
 ### 1. clone 缓存仓库 (幂等)
 
 ```bash
-if [ ! -d ~/.aistore-labs/claude-skills/.git ]; then
-  git clone git@github.com:aistore-labs/claude-skills.git ~/.aistore-labs/claude-skills
+if [ ! -d ~/.tranfu-labs/claude-skills/.git ]; then
+  git clone git@github.com:tranfu-labs/claude-skills.git ~/.tranfu-labs/claude-skills
 else
-  cd ~/.aistore-labs/claude-skills && git pull --ff-only
+  cd ~/.tranfu-labs/claude-skills && git pull --ff-only
 fi
 ```
 
@@ -35,7 +51,7 @@ fi
 ```bash
 TARGET_SKILLS=<按步骤 0 选定>   # RUNTIME.md 第 1 节查表
 for s in publish-skill search-skills install-skill update-skills; do
-  cp -r ~/.aistore-labs/claude-skills/meta-skills/$s/ "$TARGET_SKILLS/$s/"
+  cp -r ~/.tranfu-labs/claude-skills/meta-skills/$s/ "$TARGET_SKILLS/$s/"
 done
 ```
 

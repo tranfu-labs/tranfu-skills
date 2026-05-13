@@ -31,7 +31,7 @@
   <text x="700" y="68" text-anchor="middle" font-size="13" fill="#64748b">v0.1.0 · 关键词解析 → 候选目录 → frontmatter → 评分 → 排序 → top N · 全程 read-only</text>
   <rect x="80" y="92" width="1240" height="58" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
   <text x="100" y="115" font-size="13" font-weight="600" fill="#475569">用户触发短语</text>
-  <text x="100" y="136" font-size="12" fill="#334155">"搜公司 skill 关于 UI 设计的" · "公司库有没有 ts 类型推断" · "看看 aistore-labs 有什么 skill" · "列一下公司 skill"</text>
+  <text x="100" y="136" font-size="12" fill="#334155">"搜公司 skill 关于 UI 设计的" · "公司库有没有 ts 类型推断" · "看看 tranfu-labs 有什么 skill" · "列一下公司 skill"</text>
   <rect x="1180" y="104" width="118" height="22" rx="11" fill="#dcfce7" stroke="#059669" stroke-width="1"/>
   <text x="1239" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">✓ read-only</text>
   <line x1="700" y1="150" x2="700" y2="170" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
@@ -43,7 +43,7 @@
   <line x1="380" y1="290" x2="380" y2="310" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
   <rect x="80" y="310" width="600" height="110" rx="6" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2" filter="url(#soft)"/>
   <text x="92" y="329" font-size="12.5" font-weight="700" fill="#7c3aed">§2 列候选 skill 目录</text>
-  <text x="92" y="344" font-size="10.5" fill="#475569">cd ~/.aistore-labs/claude-skills/</text>
+  <text x="92" y="344" font-size="10.5" fill="#475569">cd ~/.tranfu-labs/claude-skills/</text>
   <text x="92" y="359" font-size="10.5" fill="#475569">ls | grep -v '^\.' | grep -v '^_' \</text>
   <text x="92" y="374" font-size="10.5" fill="#475569">       | grep -vE '^(publish|search|install|update)-skills?$'  ← 跳 4 个 meta</text>
   <line x1="380" y1="420" x2="380" y2="440" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
@@ -94,7 +94,7 @@
   <text x="80" y="888" font-size="11" font-weight="600" fill="#64748b">输入 / 输出:</text>
   <text x="170" y="888" font-size="11" fill="#475569">用户关键词 → top N 命中列表 + 下一步 install 引导 + dogfood log 一行</text>
   <text x="80" y="912" font-size="11" font-weight="600" fill="#64748b">权限:</text>
-  <text x="170" y="912" font-size="11" fill="#475569">只读访问 ~/.aistore-labs/claude-skills/ ; 唯一写动作是末尾 .dogfood-r1.log append (单行)</text>
+  <text x="170" y="912" font-size="11" fill="#475569">只读访问 ~/.tranfu-labs/claude-skills/ ; 唯一写动作是末尾 .dogfood-r1.log append (单行)</text>
   <text x="80" y="936" font-size="11" font-weight="600" fill="#64748b">下游 skill:</text>
   <text x="170" y="936" font-size="11" fill="#475569">install-skill (用户基于结果二次确认; 不自动衔接)</text>
 </svg>

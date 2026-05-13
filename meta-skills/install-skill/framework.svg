@@ -35,7 +35,7 @@
   <line x1="700" y1="150" x2="700" y2="170" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
   <rect x="80" y="178" width="1240" height="78" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.3"/>
   <text x="100" y="202" font-size="14" font-weight="700" fill="#0f172a">§1 确认 skill 在缓存</text>
-  <text x="100" y="223" font-size="12" fill="#334155">ls ~/.aistore-labs/claude-skills/&lt;name&gt;/SKILL.md  →  读 frontmatter 拿 origin / source_url</text>
+  <text x="100" y="223" font-size="12" fill="#334155">ls ~/.tranfu-labs/claude-skills/&lt;name&gt;/SKILL.md  →  读 frontmatter 拿 origin / source_url</text>
   <text x="100" y="243" font-size="11" fill="#64748b">不存在 → 提示 "缓存里没有 &lt;name&gt;, 要不要先 update-skills 拉最新?"</text>
   <line x1="700" y1="256" x2="700" y2="276" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
   <rect x="80" y="284" width="1240" height="78" rx="10" fill="#fef3c7" stroke="#ca8a04" stroke-width="1.6"/>
@@ -58,7 +58,7 @@
   <rect x="80" y="568" width="600" height="280" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1" stroke-opacity="0.35"/>
   <rect x="92" y="580" width="576" height="70" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" filter="url(#soft)"/>
   <text x="104" y="599" font-size="12.5" font-weight="700" fill="#2563eb">4a. cp -r 缓存 → 目标</text>
-  <text x="104" y="614" font-size="10.5" fill="#475569">cp -r ~/.aistore-labs/claude-skills/&lt;name&gt;/ &lt;target&gt;/&lt;name&gt;/</text>
+  <text x="104" y="614" font-size="10.5" fill="#475569">cp -r ~/.tranfu-labs/claude-skills/&lt;name&gt;/ &lt;target&gt;/&lt;name&gt;/</text>
   <text x="104" y="629" font-size="10.5" fill="#475569">原子操作 (失败不留半装)</text>
   <line x1="380" y1="650" x2="380" y2="666" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
   <rect x="92" y="668" width="576" height="60" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.2" filter="url(#soft)"/>

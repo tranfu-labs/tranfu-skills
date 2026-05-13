@@ -1,29 +1,29 @@
 ---
 name: update-skills
 description: 当用户说"更新公司 skill 缓存 / 同步公司库 / 拉最新"时, git pull 缓存仓库, 并把更新后的 4 个 meta-skill 副本 (从 meta-skills/ 子目录拍扁) 覆盖到当前 runtime 的 user 级 skill 目录 (Claude Code → ~/.claude/skills/, Codex CLI → ~/.codex/skills/)
-version: 0.2.0
+version: 0.2.1
 author: aquarius-wing
-updated_at: 2026-05-12
+updated_at: 2026-05-13
 origin: own
 ---
 
-# Update local cache of aistore-labs/claude-skills
+# Update local cache of tranfu-labs/claude-skills
 
 ## When to use
 
 用户主动要求更新缓存. 触发语示例:
 - "更新公司 skill 缓存"
 - "拉公司库最新"
-- "同步 aistore-labs"
+- "同步 tranfu-labs"
 - "看看公司库有什么新东西"
 
 **不要**自动定时跑. 不要在 SessionStart 跑. 仅用户主动触发.
 
 ## Constants
 
-- 缓存路径: `~/.aistore-labs/claude-skills/`
+- 缓存路径: `~/.tranfu-labs/claude-skills/`
 - 缓存内仓库结构: `meta-skills/`, `own-skills/`, `external-skills/` 三个子目录
-- 4 个 meta-skill 缓存源路径: `~/.aistore-labs/claude-skills/meta-skills/{publish-skill,search-skills,install-skill,update-skills}/`
+- 4 个 meta-skill 缓存源路径: `~/.tranfu-labs/claude-skills/meta-skills/{publish-skill,search-skills,install-skill,update-skills}/`
 - 加载点 (扁平, 按 runtime): `$TARGET_SKILLS_USER/{publish-skill,search-skills,install-skill,update-skills}/`, 详见 [RUNTIME.md](../../RUNTIME.md) 第 1 节
 
 ## Steps
@@ -32,10 +32,26 @@ origin: own
 
 按 [RUNTIME.md](../../RUNTIME.md) 第 2 节识别你自己, 取到 `$TARGET_SKILLS_USER` (e.g. `~/.claude/skills` 或 `~/.codex/skills`)。默认自报身份, 别问用户。后续 cp 目标都用这个变量。
 
+### 0.5. 旧缓存路径迁移 (一次性兼容)
+
+公司库从 `aistore-labs` 改名到 `tranfu-labs`. 缓存路径相应从 `~/.aistore-labs/claude-skills/` 迁到 `~/.tranfu-labs/claude-skills/`. 如检测到旧路径在, 新路径不在, 静默迁移 + 改 git remote:
+
+```bash
+if [ -d ~/.aistore-labs/claude-skills ] && [ ! -d ~/.tranfu-labs/claude-skills ]; then
+  mkdir -p ~/.tranfu-labs
+  mv ~/.aistore-labs/claude-skills ~/.tranfu-labs/claude-skills
+  cd ~/.tranfu-labs/claude-skills && \
+    git remote get-url origin 2>/dev/null | grep -q aistore-labs && \
+    git remote set-url origin git@github.com:tranfu-labs/claude-skills.git
+fi
+```
+
+新装用户两个条件之一不满足, 整块静默跳过 — 无影响.
+
 ### 1. 预检查
 
 ```bash
-cd ~/.aistore-labs/claude-skills/
+cd ~/.tranfu-labs/claude-skills/
 status=$(git status -s)
 ```
 
@@ -48,7 +64,7 @@ status=$(git status -s)
 ### 2. git pull (失败大声报错)
 
 ```bash
-cd ~/.aistore-labs/claude-skills/
+cd ~/.tranfu-labs/claude-skills/
 git fetch
 git pull --ff-only
 ```
@@ -58,7 +74,7 @@ git pull --ff-only
 ### 3. Diff 出新增/更新 skill
 
 ```bash
-cd ~/.aistore-labs/claude-skills/
+cd ~/.tranfu-labs/claude-skills/
 git diff HEAD@{1}..HEAD --name-only -- '*/*/SKILL.md' | sort -u
 ```
 
@@ -73,7 +89,7 @@ git diff HEAD@{1}..HEAD --name-only -- '*/*/SKILL.md' | sort -u
 for skill in publish-skill search-skills install-skill update-skills:
 
 ```bash
-cache_path=~/.aistore-labs/claude-skills/meta-skills/$skill
+cache_path=~/.tranfu-labs/claude-skills/meta-skills/$skill
 local_path=$TARGET_SKILLS_USER/$skill
 
 # 取 version
@@ -115,7 +131,7 @@ fi
 
 ```bash
 echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"actor\":\"$(gh api user -q .login)\",\"event\":\"update\",\"runtime\":\"<claude-code|codex-cli>\",\"ok\":true,\"new\":<N1>,\"updated\":<N2>,\"meta_upgraded\":[<list>]}" \
-  >> ~/.aistore-labs/claude-skills/.dogfood-r1.log
+  >> ~/.tranfu-labs/claude-skills/.dogfood-r1.log
 ```
 
 ## Failure modes

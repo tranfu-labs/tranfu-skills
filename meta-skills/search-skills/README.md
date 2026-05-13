@@ -10,7 +10,7 @@
 
 - "搜公司 skill 关于 UI 设计的"
 - "公司库有没有 ts 类型推断"
-- "看看 aistore-labs 有什么 skill"
+- "看看 tranfu-labs 有什么 skill"
 - "列一下公司 skill"
 
 ## 输入 / 输出
@@ -42,7 +42,7 @@
 
 ## 依赖
 
-- 缓存仓库 `~/.aistore-labs/claude-skills/` (由 `update-skills` 维护).
+- 缓存仓库 `~/.tranfu-labs/claude-skills/` (由 `update-skills` 维护).
 - `gh api user` (dogfood log actor 字段).
 
 ## 参考

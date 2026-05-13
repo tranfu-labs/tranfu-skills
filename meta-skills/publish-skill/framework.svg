@@ -28,7 +28,7 @@
   </defs>
   <rect width="1400" height="1080" fill="#ffffff"/>
   <text x="700" y="42" text-anchor="middle" font-size="24" font-weight="700" fill="#0f172a">publish-skill — 框架图</text>
-  <text x="700" y="68" text-anchor="middle" font-size="13" fill="#64748b">v0.3.0 · 4 路径路由 + 对话式状态机 + 共享模板 · 目标 aistore-labs/claude-skills</text>
+  <text x="700" y="68" text-anchor="middle" font-size="13" fill="#64748b">v0.3.0 · 4 路径路由 + 对话式状态机 + 共享模板 · 目标 tranfu-labs/claude-skills</text>
   <rect x="80" y="92" width="1240" height="58" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
   <text x="100" y="115" font-size="13" font-weight="600" fill="#475569">用户触发短语</text>
   <text x="100" y="136" font-size="12" fill="#334155">“把本地 X 发到公司库” · “这个 skill 不错, 分享给公司” · “给公司推荐 https://...” · “给 X 加个案例”</text>
@@ -222,7 +222,7 @@
   <text x="1263.0" y="886" text-anchor="middle" font-size="10" font-weight="600" fill="#2563eb">用于 B · C · D</text>
   <rect x="80" y="963" width="1240" height="60" rx="8" fill="#0f172a"/>
   <text x="100" y="987" font-size="13" font-weight="700" fill="#f1f5f9">⇩ 公共产物</text>
-  <text x="100" y="1007" font-size="12" fill="#cbd5e1">PR @ aistore-labs/claude-skills (按 pr-body.md checklist 模板) · dogfood log @ &lt;cache&gt;/.dogfood-r1.log · own 还回填本地 frontmatter published_*</text>
+  <text x="100" y="1007" font-size="12" fill="#cbd5e1">PR @ tranfu-labs/claude-skills (按 pr-body.md checklist 模板) · dogfood log @ &lt;cache&gt;/.dogfood-r1.log · own 还回填本地 frontmatter published_*</text>
   <line x1="230.0" y1="841" x2="230.0" y2="961" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" stroke-opacity="0.7"/>
   <line x1="230.0" y1="949" x2="230.0" y2="961" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
   <line x1="570.0" y1="841" x2="570.0" y2="961" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,3" stroke-opacity="0.7"/>
