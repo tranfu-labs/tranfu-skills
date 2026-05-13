@@ -41,10 +41,17 @@ jobs:
             exit 1
           fi
 
-          # Closed-but-not-merged PRs are abandoned; no consumer cares — skip silently.
-          if [ "$ACTION" = "closed" ] && [ "$MERGED" != "true" ]; then
-            echo "PR closed without merge; skipping notification."
-            exit 0
+          # Close 状态分两种 (都通知, 都 @ 作者):
+          #   merged   = closed && PR.merged=true   → 绿色 "已合并"
+          #   closed   = closed && PR.merged=false  → 橙色 "已关闭 (未合并)"
+          # opened/reopened/synchronize 不触发 @ — 只有 closed 类事件才 @ 作者.
+          CLOSE_STATE=""
+          if [ "$ACTION" = "closed" ]; then
+            if [ "$MERGED" = "true" ]; then
+              CLOSE_STATE="merged"
+            else
+              CLOSE_STATE="closed"
+            fi
           fi
 
           # Feishu Card v2 markdown 支持 headers / tables / lists / code blocks,
@@ -75,13 +82,19 @@ jobs:
             DISPLAY_AUTHOR="@$PR_AUTHOR"
           fi
 
-          # Lark @ mention: 仅在 PR 合并事件且作者填了 lark_id 时使用.
+          # Lark @ mention: 仅在 close 事件 (merged 或 closed-no-merge) 且作者填了 lark_id 时使用.
           # 语法 (Card v2 markdown): <at id=ou_xxxx></at>. 没填 id 就退回纯文字 DISPLAY_AUTHOR.
           AT_MENTION=""
-          if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ] && [ -n "$author_lark_id" ]; then
+          AT_LABEL=""
+          if [ -n "$CLOSE_STATE" ] && [ -n "$author_lark_id" ]; then
             AT_MENTION="<at id=${author_lark_id}></at>"
+            if [ "$CLOSE_STATE" = "merged" ]; then
+              AT_LABEL="已合并 🎉"
+            else
+              AT_LABEL="已关闭 (未合并)"
+            fi
           fi
-          echo "PR author: $PR_AUTHOR -> display: $DISPLAY_AUTHOR (lark_id: ${author_lark_id:-none}, at: ${AT_MENTION:-none})"
+          echo "PR author: $PR_AUTHOR -> display: $DISPLAY_AUTHOR (lark_id: ${author_lark_id:-none}, close: ${CLOSE_STATE:-none}, at: ${AT_MENTION:-none})"
 
           SKILL_LINE_RE='^[a-z]+	(own|external|meta)-skills/[^/]+/SKILL\.md$'
 
@@ -138,10 +151,16 @@ jobs:
             other_action_label="其它变更"
             other_color="grey"
             [ -z "$author_nick" ] && other_color="yellow"
-            if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
-              other_action_label="已合并 · ${other_action_label}"
-              other_color="green"
-            fi
+            case "$CLOSE_STATE" in
+              merged)
+                other_action_label="已合并 · ${other_action_label}"
+                other_color="green"
+                ;;
+              closed)
+                other_action_label="已关闭 · ${other_action_label}"
+                other_color="orange"
+                ;;
+            esac
             other_header_title="📦 ${other_action_label} · ${PR_TITLE}"
 
             other_payload=$(jq -n \
@@ -149,6 +168,7 @@ jobs:
               --arg color "$other_color" \
               --arg display_author "$DISPLAY_AUTHOR" \
               --arg at_mention "$AT_MENTION" \
+              --arg at_label "$AT_LABEL" \
               --arg file_count "$other_count" \
               --arg preview "$preview" \
               --arg pr_title "$PR_TITLE" \
@@ -161,7 +181,7 @@ jobs:
                                  elements: [{tag: "markdown", content: content}]};
 
               ((if $at_mention != ""
-                then [{tag: "markdown", content: ($at_mention + " 已合并 🎉")}]
+                then [{tag: "markdown", content: ($at_mention + " " + $at_label)}]
                 else [] end)
                + [
                 {tag: "column_set", columns: [
@@ -279,13 +299,19 @@ jobs:
             # 未映射作者一律用 yellow, 视觉上提示需要人工 review
             [ "$unmapped_author" = "1" ] && color="yellow"
 
-            # Merge event: prepend "已合并" badge and force green to visually
-            # distinguish from open/synchronize cards. Consumer signal: 现在可以
-            # 跑 update-skills 拉到这一变更.
-            if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
-              action_label="已合并 · ${action_label}"
-              color="green"
-            fi
+            # Close event: prepend status badge + force color.
+            # - merged: 绿色 "已合并" (consumer signal: 可以跑 update-skills 拉变更)
+            # - closed (未合并): 橙色 "已关闭" (信号: 这个变更被放弃了)
+            case "$CLOSE_STATE" in
+              merged)
+                action_label="已合并 · ${action_label}"
+                color="green"
+                ;;
+              closed)
+                action_label="已关闭 · ${action_label}"
+                color="orange"
+                ;;
+            esac
 
             # Read frontmatter from the appropriate ref.
             # - added/modified/renamed: read from HEAD
@@ -320,6 +346,7 @@ jobs:
               --arg pr_author "$PR_AUTHOR" \
               --arg display_author "$DISPLAY_AUTHOR" \
               --arg at_mention "$AT_MENTION" \
+              --arg at_label "$AT_LABEL" \
               --arg category "$category" \
               --arg author_fm "$author_fm" \
               --arg version "$version_display" \
@@ -345,7 +372,7 @@ jobs:
               ) as $cols |
 
               ((if $at_mention != ""
-                then [{tag: "markdown", content: ($at_mention + " 已合并 🎉")}]
+                then [{tag: "markdown", content: ($at_mention + " " + $at_label)}]
                 else [] end)
                + [
                 {tag: "column_set", columns: $cols},
