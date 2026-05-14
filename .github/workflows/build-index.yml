@@ -7,6 +7,9 @@ on:
       - "meta-skills/**"
       - "own-skills/**"
       - "external-skills/**"
+      - "scripts/build-index.mjs"
+      - ".github/workflows/build-index.yml"
+      - "package.json"
 jobs:
   build:
     runs-on: ubuntu-latest
