@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 920" font-family="system-ui, -apple-system, &quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Arial, sans-serif">
+  <defs>
+    <style>text{font-family:system-ui,-apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;}</style>
+    <marker id="arr-gray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#475569"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#059669"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#ca8a04"/>
+    </marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#0f172a" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1320" height="920" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="660" y="42" text-anchor="middle" font-size="24" font-weight="700" fill="#0f172a">tranfu-publish — 框架图</text>
+  <text x="660" y="66" text-anchor="middle" font-size="13" fill="#64748b">3 路径 (own / external / case) · AI 起草 → 用户审 → 拍 [1] 才 PR · 目标 tranfu-labs/tranfu-skills</text>
+
+  <!-- Trigger phrases -->
+  <rect x="80" y="90" width="1160" height="56" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="100" y="112" font-size="13" font-weight="600" fill="#475569">用户触发短语</text>
+  <text x="100" y="132" font-size="12" fill="#334155">"把本地 X 发到公司库"  ·  "把这个 skill 推到公司库 / 推荐 https://..."  ·  "给公司库 X 加个案例 / 补一个用法"</text>
+  <line x1="660" y1="146" x2="660" y2="170" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+  <!-- Step 1: identify path -->
+  <rect x="80" y="174" width="1160" height="82" rx="10" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="100" y="198" font-size="14" font-weight="700" fill="#854d0e">Step 1 · 识别路径 (AI 自动判, 信号不清才问用户)</text>
+  <text x="100" y="220" font-size="12" fill="#475569">含 URL / "推荐" → external          ·         含 "加案例 / 补用法" → case          ·         其他 (本地 author = 当前 user) → own</text>
+  <text x="100" y="240" font-size="12" fill="#475569">同时还要定位: $REPO (公司库本地 clone) + $SRC (own/case 时本地 skill 源 path)</text>
+  <line x1="300" y1="256" x2="300" y2="288" stroke="#ca8a04" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+  <line x1="660" y1="256" x2="660" y2="288" stroke="#ca8a04" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+  <line x1="1020" y1="256" x2="1020" y2="288" stroke="#ca8a04" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+
+  <!-- own path -->
+  <rect x="80" y="294" width="380" height="252" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="100" y="318" font-size="14" font-weight="700" fill="#1e40af">own — 自己写的 skill 发布</text>
+  <text x="100" y="338" font-size="12" fill="#1e3a8a">落点: own-skills/&lt;name&gt;/ (完整目录)</text>
+
+  <rect x="100" y="350" width="340" height="32" rx="6" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="112" y="370" font-size="12" fill="#1e3a8a">1. 检查 / 补 frontmatter (name / desc / origin: own ...)</text>
+
+  <rect x="100" y="390" width="340" height="32" rx="6" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="112" y="410" font-size="12" fill="#1e3a8a">2. 起草 §同类对比 (内/外 ≤3+3 + 独特价值)</text>
+
+  <rect x="100" y="430" width="340" height="32" rx="6" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="112" y="450" font-size="12" fill="#1e3a8a">3. 起草 §使用技巧 (材料 / 推荐 / 限制)</text>
+
+  <rect x="100" y="470" width="340" height="32" rx="6" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="112" y="490" font-size="12" fill="#1e3a8a">4. 渲染 PR body (templates/pr-body.md variant=own)</text>
+
+  <rect x="100" y="510" width="340" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="112" y="528" font-size="12" font-weight="600" fill="#1e3a8a">5. cp -r $SRC → own-skills/&lt;name&gt;/</text>
+
+  <!-- external path -->
+  <rect x="470" y="294" width="380" height="252" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="490" y="318" font-size="14" font-weight="700" fill="#065f46">external — 推荐外部 skill</text>
+  <text x="490" y="338" font-size="12" fill="#064e3b">落点: external-skills/&lt;name&gt;/SKILL.md (薄指针)</text>
+
+  <rect x="490" y="350" width="340" height="32" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="502" y="370" font-size="12" fill="#064e3b">1. 起 thin SKILL.md (frontmatter + source_url)</text>
+
+  <rect x="490" y="390" width="340" height="32" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="502" y="410" font-size="12" fill="#064e3b">2. 起草 §推荐场景 + §同类对比 + §使用技巧</text>
+
+  <rect x="490" y="430" width="340" height="32" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="502" y="450" font-size="12" fill="#064e3b">3. 写 cases/&lt;recommender&gt;.md (templates/case-file.md)</text>
+
+  <rect x="490" y="470" width="340" height="32" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
+  <text x="502" y="490" font-size="12" fill="#064e3b">4. 渲染 PR body (variant=external)</text>
+
+  <rect x="490" y="510" width="340" height="28" rx="6" fill="#d1fae5" stroke="#059669"/>
+  <text x="502" y="528" font-size="12" font-weight="600" fill="#065f46">5. 写 external-skills/&lt;name&gt;/ (SKILL.md + cases/)</text>
+
+  <!-- case path -->
+  <rect x="860" y="294" width="380" height="252" rx="10" fill="#fef3c7" stroke="#ca8a04" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="880" y="318" font-size="14" font-weight="700" fill="#854d0e">case — 加案例到已有 skill</text>
+  <text x="880" y="338" font-size="12" fill="#713f12">落点: external-skills/&lt;name&gt;/cases/&lt;recommender&gt;.md</text>
+
+  <rect x="880" y="350" width="340" height="32" rx="6" fill="#ffffff" stroke="#fde68a"/>
+  <text x="892" y="370" font-size="12" fill="#713f12">1. 确认 skill 已存在 (tfs list 查)</text>
+
+  <rect x="880" y="390" width="340" height="32" rx="6" fill="#ffffff" stroke="#fde68a"/>
+  <text x="892" y="410" font-size="12" fill="#713f12">2. 起 case-file (templates/case-file.md)</text>
+
+  <rect x="880" y="430" width="340" height="32" rx="6" fill="#ffffff" stroke="#fde68a"/>
+  <text x="892" y="450" font-size="12" fill="#713f12">3. 同名 recommender 已存在 → append, 不开第二份</text>
+
+  <rect x="880" y="470" width="340" height="32" rx="6" fill="#ffffff" stroke="#fde68a"/>
+  <text x="892" y="490" font-size="12" fill="#713f12">4. 渲染 PR body (variant=case, 短版)</text>
+
+  <rect x="880" y="510" width="340" height="28" rx="6" fill="#fde68a" stroke="#ca8a04"/>
+  <text x="892" y="528" font-size="12" font-weight="600" fill="#854d0e">5. 仅动 cases/ 下文件, 不触 SKILL.md</text>
+
+  <!-- Converging arrows to preview gate -->
+  <line x1="270" y1="546" x2="660" y2="592" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <line x1="660" y1="546" x2="660" y2="592" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <line x1="1050" y1="546" x2="660" y2="592" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+  <!-- Preview gate -->
+  <rect x="180" y="596" width="960" height="92" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="2" filter="url(#soft)"/>
+  <text x="660" y="622" text-anchor="middle" font-size="15" font-weight="700" fill="#991b1b">Step 2 · 预览门禁 (HARD) — 完整渲染给用户审, 不写盘</text>
+  <text x="660" y="646" text-anchor="middle" font-size="12" fill="#7f1d1d">frontmatter + §同类对比 + §使用技巧 + PR title + body, 全部 markdown 形式</text>
+  <text x="660" y="668" text-anchor="middle" font-size="12" font-weight="600" fill="#7f1d1d">[1] 走完整提交流程    [2] 改 X (重新预览)    [3] 取消</text>
+
+  <!-- Step 3: commit + push + PR -->
+  <line x1="660" y1="688" x2="660" y2="712" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+  <rect x="180" y="716" width="960" height="92" rx="10" fill="#f1f5f9" stroke="#334155" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="660" y="742" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Step 3 · 仅 [1] 才执行 — 切分支 / cp · 写盘 / npm run build:index / git commit / push / gh pr create</text>
+  <text x="660" y="766" text-anchor="middle" font-size="12" fill="#334155">分支名 skill/&lt;name&gt; · 永不直推 main · 永不 force push · gh 失败 → 报错不重试</text>
+  <text x="660" y="788" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">输出 PR URL 给用户</text>
+
+  <!-- Legend / out-of-scope -->
+  <rect x="80" y="836" width="1160" height="58" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="100" y="858" font-size="12" font-weight="600" fill="#475569">不接 (留给 tranfu-router):</text>
+  <text x="100" y="878" font-size="12" fill="#475569">search / install / list / installed / update / uninstall / doctor   ·   不跨仓 PR (只发 tranfu-labs/tranfu-skills)   ·   不删现有 skill</text>
+</svg>

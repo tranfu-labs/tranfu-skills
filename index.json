@@ -1,14 +1,21 @@
 {
   "version": 1,
-  "generated_at": "2026-05-14T15:10:37+08:00",
+  "generated_at": "2026-05-14T15:20:38+08:00",
   "skills": [
     {
       "name": "tranfu-publish",
       "type": "meta",
-      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 起草 PR 内容 (frontmatter / §同类对比 / §使用技巧 / PR title+body), 用户审完拍 y 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).",
+      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 起草 PR 内容 (frontmatter / §同类对比 / §使用技巧 / case-file / PR title+body) 全部按 templates/ 渲染, 用户审完拍 y 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).",
       "path": "meta-skills/tranfu-publish",
       "files": [
-        "SKILL.md"
+        "README.md",
+        "SKILL.md",
+        "framework.png",
+        "framework.svg",
+        "templates/case-file.md",
+        "templates/pr-body.md",
+        "templates/section-使用技巧.md",
+        "templates/section-同类对比.md"
       ],
       "sha": "856094241d99acc1a3409d0ecb27a62668225961"
     },
