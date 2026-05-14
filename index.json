@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "generated_at": "2026-05-14T04:48:04.296Z",
+  "skills": [
+    {
+      "name": "install-skill",
+      "type": "meta",
+      "description": "当用户说\"装公司 skill X 到 ___\"时, 从缓存 own-skills/external-skills 子目录复制到 user 或 project scope (扁平, 自动适配 Claude Code / Codex CLI); external 时走 source_url 拉最新并回写 cache stub",
+      "path": "meta-skills/install-skill",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "framework.png",
+        "framework.svg"
+      ],
+      "sha": "5631a321dce28b3333e3819a5e24800bd742a17b"
+    },
+    {
+      "name": "publish-skill",
+      "type": "meta",
+      "description": "当用户说\"把本地 X 发到公司库 / 这个 skill 不错分享给公司 / 给公司推荐 <url> / 给 X 加个案例\"时, 完成发布 / 推荐 / 加案例流程. 在 §1 自动选 own 直路 / external in-context / external cold-start / 仅加 case 四条路径之一. 自动补全 frontmatter, 整理案例, 起草 §同类 Skill 对比 (内/外 ≤3+3 候选 + 独特价值), 引导起草 §使用技巧 (材料方案 / 推荐用法 / 已知限制 3 子段), 按 templates/ 创建 PR. Do NOT trigger when: 用户只是询问某个 skill 的用法 / 想搜公司库有没有 X (走 search-skills) / 想装某个公司 skill 到本地 (走 install-skill) / 想拉公司库最新 (走 update-skills).",
+      "path": "meta-skills/publish-skill",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "framework.png",
+        "framework.svg",
+        "templates/case-file.md",
+        "templates/pr-body.md",
+        "templates/section-使用技巧.md",
+        "templates/section-同类对比.md"
+      ],
+      "sha": "90584bb096cb346e7b3780f629376c917726ce3f"
+    },
+    {
+      "name": "search-skills",
+      "type": "meta",
+      "description": "当用户说\"搜公司 skill 关于 X / 看看公司库有没有 Y / 列一下公司 skill\"时, grep 缓存仓库 SKILL.md frontmatter (跨 meta-skills / own-skills / external-skills 三个子目录) 返回匹配项",
+      "path": "meta-skills/search-skills",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "framework.png",
+        "framework.svg"
+      ],
+      "sha": "13609f8609a18e653ea405e452d3d28f0ff52f32"
+    },
+    {
+      "name": "tranfu-publish",
+      "type": "meta",
+      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 起草 PR 内容 (frontmatter / §同类对比 / §使用技巧 / PR title+body), 用户审完拍 y 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).",
+      "path": "meta-skills/tranfu-publish",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "e3018f5e5701b54dba244ed4bf2450024022618d"
+    },
+    {
+      "name": "tranfu-router",
+      "type": "meta",
+      "description": "当用户说\"搜公司 skill 关于 X / 装 X 到 user / project / 列公司库 skill / 列已装的公司 skill / 升级公司 skill / 卸载公司 skill X / 诊断 tfs 环境\"时, 调本地 tranfu-skills CLI (二进制 tfs) 完成. 自动识别当前 runtime (Claude Code / Codex CLI) 通过 --runtime 传给 tfs, 用 --json 解析结果. Do NOT 接发布 / publish / 推 skill 到公司库意图 (那走 tranfu-publish skill).",
+      "path": "meta-skills/tranfu-router",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "42aae7bf8eddffef5829a205cb801f696d8fed8b"
+    },
+    {
+      "name": "update-skills",
+      "type": "meta",
+      "description": "当用户说\"更新公司 skill 缓存 / 同步公司库 / 拉最新\"时, git pull 缓存仓库, 并把更新后的 4 个 meta-skill 副本 (从 meta-skills/ 子目录拍扁) 覆盖到当前 runtime 的 user 级 skill 目录 (Claude Code → ~/.claude/skills/, Codex CLI → ~/.codex/skills/)",
+      "path": "meta-skills/update-skills",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "framework.png",
+        "framework.svg"
+      ],
+      "sha": "ac1bbc3f0aaee7dc1a51bf6c0e47799303f74a05"
+    },
+    {
+      "name": "business-analysis-pipeline",
+      "type": "own",
+      "description": "当用户说\"评估 AI 产品商业可行性 / 分析这个产品方向 / 创业方向评估 / 投资尽调 / 出商业分析报告\"时, 走 PEST → 波特五力 → SWOT → BMC → 机会矩阵 → 战略建议 → 执行摘要 7 步 pipeline, 用 KF 编号交叉引用前序模块, 输出 120 分制 (S/A/B/C/D 五级) 结构化商业分析报告.",
+      "path": "own-skills/business-analysis-pipeline",
+      "files": [
+        "README.md",
+        "SKILL.md"
+      ],
+      "sha": "d353a2526adb54d9f3fb3eb59b3d9878e29e43b2"
+    },
+    {
+      "name": "credibility-review",
+      "type": "own",
+      "description": "Review a draft 踩坑记 or 养成记 article (for tranfu-site or anywhere following the same rules) by spawning two independent fresh agents in parallel — A 轨 simulates a reader with dual-axis 耐心/信任 scoring, B 轨 runs anti-pattern catalog detection — then composes a tri-state verdict (可发 / 待审查 / 退稿). Trigger when user says 审稿/审一下/检查文章/帮我看下这篇/check this draft/review this article/抓一下问题/看看哪里不对, OR pastes a markdown article tagged 踩坑/养成 and asks for feedback, OR provides a path to such a file in tranfu-site/src/content/posts/. Output combines reader-trajectory + catalog hits — NOT a rewrite. Anchored to tranfu-site/goal-docs/05-design-踩坑记-final.md + 06-design-养成记-final.md.",
+      "path": "own-skills/credibility-review",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "examples/EXPECTED.md",
+        "examples/bad-养成记-1-空标签.md",
+        "examples/bad-养成记-2-hidden-hero.md",
+        "examples/bad-养成记-3-fluent-empty.md",
+        "examples/bad-踩坑记-1-marketing-fluff.md",
+        "examples/bad-踩坑记-2-no-evidence.md",
+        "examples/good-踩坑记-baseline.md",
+        "examples/image-1.png",
+        "examples/image-2.png",
+        "examples/image-3.png",
+        "examples/image-4.png",
+        "examples/image-5.png",
+        "examples/image-6.png",
+        "examples/image-7.png",
+        "examples/image-8.png",
+        "examples/image.png",
+        "examples/real-en-anthropic-aug2025-postmortem.md",
+        "examples/real-en-karpathy-microgpt.md",
+        "examples/real-en-openai-confessions.md",
+        "examples/real-en-simonw-using-llms-for-code.md",
+        "examples/real-zh-baoyu-claude-html.md",
+        "examples/real-zh-qbitai-gpt6-leak.md",
+        "examples/real-zh-qbitai-meituan-multimodal.md",
+        "workflow.png",
+        "workflow.svg",
+        "禁用词.md"
+      ],
+      "sha": "246d832348f864f4f51054f77477b3df4b544198"
+    },
+    {
+      "name": "lark-safe-write",
+      "type": "own",
+      "description": "\"Lark/Feishu wiki 安全写入流程：强制先备份、再写入、后验证，防止覆盖丢失。支持创建新 wiki 节点和更新现有文档内容。当用户需要向飞书知识库写入、更新、覆盖文档时，必须遵循本 skill 的完整流程。\"",
+      "path": "own-skills/lark-safe-write",
+      "files": [
+        "README.en.md",
+        "README.md",
+        "SKILL.md"
+      ],
+      "sha": "a6ebed28daac7098552e67e636cc74e67a9ff590"
+    },
+    {
+      "name": "project-scoring",
+      "type": "own",
+      "description": "Use when user says \"评估这个 AI 项目\" to score AI workflows and produce a decision memo.",
+      "path": "own-skills/project-scoring",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/examples.md",
+        "references/output-schema.md",
+        "references/prompt.md",
+        "references/scoring-anchors.md",
+        "references/scoring-contexts.md",
+        "references/scoring-framework.md",
+        "scripts/score_project.py"
+      ],
+      "sha": "968a6f0417b503802e19f6795e6374966b4f28e1"
+    },
+    {
+      "name": "prompt-review",
+      "type": "own",
+      "description": "Multi-round prompt/skill review loop. Launches a reviewer subagent that audits prompt files against an embedded engineering checklist, reports findings via SendMessage, and re-reviews after fixes until all issues are resolved. Self-contained — no network dependency. Always trigger for: review prompt, review skill, review agent, audit prompt, check prompt quality, prompt engineering review, skill review, agent review, evaluate prompt, lint prompt. Also triggers for: \"帮我审一下这个 prompt\", \"检查提示词质量\", \"评审这个 agent 定义\", \"这个 skill 写得怎么样\", \"优化提示词\". Do NOT trigger when: user wants to review CODE (not prompts), run tests, or do functional QA.",
+      "path": "own-skills/prompt-review",
+      "files": [
+        "README.md",
+        "SKILL.md"
+      ],
+      "sha": "10e8d97d02e5301aa995b2e0c1026f3ea05e11bf"
+    },
+    {
+      "name": "skill-reverse-engineer",
+      "type": "own",
+      "description": "Reverse-engineer, audit, and improve AI agent skills. Use when analyzing SKILL.md files, prompt workflows, agent instructions, or skill directories.",
+      "path": "own-skills/skill-reverse-engineer",
+      "files": [
+        ".gitignore",
+        "LICENSE",
+        "README.en.md",
+        "README.md",
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "b111abd39c5a7b028bdb9ce6b49500918e86c8d4"
+    },
+    {
+      "name": "structured-thinking-advisor",
+      "type": "own",
+      "description": "当用户说\"帮我审视这份文档 / 优化这段表达 / 重构这个结构 / 这思路对吗 / 帮我深度共创\"时, 以\"结构化思考与系统设计顾问\"介入：拆解结构、校验逻辑、提炼方法论、给 2-3 个不同维度的优化版本, 主动指出问题而非复述.",
+      "path": "own-skills/structured-thinking-advisor",
+      "files": [
+        "README.md",
+        "SKILL.md"
+      ],
+      "sha": "11a94e09032f8f4ce06a7f87e6f20dbc221f4524"
+    },
+    {
+      "name": "write-spec",
+      "type": "own",
+      "description": "从模糊想法或功能需求生成结构化 PRD/feature spec，含目标、非目标、用户故事、验收标准、成功指标。触发：写 spec / 写 PRD / 规划功能 / scope 一下",
+      "path": "own-skills/write-spec",
+      "files": [
+        "README.md",
+        "SKILL.md"
+      ],
+      "sha": "c3cfb6ccc79e32150fce47de1c384a652e6a98bb"
+    },
+    {
+      "name": "andrej-karpathy-skills",
+      "type": "external",
+      "description": "基于 Andrej Karpathy 对 LLM 编码陷阱的观察，改善 Claude Code 行为的单文件行为准则。减少过度工程、无关改动和意图偏差。触发：任何 Claude Code 编码对话自动生效。",
+      "path": "external-skills/andrej-karpathy-skills",
+      "files": [
+        "SKILL.md",
+        "cases/BruceL017.md"
+      ],
+      "sha": "fdadf35afb85ab3db3ef2300a6a8610c37696bdc",
+      "source_url": "https://github.com/multica-ai/andrej-karpathy-skills"
+    },
+    {
+      "name": "fireworks-tech-graph",
+      "type": "external",
+      "description": "Use when the user wants to create any technical diagram - architecture, data flow, flowchart, sequence, agent/memory, or concept map - and export as SVG+PNG. Trigger on: \"画图\" \"帮我画\" \"生成图\" \"做个图\" \"架构图\" \"流程图\" \"可视化一下\" \"出图\" \"generate diagram\" \"draw diagram\" \"visualize\" or any system/flow description the user wants illustrated.",
+      "path": "external-skills/fireworks-tech-graph",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "79bed7b8727c49843958c76acdca51a9b1ff11ea",
+      "source_url": "https://github.com/yizhiyanhua-ai/fireworks-tech-graph"
+    },
+    {
+      "name": "openspec",
+      "type": "external",
+      "description": "当用户做多轮迭代或长期维护项目时, 用 /opsx:propose → /opsx:apply → /opsx:archive 把每个 change 拆成 proposal/specs/design/tasks 文件夹, archive 后规范沉淀到 specs/, 下次改同一模块 AI 可读历史规范",
+      "path": "external-skills/openspec",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "d4f9c0c45823d569a6c9893a8b256a2e6692a822",
+      "source_url": "https://github.com/Fission-AI/OpenSpec"
+    },
+    {
+      "name": "superpowers",
+      "type": "external",
+      "description": "当你在做复杂编码任务、想用成体系的 agent workflow 提高推进效率时使用",
+      "path": "external-skills/superpowers",
+      "files": [
+        "SKILL.md",
+        "cases/griffithkk3-del.md"
+      ],
+      "sha": "381a65c1c92056d1bf2cd935541a00d801f7efe4",
+      "source_url": "https://github.com/obra/superpowers"
+    }
+  ]
+}
