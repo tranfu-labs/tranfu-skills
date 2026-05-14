@@ -238,11 +238,17 @@ jobs:
             exit 0
           fi
 
-          # cap to keep the bot from spamming on bulk PRs
-          MAX=10
-          if [ "${#changes[@]}" -gt "$MAX" ]; then
-            echo "::warning::Truncating ${#changes[@]} skill changes to first $MAX"
-            changes=("${changes[@]:0:$MAX}")
+          # cap rows shown in the aggregated card (avoid 100kb payload on bulk PRs).
+          # 超过则只展示前 MAX 个, body 提示 "+N 更多".
+          MAX=20
+          total_changes="${#changes[@]}"
+          truncated=0
+          if [ "$total_changes" -gt "$MAX" ]; then
+            echo "::warning::Truncating $total_changes skill changes to first $MAX (rest summarized as +N)"
+            changes_display=("${changes[@]:0:$MAX}")
+            truncated=$((total_changes - MAX))
+          else
+            changes_display=("${changes[@]}")
           fi
 
           fetch_frontmatter_field() {
@@ -255,12 +261,18 @@ jobs:
               | sed -E "s/^[\"\']//; s/[\"\']\$//"
           }
 
-          for line in "${changes[@]}"; do
+          # Aggregate counters for header label + color pick.
+          declare -A status_count
+          declare -A category_count
+
+          # Build per-skill rows as a JSON array passed once to jq at the end.
+          items_json="[]"
+
+          for line in "${changes_display[@]}"; do
             status="${line%%	*}"
             path="${line#*	}"
             echo "::group::$status $path"
 
-            # category from path
             top="${path%%/*}"               # own-skills | external-skills | meta-skills
             rest="${path#*/}"               # <name>/SKILL.md
             skill_name="${rest%/SKILL.md}"
@@ -272,48 +284,17 @@ jobs:
               *)               category="$top";    cat_emoji="📦"  ;;
             esac
 
-            # Author fallback: PR author 不在 collaborators.json 时, 整张卡片归为"其它"
-            # 类别, 描述字段换成 PR title + body 原文 (让人工 review 判断).
-            unmapped_author=0
-            if [ -z "$author_nick" ]; then
-              category="其它"
-              cat_emoji="❓"
-              unmapped_author=1
-            fi
-
-            # event-specific header (title + Lark template color)
             case "$status" in
-              added)
-                action_label="新增${category} Skill"
-                color="blue"
-                [ "$category" = "推荐" ] && color="green"
-                [ "$category" = "Meta" ] && color="purple"
-                ;;
-              removed)
-                action_label="删除${category} Skill"; color="red" ;;
-              modified)
-                action_label="更新${category} Skill"; color="grey" ;;
-              renamed|copied)
-                action_label="重命名${category} Skill"; color="orange" ;;
-              *)
-                action_label="${status} ${category} Skill"; color="grey" ;;
+              added)    status_emoji="🆕"; status_label="新增" ;;
+              removed)  status_emoji="🗑";  status_label="删除" ;;
+              modified) status_emoji="✏️"; status_label="更新" ;;
+              renamed)  status_emoji="🔀"; status_label="重命名" ;;
+              copied)   status_emoji="📋"; status_label="复制" ;;
+              *)        status_emoji="❔"; status_label="$status" ;;
             esac
-            # 未映射作者一律用 yellow, 视觉上提示需要人工 review
-            [ "$unmapped_author" = "1" ] && color="yellow"
 
-            # Close event: prepend status badge + force color.
-            # - merged: 绿色 "已合并" (consumer signal: 可以跑 update-skills 拉变更)
-            # - closed (未合并): 橙色 "已关闭" (信号: 这个变更被放弃了)
-            case "$CLOSE_STATE" in
-              merged)
-                action_label="已合并 · ${action_label}"
-                color="green"
-                ;;
-              closed)
-                action_label="已关闭 · ${action_label}"
-                color="orange"
-                ;;
-            esac
+            status_count[$status]=$(( ${status_count[$status]:-0} + 1 ))
+            category_count[$category]=$(( ${category_count[$category]:-0} + 1 ))
 
             # Read frontmatter from the appropriate ref.
             # - added/modified/renamed: read from HEAD
@@ -323,15 +304,14 @@ jobs:
             else
               ref="$HEAD_SHA"
             fi
-            name=$(fetch_frontmatter_field "$ref" "$path" name      || true)
+            name=$(fetch_frontmatter_field "$ref" "$path" name        || true)
             desc=$(fetch_frontmatter_field "$ref" "$path" description || true)
-            version=$(fetch_frontmatter_field "$ref" "$path" version || true)
+            version=$(fetch_frontmatter_field "$ref" "$path" version  || true)
             author_fm=$(fetch_frontmatter_field "$ref" "$path" author || true)
 
             : "${name:=$skill_name}"
             : "${desc:=(未填 description)}"
 
-            # For modified: show old → new version when both exist and differ
             version_display="$version"
             if [ "$status" = "modified" ]; then
               old_version=$(fetch_frontmatter_field "$BASE_SHA" "$path" version || true)
@@ -340,92 +320,191 @@ jobs:
               fi
             fi
 
-            header_title="${cat_emoji} ${action_label} · ${name}"
+            # Truncate desc for the aggregated list (≤100 字, 看完整内容点 PR).
+            desc_short=$(printf '%s' "$desc" | awk '{ if (length($0) > 100) print substr($0,1,100) "…"; else print $0 }')
 
-            payload=$(jq -n \
-              --arg header_title "$header_title" \
-              --arg color "$color" \
-              --arg pr_author "$PR_AUTHOR" \
-              --arg display_author "$DISPLAY_AUTHOR" \
-              --arg at_mention "$AT_MENTION" \
-              --arg at_label "$AT_LABEL" \
+            items_json=$(jq -nc \
+              --argjson acc "$items_json" \
+              --arg status "$status" \
+              --arg status_emoji "$status_emoji" \
+              --arg status_label "$status_label" \
               --arg category "$category" \
-              --arg author_fm "$author_fm" \
-              --arg version "$version_display" \
+              --arg cat_emoji "$cat_emoji" \
               --arg path "$path" \
-              --arg desc "$desc" \
-              --arg pr_url "$PR_URL" \
-              --arg pr_number "$PR_NUMBER" \
-              --arg repo "$REPO" \
-              --arg unmapped "$unmapped_author" \
-              --arg pr_title "$PR_TITLE" \
-              --arg pr_body "$pr_body_normalized" \
-              '
-              def col(content): {tag: "column", width: "weighted", weight: 1,
-                                 elements: [{tag: "markdown", content: content}]};
-
-              ($display_author
-                + (if $author_fm != "" and $author_fm != $pr_author and $author_fm != $display_author
-                   then "\n_(frontmatter: " + $author_fm + ")_"
-                   else "" end)) as $submitter |
-
-              ([col("**提交者**\n" + $submitter), col("**类别**\n" + $category)]
-                + (if $version != "" then [col("**版本**\n" + $version)] else [] end)
-              ) as $cols |
-
-              ((if $at_mention != ""
-                then [{tag: "markdown", content: ($at_mention + " " + $at_label)}]
-                else [] end)
-               + [
-                {tag: "column_set", columns: $cols},
-                {tag: "markdown", content: ("**文件**\n`" + $path + "`")},
-                (if $unmapped == "1"
-                 then {tag: "markdown", content:
-                   ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
-                    + "**标题**: " + $pr_title + "\n\n"
-                    + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}
-                 else {tag: "markdown", content: ("**描述**\n" + $desc)}
-                 end),
-                {tag: "hr"},
-                {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
-                {tag: "button",
-                 text: {tag: "plain_text", content: "Open PR"},
-                 type: "primary", width: "fill", url: $pr_url}
-              ]) as $elements |
-
-              {
-                msg_type: "interactive",
-                card: {
-                  schema: "2.0",
-                  header: {
-                    title: {tag: "plain_text", content: $header_title},
-                    template: $color
-                  },
-                  body: {elements: $elements}
-                }
-              }
-              ')
-
-            echo "Payload:"
-            echo "$payload"
-
-            response=$(curl -sS -w "\n%{http_code}" -X POST \
-              -H "Content-Type: application/json" \
-              -d "$payload" "$LARK_WEBHOOK_URL")
-            body=$(echo "$response" | sed '$d')
-            code=$(echo "$response" | tail -n1)
-
-            echo "HTTP $code"
-            echo "$body"
-
-            if [ "$code" != "200" ]; then
-              echo "::error::Lark webhook returned HTTP $code"
-              exit 1
-            fi
-            if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
-              echo "::error::Lark API error: $body"
-              exit 1
-            fi
-
+              --arg name "$name" \
+              --arg desc "$desc_short" \
+              --arg version "$version_display" \
+              --arg author_fm "$author_fm" \
+              '$acc + [{
+                status: $status,
+                status_emoji: $status_emoji,
+                status_label: $status_label,
+                category: $category,
+                cat_emoji: $cat_emoji,
+                path: $path,
+                name: $name,
+                desc: $desc,
+                version: $version,
+                author_fm: $author_fm
+              }]')
             echo "::endgroup::"
           done
+
+          # Build aggregate header label: "新增 (2) · 更新 (1)" with stable order.
+          # Order: added → modified → removed → renamed → copied → other
+          parts=()
+          for s in added modified removed renamed copied; do
+            n="${status_count[$s]:-0}"
+            if [ "$n" -gt 0 ]; then
+              case "$s" in
+                added)    parts+=("新增 ${n}") ;;
+                modified) parts+=("更新 ${n}") ;;
+                removed)  parts+=("删除 ${n}") ;;
+                renamed)  parts+=("重命名 ${n}") ;;
+                copied)   parts+=("复制 ${n}") ;;
+              esac
+            fi
+          done
+          action_label=$(IFS=" · "; echo "${parts[*]}")
+          [ -z "$action_label" ] && action_label="Skill 改动"
+
+          # Aggregate color: pick by status priority (added > removed > modified > renamed).
+          # Close state overrides. Unmapped author 一律 yellow (人工 review).
+          color="grey"
+          if [ "${status_count[added]:-0}"    -gt 0 ]; then color="blue";
+          elif [ "${status_count[removed]:-0}"  -gt 0 ]; then color="red";
+          elif [ "${status_count[modified]:-0}" -gt 0 ]; then color="grey";
+          elif [ "${status_count[renamed]:-0}"  -gt 0 ]; then color="orange";
+          fi
+
+          unmapped_author=0
+          if [ -z "$author_nick" ]; then
+            unmapped_author=1
+            color="yellow"
+          fi
+
+          # Close event prefix + force color (consumer signal: 合并 → 可拉; 关闭 → 放弃).
+          case "$CLOSE_STATE" in
+            merged) action_label="已合并 · ${action_label}"; color="green" ;;
+            closed) action_label="已关闭 · ${action_label}"; color="orange" ;;
+          esac
+
+          # Header emoji: 单类别用该类别 emoji, 多类别用 📦.
+          n_categories=${#category_count[@]}
+          if [ "$n_categories" = "1" ]; then
+            only_cat="${!category_count[@]}"
+            case "$only_cat" in
+              原创) header_emoji="🧩" ;;
+              推荐) header_emoji="🌐" ;;
+              Meta) header_emoji="🛠"  ;;
+              *)    header_emoji="📦" ;;
+            esac
+          else
+            header_emoji="📦"
+          fi
+
+          header_title="${header_emoji} ${action_label} · ${PR_TITLE}"
+
+          # 类别分布字符串 (eg "原创 2 · 推荐 1"), 仅在 ≥1 类时显示.
+          cat_dist=""
+          for c in 原创 推荐 Meta 其它; do
+            n="${category_count[$c]:-0}"
+            [ "$n" -gt 0 ] && cat_dist+="${c} ${n} · "
+          done
+          cat_dist="${cat_dist% · }"
+
+          payload=$(jq -n \
+            --arg header_title "$header_title" \
+            --arg color "$color" \
+            --arg display_author "$DISPLAY_AUTHOR" \
+            --arg at_mention "$AT_MENTION" \
+            --arg at_label "$AT_LABEL" \
+            --arg total "$total_changes" \
+            --arg truncated "$truncated" \
+            --arg cat_dist "$cat_dist" \
+            --arg unmapped "$unmapped_author" \
+            --arg pr_author "$PR_AUTHOR" \
+            --arg pr_title "$PR_TITLE" \
+            --arg pr_body "$pr_body_normalized" \
+            --arg pr_url "$PR_URL" \
+            --arg pr_number "$PR_NUMBER" \
+            --arg repo "$REPO" \
+            --argjson items "$items_json" \
+            '
+            def col(content): {tag: "column", width: "weighted", weight: 1,
+                               elements: [{tag: "markdown", content: content}]};
+
+            # Per-skill block (markdown bullet). Author 跟 PR author 不同时附 frontmatter.
+            ($items | map(
+              "- " + .status_emoji + " **" + .name + "** · " + .cat_emoji + " " + .category
+                  + (if .version != "" then " · `" + .version + "`" else "" end) + "\n"
+              + "  `" + .path + "`"
+              + (if .author_fm != "" and .author_fm != $pr_author
+                 then "  _(author: " + .author_fm + ")_" else "" end) + "\n"
+              + "  > " + .desc
+            ) | join("\n\n")) as $items_md |
+
+            ([col("**提交者**\n" + $display_author),
+              col("**改动数**\n" + $total + " 个"
+                  + (if ($truncated|tonumber) > 0 then " (显示前 " + ($items|length|tostring) + ")" else "" end))]
+             + (if $cat_dist != "" then [col("**类别**\n" + $cat_dist)] else [] end)
+            ) as $cols |
+
+            ((if $at_mention != ""
+              then [{tag: "markdown", content: ($at_mention + " " + $at_label)}]
+              else [] end)
+             + [
+              {tag: "column_set", columns: $cols},
+              {tag: "markdown", content: ("**Skill 改动**\n" + $items_md
+                + (if ($truncated|tonumber) > 0
+                   then "\n\n_(还有 " + $truncated + " 个变更未列出, 点 Open PR 看全)_"
+                   else "" end))},
+              (if $unmapped == "1"
+               then {tag: "markdown", content:
+                 ("**PR 原文** _(作者未在协作者表, 请人工 review)_\n"
+                  + "**标题**: " + $pr_title + "\n\n"
+                  + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}
+               else {tag: "markdown", content:
+                 ("**PR 描述**\n"
+                  + (if $pr_body != "" then $pr_body else "_(无 PR 描述)_" end))}
+               end),
+              {tag: "hr"},
+              {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
+              {tag: "button",
+               text: {tag: "plain_text", content: "Open PR"},
+               type: "primary", width: "fill", url: $pr_url}
+            ]) as $elements |
+
+            {
+              msg_type: "interactive",
+              card: {
+                schema: "2.0",
+                header: {
+                  title: {tag: "plain_text", content: $header_title},
+                  template: $color
+                },
+                body: {elements: $elements}
+              }
+            }
+            ')
+
+          echo "Aggregated payload:"
+          echo "$payload"
+
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -d "$payload" "$LARK_WEBHOOK_URL")
+          body=$(echo "$response" | sed '$d')
+          code=$(echo "$response" | tail -n1)
+
+          echo "HTTP $code"
+          echo "$body"
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Lark webhook returned HTTP $code"
+            exit 1
+          fi
+          if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
+            echo "::error::Lark API error: $body"
+            exit 1
+          fi
