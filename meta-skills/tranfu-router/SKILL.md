@@ -58,3 +58,4 @@ type: meta
 - ❌ 不要原样把 stderr JSON 给用户看 — parse + 渲染人话
 - ❌ 不要静默吞错误 — 失败时把 hint 字段告诉用户
 - ❌ 不接发布意图 — 那是 tranfu-publish 的事
+
