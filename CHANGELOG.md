@@ -6,6 +6,16 @@
 
 ---
 
+## 2026-05-14
+
+- **CLI 化分发 [MAJOR]** — 旧 git-clone + cp meta-skill 装法 EOL, 改为 npm 包 [`tranfu-skills`](https://www.npmjs.com/package/tranfu-skills) (二进制 `tfs`) 分发. 仓库这一侧:
+  - 删除 4 个旧 meta-skill (`search-skills` / `install-skill` / `update-skills` / `publish-skill`), 被 [`tranfu-router`](./meta-skills/tranfu-router/) + [`tranfu-publish`](./meta-skills/tranfu-publish/) 取代 (后者已在前序 PR 落地).
+  - 删除 `RUNTIME.md` — runtime 识别从文档级约定下沉到 CLI (`tfs init` 自动探测).
+  - 重写 `INSTALL.md` — 入口 `npm i -g tranfu-skills` + `tfs init --both` + `tfs doctor`, §0.5 改为静默清理旧 git-clone 残留 (3 代 `~/.tranfu-labs` / `~/.aistore-labs` 缓存 + 4 个旧 meta-skill 目录), 新用户条件不满足整块 no-op.
+  - 重写 `UNINSTALL.md` — `tfs uninstall` 走装机戳精准卸载 + `npm uninstall -g tranfu-skills` 卸 CLI 自身 + `rm -rf ~/.tfs` 清缓存, 老用户额外清理段独立列出.
+  - 重写 `README.md` — bootstrap 段对齐 npm 流程, 加"从旧 git-clone 装法升级"段, 4 场景文案对齐新 router/publish.
+- **老用户感知**: 跑一次 README 顶上的 bootstrap 提示词即可, INSTALL.md §0.5 静默把旧装法残留删干净, 不需要手动操作.
+
 ## 2026-05-13
 
 - **组织改名 `aistore-labs` → `tranfu-labs`** — 仓库 URL / 缓存路径 / 文案 / SVG 全链路替换. 4 个 meta-skill + INSTALL.md 顶部加 `§0.5 旧缓存路径迁移` 一次性兼容块: 检测 `~/.aistore-labs/claude-skills/` 在且 `~/.tranfu-labs/tranfu-skills/` 不在时, 静默 `mv` + 修 git remote URL. UNINSTALL.md 加双路径兜底删. 老用户首次 `update-skills` 后自动迁完, 后续无感; 新用户条件不满足, 整块静默跳过. (CLI 化下载后 `~/.tranfu-labs/` 也会废弃.)
