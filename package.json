@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "tranfu-skills-repo",
+  "scripts": {
+    "build:index": "node scripts/build-index.mjs"
+  },
+  "type": "module"
+}
