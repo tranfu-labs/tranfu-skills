@@ -18,11 +18,17 @@ jobs:
         with: { node-version: 20 }
       - run: npm run build:index
       - if: github.event_name == 'pull_request'
+        # PR: 仅验 build-index 跑通 (能产出合法 JSON, 没 frontmatter parse 错).
+        # 不验 git diff — 因为 index.json 的 generated_at 字段依赖 git commit sha,
+        # 提交时 commit 还没生成 (chicken-egg), 永远 diff.
+        # main 上的 index.json 由 push event 步骤自动 rebuild + commit.
         run: |
-          if ! git diff --quiet index.json; then
-            echo "::error::index.json out of date. Run 'npm run build:index' locally and commit."
+          if [ ! -f index.json ]; then
+            echo "::error::build:index 没生成 index.json"
             exit 1
           fi
+          node -e "const i = require('./index.json'); if (!Array.isArray(i.skills) || i.skills.length === 0) { console.error('::error::index.json 无 skills'); process.exit(1); }"
+          echo "PR build:index OK, $(node -e "console.log(require('./index.json').skills.length)") skills indexed"
       - if: github.event_name == 'push'
         run: |
           if ! git diff --quiet index.json; then
