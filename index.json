@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-14T15:20:38+08:00",
+  "generated_at": "2026-05-14T15:40:32+08:00",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -17,7 +17,7 @@
         "templates/section-使用技巧.md",
         "templates/section-同类对比.md"
       ],
-      "sha": "856094241d99acc1a3409d0ecb27a62668225961"
+      "sha": "30c93fc5431ba5d6994dfecf4d58641722715c1e"
     },
     {
       "name": "tranfu-router",
@@ -88,6 +88,16 @@
         "SKILL.md"
       ],
       "sha": "a6ebed28daac7098552e67e636cc74e67a9ff590"
+    },
+    {
+      "name": "project-packaging",
+      "type": "own",
+      "description": "GitHub 项目完备性检查与补全引导。扫描项目，生成缺失清单，按优先级逐项引导用户补全。 不直接生成所有内容，而是引导用户决策后再执行。 Always trigger for: project packaging, 项目包装, 项目美化, 项目完善, open source ready, 开源准备, github setup, 补全项目, project health, project checklist, 项目清单. Also triggers for: \"这个项目还缺什么\", \"帮我完善项目结构\", \"准备开源\". Do NOT trigger when: user wants to write code, fix bugs, or do code review.",
+      "path": "own-skills/project-packaging",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": ""
     },
     {
       "name": "project-scoring",
