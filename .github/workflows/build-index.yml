@@ -7,6 +7,9 @@ on:
       - "meta-skills/**"
       - "own-skills/**"
       - "external-skills/**"
+      - "scripts/build-index.mjs"
+      - ".github/workflows/build-index.yml"
+      - "package.json"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,11 +21,17 @@ jobs:
         with: { node-version: 20 }
       - run: npm run build:index
       - if: github.event_name == 'pull_request'
+        # PR: 仅验 build-index 跑通 (产出合法 JSON, 没 frontmatter parse 错).
+        # 不验 git diff — PR 上 checkout@v4 拿的是 refs/pull/N/merge (merge commit),
+        # 它的 author date 不等于我 push 的 commit 的 author date, generated_at 永远 diff.
+        # main 上的 index.json 由 push event 步骤自动 rebuild + commit.
         run: |
-          if ! git diff --quiet index.json; then
-            echo "::error::index.json out of date. Run 'npm run build:index' locally and commit."
+          if [ ! -f index.json ]; then
+            echo "::error::build:index 没生成 index.json"
             exit 1
           fi
+          node -e "const i = require('./index.json'); if (!Array.isArray(i.skills) || i.skills.length === 0) { console.error('::error::index.json 无 skills'); process.exit(1); }"
+          echo "PR build:index OK, $(node -e "console.log(require('./index.json').skills.length)") skills indexed"
       - if: github.event_name == 'push'
         run: |
           if ! git diff --quiet index.json; then
