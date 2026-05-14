@@ -12,22 +12,7 @@
 请阅读 https://github.com/tranfu-labs/tranfu-skills/blob/main/INSTALL.md 并按文档步骤帮我安装公司 skill 库.
 ```
 
-CLI 会按文档跑 `npm i -g tranfu-skills` + `tfs init --both` + `tfs doctor` 自检, 结束后告诉你重启即可. 具体细节看 [INSTALL.md](./INSTALL.md).
-
-## 从旧 git-clone 装法升级 (老用户)
-
-老版本通过 git clone 装, 现在切到 npm CLI. 跑上面 bootstrap 段就行 — `INSTALL.md §0.5` 会**静默清理**旧残留 (旧缓存 `~/.tranfu-labs/` + 旧 4 个 meta-skill `search-skills` / `install-skill` / `update-skills` / `publish-skill`), 然后装新版. 不需要手动 `rm`.
-
-想自己手动来也行:
-
-```bash
-# 删旧 git-clone 缓存
-rm -rf ~/.tranfu-labs ~/.aistore-labs
-# 删旧 4 个 meta-skill (Claude Code 路径示例; Codex 把 .claude 换成 .codex)
-rm -rf ~/.claude/skills/{search-skills,install-skill,update-skills,publish-skill}
-# 装新 CLI
-npm i -g tranfu-skills && tfs init --both
-```
+CLI 会按文档跑 `npm i -g tranfu-skills` + `tfs init --both` + `tfs doctor` 自检, 结束后告诉你重启即可. 老 git-clone 装法的残留 (旧缓存 + 旧 4 个 meta-skill) 由 [`INSTALL.md` §0.5](./INSTALL.md) 自动静默清理, 你不需要做任何事. 具体细节看 [INSTALL.md](./INSTALL.md).
 
 ## 4 个使用场景
 
