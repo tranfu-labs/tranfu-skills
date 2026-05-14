@@ -1,50 +1,7 @@
 {
   "version": 1,
-  "generated_at": "2026-05-14T12:48:32+08:00",
+  "generated_at": "2026-05-14T15:10:37+08:00",
   "skills": [
-    {
-      "name": "install-skill",
-      "type": "meta",
-      "description": "当用户说\"装公司 skill X 到 ___\"时, 从缓存 own-skills/external-skills 子目录复制到 user 或 project scope (扁平, 自动适配 Claude Code / Codex CLI); external 时走 source_url 拉最新并回写 cache stub",
-      "path": "meta-skills/install-skill",
-      "files": [
-        "README.md",
-        "SKILL.md",
-        "framework.png",
-        "framework.svg"
-      ],
-      "sha": "5631a321dce28b3333e3819a5e24800bd742a17b"
-    },
-    {
-      "name": "publish-skill",
-      "type": "meta",
-      "description": "当用户说\"把本地 X 发到公司库 / 这个 skill 不错分享给公司 / 给公司推荐 <url> / 给 X 加个案例\"时, 完成发布 / 推荐 / 加案例流程. 在 §1 自动选 own 直路 / external in-context / external cold-start / 仅加 case 四条路径之一. 自动补全 frontmatter, 整理案例, 起草 §同类 Skill 对比 (内/外 ≤3+3 候选 + 独特价值), 引导起草 §使用技巧 (材料方案 / 推荐用法 / 已知限制 3 子段), 按 templates/ 创建 PR. Do NOT trigger when: 用户只是询问某个 skill 的用法 / 想搜公司库有没有 X (走 search-skills) / 想装某个公司 skill 到本地 (走 install-skill) / 想拉公司库最新 (走 update-skills).",
-      "path": "meta-skills/publish-skill",
-      "files": [
-        "README.md",
-        "SKILL.md",
-        "framework.png",
-        "framework.svg",
-        "templates/case-file.md",
-        "templates/pr-body.md",
-        "templates/section-使用技巧.md",
-        "templates/section-同类对比.md"
-      ],
-      "sha": "90584bb096cb346e7b3780f629376c917726ce3f"
-    },
-    {
-      "name": "search-skills",
-      "type": "meta",
-      "description": "当用户说\"搜公司 skill 关于 X / 看看公司库有没有 Y / 列一下公司 skill\"时, grep 缓存仓库 SKILL.md frontmatter (跨 meta-skills / own-skills / external-skills 三个子目录) 返回匹配项",
-      "path": "meta-skills/search-skills",
-      "files": [
-        "README.md",
-        "SKILL.md",
-        "framework.png",
-        "framework.svg"
-      ],
-      "sha": "13609f8609a18e653ea405e452d3d28f0ff52f32"
-    },
     {
       "name": "tranfu-publish",
       "type": "meta",
@@ -64,19 +21,6 @@
         "SKILL.md"
       ],
       "sha": "42aae7bf8eddffef5829a205cb801f696d8fed8b"
-    },
-    {
-      "name": "update-skills",
-      "type": "meta",
-      "description": "当用户说\"更新公司 skill 缓存 / 同步公司库 / 拉最新\"时, git pull 缓存仓库, 并把更新后的 4 个 meta-skill 副本 (从 meta-skills/ 子目录拍扁) 覆盖到当前 runtime 的 user 级 skill 目录 (Claude Code → ~/.claude/skills/, Codex CLI → ~/.codex/skills/)",
-      "path": "meta-skills/update-skills",
-      "files": [
-        "README.md",
-        "SKILL.md",
-        "framework.png",
-        "framework.svg"
-      ],
-      "sha": "ac1bbc3f0aaee7dc1a51bf6c0e47799303f74a05"
     },
     {
       "name": "business-analysis-pipeline",
