@@ -58,6 +58,7 @@ function setupTempFixtures() {
   const tmpDir = join(tmpdir(), `build-index-test-${Date.now()}`);
   mkdirSync(join(tmpDir, "own-skills", "good-skill"), { recursive: true });
   mkdirSync(join(tmpDir, "own-skills", "bad-skill"), { recursive: true });
+  mkdirSync(join(tmpDir, "own-skills", "block-scalar-skill"), { recursive: true });
   mkdirSync(join(tmpDir, "external-skills", "ext-skill"), { recursive: true });
 
   // Copy fixture SKILL.md files
@@ -70,6 +71,10 @@ function setupTempFixtures() {
   copy(
     join(FIXTURES_DIR, "own-skills", "bad-skill", "SKILL.md"),
     join(tmpDir, "own-skills", "bad-skill", "SKILL.md")
+  );
+  copy(
+    join(FIXTURES_DIR, "own-skills", "block-scalar-skill", "SKILL.md"),
+    join(tmpDir, "own-skills", "block-scalar-skill", "SKILL.md")
   );
   copy(
     join(FIXTURES_DIR, "external-skills", "ext-skill", "SKILL.md"),
@@ -145,6 +150,33 @@ test("missing name/description → skip with stderr warn, other skills unaffecte
     // good-skill should still be present (not affected by bad-skill)
     const goodSkill = indexJson.skills.find((s) => s.name === "good-skill");
     assert.ok(goodSkill, "good-skill should still be indexed");
+  } finally {
+    cleanupTempDir(tmpDir);
+  }
+});
+
+// ----- Test 4: YAML folded block scalar (>) → multi-line description folded to single line -----
+test("YAML folded block scalar (>) description → folded to single line", () => {
+  const tmpDir = setupTempFixtures();
+  try {
+    runBuildIndex(tmpDir);
+    const indexPath = join(tmpDir, "index.json");
+    const indexJson = JSON.parse(readFileSync(indexPath, "utf8"));
+
+    const skill = indexJson.skills.find((s) => s.name === "block-scalar-skill");
+    assert.ok(skill, "block-scalar-skill should be in index");
+    assert.ok(
+      !skill.description.startsWith(">"),
+      `description should NOT start with ">", got: ${JSON.stringify(skill.description)}`
+    );
+    assert.ok(
+      skill.description.includes("multi-line description"),
+      `description should contain folded content, got: ${JSON.stringify(skill.description)}`
+    );
+    assert.ok(
+      !skill.description.includes("\n"),
+      `folded description should have no newlines, got: ${JSON.stringify(skill.description)}`
+    );
   } finally {
     cleanupTempDir(tmpDir);
   }

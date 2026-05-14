@@ -5,13 +5,37 @@ import { join, relative } from "path";
 const ROOTS = { "meta-skills": "meta", "own-skills": "own", "external-skills": "external" };
 
 function parseFrontmatter(md) {
-  // 提取 --- ... --- 之间的简单 key: value (单行值)
+  // 支持: key: value (单行) + key: > / >- / | / |- (block scalar 多行)
   const m = md.match(/^---\n([\s\S]*?)\n---/);
   if (!m) return {};
   const out = {};
-  for (const line of m[1].split("\n")) {
-    const kv = line.match(/^(\w+):\s*(.*)$/);
-    if (kv) out[kv[1]] = kv[2].trim();
+  const lines = m[1].split("\n");
+  let i = 0;
+  while (i < lines.length) {
+    const kv = lines[i].match(/^(\w+):\s*(.*)$/);
+    if (!kv) { i++; continue; }
+    const [, key, rawVal] = kv;
+    const blockMarker = rawVal.match(/^([>|])([+-]?)$/);
+    if (blockMarker) {
+      // block scalar: 收集后续缩进行 (或空行) 到下一个 key
+      const folded = blockMarker[1] === ">";
+      i++;
+      const blockLines = [];
+      while (i < lines.length) {
+        const ln = lines[i];
+        if (ln.match(/^\s+/) || ln.trim() === "") {
+          blockLines.push(ln.replace(/^\s+/, ""));
+          i++;
+        } else break;
+      }
+      let value = folded
+        ? blockLines.filter(ln => ln.trim()).join(" ").trim()  // folded: 全 fold 成单空格分隔
+        : blockLines.join("\n").trim();                         // literal: 保留换行
+      out[key] = value;
+    } else {
+      out[key] = rawVal.trim();
+      i++;
+    }
   }
   return out;
 }
