@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-14T04:48:04.296Z",
+  "generated_at": "2026-05-14T12:48:32+08:00",
   "skills": [
     {
       "name": "install-skill",
@@ -53,7 +53,7 @@
       "files": [
         "SKILL.md"
       ],
-      "sha": "e3018f5e5701b54dba244ed4bf2450024022618d"
+      "sha": "856094241d99acc1a3409d0ecb27a62668225961"
     },
     {
       "name": "tranfu-router",

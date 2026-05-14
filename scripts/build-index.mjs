@@ -86,6 +86,16 @@ for (const [root, type] of Object.entries(ROOTS)) {
   }
 }
 
-const index = { version: 1, generated_at: new Date().toISOString(), skills };
+// generated_at 用 HEAD commit 的 author date 而不是 new Date(),
+// 否则同一 commit 跑两次产生不同 index.json, PR CI dry-run 永远 fail.
+function generatedAt() {
+  try {
+    return execSync("git log -1 --format=%aI HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    return new Date().toISOString(); // 非 git 环境 fallback
+  }
+}
+
+const index = { version: 1, generated_at: generatedAt(), skills };
 writeFileSync("index.json", JSON.stringify(index, null, 2));
 console.log(`wrote index.json: ${skills.length} skills`);
