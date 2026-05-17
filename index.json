@@ -1,7 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-17T21:14:12+08:00",
-  "skills": [
+  "generated_at": "2026-05-17T21:58:28+08:00",
     {
       "name": "tranfu-publish",
       "type": "meta",
@@ -86,7 +85,7 @@
         "HISTORY.md",
         "SKILL.md"
       ],
-      "sha": "d53cd56af3475e1af35347063a02afcaa0718d4f"
+      "sha": "fcf19066c43ecb15f948e4a487ee67a284ec1b30"
     },
     {
       "name": "lark-safe-write",
