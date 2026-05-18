@@ -60,6 +60,26 @@ tranfu-daily-<style>-<palette>-1080x1440.png
 manifest.json
 ```
 
+## Examples
+
+默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格。
+
+### Research iceblue
+
+![research iceblue example](examples/research-iceblue.png)
+
+### Research skyblue
+
+![research skyblue example](examples/research-skyblue.png)
+
+### Dark iceblue
+
+![dark iceblue example](examples/dark-iceblue.png)
+
+### Dark aqua
+
+![dark aqua example](examples/dark-aqua.png)
+
 ## Notes
 
 图片是静态公开发布物。不要把点击提示、原始 URL、内部流程、追溯信息、提示词、文件路径、渲染说明或空的非 AI 板块显示到图片里。默认不显示 Crypto 内容，除非用户明确要求并提供可验证素材。
