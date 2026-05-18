@@ -33,6 +33,7 @@ Default output uses:
 style: research
 palette: iceblue
 size: 1080x1440
+show_qr: false
 ```
 
 Render all bundled styles and palettes:
@@ -43,6 +44,13 @@ python3 scripts/render_daily_report.py \
   --out-dir /path/to/output \
   --all-variants
 ```
+
+The renderer emphasizes fast visual scanning: TranFu brand mark, date, strong
+headline hierarchy, numbered stories, and public category labels. It does not
+show low-context project/company badges by default because those labels often
+look like noise to public readers. QR is hidden by default because some
+publishing platforms restrict QR images. Set `show_qr: true` only for platforms
+where QR is allowed.
 
 ## Requirements
 
@@ -63,6 +71,8 @@ manifest.json
 ## Examples
 
 默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格。
+
+默认案例使用公开读者版：只展示类别标签，不展示低语境项目/公司小标签。
 
 ### Research iceblue
 

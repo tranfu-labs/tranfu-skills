@@ -1,10 +1,13 @@
 ---
 name: daily-report
-description: 生成 TranFu AI 日报图片；当用户要把 AI 新闻、日报素材或结构化 JSON 渲染为公开发布的 HTML 截图时使用。不要用于纯文本日报。
+description: >-
+  当用户要把 AI 新闻、日报素材或结构化 JSON 渲染成 TranFu 公开发布图片时使用。
+  Do NOT trigger when: 用户只要纯文本日报、文章改写、通用图片生成或非 AI 主题海报。
 version: 0.1.0
 author: griffithkk3-del
 updated_at: 2026-05-18
 origin: own
+license: internal
 ---
 
 # Daily Report
@@ -15,6 +18,54 @@ The selected default style is `research + iceblue`: a light research-note layout
 with pale blue accents. It is optimized for public daily publishing, mobile
 reading, WeChat Moments, community posts, and article body images.
 
+## When To Use
+
+Use this skill when the user asks to:
+- generate a TranFu AI daily report image from AI news material
+- turn structured daily-report JSON into a public HTML screenshot
+- create shareable daily-report images for WeChat Moments, official accounts, X, or community posts
+- render and verify example report images from the bundled script
+
+Do NOT trigger when:
+- the user only wants a pure text daily report
+- the user wants a generic image model prompt or unrelated poster
+- the task is article writing, copy editing, or web publishing without a daily-report image output
+- the material is mainly Crypto or non-AI unless the user explicitly asks to extend the schema
+
+## 同类 Skill 对比
+
+### 公司库内
+- [structured-thinking-advisor](../structured-thinking-advisor/SKILL.md) — 优化内容结构和表达；**本 skill 区别**: 不只改文案，还用 HTML/CSS 固定渲染成图片。
+- [project-scoring](../project-scoring/SKILL.md) — 评估 AI 项目并输出决策 memo；**本 skill 区别**: 不做项目评分，专注每日 AI 信息图片化。
+- [write-spec](../write-spec/SKILL.md) — 从模糊需求生成 PRD/spec；**本 skill 区别**: 面向每日内容生产，不输出产品需求文档。
+
+### 外部世界
+- Canva / Figma 模板 — 适合人工设计海报；**本 skill 区别**: 输入结构化新闻，脚本稳定批量渲染。
+- Newsletter screenshot workflows — 适合网页转截图；**本 skill 区别**: 内置公开图片展示规则，主动去掉点击、URL、QR 和低语境项目名。
+- Generic image generators — 适合视觉概念图；**本 skill 区别**: 中文正文、日期和 logo 都由 HTML/CSS 渲染，避免乱码和文字失真。
+
+### 本 skill 独特价值
+- TranFu 品牌日报图一键渲染。
+- 默认公开读者版，少噪音。
+- HTML 可追溯，PNG 可分享。
+
+## 使用技巧
+
+### 材料方案
+- 用 JSON 存归档字段，用图片只展示公开内容。
+- logo 只用 bundled `tranfu.png`。
+- QR 默认关闭，平台允许时再开。
+
+### 推荐用法
+- 先把日报素材整理成 `references/report-schema.md`。
+- 默认跑 `research + iceblue`。
+- 上传前跑 `--all-variants` 检查备用样式。
+
+### 已知限制
+- 需要 Chrome/Chromium 才能自动截图。
+- 默认只做 AI 日报，不展示 Crypto。
+- 过长新闻需先压缩成手机可读短句。
+
 ## Workflow
 
 1. Create or update a report JSON file with the schema in
@@ -24,6 +75,10 @@ reading, WeChat Moments, community posts, and article body images.
    - remove internal workflow, traceability, prompt, file path, and render notes
    - remove empty non-AI sections
    - keep only public-facing source names when they improve credibility
+   - keep the TranFu brand mark, date, and category labels easy to scan
+   - do not show low-context project/company badges such as niche tool names; rewrite them into public-facing category descriptions
+   - do not create standalone keyword or company badge blocks
+   - keep QR hidden by default because some platforms restrict QR images
    - rewrite weak summaries into editorial judgement
 3. Render with:
 
@@ -58,6 +113,8 @@ python3 <skill>/scripts/render_daily_report.py \
    - expected size: `1080x1440`
    - no garbled Chinese
    - no visible `Crypto`, `查看原文`, raw URLs, file paths, prompt text, or render notes
+   - no standalone keyword block or low-context project/company badges
+   - no QR unless the input explicitly sets `show_qr: true`
    - no text overlap or clipped footer
    - date, brand, QR placeholder, charts, and all Chinese text are rendered by HTML/CSS
 
@@ -79,9 +136,11 @@ The minimum useful JSON fields are:
     {
       "title": "新闻标题",
       "importance": "适合放进图片的短摘要",
-      "source": "Hacker News"
+      "source": "Hacker News",
+      "category": "workflow"
     }
-  ]
+  ],
+  "show_qr": false
 }
 ```
 
@@ -95,6 +154,11 @@ Treat the image as a static public artifact, not a webpage.
 - Do not display instructions that imply clicking.
 - Do not show raw source URLs in the image.
 - Do not show empty categories.
+- Do not show a QR code unless the destination platform allows it and the user explicitly requests it.
+- Do not render a separate keyword panel.
+- Default research output shows only public category labels per story.
+- Do not show niche project names or low-context company names as visual badges. If a name is not meaningful to a general public reader, rewrite the sentence into a descriptive category such as `低代码工具`, `企业身份与权限管理`, `安全监控工具`, `开源评测工具`, or `开源可观测工具`.
+- Use real brand assets only for TranFu and for explicitly requested, high-context variants. Otherwise prefer text-only category labels over invented logos or noisy badges.
 - Do not include Crypto unless the user explicitly asks for a Crypto report and
   provides valid Crypto source material.
 - Do not describe collection failure as the main summary unless that is the
@@ -103,6 +167,16 @@ Treat the image as a static public artifact, not a webpage.
 - Keep source names such as `Hacker News` only as credibility context.
 - Use exact HTML text for all Chinese, dates, brand names, and QR placeholders.
   Do not ask an image model to render text.
+
+## Visual Pattern
+
+Learn from high-performing Xiaohongshu and X information cards without copying any specific creator:
+
+- strong first-screen hierarchy: brand/date first, then a concise headline
+- blue editorial dividers, numbered modules, and compact icon labels for scan speed
+- category labels near each item; no low-context project/company badges by default
+- bottom conclusion and risk note instead of click prompts
+- no decorative QR by default; platform-specific QR should be an explicit opt-in
 
 ## Outputs
 
