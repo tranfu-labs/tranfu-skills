@@ -592,7 +592,7 @@ def find_chrome(explicit: str | None = None) -> str | None:
 
 def clean_items(items: list[dict]) -> list[dict]:
     cleaned = []
-    for item in items[:8]:
+    for item in items[:10]:
         category = item.get("category") or detect_category(item)
         cleaned.append(
             {
@@ -785,20 +785,22 @@ def render_research(report: dict, palette_name: str) -> str:
     p = PALETTES[palette_name]
     c = context(report)
     compact = len(c["items"]) > 5
-    canvas_padding = "24px 64px 22px" if compact else "24px 64px 28px"
-    masthead_height = "116px" if compact else "126px"
-    cover_size = "47px" if compact else "50px"
-    yellow_margin = "-6px 0 10px 6px" if compact else "-6px 0 18px 6px"
-    story_padding = "11px 0 12px" if compact else "22px 0 22px"
-    story_gap = "18px" if compact else "20px"
-    rank_size = "42px" if compact else "45px"
-    story_title_size = "25px" if compact else "29px"
-    story_title_margin = "0 0 6px" if compact else "0 0 10px"
-    story_body_size = "15.5px" if compact else "18px"
-    story_body_line_height = "1.27" if compact else "1.36"
-    footer_margin = "10px" if compact else "18px"
-    quote_size = "22px" if compact else "26px"
-    quote_by_size = "16px" if compact else "18px"
+    dense = len(c["items"]) > 8
+    canvas_padding = "20px 64px 18px" if dense else ("24px 64px 22px" if compact else "24px 64px 28px")
+    masthead_height = "100px" if dense else ("116px" if compact else "126px")
+    cover_size = "43px" if dense else ("47px" if compact else "50px")
+    yellow_margin = "-5px 0 7px 6px" if dense else ("-6px 0 10px 6px" if compact else "-6px 0 18px 6px")
+    yellow_height = "12px" if dense else "16px"
+    story_padding = "7px 0 8px" if dense else ("11px 0 12px" if compact else "22px 0 22px")
+    story_gap = "16px" if dense else ("18px" if compact else "20px")
+    rank_size = "38px" if dense else ("42px" if compact else "45px")
+    story_title_size = "22px" if dense else ("25px" if compact else "29px")
+    story_title_margin = "0 0 4px" if dense else ("0 0 6px" if compact else "0 0 10px")
+    story_body_size = "13.5px" if dense else ("15.5px" if compact else "18px")
+    story_body_line_height = "1.22" if dense else ("1.27" if compact else "1.36")
+    footer_margin = "8px" if dense else ("10px" if compact else "18px")
+    quote_size = "20px" if dense else ("22px" if compact else "26px")
+    quote_by_size = "14px" if dense else ("16px" if compact else "18px")
     qr_html = (
         f'<div class="qr"><span>{esc(c["qr_placeholder"])}</span><small>{esc(c["qr_label"])}</small></div>'
         if c["show_qr"]
@@ -845,7 +847,7 @@ def render_research(report: dict, palette_name: str) -> str:
     .mark .brand-svg {{ display: block; width: 146px; height: 146px; object-fit: contain; overflow: visible; }}
     .short-rule {{ width: 92px; height: 5px; margin: 0 0 13px; background: #111; }}
     .cover-title {{ margin: 0; max-width: 900px; color: #0e2537; font-family: Georgia, "Songti SC", "STSong", serif; font-size: {cover_size}; line-height: 1.01; font-weight: 950; letter-spacing: 0; }}
-    .yellow-line {{ width: 410px; height: 16px; margin: {yellow_margin}; background: #9dd8ff; transform: rotate(-1.2deg); }}
+    .yellow-line {{ width: 410px; height: {yellow_height}; margin: {yellow_margin}; background: #9dd8ff; transform: rotate(-1.2deg); }}
     .accent {{ color: {p["primary"]}; }}
     .content {{ display: block; }}
     .stories {{ display: grid; }}
