@@ -592,7 +592,7 @@ def find_chrome(explicit: str | None = None) -> str | None:
 
 def clean_items(items: list[dict]) -> list[dict]:
     cleaned = []
-    for item in items[:5]:
+    for item in items[:8]:
         category = item.get("category") or detect_category(item)
         cleaned.append(
             {
@@ -784,6 +784,21 @@ def render_dashboard(report: dict, palette_name: str) -> str:
 def render_research(report: dict, palette_name: str) -> str:
     p = PALETTES[palette_name]
     c = context(report)
+    compact = len(c["items"]) > 5
+    canvas_padding = "24px 64px 22px" if compact else "24px 64px 28px"
+    masthead_height = "116px" if compact else "126px"
+    cover_size = "47px" if compact else "50px"
+    yellow_margin = "-6px 0 10px 6px" if compact else "-6px 0 18px 6px"
+    story_padding = "11px 0 12px" if compact else "22px 0 22px"
+    story_gap = "18px" if compact else "20px"
+    rank_size = "42px" if compact else "45px"
+    story_title_size = "25px" if compact else "29px"
+    story_title_margin = "0 0 6px" if compact else "0 0 10px"
+    story_body_size = "15.5px" if compact else "18px"
+    story_body_line_height = "1.27" if compact else "1.36"
+    footer_margin = "10px" if compact else "18px"
+    quote_size = "22px" if compact else "26px"
+    quote_by_size = "16px" if compact else "18px"
     qr_html = (
         f'<div class="qr"><span>{esc(c["qr_placeholder"])}</span><small>{esc(c["qr_label"])}</small></div>'
         if c["show_qr"]
@@ -814,7 +829,7 @@ def render_research(report: dict, palette_name: str) -> str:
       font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; letter-spacing: 0;
     }}
     .canvas {{
-      width: 1080px; height: 1440px; padding: 24px 64px 28px;
+      width: 1080px; height: 1440px; padding: {canvas_padding};
       background:
         radial-gradient(circle at 18% 12%, rgba(255,255,255,.92), transparent 32%),
         linear-gradient(90deg, rgba(20, 88, 145, 0.055) 1px, transparent 1px),
@@ -822,27 +837,27 @@ def render_research(report: dict, palette_name: str) -> str:
         linear-gradient(180deg, #f7fcff 0%, #e4f6ff 100%);
       background-size: auto, 40px 40px, 40px 40px, auto;
     }}
-    .masthead {{ display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; margin-bottom: 6px; min-height: 126px; }}
+    .masthead {{ display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; margin-bottom: 6px; min-height: {masthead_height}; }}
     .date {{ justify-self: start; padding: 12px 17px; border: 2px solid {p["primary"]}; background: rgba(255,255,255,.72); font-size: 24px; font-weight: 900; white-space: nowrap; }}
     .brand {{ justify-self: end; display: block; width: 260px; height: 132px; margin-right: -34px; }}
     .mark {{ width: 260px; height: 132px; display: grid; place-items: center; border: 0; background: transparent; overflow: visible; padding: 0; }}
     .mark .brand-img {{ display: block; width: 146px; height: 146px; object-fit: contain; object-position: center; mix-blend-mode: multiply; }}
     .mark .brand-svg {{ display: block; width: 146px; height: 146px; object-fit: contain; overflow: visible; }}
     .short-rule {{ width: 92px; height: 5px; margin: 0 0 13px; background: #111; }}
-    .cover-title {{ margin: 0; max-width: 900px; color: #0e2537; font-family: Georgia, "Songti SC", "STSong", serif; font-size: 50px; line-height: 1.01; font-weight: 950; letter-spacing: 0; }}
-    .yellow-line {{ width: 410px; height: 16px; margin: -6px 0 18px 6px; background: #9dd8ff; transform: rotate(-1.2deg); }}
+    .cover-title {{ margin: 0; max-width: 900px; color: #0e2537; font-family: Georgia, "Songti SC", "STSong", serif; font-size: {cover_size}; line-height: 1.01; font-weight: 950; letter-spacing: 0; }}
+    .yellow-line {{ width: 410px; height: 16px; margin: {yellow_margin}; background: #9dd8ff; transform: rotate(-1.2deg); }}
     .accent {{ color: {p["primary"]}; }}
     .content {{ display: block; }}
     .stories {{ display: grid; }}
-    .story {{ display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 22px 0 22px; border-bottom: 1.5px solid rgba(17, 34, 48, .28); }}
+    .story {{ display: grid; grid-template-columns: 100px 1fr; gap: {story_gap}; padding: {story_padding}; border-bottom: 1.5px solid rgba(17, 34, 48, .28); }}
     .story:first-child {{ padding-top: 2px; }}
-    .rank {{ color: #0e2537; font-family: Georgia, "Times New Roman", serif; font-size: 45px; line-height: 1; font-weight: 950; }}
-    .story h2 {{ margin: 0 0 10px; color: #111; font-family: Georgia, "Songti SC", "STSong", serif; font-size: 29px; line-height: 1.12; font-weight: 950; }}
-    .story p {{ margin: 0; color: #52697a; font-size: 18px; line-height: 1.36; font-weight: 660; }}
-    .footer {{ margin-top: 18px; display: grid; grid-template-columns: 82px 1fr; gap: 18px; align-items: center; border-top: 3px solid {p["primary"]}; padding-top: 14px; color: {p["primary"]}; font-weight: 900; }}
+    .rank {{ color: #0e2537; font-family: Georgia, "Times New Roman", serif; font-size: {rank_size}; line-height: 1; font-weight: 950; }}
+    .story h2 {{ margin: {story_title_margin}; color: #111; font-family: Georgia, "Songti SC", "STSong", serif; font-size: {story_title_size}; line-height: 1.12; font-weight: 950; }}
+    .story p {{ margin: 0; color: #52697a; font-size: {story_body_size}; line-height: {story_body_line_height}; font-weight: 660; }}
+    .footer {{ margin-top: {footer_margin}; display: grid; grid-template-columns: 82px 1fr; gap: 18px; align-items: center; border-top: 3px solid {p["primary"]}; padding-top: 14px; color: {p["primary"]}; font-weight: 900; }}
     .quote-mark {{ color: #111; font-family: Georgia, "Times New Roman", serif; font-size: 56px; line-height: .8; }}
-    .quote {{ color: #111; font-family: Georgia, "Songti SC", "STSong", serif; font-size: 26px; line-height: 1.16; font-weight: 750; }}
-    .quote small {{ display: block; margin-top: 6px; color: #333; text-align: right; font-size: 18px; font-style: italic; font-weight: 500; }}
+    .quote {{ color: #111; font-family: Georgia, "Songti SC", "STSong", serif; font-size: {quote_size}; line-height: 1.16; font-weight: 750; }}
+    .quote small {{ display: block; margin-top: 6px; color: #333; text-align: right; font-size: {quote_by_size}; font-style: italic; font-weight: 500; }}
     .qr {{ width: 150px; height: 150px; display: grid; place-items: center; border: 2px dashed {p["primary"]}; color: {p["primary"]}; font-size: 26px; background: repeating-linear-gradient(45deg, {p["chip"]} 0 8px, {p["chip_border"]} 8px 16px); }}
     .qr small {{ display: block; margin-top: -28px; font-size: 14px; }}
   </style>
