@@ -305,31 +305,6 @@ def brand_logo_markup(brand: str) -> str:
     return logo_markup(brand or "TranFu")
 
 
-def research_theme_line(ctx: dict) -> str:
-    headline = str(ctx.get("headline") or "").strip()
-    if headline:
-        return f"今日主线：{headline}"
-    theme = str(ctx.get("theme") or "").strip()
-    return f"今日主线：{theme}" if theme else "今日主线：AI 关键变化速览"
-
-
-def research_lead(ctx: dict) -> str:
-    return str(ctx.get("main_judgement") or ctx.get("judgement") or "每天 3 分钟，看懂 AI 世界。")
-
-
-def research_editorial(ctx: dict) -> str:
-    items = ctx.get("items") or []
-    categories = []
-    for item in items:
-        label = item.get("category_label")
-        if label and label not in categories:
-            categories.append(label)
-    category_text = "、".join(categories[:4]) if categories else "工具链、治理与评测"
-    return (
-        f"今天入选的 {len(items)} 条线索集中在{category_text}。重点不在单点热点，"
-        "而在生产级 Agent 所需的工程底座正在补齐：流程编排、权限边界、安全监控、真实评测与可观测性。"
-    )
-
 def item_summary(item: dict) -> str:
     return item.get("summary") or item.get("importance") or ""
 
@@ -818,7 +793,6 @@ def render_research(report: dict, palette_name: str) -> str:
         f'''<article class="story">
           <div class="rank">{idx:02d}.</div>
           <div class="story-body">
-            <div class="story-meta"><span class="category">{esc(item["category_label"])}</span></div>
             <h2>{esc(item["title"])}</h2>
             <p>{esc(public_research_text(item["importance"]))}</p>
           </div>
@@ -827,9 +801,6 @@ def render_research(report: dict, palette_name: str) -> str:
     )
     quote = report.get("quote") or "未来已经到来，只是尚未均匀分布。"
     quote_by = report.get("quote_by") or "William Gibson"
-    theme_line = research_theme_line(c)
-    lead_line = research_lead(c)
-    editorial = research_editorial(c)
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -859,23 +830,15 @@ def render_research(report: dict, palette_name: str) -> str:
     .mark .brand-svg {{ display: block; width: 146px; height: 146px; object-fit: contain; overflow: visible; }}
     .short-rule {{ width: 92px; height: 5px; margin: 0 0 13px; background: #111; }}
     .cover-title {{ margin: 0; max-width: 900px; color: #0e2537; font-family: Georgia, "Songti SC", "STSong", serif; font-size: 50px; line-height: 1.01; font-weight: 950; letter-spacing: 0; }}
-    .yellow-line {{ width: 410px; height: 16px; margin: -6px 0 13px 6px; background: #9dd8ff; transform: rotate(-1.2deg); }}
-    h1 {{ margin: 0; max-width: 890px; font-size: 29px; line-height: 1.1; font-weight: 950; color: #12283a; }}
+    .yellow-line {{ width: 410px; height: 16px; margin: -6px 0 18px 6px; background: #9dd8ff; transform: rotate(-1.2deg); }}
     .accent {{ color: {p["primary"]}; }}
-    .lead {{ max-width: 890px; margin-top: 8px; color: #435b70; font-size: 18px; line-height: 1.24; font-weight: 720; }}
-    .summary {{ margin: 12px 0 10px; padding: 13px 24px; background: {p["primary"]}; color: #f6faf5; }}
-    .summary-label {{ color: #d5efff; font-size: 15px; font-weight: 950; margin-bottom: 7px; }}
-    .summary p {{ margin: 0; font-size: 18px; line-height: 1.32; font-weight: 780; }}
     .content {{ display: block; }}
     .stories {{ display: grid; }}
-    .story {{ display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0 16px; border-bottom: 1.5px solid rgba(17, 34, 48, .28); }}
+    .story {{ display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 22px 0 22px; border-bottom: 1.5px solid rgba(17, 34, 48, .28); }}
     .story:first-child {{ padding-top: 2px; }}
     .rank {{ color: #0e2537; font-family: Georgia, "Times New Roman", serif; font-size: 45px; line-height: 1; font-weight: 950; }}
-    .story-meta {{ display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }}
-    .category {{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; background: #e2f3ff; color: {p["primary"]}; border: 1px solid #bfe1f6; font-size: 13px; line-height: 1; font-weight: 950; }}
-    .company {{ padding: 4px 8px; border: 1px solid #cdd8df; color: #344f64; background: rgba(255,255,255,.72); font-size: 13px; line-height: 1; font-weight: 900; }}
-    .story h2 {{ margin: 0 0 7px; color: #111; font-family: Georgia, "Songti SC", "STSong", serif; font-size: 27px; line-height: 1.12; font-weight: 950; }}
-    .story p {{ margin: 0; color: #52697a; font-size: 17px; line-height: 1.34; font-weight: 660; }}
+    .story h2 {{ margin: 0 0 10px; color: #111; font-family: Georgia, "Songti SC", "STSong", serif; font-size: 29px; line-height: 1.12; font-weight: 950; }}
+    .story p {{ margin: 0; color: #52697a; font-size: 18px; line-height: 1.36; font-weight: 660; }}
     .footer {{ margin-top: 18px; display: grid; grid-template-columns: 82px 1fr; gap: 18px; align-items: center; border-top: 3px solid {p["primary"]}; padding-top: 14px; color: {p["primary"]}; font-weight: 900; }}
     .quote-mark {{ color: #111; font-family: Georgia, "Times New Roman", serif; font-size: 56px; line-height: .8; }}
     .quote {{ color: #111; font-family: Georgia, "Songti SC", "STSong", serif; font-size: 26px; line-height: 1.16; font-weight: 750; }}
@@ -893,9 +856,6 @@ def render_research(report: dict, palette_name: str) -> str:
     <div class="short-rule"></div>
     <div class="cover-title">AI 圈今日大事<br>速览精选</div>
     <div class="yellow-line"></div>
-    <h1>{esc(theme_line)}</h1>
-    <div class="lead">{esc(lead_line)}</div>
-    <section class="summary"><div class="summary-label">主编判断</div><p>{esc(editorial)}</p></section>
     <section class="content">
       <div class="stories">{stories_html}</div>
       {qr_html}
@@ -1123,6 +1083,8 @@ def main() -> int:
                 "raw URLs",
                 "empty non-AI sections",
                 "internal render workflow text",
+                "top summary blocks",
+                "per-story labels and tags",
             ]
         },
     }

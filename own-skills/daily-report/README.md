@@ -46,7 +46,7 @@ python3 scripts/render_daily_report.py \
 ```
 
 The renderer emphasizes fast visual scanning: TranFu brand mark, date, strong
-headline hierarchy, numbered stories, and public category labels. It does not
+headline hierarchy, and numbered story summaries. It does not
 show low-context project/company badges by default because those labels often
 look like noise to public readers. QR is hidden by default because some
 publishing platforms restrict QR images. Set `show_qr: true` only for platforms
@@ -72,7 +72,7 @@ manifest.json
 
 默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格。
 
-默认案例使用公开读者版：只展示类别标签，不展示低语境项目/公司小标签。
+默认案例使用公开读者版：标题后直接进入 `01`、`02` 编号新闻摘要，不展示顶部总结、标签或低语境项目/公司小标签。
 
 ### Research iceblue
 

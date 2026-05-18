@@ -14,8 +14,8 @@ TranFu 需要把每日 AI 新闻材料生成适合朋友圈、公众号正文和
 ## 做法
 
 使用 `scripts/render_daily_report.py` 读取结构化 JSON，默认渲染 `research + iceblue`
-版式，输出 `1080x1440` HTML 截图。图片中保留日期、TranFu logo、主线判断、类别标签和 5 条要闻，
-去掉点击提示、原始 URL、QR、内部流程说明、Crypto 空板块和低语境项目/公司小标签。
+版式，输出 `1080x1440` HTML 截图。图片中保留日期、TranFu logo、标题和 5 条编号要闻，
+去掉顶部总结、标签、点击提示、原始 URL、QR、内部流程说明、Crypto 空板块和低语境项目/公司小标签。
 
 ## 结果
 

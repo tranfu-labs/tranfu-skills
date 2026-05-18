@@ -75,7 +75,7 @@ Do NOT trigger when:
    - remove internal workflow, traceability, prompt, file path, and render notes
    - remove empty non-AI sections
    - keep only public-facing source names when they improve credibility
-   - keep the TranFu brand mark, date, and category labels easy to scan
+   - keep the TranFu brand mark, date, title, and numbered stories easy to scan
    - do not show low-context project/company badges such as niche tool names; rewrite them into public-facing category descriptions
    - do not create standalone keyword or company badge blocks
    - keep QR hidden by default because some platforms restrict QR images
@@ -156,9 +156,9 @@ Treat the image as a static public artifact, not a webpage.
 - Do not show empty categories.
 - Do not show a QR code unless the destination platform allows it and the user explicitly requests it.
 - Do not render a separate keyword panel.
-- Default research output shows only public category labels per story.
+- Default research output goes directly from the title block into numbered story summaries; do not show top summary blocks, standalone judgement boxes, per-story labels, or tags.
 - Do not show niche project names or low-context company names as visual badges. If a name is not meaningful to a general public reader, rewrite the sentence into a descriptive category such as `低代码工具`, `企业身份与权限管理`, `安全监控工具`, `开源评测工具`, or `开源可观测工具`.
-- Use real brand assets only for TranFu and for explicitly requested, high-context variants. Otherwise prefer text-only category labels over invented logos or noisy badges.
+- Use real brand assets only for TranFu and for explicitly requested, high-context variants. Do not add invented logos, noisy badges, or low-context labels.
 - Do not include Crypto unless the user explicitly asks for a Crypto report and
   provides valid Crypto source material.
 - Do not describe collection failure as the main summary unless that is the
@@ -173,8 +173,8 @@ Treat the image as a static public artifact, not a webpage.
 Learn from high-performing Xiaohongshu and X information cards without copying any specific creator:
 
 - strong first-screen hierarchy: brand/date first, then a concise headline
-- blue editorial dividers, numbered modules, and compact icon labels for scan speed
-- category labels near each item; no low-context project/company badges by default
+- blue editorial dividers and numbered modules for scan speed
+- default research layout shows numbered items only; no per-story tags, category labels, or low-context project/company badges
 - bottom conclusion and risk note instead of click prompts
 - no decorative QR by default; platform-specific QR should be an explicit opt-in
 

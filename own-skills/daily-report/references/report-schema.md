@@ -42,6 +42,6 @@ Static image display rules:
 - Remove empty non-AI sections.
 - Do not render a standalone keyword section. Keep keywords as archive/search metadata unless a specific style explicitly needs them.
 - Do not render QR by default. QR is opt-in through `show_qr: true`.
-- Default research output should show only category labels near each story.
+- Default research output should go directly from the title block into numbered story summaries. Do not show top summary blocks, per-story labels, or standalone tags.
 - Do not show low-context project/company badges in the image. Rewrite niche names into public-facing descriptions unless the user explicitly asks to show them.
 - Keep summaries short enough to read on a phone.
