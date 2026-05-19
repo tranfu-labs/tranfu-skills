@@ -86,11 +86,16 @@ for (const [root, type] of Object.entries(ROOTS)) {
   }
 }
 
-// generated_at 用 HEAD commit 的 author date 而不是 new Date(),
-// 否则同一 commit 跑两次产生不同 index.json, PR CI dry-run 永远 fail.
+// generated_at = 最近一次改 skill 内容的 commit 的 author date.
+// 不能用 HEAD — "commit 这次 rebuild" 本身会产生新 HEAD, 让 generated_at 立刻过时,
+// validate-diff 死循环. 也不 glob scripts/build-index.mjs 自身 — 改 build 脚本不算
+// 内容变化, 且会引发同样的死循环 (改脚本 + commit 一起做时, 取决于即将创建的 commit).
 function generatedAt() {
   try {
-    return execSync("git log -1 --format=%aI HEAD", { encoding: "utf8" }).trim();
+    return execSync(
+      "git log -1 --format=%aI -- meta-skills own-skills external-skills",
+      { encoding: "utf8" }
+    ).trim();
   } catch {
     return new Date().toISOString(); // 非 git 环境 fallback
   }
