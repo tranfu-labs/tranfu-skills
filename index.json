@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-17T21:58:28+08:00",
+  "generated_at": "2026-05-19T10:27:00+08:00",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -17,7 +17,7 @@
         "templates/section-使用技巧.md",
         "templates/section-同类对比.md"
       ],
-      "sha": "30c93fc5431ba5d6994dfecf4d58641722715c1e"
+      "sha": "0a2d75fa3ab4e0f5bcd82a8940f0affce3673d88"
     },
     {
       "name": "tranfu-router",
@@ -78,6 +78,28 @@
       "sha": "246d832348f864f4f51054f77477b3df4b544198"
     },
     {
+      "name": "daily-report",
+      "type": "own",
+      "description": "当用户要把 AI 新闻、日报素材或结构化 JSON 渲染成 TranFu 公开发布图片时使用。 Do NOT trigger when: 用户只要纯文本日报、文章改写、通用图片生成或非 AI 主题海报。",
+      "path": "own-skills/daily-report",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/logos/tranfu.png",
+        "cases/griffithkk3-del.md",
+        "examples/dark-aqua.png",
+        "examples/dark-iceblue.png",
+        "examples/research-iceblue-10-items.png",
+        "examples/research-iceblue.png",
+        "examples/research-public-copy.png",
+        "examples/research-skyblue.png",
+        "references/report-schema.md",
+        "scripts/render_daily_report.py"
+      ],
+      "sha": "47eacd6d5dca3b0c81a9e0f3c8b4c8a898def2fe"
+    },
+    {
       "name": "goal-driven-decomposition",
       "type": "own",
       "description": "Solve \"build/make/design X\" goals AND follow-up edits (\"做一个网站\", \"build a tool\", \"加用户登录\", \"X 偏了改一下\"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).",
@@ -86,7 +108,7 @@
         "HISTORY.md",
         "SKILL.md"
       ],
-      "sha": "fcf19066c43ecb15f948e4a487ee67a284ec1b30"
+      "sha": "7f5bd29706d110a68df75f906c7108b2e02a4494"
     },
     {
       "name": "lark-safe-write",

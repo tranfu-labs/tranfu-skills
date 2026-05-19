@@ -13,31 +13,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # PR 上默认 checkout 的是 refs/pull/N/merge (merge commit),
+          # 它的 author date 跟 PR head commit 对不上 → diff 永远非空.
+          # 显式指定 head sha, 让 CI 上的 HEAD 等于 PR head commit.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # build-index.mjs 用 `git log -1 -- meta-skills own-skills external-skills`
+          # 找最近一次 skill 内容 commit 算 generated_at, 需要完整历史
+          # (默认 depth=1 时 path 过滤行为异常, 会回退到 HEAD commit).
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm run build:index
-      - if: github.event_name == 'pull_request'
-        # PR: 仅验 build-index 跑通 (产出合法 JSON, 没 frontmatter parse 错).
-        # 不验 git diff — PR 上 checkout@v4 拿的是 refs/pull/N/merge (merge commit),
-        # 它的 author date 不等于我 push 的 commit 的 author date, generated_at 永远 diff.
-        # main 上的 index.json 由 push event 步骤自动 rebuild + commit.
-        run: |
-          if [ ! -f index.json ]; then
-            echo "::error::build:index 没生成 index.json"
-            exit 1
-          fi
-          node -e "const i = require('./index.json'); if (!Array.isArray(i.skills) || i.skills.length === 0) { console.error('::error::index.json 无 skills'); process.exit(1); }"
-          echo "PR build:index OK, $(node -e "console.log(require('./index.json').skills.length)") skills indexed"
-      - if: github.event_name == 'push'
+      - name: Verify index.json up-to-date
+        # 不再 main 上自动 commit + push (跟 "必须走 PR" 的 branch rule 冲突).
+        # 改成 PR 上 validate — 作者本地必须跑过 npm run build:index 且把 index.json 一起 commit 进 PR.
+        # tranfu-publish skill 已把这步列进 task list, 不容易漏.
         run: |
           if ! git diff --quiet index.json; then
-            git config user.name "tranfu-ci"
-            git config user.email "ci@tranfu-labs.local"
-            git add index.json
-            git commit -m "ci: rebuild index.json"
-            git push
+            echo "::error::index.json 不是最新的. 请在本地跑 'npm run build:index' 然后把 index.json 一起 commit 进 PR."
+            echo "--- index.json diff ---"
+            git diff index.json
+            exit 1
           fi
+          echo "index.json OK — $(node -e "console.log(require('./index.json').skills.length)") skills indexed"
