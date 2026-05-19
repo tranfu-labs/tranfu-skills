@@ -1,0 +1,4 @@
+interface:
+  display_name: "Daily Report"
+  short_description: "把 AI 日报素材渲染为 TranFu 公开发布图片。"
+  default_prompt: "根据结构化 AI 日报素材生成 TranFu 日报图片。"
