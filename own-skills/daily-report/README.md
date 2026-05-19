@@ -78,6 +78,10 @@ manifest.json
 
 ![research iceblue example](examples/research-iceblue.png)
 
+### Research iceblue 10 items
+
+![research iceblue 10 items example](examples/research-iceblue-10-items.png)
+
 ### Research skyblue
 
 ![research skyblue example](examples/research-skyblue.png)
