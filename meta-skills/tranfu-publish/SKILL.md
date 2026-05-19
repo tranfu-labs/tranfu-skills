@@ -178,29 +178,21 @@ NEVER 在拿 `[1]` 之前动公司库文件.
 | external | 写 `$REPO/external-skills/<name>/SKILL.md` (薄指针 + §推荐场景 + §同类对比 + §使用技巧) + `cases/<recommender>.md` | `external-skills/<name>/` + `index.json` |
 | case | append `## <scenario>` 到 `$REPO/external-skills/<name>/cases/<recommender>.md` (或新建); 不动 SKILL.md | 该 case 文件 + `index.json` (仅当 description 因 case 变了) |
 
-执行:
+**MUST 用 task tool 跑这段** (Claude Code: `TaskCreate` / Codex: 等效 task API). 每步建一个独立 task, 按顺序 `in_progress` → `completed`. 任何一步失败 → 留在 `in_progress` + 报给用户, **不静默跳到下一步**.
 
-```bash
-cd $REPO
-git checkout main && git pull --ff-only
-BRANCH="skill/$NAME"          # e.g. skill/auth-helper
-git checkout -b $BRANCH
+为什么强制 task list: 这段步骤多 + 有顺序依赖 + 漏一步(尤其 `npm run build:index`) PR CI 就 fail. 显式 task 让进度可见, 漏步骤当场暴露.
 
-# 按 path 写文件 (上表)
-# ...
+Task list (按 path 微调写文件那步):
 
-# 重新生成 index.json (公司库 root, npm run build:index zero-dep)
-npm run build:index
+1. **切分支** — `cd $REPO && git checkout main && git pull --ff-only && git checkout -b skill/<name>`
+2. **写文件** — 按上表 path 决定: own = `cp -r $SRC ...`; external = 写 SKILL.md + cases/<recommender>.md; case = append `## <scenario>` 到已有 case 文件
+3. **重新生成 index.json** — `npm run build:index` (公司库 root, zero-dep). **不可跳** — PR CI 会 validate diff, 漏跑直接 fail
+4. **git add + commit** — path-specific add (上表) + `git commit -m "skill: 加 <name> (<path_type>)"`
+5. **push 分支** — `git push -u origin skill/<name>`
+6. **开 PR** (见 §9) — `gh pr create ...`
+7. **输出 PR URL 给用户**
 
-# commit (path-specific git add — 上表)
-git add <按 path 决定>
-git commit -m "skill: 加 $NAME ($PATH_TYPE)"
-
-# push 到 origin
-git push -u origin $BRANCH
-```
-
-### 9. 提 PR (仅 §8 全部成功后)
+### 9. 提 PR (仅 §8 task list 全部 completed 后执行)
 
 ```bash
 gh pr create --base main --head $BRANCH \
@@ -220,7 +212,8 @@ EOF
 - ❌ **不动公司库任何文件 until §8** — §1-7 全部是起草, 不写盘
 - ❌ **起草后必须完整 markdown 渲染给用户审** (不能只说"已起草, 我走了")
 - ❌ **必须按 `templates/` 渲染** — 不允许换成 GitHub 通用 `## Summary / ## Validation / ## Test plan / ## Rollback` 这些段
-- ❌ **`npm run build:index` 必须跑** — 若漏跑, PR CI 会 fail (CI 会 validate index.json 是否 up-to-date)
+- ❌ **`npm run build:index` 必须跑且作为独立 task 显式追踪** — 若漏跑, PR CI 会 fail (CI validate index.json 是否 up-to-date). §8 task list 里它是一个独立条目, 不能埋在别的步骤里
+- ❌ **§8 不用 task tool 跑 = 违规** — 不允许把 7 步连写成一段 bash 一口气跑掉; 必须 TaskCreate 建 list, 逐项 in_progress / completed
 - ❌ **`gh` 失败 → 报错给用户, 不重试** — 不假装成功
 - ❌ **不接 router 范围意图** (search / install / list / update / uninstall / doctor)
 - ❌ **不跨仓 PR** — tranfu-publish 只发到 `tranfu-labs/tranfu-skills`, 别的仓走别的 skill
