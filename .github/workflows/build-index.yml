@@ -17,10 +17,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # PR 上默认 checkout 的是 refs/pull/N/merge (merge commit),
-          # 它的 author date 跟 PR head commit 对不上, build-index.mjs 里
-          # `git log -1 --format=%aI HEAD` 拿到的时间会跟作者本地不一致 → diff 永远非空.
+          # 它的 author date 跟 PR head commit 对不上 → diff 永远非空.
           # 显式指定 head sha, 让 CI 上的 HEAD 等于 PR head commit.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # build-index.mjs 用 `git log -1 -- meta-skills own-skills external-skills`
+          # 找最近一次 skill 内容 commit 算 generated_at, 需要完整历史
+          # (默认 depth=1 时 path 过滤行为异常, 会回退到 HEAD commit).
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm run build:index
