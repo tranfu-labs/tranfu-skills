@@ -86,19 +86,11 @@ for (const [root, type] of Object.entries(ROOTS)) {
   }
 }
 
-// generated_at = 最近一次改 skill 内容的 commit 的 author date.
-// 不能用 HEAD — "commit 这次 rebuild" 本身会产生新 HEAD, 让 generated_at 立刻过时,
-// validate-diff 死循环. 也不 glob scripts/build-index.mjs 自身 — 改 build 脚本不算
-// 内容变化, 且会引发同样的死循环 (改脚本 + commit 一起做时, 取决于即将创建的 commit).
+// generated_at 仅作信息展示, 不参与 PR validate (workflow 用 jq 删掉它再比对).
+// 任何"基于 git 时间"的方案都会被 squash merge 打破 — squash 创造新 commit,
+// 它的 date 跟 PR 里 commit 的 date 不一致, validate-diff 永远 fail.
 function generatedAt() {
-  try {
-    return execSync(
-      "git log -1 --format=%aI -- meta-skills own-skills external-skills",
-      { encoding: "utf8" }
-    ).trim();
-  } catch {
-    return new Date().toISOString(); // 非 git 环境 fallback
-  }
+  return new Date().toISOString();
 }
 
 const index = { version: 1, generated_at: generatedAt(), skills };

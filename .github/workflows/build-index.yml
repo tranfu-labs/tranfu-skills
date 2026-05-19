@@ -16,26 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # PR 上默认 checkout 的是 refs/pull/N/merge (merge commit),
-          # 它的 author date 跟 PR head commit 对不上 → diff 永远非空.
-          # 显式指定 head sha, 让 CI 上的 HEAD 等于 PR head commit.
+          # PR 上默认 checkout 的是 refs/pull/N/merge (merge commit) — 没问题, 因为
+          # validate 已忽略 generated_at, 不再依赖 commit date.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          # build-index.mjs 用 `git log -1 -- meta-skills own-skills external-skills`
-          # 找最近一次 skill 内容 commit 算 generated_at, 需要完整历史
-          # (默认 depth=1 时 path 过滤行为异常, 会回退到 HEAD commit).
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+      - name: Snapshot committed index.json
+        run: cp index.json /tmp/committed-index.json
       - run: npm run build:index
-      - name: Verify index.json up-to-date
-        # 不再 main 上自动 commit + push (跟 "必须走 PR" 的 branch rule 冲突).
-        # 改成 PR 上 validate — 作者本地必须跑过 npm run build:index 且把 index.json 一起 commit 进 PR.
-        # tranfu-publish skill 已把这步列进 task list, 不容易漏.
+      - name: Verify index.json skills up-to-date
+        # 只比对 skills 数组 (内容), 忽略 generated_at — 它每次 build 都变 (new Date()),
+        # 也会被 squash merge 重置, 拿它做 diff 触发器会让 CI 死循环 fail.
+        # 真正要拦的是: 作者改了 skill 但忘跑 npm run build:index → skills 数组里 sha/files/description 落后.
         run: |
-          if ! git diff --quiet index.json; then
-            echo "::error::index.json 不是最新的. 请在本地跑 'npm run build:index' 然后把 index.json 一起 commit 进 PR."
-            echo "--- index.json diff ---"
-            git diff index.json
+          if ! diff <(jq -S 'del(.generated_at)' /tmp/committed-index.json) <(jq -S 'del(.generated_at)' index.json) > /dev/null; then
+            echo "::error::index.json 的 skills 数据落后. 请在本地跑 'npm run build:index' 然后把 index.json 一起 commit 进 PR."
+            echo "--- diff (忽略 generated_at) ---"
+            diff <(jq -S 'del(.generated_at)' /tmp/committed-index.json) <(jq -S 'del(.generated_at)' index.json) || true
             exit 1
           fi
           echo "index.json OK — $(node -e "console.log(require('./index.json').skills.length)") skills indexed"
