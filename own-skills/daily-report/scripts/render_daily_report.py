@@ -17,6 +17,10 @@ WIDTH = 1080
 HEIGHT = 1440
 DEFAULT_STYLE = "research"
 DEFAULT_PALETTE = "iceblue"
+STYLES = ["dashboard", "research", "dark", "verge"]
+STYLE_SIZES = {
+    "verge": (1080, 1350),
+}
 
 SECTION_ICONS = {
     "workflow": "▦",
@@ -651,6 +655,10 @@ def headline_html(ctx: dict) -> str:
     return esc(headline)
 
 
+def output_size(style: str) -> tuple[int, int]:
+    return STYLE_SIZES.get(style, (WIDTH, HEIGHT))
+
+
 
 
 
@@ -1008,6 +1016,202 @@ def render_dark(report: dict, palette_name: str) -> str:
 """
 
 
+def render_verge(report: dict, palette_name: str) -> str:
+    c = context(report)
+    themes = {
+        "iceblue": {
+            "title": "今日科技早报",
+            "topic": "AI · Agent · 市场 · 产品",
+            "bg": "#050505",
+            "paper": "#f7f7ef",
+            "primary": "#641cff",
+            "accent": "#ff32b2",
+            "lime": "#b6ff00",
+            "metric": "#ff4fbd",
+        },
+        "skyblue": {
+            "title": "AI 今日早报",
+            "topic": "AI · 硬件 · 市场 · 产品",
+            "bg": "#050511",
+            "paper": "#f5f0e8",
+            "primary": "#6c2cff",
+            "accent": "#00e5ff",
+            "lime": "#d6ff2f",
+            "metric": "#00e5ff",
+        },
+        "aqua": {
+            "title": "科技情报早报",
+            "topic": "AI · 模型 · 基建 · 产品",
+            "bg": "#00110f",
+            "paper": "#e9fff9",
+            "primary": "#8a38ff",
+            "accent": "#ff4dc4",
+            "lime": "#c8ff2e",
+            "metric": "#ff4dc4",
+        },
+        "slate": {
+            "title": "AI 极客早报",
+            "topic": "AI · Agent · 安全 · 基建",
+            "bg": "#05080b",
+            "paper": "#e7f2e8",
+            "primary": "#6b38ff",
+            "accent": "#b7ff00",
+            "lime": "#83ff72",
+            "metric": "#83ff72",
+        },
+        "steelblue": {
+            "title": "AI 系统早报",
+            "topic": "AI · 治理 · 模型 · 市场",
+            "bg": "#080b12",
+            "paper": "#eef4ff",
+            "primary": "#7ab8ff",
+            "accent": "#ff6a3d",
+            "lime": "#d5e2ff",
+            "metric": "#ff6a3d",
+        },
+        "mist": {
+            "title": "AI 未来早报",
+            "topic": "AI · 应用 · 端侧 · 基建",
+            "bg": "#eaf7ff",
+            "paper": "#061427",
+            "primary": "#237cff",
+            "accent": "#ff4f8b",
+            "lime": "#c7ff2f",
+            "metric": "#237cff",
+        },
+    }
+    theme = themes.get(palette_name, themes["iceblue"])
+    items = c["items"]
+    lead = items[0] if items else {"title": c["headline"], "importance": c["dek"], "category": "workflow"}
+    main_items = items[1:5]
+    default_market = [
+        {"label": "AI 指数", "value": "+2.4%", "icon": "▟"},
+        {"label": "芯片板块", "value": "+1.1%", "icon": "▣"},
+        {"label": "消费电子", "value": "+0.7%", "icon": "▱"},
+        {"label": "美元指数", "value": "104.2", "icon": "◎"},
+    ]
+    market_items = report.get("market_snapshot") if isinstance(report.get("market_snapshot"), list) else default_market
+    watch_items = report.get("watch_items") if isinstance(report.get("watch_items"), list) else [
+        "新品发布会 10:00",
+        "行业财报窗口开启",
+        "开发者大会议程更新",
+    ]
+    footer_text = report.get("closing") or c["judgement"] or c["headline"]
+
+    def complete_text(value: object, limit: int) -> str:
+        text = public_research_text(value).strip()
+        if len(text) <= limit:
+            return text
+        for mark in ["。", "！", "？", ";", "；"]:
+            pos = text.rfind(mark, 0, limit + 1)
+            if pos >= max(16, int(limit * 0.46)):
+                return text[: pos + 1]
+        for mark in ["，", ",", "、", "：", ":"]:
+            pos = text.rfind(mark, 0, limit + 1)
+            if pos >= max(16, int(limit * 0.46)):
+                return text[:pos].rstrip("，,；;、：: ") + "。"
+        words = text[:limit].rstrip("，,；;、：: ")
+        while words and (words[-1].isascii() and words[-1].isalnum()):
+            words = words[:-1].rstrip()
+        return words.rstrip("，,；;、：: ") + "。"
+
+    rows_html = "\n".join(
+        f'''<article class="main-row">
+          <div class="num">{idx:02d}</div>
+          <div class="ico">{esc(item.get("icon") or SECTION_ICONS.get(item.get("category"), "◇"))}</div>
+          <div><h3>{esc(complete_text(item["title"], 28))}</h3><p>{esc(complete_text(item["importance"], 58))}</p></div>
+        </article>'''
+        for idx, item in enumerate(main_items, 1)
+    )
+    metrics_html = "\n".join(
+        f'''<div class="metric"><span class="micon">{esc(item.get("icon") or "▣")}</span><span>{esc(item.get("label") or "")}</span><b>{esc(item.get("value") or "—")}</b></div>'''
+        for item in market_items[:4]
+    )
+    swatches = [theme["accent"], theme["lime"], theme["primary"]]
+    watch_html = "\n".join(
+        f'''<li><span style="background:{swatches[idx % len(swatches)]}"></span>{esc(complete_text(item, 22))}</li>'''
+        for idx, item in enumerate(watch_items[:3])
+    )
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1080, initial-scale=1">
+  <title>{esc(c["brand"])} AI Morning Brief · {date_display(c["date"])}</title>
+  <style>
+    * {{ box-sizing: border-box; }}
+    html, body {{ margin: 0; width: 1080px; min-height: 1350px; background: {theme["bg"]}; color: {theme["paper"]}; font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif; letter-spacing: 0; }}
+    h1,h2,h3,h4,p {{ margin: 0; }}
+    .canvas {{ width: 1080px; height: 1350px; background: {theme["bg"]}; padding: 30px 34px 34px; overflow: hidden; position: relative; }}
+    .canvas:before {{ content: ""; position: absolute; inset: 28px; border: 1.5px solid rgba(245,240,232,.88); pointer-events: none; }}
+    .decor-a {{ position: absolute; right: 76px; top: 34px; width: 66px; height: 66px; background: {theme["primary"]}; }}
+    .decor-b {{ position: absolute; right: 140px; top: 96px; width: 38px; height: 38px; background: {theme["lime"]}; }}
+    .decor-c {{ position: absolute; right: 260px; top: 86px; width: 92px; height: 6px; border-top: 4px dotted {theme["accent"]}; }}
+    .top {{ position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 160px; align-items: start; gap: 20px; }}
+    h1 {{ font-size: 82px; line-height: .88; font-weight: 950; color: {theme["paper"]}; max-width: 720px; }}
+    .sub {{ margin-top: 14px; font-size: 18px; font-weight: 950; letter-spacing: 5px; color: {theme["paper"]}; }}
+    .sub:after {{ content: ""; display: inline-block; width: 38px; height: 3px; background: {theme["accent"]}; margin-left: 10px; vertical-align: middle; }}
+    .date {{ margin-top: 13px; font-size: 22px; color: {theme["paper"]}; word-spacing: 5px; }}
+    .brand {{ justify-self: end; display: grid; justify-items: end; gap: 7px; }}
+    .brand-mark {{ width: 100px; height: 64px; background: {theme["paper"]}; display: grid; place-items: center; }}
+    .brand-mark img {{ width: 76px; height: 76px; object-fit: contain; mix-blend-mode: multiply; }}
+    .brand-name {{ font-size: 16px; font-weight: 950; color: {theme["paper"]}; letter-spacing: 2px; }}
+    .topic {{ position: relative; z-index: 1; margin-top: 16px; text-align: right; font-size: 20px; letter-spacing: 2px; }}
+    .topic:before {{ content: ""; display: inline-block; width: 330px; height: 2px; background: {theme["primary"]}; vertical-align: middle; margin-right: 14px; }}
+    .topic:after {{ content: ""; display: inline-block; width: 14px; height: 14px; background: {theme["accent"]}; margin-left: 8px; vertical-align: middle; }}
+    .hero {{ position: relative; z-index: 1; margin-top: 16px; border: 1.5px solid rgba(245,240,232,.88); height: 440px; padding: 30px 30px 26px; overflow: hidden; }}
+    .hero:before {{ content: ""; position: absolute; right: -2px; top: -2px; border-top: 118px solid {theme["accent"]}; border-left: 118px solid transparent; }}
+    .hero:after {{ content: "↗"; position: absolute; right: 30px; top: 20px; font-size: 48px; color: {theme["paper"]}; font-weight: 300; }}
+    .top-story {{ color: {theme["accent"]}; font-size: 48px; line-height: 1; font-weight: 950; }}
+    .top-story:after {{ content: ""; display: block; width: 38px; height: 3px; background: {theme["accent"]}; margin-top: 14px; }}
+    .hero h2 {{ margin: 30px 0 0 150px; max-width: 690px; font-size: 51px; line-height: 1.09; font-weight: 950; color: {theme["paper"]}; }}
+    .hero p {{ margin: 20px 0 0 150px; max-width: 650px; border-left: 7px solid {theme["accent"]}; padding-left: 16px; font-size: 20px; line-height: 1.42; color: #e5ded4; font-weight: 650; }}
+    .dots {{ position: absolute; left: 34px; bottom: 94px; width: 76px; height: 104px; background: radial-gradient(rgba(245,240,232,.32) 1.4px,transparent 1.4px); background-size: 8px 8px; }}
+    .small-block {{ position: absolute; left: 32px; bottom: 34px; width: 40px; height: 40px; background: {theme["lime"]}; box-shadow: 38px 32px 0 {theme["primary"]}; }}
+    .side-slash {{ position: absolute; right: 12px; bottom: 0; width: 100px; height: 176px; background: repeating-linear-gradient(135deg,{theme["primary"]} 0 7px,transparent 7px 17px); }}
+    .lower {{ position: relative; z-index: 1; display: grid; grid-template-columns: 1.55fr .9fr; border-left: 1.5px solid rgba(245,240,232,.88); border-right: 1.5px solid rgba(245,240,232,.88); border-bottom: 1.5px solid rgba(245,240,232,.88); }}
+    .main-list {{ border-right: 1.5px solid rgba(245,240,232,.88); }}
+    .main-row {{ height: 128px; display: grid; grid-template-columns: 86px 60px 1fr; gap: 16px; align-items: center; border-bottom: 1px solid rgba(245,240,232,.35); padding: 0 20px; }}
+    .main-row:last-child {{ border-bottom: 0; }}
+    .num {{ font-size: 45px; line-height: 1; font-weight: 950; color: {theme["primary"]}; font-family: Arial Black, Impact, sans-serif; }}
+    .ico {{ font-size: 31px; color: {theme["accent"]}; text-align: center; }}
+    .main-row h3 {{ font-size: 25px; line-height: 1.12; font-weight: 950; color: {theme["paper"]}; margin-bottom: 7px; }}
+    .main-row p {{ font-size: 16.4px; line-height: 1.32; color: #d8d0c6; font-weight: 650; }}
+    .side {{ display: grid; grid-template-rows: auto auto auto 1fr; align-content: start; min-height: 0; }}
+    .panel-title {{ height: 44px; border-bottom: 1.5px solid rgba(245,240,232,.88); display: flex; align-items: center; padding: 0 20px; color: {theme["primary"]}; font-size: 20px; font-weight: 950; position: relative; }}
+    .panel-title:after {{ content: ""; position: absolute; right: 12px; top: 12px; border-top: 20px solid {theme["primary"]}; border-left: 20px solid transparent; }}
+    .metrics {{ padding: 5px 18px 4px; border-bottom: 1.5px solid rgba(245,240,232,.88); }}
+    .metric {{ height: 34px; display: grid; grid-template-columns: 38px 1fr auto; align-items: center; border-bottom: 1px solid rgba(245,240,232,.24); gap: 10px; }}
+    .metric:last-child {{ border-bottom: 0; }}
+    .micon {{ font-size: 21px; color: {theme["lime"]}; text-align: center; }}
+    .metric span:nth-child(2) {{ font-size: 15.4px; color: {theme["paper"]}; font-weight: 750; }}
+    .metric b {{ font-size: 20px; color: {theme["metric"]}; font-weight: 950; white-space: nowrap; }}
+    .watch-title {{ height: 42px; display: flex; align-items: center; padding: 0 20px; color: {theme["primary"]}; font-size: 21px; font-weight: 950; border-bottom: 1.5px solid rgba(245,240,232,.88); position: relative; }}
+    .watch-title:after {{ content: ""; position: absolute; right: 12px; top: 12px; border-top: 19px solid {theme["primary"]}; border-left: 19px solid transparent; }}
+    .watch {{ list-style: none; margin: 0; padding: 15px 20px 18px; display: grid; gap: 14px; align-content: start; }}
+    .watch li {{ display: grid; grid-template-columns: 15px 1fr; gap: 12px; font-size: 21px; line-height: 1.24; color: {theme["paper"]}; font-weight: 820; }}
+    .watch span {{ width: 15px; height: 15px; margin-top: 5px; }}
+    .footer {{ position: relative; z-index: 1; height: 70px; border: 1.5px solid rgba(245,240,232,.88); border-top: 0; display: grid; grid-template-columns: 78px 1fr 148px; align-items: center; }}
+    .f-icon {{ height: 70px; background: {theme["lime"]}; color: {theme["bg"]}; display: grid; place-items: center; font-size: 34px; font-weight: 950; }}
+    .f-copy {{ padding-left: 20px; font-size: 17px; line-height: 1.18; color: {theme["paper"]}; font-weight: 720; }}
+    .f-copy b {{ color: {theme["lime"]}; }}
+    .f-brand {{ font-size: 15px; font-weight: 950; color: {theme["paper"]}; letter-spacing: 1px; text-align: center; }}
+  </style>
+</head>
+<body>
+  <main class="canvas">
+    <div class="decor-a"></div><div class="decor-b"></div><div class="decor-c"></div>
+    <header class="top"><div><h1>{esc(theme["title"])}</h1><div class="sub">MORNING BRIEF</div><div class="date">{date_display(c["date"]).replace(".", " / ")}</div></div><div class="brand"><div class="brand-mark">{brand_logo_markup(c["brand"])}</div><div class="brand-name">{esc(c["brand"].upper())}</div></div></header>
+    <div class="topic">{esc(theme["topic"])}</div>
+    <section class="hero"><div class="top-story">TOP STORY</div><h2>{esc(complete_text(lead["title"], 34))}</h2><p>{esc(complete_text(lead["importance"], 72))}</p><div class="dots"></div><div class="small-block"></div><div class="side-slash"></div></section>
+    <section class="lower"><div class="main-list">{rows_html}</div><aside class="side"><div class="panel-title">MARKET SNAPSHOT</div><div class="metrics">{metrics_html}</div><div class="watch-title">TODAY TO WATCH</div><ul class="watch">{watch_html}</ul></aside></section>
+    <footer class="footer"><div class="f-icon">▤</div><div class="f-copy"><b>编辑摘要：</b>{esc(complete_text(footer_text, 54))}</div><div class="f-brand">{esc(c["brand"].upper())} DAILY</div></footer>
+  </main>
+</body>
+</html>
+"""
+
+
 def render_html(report: dict, style: str, palette: str) -> str:
     if style == "dashboard":
         return render_dashboard(report, palette)
@@ -1015,16 +1219,18 @@ def render_html(report: dict, style: str, palette: str) -> str:
         return render_research(report, palette)
     if style == "dark":
         return render_dark(report, palette)
+    if style == "verge":
+        return render_verge(report, palette)
     raise ValueError(f"Unknown style: {style}")
 
 
-def screenshot(chrome: str, html_path: Path, out_path: Path) -> None:
+def screenshot(chrome: str, html_path: Path, out_path: Path, width: int, height: int) -> None:
     cmd = [
         chrome,
         "--headless=new",
         "--disable-gpu",
         "--hide-scrollbars",
-        f"--window-size={WIDTH},{HEIGHT}",
+        f"--window-size={width},{height}",
         f"--screenshot={out_path}",
         html_path.resolve().as_uri(),
     ]
@@ -1032,15 +1238,16 @@ def screenshot(chrome: str, html_path: Path, out_path: Path) -> None:
 
 
 def render_one(report: dict, out_dir: Path, style: str, palette: str, chrome: str | None, no_screenshot: bool) -> dict:
+    width, height = output_size(style)
     html_name = f"render-{style}-{palette}.html"
-    image_name = f"tranfu-daily-{style}-{palette}-1080x1440.png"
+    image_name = f"tranfu-daily-{style}-{palette}-{width}x{height}.png"
     html_path = out_dir / html_name
     image_path = out_dir / image_name
     html_path.write_text(render_html(report, style, palette), encoding="utf-8")
 
     screenshot_status = "skipped"
     if not no_screenshot and chrome:
-        screenshot(chrome, html_path, image_path)
+        screenshot(chrome, html_path, image_path, width, height)
         screenshot_status = "created"
     elif not no_screenshot:
         screenshot_status = "missing_chrome"
@@ -1050,7 +1257,7 @@ def render_one(report: dict, out_dir: Path, style: str, palette: str, chrome: st
         "palette": palette,
         "html": html_name,
         "image": image_name if image_path.exists() else None,
-        "size": f"{WIDTH}x{HEIGHT}",
+        "size": f"{width}x{height}",
         "screenshot_status": screenshot_status,
     }
 
@@ -1059,7 +1266,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, help="Path to report JSON")
     parser.add_argument("--out-dir", required=True, help="Output directory")
-    parser.add_argument("--style", choices=["dashboard", "research", "dark"], default=DEFAULT_STYLE)
+    parser.add_argument("--style", choices=STYLES, default=DEFAULT_STYLE)
     parser.add_argument("--palette", choices=sorted(PALETTES), default=DEFAULT_PALETTE)
     parser.add_argument("--all-variants", action="store_true", help="Render every style and palette combination")
     parser.add_argument("--chrome", help="Optional Chrome/Chromium executable path")
@@ -1076,7 +1283,7 @@ def main() -> int:
 
     variants = []
     if args.all_variants:
-        for style in ["dashboard", "research", "dark"]:
+        for style in STYLES:
             for palette in PALETTES:
                 variants.append((style, palette))
     else:

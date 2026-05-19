@@ -1,6 +1,6 @@
 # daily-report
 
-把结构化 AI 新闻素材渲染成 TranFu 品牌日报图片，默认输出适合朋友圈、公众号正文和公开社群传播的 `1080x1440` HTML 截图。
+把结构化 AI 新闻素材渲染成 TranFu 品牌日报图片，默认输出适合朋友圈、公众号正文和公开社群传播的 `1080x1440` HTML 截图；`verge` 风格输出 `1080x1350` 的 4:5 高对比资讯早报图。
 
 ## Install
 
@@ -65,14 +65,17 @@ files, but PNG screenshot output is skipped.
 ```text
 render-<style>-<palette>.html
 tranfu-daily-<style>-<palette>-1080x1440.png
+tranfu-daily-verge-<palette>-1080x1350.png
 manifest.json
 ```
 
 ## Examples
 
-默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格。
+默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格；如果需要 4:5 高冲击纯资讯早报，可切换到 `verge` 风格。
 
 默认案例使用公开读者版：标题后直接进入 `01`、`02` 编号新闻摘要，不展示顶部总结、标签或低语境项目/公司小标签。
+
+`verge` 案例使用大中文标题、`TOP STORY`、四条编号新闻、右侧模拟市场快照和 `TODAY TO WATCH` 信息栏，适合朋友圈、小红书、X 等平台快速扫读。
 
 ### Research iceblue
 
@@ -85,6 +88,10 @@ manifest.json
 ### Research skyblue
 
 ![research skyblue example](examples/research-skyblue.png)
+
+### Verge iceblue
+
+![verge iceblue example](examples/verge-iceblue.png)
 
 ### Dark iceblue
 

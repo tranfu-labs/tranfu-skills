@@ -16,7 +16,11 @@ Use this skill to generate a public-facing TranFu AI daily report image from str
 
 The selected default style is `research + iceblue`: a light research-note layout
 with pale blue accents. It is optimized for public daily publishing, mobile
-reading, WeChat Moments, community posts, and article body images.
+reading, WeChat Moments, community posts, and article body images. Use `verge`
+for a 4:5 high-contrast morning-brief card with oversized Chinese headline,
+TOP STORY block, numbered news rows, simulated market snapshot, and a raised
+`TODAY TO WATCH` rail. It is inspired by high-contrast technology-media cards
+without copying any specific publisher brand.
 
 ## When To Use
 
@@ -110,12 +114,14 @@ python3 <skill>/scripts/render_daily_report.py \
 ```
 
 4. Verify the generated PNG:
-   - expected size: `1080x1440`
+   - expected size: `1080x1440`, except `verge` which is `1080x1350`
    - no garbled Chinese
    - no visible `Crypto`, `查看原文`, raw URLs, file paths, prompt text, or render notes
    - no standalone keyword block or low-context project/company badges
+   - no ellipses or chopped sentence fragments; every visible brief should end as a complete sentence or deliberate label
    - no QR unless the input explicitly sets `show_qr: true`
    - no text overlap or clipped footer
+   - for `verge`, confirm the right-side `TODAY TO WATCH` block is not pinned too low and remains readable after social-platform compression
    - date, brand, QR placeholder, charts, and all Chinese text are rendered by HTML/CSS
 
 ## Input Requirements
@@ -175,6 +181,7 @@ Learn from high-performing Xiaohongshu and X information cards without copying a
 - strong first-screen hierarchy: brand/date first, then a concise headline
 - blue editorial dividers and numbered modules for scan speed
 - default research layout shows numbered items only; no per-story tags, category labels, or low-context project/company badges
+- `verge` layout uses a compact tech-card structure: huge Chinese title, `MORNING BRIEF`, `TOP STORY`, four numbered story rows, right-side market/watch rail, and bottom editor summary
 - bottom conclusion and risk note instead of click prompts
 - no decorative QR by default; platform-specific QR should be an explicit opt-in
 
@@ -184,6 +191,7 @@ The script writes:
 
 - `render-<style>-<palette>.html`
 - `tranfu-daily-<style>-<palette>-1080x1440.png` when Chrome/Chromium is available
+- `tranfu-daily-verge-<palette>-1080x1350.png` for the 4:5 `verge` style
 - `manifest.json`
 
 If screenshotting fails because Chrome is unavailable, still deliver the HTML
@@ -195,6 +203,7 @@ Styles:
 
 - `research`: default, light research-note layout
 - `dark`: dark intelligence-dashboard layout
+- `verge`: 4:5 high-contrast pure information morning-brief layout with a Verge-like tech-card rhythm; use for more editorial, punchy social posts
 
 Palettes:
 
