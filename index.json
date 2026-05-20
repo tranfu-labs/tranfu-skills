@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-20T09:57:59.210Z",
+  "generated_at": "2026-05-20T10:01:20.627Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -17,7 +17,7 @@
         "templates/section-使用技巧.md",
         "templates/section-同类对比.md"
       ],
-      "sha": "0a2d75fa3ab4e0f5bcd82a8940f0affce3673d88"
+      "sha": "921c9c0bce17bea13da0d66f5ead169cbeec894c"
     },
     {
       "name": "tranfu-router",
