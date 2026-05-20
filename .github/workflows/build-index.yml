@@ -1,7 +1,5 @@
 name: Build index.json
 on:
-  push:
-    branches: [main]
   pull_request:
     paths:
       - "meta-skills/**"
@@ -10,29 +8,43 @@ on:
       - "scripts/build-index.mjs"
       - ".github/workflows/build-index.yml"
       - "package.json"
+      - "index.json"
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          # PR 上默认 checkout 的是 refs/pull/N/merge (merge commit) — 没问题, 因为
-          # validate 已忽略 generated_at, 不再依赖 commit date.
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # 拿 PR head 分支本身 (不是默认的 refs/pull/N/merge), 这样能 commit + push 回去.
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: Snapshot committed index.json
-        run: cp index.json /tmp/committed-index.json
+        run: cp index.json /tmp/before.json
       - run: npm run build:index
-      - name: Verify index.json skills up-to-date
-        # 只比对 skills 数组 (内容), 忽略 generated_at — 它每次 build 都变 (new Date()),
-        # 也会被 squash merge 重置, 拿它做 diff 触发器会让 CI 死循环 fail.
-        # 真正要拦的是: 作者改了 skill 但忘跑 npm run build:index → skills 数组里 sha/files/description 落后.
+      - name: Auto-commit if skills changed
+        # 静默生成: 作者不用本地跑 build:index, CI 跑完发现 skills 数组有实质变化
+        # 就自动 commit 回 PR 分支. 忽略 generated_at (每次都变, 没意义).
+        # GITHUB_TOKEN 推的 commit 默认不会再触发新的 workflow → 无循环风险.
         run: |
-          if ! diff <(jq -S 'del(.generated_at)' /tmp/committed-index.json) <(jq -S 'del(.generated_at)' index.json) > /dev/null; then
-            echo "::error::index.json 的 skills 数据落后. 请在本地跑 'npm run build:index' 然后把 index.json 一起 commit 进 PR."
-            echo "--- diff (忽略 generated_at) ---"
-            diff <(jq -S 'del(.generated_at)' /tmp/committed-index.json) <(jq -S 'del(.generated_at)' index.json) || true
-            exit 1
+          # fork PR: GITHUB_TOKEN 是 read-only, 推不动. 跳过 + 警告, maintainer 接手再处理.
+          if [ "${{ github.event.pull_request.head.repo.fork }}" = "true" ]; then
+            echo "::warning::fork PR — 跳过 auto-commit index.json. maintainer 接手后请本地 rebuild + push."
+            exit 0
           fi
-          echo "index.json OK — $(node -e "console.log(require('./index.json').skills.length)") skills indexed"
+
+          if diff -q <(jq -S 'del(.generated_at)' /tmp/before.json) <(jq -S 'del(.generated_at)' index.json) > /dev/null; then
+            echo "✓ index.json skills 已 up-to-date — 不 commit"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.json
+          git commit -m "ci: rebuild index.json"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          echo "✓ index.json rebuilt + pushed to ${{ github.event.pull_request.head.ref }}"
