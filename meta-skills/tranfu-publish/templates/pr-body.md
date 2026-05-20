@@ -60,7 +60,6 @@ reason_kind: {tried-and-good | tried-and-bad | read-and-curious | solves-real-pa
 - [ ] 触发语写法是用户视角 ("用户说 ...", 不是 "调用此 skill 当 ...")
 - [ ] 本地 dogfood: 至少跑过 1 次完整流程
 - [ ] 不在子目录嵌套其他 skill, 不引入需额外手动安装的二进制
-- [ ] 跑过 `npm run build:index`, index.json 已 stage
 {variant: external}
 - [ ] SKILL.md 是薄指针, body 含 "完整内容见 source_url" / "上游仓库" 引导
 - [ ] frontmatter: origin: external + source_url 有效 (HTTP 200)
@@ -69,13 +68,11 @@ reason_kind: {tried-and-good | tried-and-bad | read-and-curious | solves-real-pa
 - [ ] case body 不空话, 有具体场景描述
 - [ ] 图 (如有) ≤ 1MB, 路径在 cases/_assets/
 - [ ] source_url 指向真实 skill (不是 vaporware / 长期不维护)
-- [ ] 跑过 `npm run build:index`, index.json 已 stage
 {variant: case}
 - [ ] 不改 external-skills/{name}/SKILL.md (本 PR 只动 cases/, 不触发 §同类对比 / §使用技巧)
 - [ ] case 文件 frontmatter 三必填齐: recommender / recommended_at / reason_kind
 - [ ] case body 不空话, 有具体场景描述
 - [ ] 图 (如有) ≤ 1MB, 路径在 cases/_assets/
-- [ ] 如 description 因为新 case 调整 → index.json 已 rebuild
 
 ## Test plan
 
