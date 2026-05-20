@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-20T02:30:21.976Z",
+  "generated_at": "2026-05-20T04:26:06.279Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -254,8 +254,20 @@
         "SKILL.md",
         "cases/mccree.md"
       ],
-      "sha": "",
+      "sha": "c9f5899c2a3a78432146bb75a5cfd421ec106f9b",
       "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"
+    },
+    {
+      "name": "web-design-guidelines",
+      "type": "external",
+      "description": "Review UI code for Web Interface Guidelines compliance (100+ rules: a11y / focus / forms / performance / UX). Trigger when user says \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", \"check my site against best practices\", \"审一下前端\", \"查 a11y\". Do NOT trigger when: 用户想生成设计系统 (走 ui-ux-pro-max) / 审 prompt 而非代码 (走 prompt-review) / 只画架构图 (走 fireworks-tech-graph).",
+      "path": "external-skills/web-design-guidelines",
+      "files": [
+        "SKILL.md",
+        "cases/mccree.md"
+      ],
+      "sha": "",
+      "source_url": "https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines"
     }
   ]
 }
