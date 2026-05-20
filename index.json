@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-19T02:41:15.957Z",
+  "generated_at": "2026-05-20T02:30:21.976Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -244,6 +244,18 @@
       ],
       "sha": "381a65c1c92056d1bf2cd935541a00d801f7efe4",
       "source_url": "https://github.com/obra/superpowers"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "type": "external",
+      "description": "AI-powered design intelligence with 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 15+ tech stacks. Trigger when user asks for design system / 配色 / 字体搭配 / UI 风格选型 / 落地页结构 / 图表选型 / UX 守则 / \"帮我做一套设计系统\". Do NOT trigger when: 用户只要写功能代码 / 修 bug / 项目结构包装 (走 project-packaging).",
+      "path": "external-skills/ui-ux-pro-max",
+      "files": [
+        "SKILL.md",
+        "cases/mccree.md"
+      ],
+      "sha": "",
+      "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"
     }
   ]
 }
