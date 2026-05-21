@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-21T12:12:10.761Z",
+  "generated_at": "2026-05-21T12:11:26.487Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -100,21 +100,6 @@
       "sha": "47eacd6d5dca3b0c81a9e0f3c8b4c8a898def2fe"
     },
     {
-      "name": "elite-market-researcher",
-      "type": "own",
-      "description": "顶尖市场研究员模式。当用户要求\"做市场分析\"\"分析XX赛道\"\"研究XX行业\"\"竞争格局分析\"\"投资机会判断\"\"创业方向评估\"\"market research\"\"industry analysis\"\"赛道判断\"\"做行业研报\"\"帮我看看XX市场\"，或任何涉及对一个市场/行业/赛道做严肃决策依据的研究任务时，必须使用此技能。本技能将AI拉入McKinsey合伙人 + 投行首席分析师 + 顶级VC合伙人 + 行业操盘手的复合心智，输出领先行业3-5年视野、具备反共识洞察、可直接支撑亿元级决策的深度研究报告。任何\"了解一下市场\"以上严肃度的研究请求，都应主动触发此技能。可与 market-analysis 技能配合使用（本技能负责心智与质量，market-analysis 负责搜索流程）。",
-      "path": "own-skills/elite-market-researcher",
-      "files": [
-        "README.md",
-        "SKILL.md",
-        "cases/tf-nezha.md",
-        "references/contrarian-thinking-patterns.md",
-        "references/quality-checklist-detailed.md",
-        "references/six-principles-deep-dive.md"
-      ],
-      "sha": "d91ecc43b639f695a51b531c88fa690a77e4e8c9"
-    },
-    {
       "name": "goal-driven-decomposition",
       "type": "own",
       "description": "Solve \"build/make/design X\" goals AND follow-up edits (\"做一个网站\", \"build a tool\", \"加用户登录\", \"X 偏了改一下\"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).",
@@ -136,6 +121,19 @@
         "SKILL.md"
       ],
       "sha": "a6ebed28daac7098552e67e636cc74e67a9ff590"
+    },
+    {
+      "name": "market-analysis",
+      "type": "own",
+      "description": "全景市场分析技能。当用户说\"分析XX市场\"、\"帮我做市场调研\"、\"XX行业市场分析\"、\"竞争格局分析\"、\"市场机会在哪里\"、\"market analysis\"、\"行业研究\"、\"赛道分析\"时，必须使用此技能。该技能通过全网多维度搜索，综合行业报告、竞品动态、用户声音、投融资信息，输出结构化市场分析报告并挖掘机会点。只要涉及市场、行业、赛道、竞争格局相关分析，都应主动触发此技能。",
+      "path": "own-skills/market-analysis",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "cases/tf-nezha.md",
+        "references/methodology.md"
+      ],
+      "sha": "413204fca3e67eccb0030adbec5e9c0234033b86"
     },
     {
       "name": "project-packaging",
