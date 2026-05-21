@@ -1,5 +1,5 @@
 ---
-recommender: cnrandomgod-jpg
+recommender: tf-nezha
 recommended_at: 2026-05-12
 reason_kind: solves-real-pain
 scenario_tag: 市场调研

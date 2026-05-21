@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-21T11:45:02.811Z",
+  "generated_at": "2026-05-21T12:11:26.487Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -130,10 +130,10 @@
       "files": [
         "README.md",
         "SKILL.md",
-        "cases/cnrandomgod-jpg.md",
+        "cases/tf-nezha.md",
         "references/methodology.md"
       ],
-      "sha": ""
+      "sha": "413204fca3e67eccb0030adbec5e9c0234033b86"
     },
     {
       "name": "project-packaging",

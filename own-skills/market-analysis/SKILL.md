@@ -2,7 +2,7 @@
 name: market-analysis
 description: 全景市场分析技能。当用户说"分析XX市场"、"帮我做市场调研"、"XX行业市场分析"、"竞争格局分析"、"市场机会在哪里"、"market analysis"、"行业研究"、"赛道分析"时，必须使用此技能。该技能通过全网多维度搜索，综合行业报告、竞品动态、用户声音、投融资信息，输出结构化市场分析报告并挖掘机会点。只要涉及市场、行业、赛道、竞争格局相关分析，都应主动触发此技能。
 version: 0.1.0
-author: cnrandomgod-jpg
+author: tf-nezha
 updated_at: 2026-05-12
 origin: own
 ---
