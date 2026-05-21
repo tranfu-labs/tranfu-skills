@@ -1,7 +1,11 @@
 <!--
-tranfu-publish 使用技巧 — SKILL.md body section 模板.
+tranfu-publish 使用技巧 — README.md body section 模板.
 own / external 路径必跑, case 跳过. 不进 frontmatter. 整段 ≤500 字 / 每子段 ≤3 bullet / 全段 ≤9 bullet.
-落点: SKILL.md `## 同类 Skill 对比` 之后. 横向同类对比 vs 纵向使用技巧, 焦点严格分离.
+
+落点 (HARD): 落 README.md, **不**落 SKILL.md — README 给人看, SKILL.md 给 LLM 看, 不同读者.
+  - own:      own-skills/{name}/README.md, `## 同类 Skill 对比` 之后
+  - external: external-skills/{name}/README.md, `## 同类 Skill 对比` 之后
+横向同类对比 vs 纵向使用技巧, 焦点严格分离.
 -->
 
 ## 使用技巧

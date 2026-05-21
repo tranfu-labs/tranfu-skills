@@ -1,8 +1,11 @@
 <!--
-tranfu-publish 同类 Skill 对比 — SKILL.md body section 模板.
+tranfu-publish 同类 Skill 对比 — README.md body section 模板.
 own / external 路径必跑, case 跳过. 不进 frontmatter. {…} 占位符替换.
-落点: own-skills/{name}/SKILL.md (own) 或 external-skills/{name}/SKILL.md (external),
-紧跟在 `## When to use` (own) 或 `## 推荐场景` (external) 之后.
+
+落点 (HARD): 落 README.md, **不**落 SKILL.md — README 给人横向定位看, SKILL.md 给 LLM 执行看, 不同读者.
+  - own:      own-skills/{name}/README.md
+  - external: external-skills/{name}/README.md
+紧跟在 `## 什么时候用它` / `## 推荐场景` 之后. 横向同类对比 vs 纵向使用技巧, 焦点严格分离.
 -->
 
 ## 同类 Skill 对比
