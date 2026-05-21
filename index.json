@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "generated_at": "2026-05-20T10:01:20.627Z",
+  "generated_at": "2026-05-21T12:12:10.761Z",
   "skills": [
     {
       "name": "tranfu-publish",
       "type": "meta",
-      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 起草 PR 内容 (frontmatter / §同类对比 / §使用技巧 / case-file / PR title+body) 全部按 templates/ 渲染, 用户审完拍 y 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).",
+      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 起草 PR 内容 (frontmatter / README §同类对比 / README §使用技巧 / case-file / PR title+body) 全部按 templates/ 渲染, 用户拍 [发布] 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).",
       "path": "meta-skills/tranfu-publish",
       "files": [
         "README.md",
@@ -17,7 +17,7 @@
         "templates/section-使用技巧.md",
         "templates/section-同类对比.md"
       ],
-      "sha": "921c9c0bce17bea13da0d66f5ead169cbeec894c"
+      "sha": "c6eee4819f60f0e21a2c5353c34a2e10fb554aae"
     },
     {
       "name": "tranfu-router",
@@ -100,6 +100,21 @@
       "sha": "47eacd6d5dca3b0c81a9e0f3c8b4c8a898def2fe"
     },
     {
+      "name": "elite-market-researcher",
+      "type": "own",
+      "description": "顶尖市场研究员模式。当用户要求\"做市场分析\"\"分析XX赛道\"\"研究XX行业\"\"竞争格局分析\"\"投资机会判断\"\"创业方向评估\"\"market research\"\"industry analysis\"\"赛道判断\"\"做行业研报\"\"帮我看看XX市场\"，或任何涉及对一个市场/行业/赛道做严肃决策依据的研究任务时，必须使用此技能。本技能将AI拉入McKinsey合伙人 + 投行首席分析师 + 顶级VC合伙人 + 行业操盘手的复合心智，输出领先行业3-5年视野、具备反共识洞察、可直接支撑亿元级决策的深度研究报告。任何\"了解一下市场\"以上严肃度的研究请求，都应主动触发此技能。可与 market-analysis 技能配合使用（本技能负责心智与质量，market-analysis 负责搜索流程）。",
+      "path": "own-skills/elite-market-researcher",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "cases/tf-nezha.md",
+        "references/contrarian-thinking-patterns.md",
+        "references/quality-checklist-detailed.md",
+        "references/six-principles-deep-dive.md"
+      ],
+      "sha": "d91ecc43b639f695a51b531c88fa690a77e4e8c9"
+    },
+    {
       "name": "goal-driven-decomposition",
       "type": "own",
       "description": "Solve \"build/make/design X\" goals AND follow-up edits (\"做一个网站\", \"build a tool\", \"加用户登录\", \"X 偏了改一下\"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).",
@@ -149,7 +164,7 @@
         "references/scoring-framework.md",
         "scripts/score_project.py"
       ],
-      "sha": "968a6f0417b503802e19f6795e6374966b4f28e1"
+      "sha": "76418b35ce6235cce385318a97204af000e3b3f6"
     },
     {
       "name": "prompt-review",
@@ -232,6 +247,18 @@
       ],
       "sha": "d4f9c0c45823d569a6c9893a8b256a2e6692a822",
       "source_url": "https://github.com/Fission-AI/OpenSpec"
+    },
+    {
+      "name": "seo-audit",
+      "type": "external",
+      "description": "Single-page SEO audit skill. Give it a URL, get a structured HTML report covering 20+ checks (robots.txt / sitemap / canonical / hreflang / Schema / E-E-A-T / TDK / H1 / 内链 / 关键词). Script + LLM 混合架构. Trigger when user says \"audit this page\", \"审一下 SEO\", \"查 SEO\", \"SEO 体检\", \"seo audit\", \"技术 SEO 报告\". Do NOT trigger when: 用户要全站爬虫 / 关键词排名追踪 / 反链分析 (这些是 SEO 工具如 Ahrefs/Semrush 的范围, 不是本 skill 范围).",
+      "path": "external-skills/seo-audit",
+      "files": [
+        "SKILL.md",
+        "cases/mccree.md"
+      ],
+      "sha": "ccac4056cf90d2cbf3464ff48d508234e4a3dc34",
+      "source_url": "https://github.com/JeffLi1993/seo-audit-skill/tree/main/seo-audit"
     },
     {
       "name": "seo-audit-full",

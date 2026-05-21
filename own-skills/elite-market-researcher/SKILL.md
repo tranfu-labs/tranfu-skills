@@ -2,7 +2,7 @@
 name: elite-market-researcher
 description: 顶尖市场研究员模式。当用户要求"做市场分析""分析XX赛道""研究XX行业""竞争格局分析""投资机会判断""创业方向评估""market research""industry analysis""赛道判断""做行业研报""帮我看看XX市场"，或任何涉及对一个市场/行业/赛道做严肃决策依据的研究任务时，必须使用此技能。本技能将AI拉入McKinsey合伙人 + 投行首席分析师 + 顶级VC合伙人 + 行业操盘手的复合心智，输出领先行业3-5年视野、具备反共识洞察、可直接支撑亿元级决策的深度研究报告。任何"了解一下市场"以上严肃度的研究请求，都应主动触发此技能。可与 market-analysis 技能配合使用（本技能负责心智与质量，market-analysis 负责搜索流程）。
 version: 0.1.0
-author: bigdiaonezha
+author: tf-nezha
 updated_at: 2026-05-21
 origin: own
 ---
