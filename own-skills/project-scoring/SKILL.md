@@ -1,21 +1,22 @@
 ---
 name: project-scoring
 description: Use when user says "评估这个 AI 项目" to score AI workflows and produce a decision memo.
-version: 0.1.0
+version: 0.2.0
 author: griffithkk3-del
-updated_at: 2026-05-13
+updated_at: 2026-05-21
 origin: own
 ---
 
-# Project Scoring
+# Tranfu Project Scoring
 
-Use this skill to perform a civilized project approval review for AI workflow ideas. The goal is not to predict success; it is to decide whether the project deserves current investment in validation, demo development, or co-creation.
+Use this skill to perform a civilized project approval review for AI workflow ideas. The goal is not to predict success; it is to decide whether the project deserves current investment in validation, reusable skill development, public case development, or co-creation.
 
 ## When To Use
 
 Use this skill when the user asks to:
 - score or review an AI workflow project idea
-- decide whether a project should enter Tranfu demo development, observation, or co-creation pool
+- collect public evidence from project links, documentation, or repositories before scoring when sources are available
+- decide whether a project should enter Tranfu validation, reusable skill development, observation, or co-creation pool
 - analyze demand, technology, heat/distribution, time cost, funding cost, or responsibility risk
 - compare several candidate projects and rank priority
 - generate a 7-day validation plan before implementation
@@ -30,13 +31,13 @@ Use this skill when the user asks to:
 
 ### 外部世界
 - RICE / ICE prioritization tools — 用 Reach、Impact、Confidence、Effort 排功能优先级; **本 skill 区别**: 面向 AI 工作流立项, 输出硬门槛、风险、验证实验和下一步动作。
-- WSJF prioritization tools — 用 Cost of Delay / Job Size 排敏捷 backlog; **本 skill 区别**: 支持内部立项、Transfu skill、公开 demo 等不同项目上下文权重。
+- WSJF prioritization tools — 用 Cost of Delay / Job Size 排敏捷 backlog; **本 skill 区别**: 支持内部立项、Tranfu skill、公开 demo 等不同项目上下文权重。
 - AI startup idea validator agents — 评估创业想法的市场、竞争和 SWOT; **本 skill 区别**: 先做立项访谈, 信息不足时主动追问, 不对两句话想法直接评分。
 
 ### 本 skill 独特价值
-- 先访谈, 再评分。
 - 内部立项有专用权重。
-- 输出唯一下一步和 7 天验证。
+- 低信息输入先追问。
+- 输出 7 天验证实验。
 
 ## 使用技巧
 
@@ -44,14 +45,14 @@ Use this skill when the user asks to:
 > 帮助阅读者纵向上手 — tacit knowledge 在此. 横向同类对比见上方 §同类 Skill 对比.
 
 ### 材料方案
-- Skill-first, 网页只做 demo。
-- 按项目类型切换权重。
+- 先做成 skill, 不做复杂网页。
+- 权重按项目类型切换。
 - 缺数据降置信度, 不判差。
 
 ### 推荐用法
-- 先给用户、场景、替代方案。
-- 允许它先问 3-5 个问题。
-- 内部立项注明 projectType。
+- 先给项目背景和目标用户。
+- 信息不足时接受 3-5 个追问。
+- 内部立项请声明 projectType。
 
 ### 已知限制
 - 不替代正式投委会。
@@ -96,7 +97,8 @@ Only proceed directly to scoring when enough facts are present to evaluate the h
 8. Apply hard gates: user gate, demand gate, AI-fit gate, responsibility gate.
 9. Apply evidence confidence and weak-link downgrade. Low evidence limits decision confidence; for internal立项 it should usually cap scope, not automatically否定项目.
 10. Separate missing information from negative evidence: missing information lowers confidence and may cap status; proven flaws lower dimension scores.
-11. Produce a decision memo with context, weights, score, status, confidence level, reasons, risks, one riskiest assumption, one 7-day validation experiment, failure preview, and one next action.
+11. Before final scoring, gather and record available evidence from user-provided discussion, public links, docs, repositories, or authorized local files. Keep facts, assumptions, and recommendations separate.
+12. Produce a Markdown decision memo with context, weights, score, score range, status, confidence level, evidence ledger, multi-view review, reasons, risks, one riskiest assumption, one 7-day validation experiment, failure preview, and one next action.
 
 ## Output Rules
 
@@ -106,7 +108,10 @@ Only proceed directly to scoring when enough facts are present to evaluate the h
 - Be specific, restrained, and action-oriented.
 - Do not use hype or popularity as a substitute for real demand and distribution.
 - Prefer a Markdown decision memo for human users and JSON only when the caller asks for machine-readable output.
-- For agent-to-agent handoff, include `schemaVersion`, `reviewMode`, `projectType`, `weightProfile`, `inputSummary`, `missingInfo`, dimension-specific `evidence`, `scoreBeforeConfidence`, `informationCompleteness`, `confidenceCoefficient`, and whether evidence was applied to the final score.
+- Include an evidence ledger when links, docs, repositories, or structured evidence are available. Do not treat scraped public text as high-confidence evidence without a source and confidence note.
+- Include multi-view review notes covering demand, AI workflow, technology, distribution, risk, skeptical review, and final judgment.
+- Include score range and sensitivity analysis so readers can see which assumptions could move the decision.
+- For agent-to-agent handoff, include `schemaVersion`, `reviewMode`, `projectType`, `weightProfile`, `inputSummary`, `missingInfo`, dimension-specific `evidence`, `evidenceLedger`, `subscores`, `scoreRange`, `sensitivity`, `multiViewReview`, `scoreBeforeConfidence`, `informationCompleteness`, `confidenceCoefficient`, and `evidenceAppliedToScore`.
 - For privacy, medical, legal, finance, copyright, minors, or other high-risk projects, require responsibility boundaries before development.
 - Provide exactly one primary next action. Put secondary ideas under risks or experiment steps, not as competing conclusions.
 - When exact weights, schema, or prompt wording matter, read the reference files instead of improvising.
