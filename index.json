@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-21T11:29:21.558Z",
+  "generated_at": "2026-05-21T12:12:10.761Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -107,12 +107,12 @@
       "files": [
         "README.md",
         "SKILL.md",
-        "cases/cnrandomgod-jpg.md",
+        "cases/tf-nezha.md",
         "references/contrarian-thinking-patterns.md",
         "references/quality-checklist-detailed.md",
         "references/six-principles-deep-dive.md"
       ],
-      "sha": ""
+      "sha": "d91ecc43b639f695a51b531c88fa690a77e4e8c9"
     },
     {
       "name": "goal-driven-decomposition",
