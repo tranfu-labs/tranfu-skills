@@ -1,6 +1,6 @@
 # Scoring Anchors
 
-Use these anchors to keep project reviews consistent across agents and reviewers. Scores should reflect both project quality and evidence. Missing information lowers confidence first; proven negative information lowers the dimension score.
+Use these anchors to keep Tranfu project reviews consistent across agents and reviewers. Scores should reflect both project quality and evidence. Missing information lowers confidence first; proven negative information lowers the dimension score.
 
 ## General Calibration
 
@@ -104,7 +104,7 @@ Required evidence: domain risk, data sensitivity, human review, auditability, pr
 
 ## 10. Tranfu Fit
 
-- 0-20: Not aligned with AI workflow validation, demo development, or co-creation.
+- 0-20: Not aligned with AI workflow validation, reusable skill development, public case development, or co-creation.
 - 21-40: Interesting idea but not a good fit for current assets or audience.
 - 41-60: Related to the mission but requires repositioning or partner access.
 - 61-80: Fits current demo, skill, workflow, or co-creation direction.

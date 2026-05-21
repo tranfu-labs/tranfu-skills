@@ -73,6 +73,30 @@ Use this shape for tools, APIs, and agent-to-agent handoff.
     "technical": "L2",
     "risk": "L1"
   },
+  "evidenceLedger": [
+    {
+      "id": "E1",
+      "dimension": "demandReality",
+      "claim": "Target users review support conversations weekly.",
+      "source": "project.targetUser",
+      "sourceType": "user_input|public_url|local_file|local_directory|provided|missing",
+      "evidenceLevel": "L2",
+      "quote": "20-80 person support teams review conversations weekly",
+      "confidenceNote": "Source is user-provided and should be checked with real samples."
+    }
+  ],
+  "subscores": {
+    "demandReality": [
+      {"name": "目标用户具体度", "score": 82, "evidenceRefs": ["E1"], "reason": "Target user and repeated scene are concrete."}
+    ]
+  },
+  "scoreRange": {"low": 64, "current": 72, "high": 78, "explanation": "Range reflects evidence and missing information."},
+  "sensitivity": [
+    {"assumption": "Real samples are unavailable", "impact": -12, "why": "Validation would weaken."}
+  ],
+  "multiViewReview": [
+    {"role": "需求审查员", "averageScore": 76, "support": "Repeated workflow pain is plausible", "concern": "Needs real samples", "missingEvidence": "Interview count is unknown", "impact": "Affects validation scope"}
+  ],
   "scoreBeforeConfidence": 80,
   "informationCompleteness": 0.82,
   "confidenceCoefficient": 0.9,
@@ -82,7 +106,7 @@ Use this shape for tools, APIs, and agent-to-agent handoff.
   "confidence": "中置信度",
   "verdict": "The project has real workflow pain but needs evidence before development.",
   "dimensions": [
-    {"key": "demandReality", "label": "需求真实性", "score": 78, "missing": false, "reason": "Target users and pain are specific."}
+    {"key": "demandReality", "label": "需求真实性", "score": 78, "missing": false}
   ],
   "gates": [
     {"label": "用户门槛", "pass": true, "fix": ""}
@@ -120,17 +144,19 @@ Use this shape for tools, APIs, and agent-to-agent handoff.
 - `missingInfo` must list missing facts that would change the decision.
 - `evidence` should be dimension-specific when possible. Do not collapse all evidence into one level if demand, payment, risk, and distribution have different proof quality.
 - `dimensions[].score` may be `null` only when the dimension is missing. Missing dimensions lower confidence; they are not automatically treated as 50.
+- Local pre-scorer output includes the core handoff fields above plus evidence ledger, subcriteria scores, score range, sensitivity analysis, and multi-view review notes. The full LLM/agent score schema may additionally include richer narrative fields such as `verdict`, dimension reasons, `strengths`, `risks`, `experiment`, and `failurePreview` when producing a complete decision memo.
 - `nextAction` must contain exactly one primary action.
 
 ## Markdown Decision Memo
 
-Use this shape for human-readable reports.
+Use this shape for human-readable reports. The local pre-scorer can emit this format with `--format markdown` or `--md`.
 
 ```markdown
 ## 立项结论
 
 - 项目：
 - 总分：
+- 分数区间：
 - 状态：
 - 置信度：
 - 评审模式：
@@ -138,15 +164,30 @@ Use this shape for human-readable reports.
 - 一句话判断：
 - 缺失信息：
 
-## 分项评分
+## 证据台账
 
-| 维度 | 分数 | 理由 |
-|---|---:|---|
+| ID | 维度 | 等级 | 来源类型 | 来源 | 摘要 |
+|---|---|---|---|---|---|
+
+## 评分总览
+
+| 维度 | 权重 | 分数 | 理由 |
+|---|---:|---:|---|
+
+## 维度子项拆解
+
+| 子项 | 分数 | 证据引用 | 判断 |
+|---|---:|---|---|
 
 ## 硬门槛
 
 | 门槛 | 是否通过 | 修正建议 |
 |---|---|---|
+
+## 多视角评审摘要
+
+| 角色 | 均分 | 支撑点 | 反对点/担忧 | 对结论影响 |
+|---|---:|---|---|---|
 
 ## 通过理由
 
@@ -163,6 +204,11 @@ Use this shape for human-readable reports.
 ## 最危险假设
 
 ...
+
+## 分数区间与敏感性分析
+
+| 假设变化 | 分数影响 | 原因 |
+|---|---:|---|
 
 ## 7 天验证实验
 

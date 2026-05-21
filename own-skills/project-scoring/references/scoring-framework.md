@@ -1,8 +1,8 @@
-# Project Scoring Framework
+# Tranfu Project Scoring Framework
 
 ## Positioning
 
-The Project Scoring framework evaluates whether an AI workflow project deserves current investment in validation, demo development, or co-creation. It does not predict guaranteed success.
+The Tranfu Project Scoring framework evaluates whether an AI workflow project deserves current investment in validation, reusable skill development, public case development, or co-creation. It does not predict guaranteed success.
 
 ## Scoring Dimensions
 
@@ -42,7 +42,7 @@ If payment is intentionally out of scope, reinterpret `Business/value recovery` 
 
 | Status | Typical Score | Action |
 |---|---:|---|
-| 立即立项 | 85-100 | Enter demo development and public build log. |
+| 立即立项 | 85-100 | Enter focused build or reusable skill development with explicit validation checkpoints. |
 | 小步立项 | 75-84 | Build, but with strict MVP scope. |
 | 先验证 | 60-74 | Do interviews, landing page, concierge test, or sample test first. |
 | 重构方向 | 45-59 | Rewrite user, scene, boundary, delivery, or business model. |
