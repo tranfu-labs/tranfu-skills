@@ -9,6 +9,8 @@ on:
       - ".github/workflows/build-index.yml"
       - "package.json"
       - "index.json"
+  push:
+    branches: [main]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,35 +18,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          # 拿 PR head 分支本身 (不是默认的 refs/pull/N/merge), 这样能 commit + push 回去.
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Snapshot committed index.json
-        run: cp index.json /tmp/before.json
       - run: npm run build:index
-      - name: Auto-commit if skills changed
-        # 静默生成: 作者不用本地跑 build:index, CI 跑完发现 skills 数组有实质变化
-        # 就自动 commit 回 PR 分支. 忽略 generated_at (每次都变, 没意义).
-        # GITHUB_TOKEN 推的 commit 默认不会再触发新的 workflow → 无循环风险.
+      - name: Publish index.json to rolling `catalog` release
+        # 仅 main push 触发. PR 上只跑 build:index 做 sanity check, 不发布.
+        # 新 CLI (0.4+) 从 release `catalog` tag 拉 index.json; git 里那份是老 CLI (0.3.x) 兼容快照.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # fork PR: GITHUB_TOKEN 是 read-only, 推不动. 跳过 + 警告, maintainer 接手再处理.
-          if [ "${{ github.event.pull_request.head.repo.fork }}" = "true" ]; then
-            echo "::warning::fork PR — 跳过 auto-commit index.json. maintainer 接手后请本地 rebuild + push."
-            exit 0
-          fi
-
-          if diff -q <(jq -S 'del(.generated_at)' /tmp/before.json) <(jq -S 'del(.generated_at)' index.json) > /dev/null; then
-            echo "✓ index.json skills 已 up-to-date — 不 commit"
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.json
-          git commit -m "ci: rebuild index.json"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          echo "✓ index.json rebuilt + pushed to ${{ github.event.pull_request.head.ref }}"
+          gh release delete catalog --yes --cleanup-tag 2>/dev/null || true
+          gh release create catalog index.json \
+            --title "Catalog (latest)" \
+            --notes "Auto-generated from main@$(git rev-parse --short HEAD)" \
+            --latest

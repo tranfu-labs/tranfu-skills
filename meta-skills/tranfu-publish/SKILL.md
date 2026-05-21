@@ -178,7 +178,7 @@ NEVER 在拿 `[1]` 之前动公司库文件.
 | external | 写 `$REPO/external-skills/<name>/SKILL.md` (薄指针 + §推荐场景 + §同类对比 + §使用技巧) + `cases/<recommender>.md` | `external-skills/<name>/` |
 | case | append `## <scenario>` 到 `$REPO/external-skills/<name>/cases/<recommender>.md` (或新建); 不动 SKILL.md | 该 case 文件 |
 
-`index.json` **不要手动 add / commit** — PR 上 CI 会自动 rebuild + push 回 PR 分支 (见公司库 `.github/workflows/build-index.yml`). 作者本地完全不用管它.
+`index.json` **不要手动 add / commit** — 由 CI 在 main 上自动 rebuild 并发布到 GitHub Release `catalog` tag (见公司库 `.github/workflows/build-index.yml`). 作者本地完全不用管它.
 
 **MUST 用 task tool 跑这段** (Claude Code: `TaskCreate` / Codex: 等效 task API). 每步建一个独立 task, 按顺序 `in_progress` → `completed`. 任何一步失败 → 留在 `in_progress` + 报给用户, **不静默跳到下一步**.
 
@@ -191,7 +191,7 @@ Task list (按 path 微调写文件那步):
 3. **git add + commit** — path-specific add (上表, 不含 index.json) + `git commit -m "skill: 加 <name> (<path_type>)"`
 4. **push 分支** — `git push -u origin skill/<name>`
 5. **开 PR** (见 §9) — `gh pr create ...`
-6. **输出 PR URL 给用户** — 提示作者: index.json 会由 CI 在 PR 上自动 commit, 等 1-2 分钟刷新 PR 能看到 `ci: rebuild index.json` 那个 commit
+6. **输出 PR URL 给用户** — 告知作者: index.json 由 CI 在 PR merge 进 main 后自动发布到 release `catalog` tag, PR 本身不会出现 index.json 改动
 
 ### 9. 提 PR (仅 §8 task list 全部 completed 后执行)
 
@@ -213,7 +213,7 @@ EOF
 - ❌ **不动公司库任何文件 until §8** — §1-7 全部是起草, 不写盘
 - ❌ **起草后必须完整 markdown 渲染给用户审** (不能只说"已起草, 我走了")
 - ❌ **必须按 `templates/` 渲染** — 不允许换成 GitHub 通用 `## Summary / ## Validation / ## Test plan / ## Rollback` 这些段
-- ❌ **不要手动 add / commit `index.json`** — 公司库 CI 会在 PR 上自动 rebuild + push. 作者本地若误跑了 `npm run build:index` 也不要 stage 它 (没必要, 也没害, 但徒增 review 噪音)
+- ❌ **不要手动 add / commit `index.json`** — 公司库 CI 在 main push 后自动 rebuild + 发布到 release `catalog` tag. 作者本地若误跑了 `npm run build:index` 也不要 stage 它 (没必要, 也没害, 但徒增 review 噪音)
 - ❌ **§8 不用 task tool 跑 = 违规** — 不允许把多步连写成一段 bash 一口气跑掉; 必须 TaskCreate 建 list, 逐项 in_progress / completed
 - ❌ **`gh` 失败 → 报错给用户, 不重试** — 不假装成功
 - ❌ **不接 router 范围意图** (search / install / list / update / uninstall / doctor)
