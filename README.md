@@ -80,7 +80,7 @@ external-skills/              外部推荐薄指针 (frontmatter origin: externa
   <skill-name>/SKILL.md       仅 frontmatter, body = "首次 install 时从 source_url 拉最新"
   ...
 
-index.json                    CI 自动生成 (build-index.yml), tfs search/list 拉这个
+index.json                    CI 自动生成. 新 CLI (0.4+) 从 release `catalog` tag 拉; git 里这份仅作老 CLI (0.3.x) 兼容快照, 不再自动更新.
 ```
 
 > CLI 装到 runtime 时一律扁平 (e.g. `meta-skills/tranfu-router/` → `~/.claude/skills/tranfu-router/`). 规模到 20+ own skill 后再考虑二级分类 (e.g. `own-skills/content/`), 现在不过早设计.
