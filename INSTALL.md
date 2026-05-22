@@ -65,6 +65,20 @@ tfs doctor
 
 期望 4/4 ✓ (node-version / runtime / tfs-in-path / legacy-cache). 任一 ✗ 或 ⚠ → 按 doctor 自己的提示处理, 不绕过.
 
+### 3.5. 同步到最新 (老用户必跑, 新装也无害)
+
+`npm i -g tranfu-skills` 只更新 CLI 本身, 不动已装的 meta-skill 文件; `tfs init` 在 meta-skill 已存在时是 no-op. 所以**走完步 1–3 之后, 已装的 meta-skill 仍可能是装那天的旧版**.
+
+`tfs doctor` 末尾若有 "X 个 outdated" (X > 0) 这行 hint, **必须跑一次同步**:
+
+```bash
+tfs update
+```
+
+新装用户 (步 0.5 全部 no-op, 步 2 刚装上) 这一步通常也是 no-op, 直接跑即可, 不用判断.
+
+跑完再回步 3 重跑 `tfs doctor` 确认 outdated 那行消失.
+
 ### 4. 通知用户
 
 汇报给用户 (措辞按当前 runtime 调整, e.g. "重启 Codex CLI" / "重启 Claude Code"):
@@ -82,6 +96,7 @@ tfs doctor
 - `npm i -g` 报权限 → 让用户改 npm prefix 或上 nvm/fnm, 不上 sudo
 - `tfs init` 探不到 runtime → 让用户先初始化对应 CLI (`~/.claude` 或 `~/.codex` 至少有一个), 不替它建目录
 - `tfs doctor` legacy-cache 仍然 ⚠ → 步 0.5 漏了, 重跑步 0.5 那段 rm
+- `tfs doctor` 报 "X 个 outdated" 但步 3.5 已跑 `tfs update` → 重启当前 CLI 让 skill 重新加载, 或检查 `tfs update` 是否报错
 
 ## What NOT to do
 
