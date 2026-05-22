@@ -183,7 +183,8 @@ Learn from high-performing Xiaohongshu and X information cards without copying a
 The script writes:
 
 - `render-<style>-<palette>.html`
-- `tranfu-daily-<style>-<palette>-1080x1440.png` when Chrome/Chromium is available
+- `tranfu-daily-<style>-<palette>-1080x1440.png` for bundled `research` and `dark` styles when Chrome/Chromium is available
+- `examples/verge-iceblue/tranfu-daily-verge-iceblue-1080x1350.png` as the latest bundled Verge reference image
 - `manifest.json`
 
 If screenshotting fails because Chrome is unavailable, still deliver the HTML
@@ -195,6 +196,7 @@ Styles:
 
 - `research`: default, light research-note layout
 - `dark`: dark intelligence-dashboard layout
+- `verge`: compact technology-media information card layout; latest example output is bundled under `examples/verge-iceblue/` at `1080x1350`
 
 Palettes:
 
