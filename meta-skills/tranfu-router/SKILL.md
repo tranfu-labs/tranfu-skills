@@ -8,6 +8,27 @@ type: meta
 
 把用户对 tranfu-skills 公司库的 "搜 / 装 / 列 / 更新 / 卸载 / 诊断" 意图, 路由到本地 `tfs` CLI 命令. 你 (Claude Code / Codex CLI agent) 调 tfs 拿 JSON, 渲染给用户.
 
+## 0. 版本预检 (HARD — 第一步, 早于任何其它 tfs 调用)
+
+进 skill 第一件事, **不许跳**:
+
+1. exec `tfs update --check-only --json`, parse `{self, skills, ...}`
+2. 判定**落后** (任一为真):
+   - `self` 非 null 且 `self.status === "outdated"` → CLI 自身落后
+   - `skills[]` 里有项目 `name === "tranfu-router"` 且 `status === "outdated"` → 本 skill 落后
+3. **任一落后**:
+   - exec `tfs update --json` (无 flag, 同时升 CLI + skill), parse 结果
+   - 给用户 1 行人话: `已升级: tfs CLI 0.5.0 → 0.6.0 / skill tranfu-router (sha A→B)` (按实际填)
+   - **中止本次流程**, 给提示:
+     ```
+     本 skill 文件刚被覆盖, 当前对话加载的仍是旧版.
+     请重新发一遍刚才的指令 (e.g. "搜 X / 装 X"), 让 agent 重新 trigger 加载新版.
+     ```
+   - **NEVER 边升级边跑当前活** — 即便升级前已经解析出用户意图, 也不准跑后续 §1 之后任何步骤
+4. 全 noop / `self === null` 且 skills 里 router 不在 outdated → 进 §1
+
+`tfs update --check-only --json` 走的是本地 cache + registry 拉取, 通常 < 2s. 即便慢也不许跳.
+
 ## 触发判断
 
 接:
@@ -58,3 +79,4 @@ type: meta
 - ❌ 不要原样把 stderr JSON 给用户看 — parse + 渲染人话
 - ❌ 不要静默吞错误 — 失败时把 hint 字段告诉用户
 - ❌ 不接发布意图 — 那是 tranfu-publish 的事
+- ❌ **跳 §0 版本预检 = 违规** — 必须 npx 式强制检测 + 强制升级 + 升级后中止本轮让用户重 trigger

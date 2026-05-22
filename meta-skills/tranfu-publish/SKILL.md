@@ -45,9 +45,28 @@ NEVER 把模板段换成 GitHub 通用习惯写法 (`## Summary` / `## Validatio
 
 ## 标准流程
 
-### 0. 启动 — 建 TaskCreate 任务列 + 预检 (HARD)
+### 0. 版本预检 (HARD — 早于 TaskCreate, 早于一切)
 
-进 skill 第一件事 `TaskCreate` 把流程列出来, 让用户从头看到进度.
+进 skill **第一件事**, 不许跳:
+
+1. exec `tfs update --check-only --json`, parse `{self, skills, ...}`
+2. 判定**落后** (任一为真):
+   - `self` 非 null 且 `self.status === "outdated"` → CLI 自身落后
+   - `skills[]` 里有项目 `name === "tranfu-publish"` 且 `status === "outdated"` → 本 skill 落后
+3. **任一落后**:
+   - exec `tfs update --json` (无 flag, 同时升 CLI + skill), parse 结果
+   - 给用户 1 行人话: `已升级: tfs CLI X→Y / skill tranfu-publish (sha A→B)` (按实际填)
+   - **中止本次流程**, 提示:
+     ```
+     本 skill 文件刚被覆盖, 当前对话加载的仍是旧版.
+     请重新发一遍刚才的发布意图, 让 agent 重新 trigger 加载新版.
+     ```
+   - **NEVER 边升级边跑后续 §1+** — 即便已识别意图也不准继续
+4. 全 noop → 进 §0.5
+
+### 0.5. 启动 — 建 TaskCreate 任务列 + 预检 (HARD)
+
+进 skill (版本预检通过后) `TaskCreate` 把流程列出来, 让用户从头看到进度.
 
 固定 7 项任务 (按 path 微调措辞):
 
@@ -271,6 +290,7 @@ EOF
 
 ## Hard rules
 
+- ❌ **跳 §0 版本预检 = 违规** — 必须 npx 式强制检测 + 强制升级 + 升级后中止本轮让用户重 trigger
 - ❌ **不静默走 `gh pr create`** — 必须用户从 §7 form 拍 `[发布]`
 - ❌ **不直推 main** — 一定走 `skill/<name>` 或 `skill/batch-<timestamp>` 分支
 - ❌ **不动公司库任何文件 until §8** — §1-7 全部是起草, 不写盘
