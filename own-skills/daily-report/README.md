@@ -70,9 +70,15 @@ manifest.json
 
 ## Examples
 
-默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格。
+默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格；如果需要更接近科技媒体信息卡的视觉，可以参考 `verge + iceblue` 示例。
 
 默认案例使用公开读者版：标题后直接进入 `01`、`02` 编号新闻摘要，不展示顶部总结、标签或低语境项目/公司小标签。
+
+### Verge iceblue
+
+最新 Verge 版本示例位于 `examples/verge-iceblue/`，包含可预览 HTML、PNG 成图和 manifest：
+
+![verge iceblue example](examples/verge-iceblue/tranfu-daily-verge-iceblue-1080x1350.png)
 
 ### Research iceblue
 

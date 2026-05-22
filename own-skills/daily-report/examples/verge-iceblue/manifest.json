@@ -1,0 +1,27 @@
+{
+  "date": "2026-05-18",
+  "brand": "TranFu",
+  "default_style": "research",
+  "default_palette": "iceblue",
+  "input": "/Users/griffith/Projects/AI/Skills/DailyPic/data/2026-05-18/report.json",
+  "outputs": [
+    {
+      "style": "verge",
+      "palette": "iceblue",
+      "html": "render-verge-iceblue.html",
+      "image": "tranfu-daily-verge-iceblue-1080x1350.png",
+      "size": "1080x1350",
+      "screenshot_status": "created"
+    }
+  ],
+  "display_review": {
+    "removed_from_image": [
+      "click-only source labels",
+      "raw URLs",
+      "empty non-AI sections",
+      "internal render workflow text",
+      "top summary blocks",
+      "per-story labels and tags"
+    ]
+  }
+}
