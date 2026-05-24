@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>二、显示框架 — [页面名]</title>
+<style>
+  body { font-family: -apple-system, system-ui, "PingFang SC", sans-serif; margin: 24px; background: #f5f5f5; color: #222; }
+  h1 { color: #444; }
+  h2 { color: #444; margin-top: 36px; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+  .notice { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px 14px; border-radius: 3px; margin: 16px 0 24px; font-size: 13px; color: #6b5b00; }
+  .state { display: grid; grid-template-columns: 1fr 320px; gap: 20px; background: #fff; border: 1px solid #ccc; margin: 16px 0; padding: 20px; }
+  .canvas { min-width: 0; }
+  .region { border: 2px dashed #888; padding: 12px 14px; margin: 10px 0; background: #fafafa; }
+  .region-tag { background: #ddd; color: #333; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-bottom: 10px; display: inline-block; border-radius: 2px; }
+  .region-body { font-size: 13px; color: #333; line-height: 1.8; }
+  .mock-row { padding: 6px 0; border-bottom: 1px dotted #ddd; }
+  .mock-row:last-child { border-bottom: none; }
+  .legend { background: #fffbe6; border: 1px solid #f0c14b; padding: 14px; font-size: 13px; line-height: 1.8; align-self: start; position: sticky; top: 20px; }
+  .legend h3 { margin: 0 0 8px; font-size: 13px; color: #6b5b00; }
+  .legend ul { margin: 0; padding-left: 18px; }
+  .legend li { margin: 4px 0; }
+  .legend code { background: #fff; padding: 1px 4px; border: 1px solid #f0c14b; border-radius: 2px; font-size: 12px; }
+  .empty { color: #888; font-style: italic; padding: 12px; }
+  .arrow { text-align: center; color: #888; font-size: 20px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<h1>二、显示框架 — [页面名]</h1>
+<div class="notice">
+  <strong>注:</strong> 本页所有内容为<strong>模拟数据</strong>, 仅用于展示信息密度与排版. 字段与对应数据的对照关系见每个状态右侧"图例".
+</div>
+
+<!-- ============ 入口态 ============ -->
+<h2>入口态</h2>
+<div class="state">
+  <div class="canvas">
+
+    <div class="region">
+      <span class="region-tag">头部区</span>
+      <div class="region-body">
+        <div class="mock-row">[模拟数据 — 例: 全部 skill 最新一轮 · 共 12 个 · 最近更新 2026-05-20]</div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">主列表区</span>
+      <div class="region-body">
+        <div class="mock-row">[模拟数据 行一]</div>
+        <div class="mock-row">[模拟数据 行二]</div>
+        <div class="mock-row">[模拟数据 行三]</div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">明细区</span>
+      <div class="region-body">
+        <div class="empty">尚未选中任何记录, 请在左侧主列表区选一行</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="legend">
+    <h3>图例 — 模拟数据 → 字段</h3>
+    <ul>
+      <li>头部区第一行 → 字段 <code>[字段名]</code> (来自显示信息段)</li>
+      <li>主列表区行 → 字段 <code>[字段名一]</code> + <code>[字段名二]</code> + <code>[字段名三]</code></li>
+      <li>明细区 → 入口态为空状态, 无数据绑定</li>
+    </ul>
+  </aside>
+</div>
+
+<div class="arrow">↓ 用户在主列表区选中一行 ↓</div>
+
+<!-- ============ 选中态 ============ -->
+<h2>选中态</h2>
+<div class="state">
+  <div class="canvas">
+
+    <div class="region">
+      <span class="region-tag">头部区</span>
+      <div class="region-body">
+        <div class="mock-row">[模拟数据 — 同入口态]</div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">主列表区 (某行高亮)</span>
+      <div class="region-body">
+        <div class="mock-row">[模拟数据 行一]</div>
+        <div class="mock-row" style="background: #eef; padding: 8px;">[模拟数据 行二 — 高亮中]</div>
+        <div class="mock-row">[模拟数据 行三]</div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">明细区 (填充)</span>
+      <div class="region-body">
+        <div class="mock-row">[模拟明细 字段甲]</div>
+        <div class="mock-row">[模拟明细 字段乙]</div>
+        <div class="mock-row">[模拟明细 字段丙]</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="legend">
+    <h3>图例 — 模拟数据 → 字段</h3>
+    <ul>
+      <li>主列表区高亮行 → 字段 <code>[字段名一]</code> + <code>[字段名二]</code></li>
+      <li>明细区第一行 → 字段 <code>[字段名]</code></li>
+      <li>明细区第二行 → 字段 <code>[字段名]</code></li>
+      <li>明细区第三行 → 字段 <code>[字段名]</code></li>
+    </ul>
+  </aside>
+</div>
+
+<!-- ============ 空数据态 ============ -->
+<h2>空数据态</h2>
+<div class="state">
+  <div class="canvas">
+
+    <div class="region">
+      <span class="region-tag">头部区</span>
+      <div class="region-body">
+        <div class="mock-row">[模拟数据 — 筛选: 仅崩溃, 当前结果 0 条]</div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">主列表区 (空)</span>
+      <div class="region-body">
+        <div class="empty">当前筛选下没有匹配的记录</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="legend">
+    <h3>图例 — 模拟数据 → 字段</h3>
+    <ul>
+      <li>头部区 → 字段 <code>[筛选条件]</code> + <code>[结果数]</code></li>
+      <li>主列表区 → 空状态, 无数据绑定</li>
+    </ul>
+  </aside>
+</div>
+
+</body>
+</html>
