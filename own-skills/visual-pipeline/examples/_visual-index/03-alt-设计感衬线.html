@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>候选「设计感 · 衬线留白」— UI 审查协议查看器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700;900&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ========== 设计感 · 衬线留白 调性 token (对标 web-goal-docs/design-ref/image.png) ========== */
+  :root {
+    /* 色板 — 米灰底 + 单点鲜蓝 (收敛到 8 个) */
+    --c-bg: #ECEAE5;             /* 页面底色 米灰暖底 */
+    --c-surface: #FFFFFF;        /* 卡片底 纯白 */
+    --c-subsurface: #F4F2ED;     /* 次卡片底 (柔米) */
+    --c-text: #0A0A0A;           /* 主文字 近黑 */
+    --c-muted: #6B6B6B;          /* 次文字 中灰 */
+    --c-faint: #A9A59D;          /* 弱文字 米灰 */
+    --c-line: #DCD8D0;           /* 分割线 */
+    --c-dark: #0A0A0A;           /* 黑胶囊 / 暗组 active */
+
+    /* 单点强调色 */
+    --c-accent: #3B6BFF;         /* 鲜蓝 (全页仅主操作 + 选中卡片) */
+    --c-accent-soft: #E9EFFF;    /* 选中卡片底 */
+
+    /* 语义色 — 同样米调 */
+    --c-danger: #9E2E1A;
+    --c-danger-bg: #F4E4DE;
+    --c-success: #1F6F4A;
+    --c-success-bg: #E4EFE8;
+    --c-success-code: #B7E4C7;
+
+    /* 字号 — 衬线大字, 5 档主阶梯 */
+    --fs-mega: 84px;       /* Hero 大字 (icon design 级别) */
+    --fs-section: 56px;    /* Section 标题 */
+    --fs-card-title: 22px; /* 组件名 / skill 卡片名 */
+    --fs-body: 15px;       /* 正文 */
+    --fs-cap: 11px;        /* 全大写小标签 */
+
+    /* 留白 — 严格 8 倍数节奏 */
+    --sp-1: 8px;
+    --sp-2: 16px;
+    --sp-3: 24px;
+    --sp-4: 32px;
+    --sp-5: 48px;
+    --sp-6: 64px;
+    --sp-7: 80px;
+    --sp-8: 120px;
+
+    /* 圆角 — 3 档 */
+    --r-card: 28px;        /* 大卡片 */
+    --r-inner: 18px;       /* 内嵌容器 / 代码块 */
+    --r-button: 12px;      /* 按钮 / 标签 */
+    --r-pill: 999px;       /* 胶囊 */
+
+    /* 阴影 — 柔和大阴影 (一致, 卡片浮起感) */
+    --shadow-card: 0 18px 40px -8px rgba(28, 24, 16, 0.10), 0 2px 6px rgba(28, 24, 16, 0.04);
+    --shadow-lift: 0 28px 56px -10px rgba(28, 24, 16, 0.16), 0 4px 12px rgba(28, 24, 16, 0.06);
+    --shadow-accent: 0 8px 20px -4px rgba(59, 107, 255, 0.35);
+
+    /* 字体 */
+    --ff-serif: "Noto Serif SC", "Noto Serif", "Source Han Serif SC", "Songti SC", Georgia, serif;
+    --ff-sans: -apple-system, system-ui, "PingFang SC", "Segoe UI", "Helvetica Neue", sans-serif;
+    --ff-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--ff-sans);
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-size: var(--fs-body);
+    margin: 0;
+    padding: var(--sp-6) var(--sp-6) var(--sp-7);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01" on, "kern" on;
+  }
+  code {
+    font-family: var(--ff-mono);
+    font-size: 0.92em;
+    background: var(--c-subsurface);
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: var(--c-text);
+  }
+
+  /* ========== 页面 Header ========== */
+  .doc-header {
+    max-width: 1200px;
+    margin: 0 auto var(--sp-7);
+  }
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--sp-3);
+  }
+  .brand-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    padding: 6px 20px 6px 6px;
+    border: 1px solid var(--c-text);
+    border-radius: var(--r-pill);
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .brand-dot {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffe28a 0%, #ffb84d 45%, #f08a2a 100%);
+    display: inline-block;
+    box-shadow: inset 0 -2px 4px rgba(180,90,20,0.35);
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--c-text);
+  }
+  .nav-links .sep {
+    color: var(--c-faint);
+    margin-right: var(--sp-1);
+    font-family: var(--ff-serif);
+  }
+
+  .doc-hero {
+    margin-top: var(--sp-5);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: var(--sp-4);
+  }
+  .doc-eyebrow {
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--c-text);
+    margin: 0 0 var(--sp-2);
+    letter-spacing: -0.005em;
+  }
+  .doc-title {
+    font-family: var(--ff-serif);
+    font-weight: 700;
+    font-size: var(--fs-mega);
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    margin: 0;
+  }
+  .doc-lede {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-body);
+    color: var(--c-muted);
+    max-width: 520px;
+    line-height: 1.65;
+    margin: var(--sp-3) 0 0;
+  }
+  .doc-figma-tile {
+    width: 88px; height: 88px;
+    background: var(--c-dark);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--r-inner);
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-weight: 700;
+    font-size: 44px;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ========== Section 通用 ========== */
+  .section {
+    max-width: 1200px;
+    margin: 0 auto var(--sp-8);
+  }
+  .section-head {
+    margin-bottom: var(--sp-5);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--sp-4);
+    align-items: end;
+  }
+  .section-head-num {
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 80px;
+    color: var(--c-text);
+    line-height: 0.85;
+    letter-spacing: -0.03em;
+  }
+  .section-eyebrow {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    margin: 0 0 var(--sp-2);
+  }
+  .section-title {
+    font-family: var(--ff-serif);
+    font-weight: 700;
+    font-size: var(--fs-section);
+    line-height: 1.0;
+    margin: 0;
+    letter-spacing: -0.025em;
+  }
+  .section-title-italic {
+    font-style: italic;
+    font-weight: 400;
+  }
+  .section-hint {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-body);
+    color: var(--c-muted);
+    max-width: 640px;
+    margin: var(--sp-3) 0 0;
+    line-height: 1.65;
+    grid-column: 2 / 3;
+  }
+
+  /* ========== 组件样例库 通用容器 ========== */
+  .sample-group {
+    background: var(--c-surface);
+    border-radius: var(--r-card);
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--sp-3);
+  }
+  .sample-group-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+    padding-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--c-line);
+  }
+  .sample-group-head .sample-id-label {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--c-faint);
+    margin-bottom: var(--sp-1);
+  }
+  .sample-title {
+    font-family: var(--ff-serif);
+    font-size: var(--fs-card-title);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .sample-subtitle {
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--c-muted);
+    margin: 4px 0 0;
+    font-weight: 400;
+  }
+  .sample-id {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--c-faint);
+    white-space: nowrap;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .sample-row {
+    display: flex;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .sample-row.block { display: block; }
+  .sample-row.center { justify-content: center; }
+  .sample-note {
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--c-muted);
+    margin-top: var(--sp-3);
+    line-height: 1.65;
+  }
+
+  /* ========== 组件: 标签按钮 ========== */
+  .tag-btn {
+    font-family: var(--ff-sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border: 1px solid var(--c-line);
+    background: var(--c-surface);
+    color: var(--c-text);
+    cursor: pointer;
+    line-height: 1.3;
+    border-radius: var(--r-button);
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    letter-spacing: 0.005em;
+  }
+  .tag-btn:hover { border-color: var(--c-text); }
+  .tag-btn.active {
+    background: var(--c-accent);
+    color: #fff;
+    border-color: var(--c-accent);
+    box-shadow: var(--shadow-accent);
+  }
+  .tag-btn.dark-active {
+    background: var(--c-dark);
+    color: #fff;
+    border-color: var(--c-dark);
+  }
+
+  /* ========== 组件: 大数字 + 单位 ========== */
+  .big-num {
+    font-family: var(--ff-serif);
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--c-text);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+  }
+  .big-num .unit {
+    font-family: var(--ff-sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--c-faint);
+    margin-left: 6px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    vertical-align: 18px;
+  }
+  .big-num.dim { color: var(--c-faint); }
+  .big-num.md { font-size: 36px; letter-spacing: -0.025em; }
+  .big-num.md .unit { vertical-align: 8px; }
+
+  /* ========== 组件: 双 bar 进度条 ========== */
+  .bar-pair {
+    display: flex; flex-direction: column;
+    gap: 10px;
+    min-width: 220px;
+  }
+  .bar-line {
+    display: flex; align-items: center;
+    gap: var(--sp-2);
+    font-size: 13px;
+  }
+  .bar-line .label {
+    width: 96px;
+    color: var(--c-muted);
+    font-family: var(--ff-sans);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .bar-track {
+    flex: 1;
+    height: 4px;
+    background: var(--c-line);
+    position: relative;
+    border-radius: var(--r-pill);
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--c-faint);
+    border-radius: var(--r-pill);
+  }
+  .bar-fill.on { background: var(--c-text); }
+  .bar-line .pct {
+    width: 44px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--ff-serif);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ========== 组件: 列表行 / skill 卡片 ========== */
+  .skill-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: var(--sp-3);
+    align-items: center;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-inner);
+    background: var(--c-surface);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--sp-2);
+    min-width: 0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .skill-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+  .skill-card > * { min-width: 0; }
+  .skill-card .name { overflow-wrap: anywhere; }
+  .skill-card.selected {
+    background: var(--c-accent-soft);
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-1px);
+  }
+  .skill-card.selected::before {
+    content: "";
+    position: absolute;
+  }
+  .skill-card .name {
+    font-family: var(--ff-serif);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+  .skill-card .sub {
+    font-size: 12px;
+    color: var(--c-muted);
+    margin-top: 6px;
+    font-family: var(--ff-sans);
+    letter-spacing: 0.02em;
+  }
+  .crash-badge {
+    display: inline-block;
+    background: var(--c-danger-bg);
+    color: var(--c-danger);
+    border-radius: var(--r-pill);
+    padding: 2px 10px;
+    font-size: 11px;
+    margin-left: var(--sp-2);
+    font-family: var(--ff-sans);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    vertical-align: 3px;
+  }
+
+  /* ========== 组件: 时间戳翻页器 ========== */
+  .ts-pager {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    font-size: var(--fs-body);
+    font-variant-numeric: tabular-nums;
+    font-family: var(--ff-sans);
+  }
+  .ts-pager .arrow {
+    width: 36px; height: 36px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--c-line);
+    background: var(--c-surface);
+    cursor: pointer;
+    color: var(--c-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: border-color 0.15s ease;
+  }
+  .ts-pager .arrow:hover { border-color: var(--c-text); }
+  .ts-pager .current {
+    padding: 8px 18px;
+    border-radius: var(--r-pill);
+    background: var(--c-subsurface);
+    color: var(--c-text);
+    font-family: var(--ff-serif);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .ts-pager .more {
+    font-size: 12px;
+    color: var(--c-muted);
+    margin-left: var(--sp-2);
+    cursor: pointer;
+    font-family: var(--ff-sans);
+    letter-spacing: 0.04em;
+  }
+
+  /* ========== 组件: 主蓝按钮 (新建知识库样式) ========== */
+  .btn-primary {
+    background: var(--c-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-button);
+    padding: 14px 26px;
+    font-family: var(--ff-sans);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow-accent);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -4px rgba(59,107,255,0.4); }
+  .btn-primary .plus { font-size: 18px; line-height: 1; margin-top: -2px; }
+
+  /* ========== 组件: Tab 三按钮 ========== */
+  .tab-bar {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--c-subsurface);
+    border-radius: var(--r-pill);
+  }
+  .tab-bar .tab-btn {
+    font-family: var(--ff-sans);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 22px;
+    border: none;
+    background: transparent;
+    color: var(--c-muted);
+    cursor: pointer;
+    border-radius: var(--r-pill);
+    transition: color 0.15s ease, background 0.15s ease;
+    letter-spacing: 0.02em;
+  }
+  .tab-bar .tab-btn:hover { color: var(--c-text); }
+  .tab-bar .tab-btn.active {
+    background: var(--c-dark);
+    color: #fff;
+  }
+
+  /* ========== 组件: 元信息条 ========== */
+  .meta-strip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    padding: 10px 20px;
+    background: var(--c-subsurface);
+    border-radius: var(--r-pill);
+    font-size: 12px;
+    color: var(--c-muted);
+    font-family: var(--ff-mono);
+    letter-spacing: 0.02em;
+  }
+  .meta-strip span { white-space: nowrap; display: inline-flex; align-items: baseline; gap: 6px; }
+  .meta-strip strong {
+    color: var(--c-text);
+    font-weight: 600;
+    font-family: var(--ff-serif);
+    font-size: 14px;
+  }
+
+  /* ========== 组件: 代码 / JSON 块 ========== */
+  .code-block {
+    background: var(--c-dark);
+    color: var(--c-success-code);
+    font-family: var(--ff-mono);
+    font-size: 13px;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-inner);
+    white-space: pre-wrap;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+  }
+
+  /* ========== 组件: 失败 / 成功行 ========== */
+  .status-row {
+    font-size: 14px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-family: var(--ff-sans);
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .status-row .icon {
+    font-family: var(--ff-serif);
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.2;
+    flex-shrink: 0;
+  }
+  .status-row.fail {
+    background: var(--c-danger-bg);
+    color: var(--c-danger);
+  }
+  .status-row.ok {
+    background: var(--c-success-bg);
+    color: var(--c-success);
+  }
+
+  /* ========== 组件: 空状态占位 ========== */
+  .empty-state {
+    padding: var(--sp-6) var(--sp-4);
+    text-align: center;
+    color: var(--c-muted);
+    font-size: 18px;
+    background: var(--c-subsurface);
+    border-radius: var(--r-card);
+    font-family: var(--ff-serif);
+    font-style: italic;
+    letter-spacing: -0.005em;
+  }
+
+  /* ========== 整体组合 - 区域容器 ========== */
+  .composition {
+    display: grid;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
+  }
+  .composition .two-col {
+    display: grid;
+    grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+    gap: var(--sp-3);
+    align-items: start;
+  }
+  .region {
+    background: var(--c-surface);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-4);
+    min-width: 0;
+  }
+  .region-head {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    color: var(--c-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    margin-bottom: var(--sp-3);
+    padding-bottom: var(--sp-2);
+    border-bottom: 1px solid var(--c-line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .region-head::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--c-text);
+    display: inline-block;
+  }
+
+  /* 头部摘要区 内部布局 */
+  .summary-strip {
+    display: flex;
+    gap: var(--sp-5);
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .summary-strip .item {
+    display: flex; flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .summary-strip .item .k {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    color: var(--c-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+  }
+  .summary-strip .item .v {
+    font-family: var(--ff-serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--c-text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+  .summary-strip .item .v.mono {
+    font-family: var(--ff-mono);
+    font-size: 13px;
+    color: var(--c-text);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  /* 明细区 内部布局 */
+  .detail-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    padding-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--c-line);
+    margin-bottom: var(--sp-4);
+    flex-wrap: wrap;
+  }
+  .detail-head .skill-title {
+    font-family: var(--ff-serif);
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.05;
+    margin: 0;
+    letter-spacing: -0.025em;
+  }
+  .detail-head .overview {
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--c-muted);
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+  }
+  .detail-row {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+    margin-bottom: var(--sp-3);
+    flex-wrap: wrap;
+  }
+  .detail-row .key {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    color: var(--c-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .tab-body {
+    background: var(--c-subsurface);
+    padding: var(--sp-3);
+    border-radius: var(--r-inner);
+    margin-top: var(--sp-3);
+  }
+
+  /* ========== 底栏 黑色长胶囊 ========== */
+  .doc-footer {
+    max-width: 1200px;
+    margin: var(--sp-7) auto 0;
+    background: var(--c-dark);
+    color: #fff;
+    border-radius: var(--r-pill);
+    padding: 12px 20px 12px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--ff-sans);
+    font-size: 13px;
+  }
+  .doc-footer .author {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 0.04em;
+  }
+  .doc-footer .author-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffe28a 0%, #ffb84d 45%, #f08a2a 100%);
+  }
+  .doc-footer .year {
+    font-family: var(--ff-serif);
+    font-style: italic;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.015em;
+    padding: 4px 18px;
+    background: rgba(255,255,255,0.08);
+    border-radius: var(--r-pill);
+  }
+
+  /* 通用工具 */
+  .row-flex { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; }
+  .muted { color: var(--c-muted); }
+  .nowrap { white-space: nowrap; }
+  .sort-label {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-cap);
+    font-weight: 500;
+    color: var(--c-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     文档头部 — 衬线大字 + 米灰底 + 导航 (对标参考图)
+============================================================ -->
+<header class="doc-header">
+  <div class="nav-bar">
+    <div class="brand-pill">
+      <span class="brand-dot"></span>
+      <span>评审实验室</span>
+    </div>
+    <nav class="nav-links">
+      <span class="sep">//</span>
+      <span>组件样例库</span>
+      <span>整体组合</span>
+      <span>风格说明</span>
+    </nav>
+  </div>
+  <div class="doc-hero">
+    <div>
+      <p class="doc-eyebrow">设计参考稿</p>
+      <h1 class="doc-title">审查协议<br>查看器</h1>
+      <p class="doc-lede">这是一份反向示例 — 把同一份审查工具的内容, 用「衬线大字 + 米灰底 + 单点鲜蓝 + 大留白」的设计感调性重做一遍, 风格对标设计参考图.</p>
+    </div>
+    <div class="doc-figma-tile">F</div>
+  </div>
+</header>
+
+<!-- ============================================================
+     一、组件样例库
+     按 03-style.md 第 2 节组件清单, 每个组件给一个样例, 不绑定字段
+============================================================ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-head-num">一</div>
+    <div>
+      <div class="section-eyebrow">第一节 · 组件样例库</div>
+      <h2 class="section-title">每件<span class="section-title-italic">小物</span>各自陈列</h2>
+    </div>
+    <p class="section-hint">按 <code>03-style.md</code> 第 2 节组件清单展开. 不绑定字段, 仅展示组件长什么样, 套衬线大字 + 米灰底 + 鲜蓝强调的调性 token 渲染.</p>
+  </div>
+
+  <!-- 1. 标签按钮 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">标签按钮</h3>
+        <p class="sample-subtitle">tag button — 互斥状态选择</p>
+      </div>
+      <div class="sample-id">默认 / 蓝色激活 / 暗组激活</div>
+    </div>
+    <div class="sample-row">
+      <button class="tag-btn">默认</button>
+      <button class="tag-btn active">蓝色激活</button>
+      <button class="tag-btn dark-active">暗组激活</button>
+      <button class="tag-btn">另一项</button>
+      <button class="tag-btn">再一项</button>
+    </div>
+    <p class="sample-note">用于 Case 切换 / Trace 切换 / 三 tab. 蓝色激活承担"主路径选中", 暗组激活承担"二级互斥".</p>
+  </div>
+
+  <!-- 2. 大数字 + 单位 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">大数字 + 单位</h3>
+        <p class="sample-subtitle">big number — 突出聚合关键数</p>
+      </div>
+      <div class="sample-id">中性 / 暗淡 / 中号</div>
+    </div>
+    <div class="sample-row" style="gap: var(--sp-6);">
+      <div class="big-num">78<span class="unit">%</span></div>
+      <div class="big-num dim">62<span class="unit">%</span></div>
+      <div class="big-num md">247<span class="unit">个 run</span></div>
+      <div class="big-num md">3<span class="unit">个崩溃</span></div>
+    </div>
+    <p class="sample-note">数字采用衬线字体, 字距收紧, 单位换无衬线小字, 两种字体形成质感对比.</p>
+  </div>
+
+  <!-- 3. 双 bar 进度条 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">双 bar 进度条</h3>
+        <p class="sample-subtitle">paired bar — 启用 / 不启用 通过率对比</p>
+      </div>
+      <div class="sample-id">不启用 (浅) / 启用 (深)</div>
+    </div>
+    <div class="sample-row">
+      <div class="bar-pair">
+        <div class="bar-line">
+          <span class="label">不启用 skill</span>
+          <span class="bar-track"><span class="bar-fill" style="width: 62%"></span></span>
+          <span class="pct">62%</span>
+        </div>
+        <div class="bar-line">
+          <span class="label">启用 skill</span>
+          <span class="bar-track"><span class="bar-fill on" style="width: 78%"></span></span>
+          <span class="pct">78%</span>
+        </div>
+      </div>
+    </div>
+    <p class="sample-note">轨道改为细线 + 圆角, 浅米灰底, 填充用深近黑, 差值靠长度差自然显示.</p>
+  </div>
+
+  <!-- 4. 列表行 / skill 卡片 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">列表行 / skill 卡片</h3>
+        <p class="sample-subtitle">skill card — 主列表单条记录</p>
+      </div>
+      <div class="sample-id">默认 / 选中 / 含崩溃角标</div>
+    </div>
+    <div class="sample-row block">
+      <div class="skill-card">
+        <div>
+          <div class="name">示例 skill 名 (默认行)</div>
+          <div class="sub">cases 8 · 最新时间戳 2026-05-20 18:30</div>
+        </div>
+        <div class="bar-pair" style="min-width:200px">
+          <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 50%"></span></span><span class="pct">50%</span></div>
+          <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 64%"></span></span><span class="pct">64%</span></div>
+        </div>
+        <div class="big-num md">64<span class="unit">%</span></div>
+      </div>
+      <div class="skill-card selected">
+        <div>
+          <div class="name">示例 skill 名 (选中行)</div>
+          <div class="sub">cases 14 · 最新时间戳 2026-05-21 10:42</div>
+        </div>
+        <div class="bar-pair" style="min-width:200px">
+          <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 62%"></span></span><span class="pct">62%</span></div>
+          <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 78%"></span></span><span class="pct">78%</span></div>
+        </div>
+        <div class="big-num md">78<span class="unit">%</span></div>
+      </div>
+      <div class="skill-card">
+        <div>
+          <div class="name">示例 skill 名 <span class="crash-badge">崩溃 2</span></div>
+          <div class="sub">cases 6 · 最新时间戳 2026-05-19 22:11</div>
+        </div>
+        <div class="bar-pair" style="min-width:200px">
+          <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 40%"></span></span><span class="pct">40%</span></div>
+          <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 45%"></span></span><span class="pct">45%</span></div>
+        </div>
+        <div class="big-num md">45<span class="unit">%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 时间戳翻页器 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">时间戳翻页器</h3>
+        <p class="sample-subtitle">timestamp pager — 同 case+模式相邻时间戳切换</p>
+      </div>
+      <div class="sample-id">‹ 当前 › + 下拉历史</div>
+    </div>
+    <div class="sample-row">
+      <div class="ts-pager">
+        <span class="arrow">‹</span>
+        <span class="current">2026-05-21 10:42</span>
+        <span class="arrow">›</span>
+        <span class="more">展开历史 (12 个时间戳) ▾</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Case 切换器 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">Case 切换器</h3>
+        <p class="sample-subtitle">case switcher — 在多 case 间切换</p>
+      </div>
+      <div class="sample-id">默认落差值最大 case</div>
+    </div>
+    <div class="sample-row">
+      <button class="tag-btn active">Case 14</button>
+      <button class="tag-btn">Case 7</button>
+      <button class="tag-btn">Case 21</button>
+      <button class="tag-btn">Case 3</button>
+    </div>
+  </div>
+
+  <!-- 7. Trace 模式切换 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">Trace 模式切换</h3>
+        <p class="sample-subtitle">trace toggle — 不启用 / 启用 二元互斥</p>
+      </div>
+      <div class="sample-id">单 run 内两模式切换</div>
+    </div>
+    <div class="sample-row">
+      <button class="tag-btn active">不启用 skill</button>
+      <button class="tag-btn">启用 skill</button>
+    </div>
+  </div>
+
+  <!-- 8. 三 tab -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">三 tab</h3>
+        <p class="sample-subtitle">main tabs — 切换产物视角</p>
+      </div>
+      <div class="sample-id">Task / Chat / Result, 暗组 active</div>
+    </div>
+    <div class="sample-row block">
+      <div class="tab-bar">
+        <button class="tab-btn active">Task</button>
+        <button class="tab-btn">Chat</button>
+        <button class="tab-btn">Result</button>
+      </div>
+      <div class="tab-body muted" style="font-size: var(--fs-body);">(此处为 tab 内容容器, 样例库不填充)</div>
+    </div>
+  </div>
+
+  <!-- 9. 元信息条 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">元信息条</h3>
+        <p class="sample-subtitle">meta strip — run.meta 单行</p>
+      </div>
+      <div class="sample-id">等宽 + 米灰胶囊</div>
+    </div>
+    <div class="sample-row">
+      <div class="meta-strip">
+        <span>耗时<strong>286s</strong></span>
+        <span>Token<strong>100k</strong></span>
+        <span>判定<strong>Pass</strong></span>
+        <span>退出码<strong>0</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. 代码 / JSON 块 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">代码 / JSON 块</h3>
+        <p class="sample-subtitle">code block — 结构化产物 / 执行日志</p>
+      </div>
+      <div class="sample-id">近黑底 + 终端绿</div>
+    </div>
+    <div class="sample-row block">
+      <div class="code-block">{
+  "skill": "eval-news-impact",
+  "case": 14,
+  "mode": "不启用 skill",
+  "score": 0.62
+}</div>
+    </div>
+  </div>
+
+  <!-- 11. 失败 / 成功行 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">失败行 / 成功行</h3>
+        <p class="sample-subtitle">status row — 判定子区 / 执行日志状态</p>
+      </div>
+      <div class="sample-id">柔粉底深红字 / 柔绿底深绿字</div>
+    </div>
+    <div class="sample-row block">
+      <div class="status-row fail">
+        <span class="icon">✗</span>
+        <span>期望含「监管」, 实际产物缺失 (失败示例)</span>
+      </div>
+      <div class="status-row ok">
+        <span class="icon">✓</span>
+        <span>refs_loaded 全部命中 (5 / 5) (成功示例)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. 空状态占位 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">空状态占位</h3>
+        <p class="sample-subtitle">empty state — 明细区入口态 / 过滤无果</p>
+      </div>
+      <div class="sample-id">柔米灰底 + 衬线斜体</div>
+    </div>
+    <div class="sample-row block">
+      <div class="empty-state">选择左侧任意一张 skill 卡片, 查看明细</div>
+    </div>
+  </div>
+
+  <!-- 13. 主蓝按钮 -->
+  <div class="sample-group">
+    <div class="sample-group-head">
+      <div>
+        <h3 class="sample-title">主蓝按钮</h3>
+        <p class="sample-subtitle">primary action — 全页单点强调</p>
+      </div>
+      <div class="sample-id">仅用于核心操作</div>
+    </div>
+    <div class="sample-row">
+      <button class="btn-primary"><span class="plus">＋</span>导出本批报告</button>
+      <button class="btn-primary"><span class="plus">＋</span>新建一组 case</button>
+    </div>
+    <p class="sample-note">单点鲜蓝, 全页除主操作外不再出现, 避免色彩稀释.</p>
+  </div>
+
+</section>
+
+<!-- ============================================================
+     二、整体组合 — 选中态
+     用上方组件 + 01-display-info.md 第 4 节真字段, 按 02-skeleton.md 区域和"选中态"拼
+============================================================ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-head-num">二</div>
+    <div>
+      <div class="section-eyebrow">第二节 · 整体组合</div>
+      <h2 class="section-title">选中之后, <span class="section-title-italic">所见即明细</span></h2>
+    </div>
+    <p class="section-hint">场景: 用户在主列表区选中 <code>eval-news-impact</code> 之后. 用上方组件 + 真字段 (字段名与 <code>01-display-info.md</code> 第 4 节一一对应), 按 <code>02-skeleton.md</code> 的头部摘要区 / 主列表区 / 明细区拼.</p>
+  </div>
+
+  <div class="composition">
+
+    <!-- 头部摘要区 横跨整行 -->
+    <div class="region">
+      <div class="region-head">头部摘要区</div>
+      <div class="summary-strip">
+        <div class="item">
+          <span class="k">数据源路径</span>
+          <span class="v mono">/Users/wing/Develop/skill-eval/runs</span>
+        </div>
+        <div class="item">
+          <span class="k">runs 总数</span>
+          <span class="v">247</span>
+        </div>
+        <div class="item">
+          <span class="k">崩溃总数</span>
+          <span class="v">3</span>
+        </div>
+        <div class="item">
+          <span class="k">最近扫描时间</span>
+          <span class="v">2026-05-21 10:42</span>
+        </div>
+        <div class="item">
+          <span class="k">当前过滤</span>
+          <span class="v">全部 skill</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+
+      <!-- 主列表区 -->
+      <div class="region">
+        <div class="region-head">主列表区</div>
+
+        <div class="row-flex" style="margin-bottom: var(--sp-3); justify-content: space-between;">
+          <div class="row-flex">
+            <button class="tag-btn active">全部</button>
+            <button class="tag-btn">只看崩溃</button>
+          </div>
+          <div class="row-flex">
+            <span class="sort-label">排序</span>
+            <button class="tag-btn dark-active">差值绝对值降序</button>
+          </div>
+        </div>
+
+        <div class="skill-card">
+          <div>
+            <div class="name">summarizer <span class="crash-badge">崩溃 1</span></div>
+            <div class="sub">cases 12 · 最新 2026-05-21 09:18</div>
+          </div>
+          <div class="bar-pair" style="min-width:160px">
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 70%"></span></span><span class="pct">70%</span></div>
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 88%"></span></span><span class="pct">88%</span></div>
+          </div>
+          <div class="big-num md">88<span class="unit">%</span></div>
+        </div>
+
+        <div class="skill-card selected">
+          <div>
+            <div class="name">eval-news-impact</div>
+            <div class="sub">cases 14 · 最新 2026-05-21 10:42 · Δ +16</div>
+          </div>
+          <div class="bar-pair" style="min-width:160px">
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 62%"></span></span><span class="pct">62%</span></div>
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 78%"></span></span><span class="pct">78%</span></div>
+          </div>
+          <div class="big-num md">78<span class="unit">%</span></div>
+        </div>
+
+        <div class="skill-card">
+          <div>
+            <div class="name">credibility-review</div>
+            <div class="sub">cases 9 · 最新 2026-05-20 22:05</div>
+          </div>
+          <div class="bar-pair" style="min-width:160px">
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 55%"></span></span><span class="pct">55%</span></div>
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 67%"></span></span><span class="pct">67%</span></div>
+          </div>
+          <div class="big-num md">67<span class="unit">%</span></div>
+        </div>
+
+        <div class="skill-card">
+          <div>
+            <div class="name">broken-skill <span class="crash-badge">崩溃 2</span></div>
+            <div class="sub">cases 6 · 最新 2026-05-19 22:11</div>
+          </div>
+          <div class="bar-pair" style="min-width:160px">
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 40%"></span></span><span class="pct">40%</span></div>
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 45%"></span></span><span class="pct">45%</span></div>
+          </div>
+          <div class="big-num md">45<span class="unit">%</span></div>
+        </div>
+
+        <div class="skill-card">
+          <div>
+            <div class="name">geo-citability</div>
+            <div class="sub">cases 8 · 最新 2026-05-20 14:08</div>
+          </div>
+          <div class="bar-pair" style="min-width:160px">
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill" style="width: 73%"></span></span><span class="pct">73%</span></div>
+            <div class="bar-line"><span class="bar-track"><span class="bar-fill on" style="width: 81%"></span></span><span class="pct">81%</span></div>
+          </div>
+          <div class="big-num md">81<span class="unit">%</span></div>
+        </div>
+      </div>
+
+      <!-- 明细区 -->
+      <div class="region">
+        <div class="region-head">明细区 · 选中 eval-news-impact</div>
+
+        <div class="detail-head">
+          <div>
+            <h3 class="skill-title">eval-news-impact</h3>
+            <p class="overview">62% → 78%, 双模式差值 Δ +16</p>
+          </div>
+          <div class="meta-strip">
+            <span>耗时<strong>286s</strong></span>
+            <span>Token<strong>100k</strong></span>
+            <span>判定<strong>Pass</strong></span>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <span class="key">Case</span>
+          <button class="tag-btn active">Case 14</button>
+          <button class="tag-btn">Case 7</button>
+          <button class="tag-btn">Case 21</button>
+          <button class="tag-btn">Case 3</button>
+        </div>
+
+        <div class="detail-row">
+          <span class="key">Trace 模式</span>
+          <button class="tag-btn active">不启用 skill</button>
+          <button class="tag-btn">启用 skill</button>
+        </div>
+
+        <div class="detail-row">
+          <span class="key">时间戳</span>
+          <div class="ts-pager">
+            <span class="arrow">‹</span>
+            <span class="current">2026-05-21 10:42</span>
+            <span class="arrow">›</span>
+            <span class="more">展开历史 (12) ▾</span>
+          </div>
+        </div>
+
+        <div class="row-flex" style="margin-top: var(--sp-3);">
+          <div class="tab-bar">
+            <button class="tab-btn active">Task</button>
+            <button class="tab-btn">Chat</button>
+            <button class="tab-btn">Result</button>
+          </div>
+        </div>
+
+        <div class="tab-body">
+          <div class="row-flex" style="margin-bottom: var(--sp-3);">
+            <button class="tag-btn dark-active">case-input.md</button>
+            <button class="tag-btn">run-instruction.md</button>
+            <button class="tag-btn">extract-instruction.md</button>
+            <button class="tag-btn">judge-instruction.md</button>
+          </div>
+          <div class="code-block">## case 14 输入
+
+新闻原文: 央行下调存款准备金率 0.5 个百分点, 释放长期资金约 1 万亿元.
+预期产物: 影响评估文档, 至少包含「政策方向」「市场反应」「监管态度」三段...</div>
+          <div class="status-row ok" style="margin-top: var(--sp-3);">
+            <span class="icon">✓</span>
+            <span>refs_loaded 5 / 5 命中</span>
+          </div>
+          <div class="status-row fail">
+            <span class="icon">✗</span>
+            <span>期望含「监管态度」段落, 实际产物缺失 (该指标拉低 0.18)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     底栏 — 黑色长胶囊 (对标参考图)
+============================================================ -->
+<footer class="doc-footer">
+  <div class="author">
+    <span class="author-dot"></span>
+    <span>@评审实验室 · 反向 demo</span>
+  </div>
+  <div class="year">2026</div>
+</footer>
+
+</body>
+</html>

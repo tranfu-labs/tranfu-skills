@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>三、候选「[调性中文名]」— [页面名]</title>
+<style>
+  /* ========== 本候选调性 token ========== */
+  :root {
+    --c-bg: #ffffff;
+    --c-surface: #f7f8fa;
+    --c-text: #1a1a1a;
+    --c-muted: #6b7280;
+    --c-border: #e5e7eb;
+    --c-accent: #2563eb;
+    --c-danger: #dc2626;
+    --c-success: #16a34a;
+
+    --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-lg: 16px; --fs-xl: 20px; --fs-2xl: 24px;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+    --radius: 4px;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, system-ui, "PingFang SC", sans-serif; background: var(--c-bg); color: var(--c-text); font-size: var(--fs-md); margin: 0; padding: var(--sp-5); line-height: 1.5; }
+  .meta { background: var(--c-surface); border: 1px solid var(--c-border); padding: var(--sp-3) var(--sp-4); border-radius: var(--radius); margin-bottom: var(--sp-5); font-size: var(--fs-sm); color: var(--c-muted); }
+
+  section { margin-bottom: var(--sp-6); padding-bottom: var(--sp-5); border-bottom: 2px dashed var(--c-border); }
+  section:last-child { border-bottom: none; }
+  section > h2 { margin: 0 0 var(--sp-2); font-size: var(--fs-xl); }
+  section > p.section-hint { margin: 0 0 var(--sp-4); color: var(--c-muted); font-size: var(--fs-sm); }
+
+  /* 组件样例库样式 */
+  .sample-group { margin-bottom: var(--sp-5); }
+  .sample-group h3 { font-size: var(--fs-sm); color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 var(--sp-2); }
+  .sample-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: center; padding: var(--sp-3); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }
+  .sample-label { font-size: var(--fs-xs); color: var(--c-muted); margin-bottom: var(--sp-1); }
+
+  /* 组件样例: 按钮 */
+  button { font-family: inherit; font-size: var(--fs-md); padding: var(--sp-2) var(--sp-4); border: 1px solid var(--c-border); border-radius: var(--radius); background: var(--c-bg); color: var(--c-text); cursor: pointer; }
+  button.primary { background: var(--c-accent); color: white; border-color: var(--c-accent); }
+  button.danger { background: var(--c-danger); color: white; border-color: var(--c-danger); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* 组件样例: 列表行 */
+  .list-row { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--c-border); }
+  .list-row.active { background: #e8f0ff; border-left: 3px solid var(--c-accent); }
+  .list-row.failed { background: #fef2f2; }
+
+  /* 组件样例: 标签页 */
+  .tabs { display: flex; border-bottom: 1px solid var(--c-border); }
+  .tab { padding: var(--sp-2) var(--sp-4); cursor: pointer; color: var(--c-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: var(--c-accent); border-bottom-color: var(--c-accent); }
+
+  /* 组件样例: 空状态 */
+  .empty-state { padding: var(--sp-5); text-align: center; color: var(--c-muted); font-size: var(--fs-sm); background: var(--c-surface); border: 1px dashed var(--c-border); border-radius: var(--radius); }
+
+  /* 整体组合 */
+  .composition-region { border: 1px solid var(--c-border); border-radius: var(--radius); margin-bottom: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+  .composition-region h4 { font-size: var(--fs-xs); color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 var(--sp-2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>候选「[调性中文名]」— [页面名]</h1>
+  <div class="meta">
+    调性 · [一句话描述] · 对标: [具体产品] · 色板/字号/留白 见 <code>:root</code>
+  </div>
+</header>
+
+<!-- ============================================================
+     Section 一: 组件样例库
+     按 03-style.md 第 2 节组件清单, 每个组件给一个样例
+============================================================ -->
+<section id="components">
+  <h2>一、组件样例库</h2>
+  <p class="section-hint">下列按 <code>03-style.md</code> 第 2 节组件清单展开. 不绑定字段, 仅展示组件长什么样.</p>
+
+  <div class="sample-group">
+    <h3>按钮</h3>
+    <div class="sample-label">主 / 次 / 危险 / 禁用</div>
+    <div class="sample-row">
+      <button class="primary">主按钮</button>
+      <button>次按钮</button>
+      <button class="danger">危险按钮</button>
+      <button disabled>禁用</button>
+    </div>
+  </div>
+
+  <div class="sample-group">
+    <h3>列表行</h3>
+    <div class="sample-label">默认 / 高亮 / 失败 / 空状态</div>
+    <div class="sample-row" style="display:block; padding:0;">
+      <div class="list-row"><span>默认行 — 内容示例</span><span style="color:var(--c-muted)">辅助信息</span></div>
+      <div class="list-row active"><span>高亮行 (选中态)</span><span style="color:var(--c-muted)">辅助信息</span></div>
+      <div class="list-row failed"><span>失败行</span><span style="color:var(--c-danger)">异常标签</span></div>
+      <div class="empty-state">空状态: 当前筛选无匹配</div>
+    </div>
+  </div>
+
+  <div class="sample-group">
+    <h3>标签页</h3>
+    <div class="sample-label">默认 / 选中</div>
+    <div class="sample-row" style="display:block;">
+      <div class="tabs">
+        <div class="tab active">概览</div>
+        <div class="tab">原始对话</div>
+        <div class="tab">产物</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 继续按第 2 节组件清单展开其它组件 ... -->
+
+</section>
+
+<!-- ============================================================
+     Section 二: 整体组合
+     用 Section 一组件 + 显示信息段真字段 按显示框架段区域+状态拼
+============================================================ -->
+<section id="composition">
+  <h2>二、整体组合 — [核心状态名, 如 "选中态"]</h2>
+  <p class="section-hint">用上方组件 + 显示信息段第 4 节真字段, 按显示框架段区域和状态拼.</p>
+
+  <div class="composition-region">
+    <h4>头部区</h4>
+    <!-- 真字段 + 真数据, 应用本候选调性 -->
+    [此处用真字段渲染]
+  </div>
+
+  <div class="composition-region">
+    <h4>主列表区</h4>
+    <div class="list-row"><span>[字段名: 真数据]</span><span style="color:var(--c-muted)">[字段名: 真数据]</span></div>
+    <div class="list-row active"><span>[字段名: 真数据]</span><span style="color:var(--c-muted)">[字段名: 真数据]</span></div>
+    <div class="list-row"><span>[字段名: 真数据]</span><span style="color:var(--c-muted)">[字段名: 真数据]</span></div>
+  </div>
+
+  <div class="composition-region">
+    <h4>明细区</h4>
+    <div class="tabs">
+      <div class="tab active">[标签一]</div>
+      <div class="tab">[标签二]</div>
+      <div class="tab">[标签三]</div>
+    </div>
+    <!-- 真字段填充 -->
+    [此处用真字段渲染明细]
+  </div>
+
+</section>
+
+</body>
+</html>

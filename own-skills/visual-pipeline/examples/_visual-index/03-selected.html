@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UI 审查 - Layer 查看器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header class="sticky top-0 z-30 border-b border-slate-300 bg-white">
+    <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6">
+      <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">UI 审查协议 r2 - Layer 查看器</div>
+      <nav class="flex flex-wrap gap-2" id="tabs" aria-label="Layer 标签页">
+        <button data-layer="l1" class="tab border px-3 py-1.5 text-sm font-medium">Layer 1 — IA</button>
+        <button data-layer="l2" class="tab border px-3 py-1.5 text-sm font-medium">Layer 2 — Skeleton</button>
+        <button data-layer="l3" class="tab border px-3 py-1.5 text-sm font-medium">Layer 3 — Components</button>
+        <button data-layer="l4" class="tab border px-3 py-1.5 text-sm font-medium">Layer 4 — Assembly</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content" class="mx-auto max-w-7xl px-4 py-6 sm:px-6"></main>
+
+  <script>
+    const regionStyles = {
+      R1: { chip: 'bg-blue-100 text-blue-900 border-blue-300', box: 'border-blue-500 bg-blue-50', ring: 'ring-blue-500', name: 'batch-meta-strip' },
+      R2: { chip: 'bg-purple-100 text-purple-900 border-purple-300', box: 'border-purple-500 bg-purple-50', ring: 'ring-purple-500', name: 'filter-chip' },
+      R3: { chip: 'bg-emerald-100 text-emerald-900 border-emerald-300', box: 'border-emerald-500 bg-emerald-50', ring: 'ring-emerald-500', name: 'primary-region' },
+      R4: { chip: 'bg-orange-100 text-orange-900 border-orange-300', box: 'border-orange-500 bg-orange-50', ring: 'ring-orange-500', name: 'detail-region' },
+      R6: { chip: 'bg-slate-100 text-slate-800 border-slate-300', box: 'border-slate-400 bg-slate-50', ring: 'ring-slate-400', name: 'footer-meta' }
+    };
+
+    const regionDescriptions = {
+      R1: '顶部 batch 摘要',
+      R2: '主列表过滤',
+      R3: '主列表区',
+      R4: '明细区',
+      R6: '底部辅助信息'
+    };
+
+    const regionContent = {
+      R1: ['数据源路径', 'runs 总数', 'crash 总数', '最近扫描时间', '当前过滤状态摘要'],
+      R2: ['crash skill 过滤 chip', '过滤后同步主列表'],
+      R3: ['skill bar 卡片', 'with-skills pass-rate 大数字', 'no-skills / with-skills 双 bar', 'mode-delta 小字', 'crash 标记', '排序选择'],
+      R4: ['skill 头', 'Case 切换器', 'Trace mode 切换器 + run.meta 元信息 (第 1 行)', 'ts 翻页 (第 2 行)', 'Task / Chat / Result 三 tab'],
+      R6: ['pagination', '上一 run 快速跳转', '下一 run 快速跳转']
+    };
+
+    const regionMapRows = [
+      ['skill 列表 + with-skills pass-rate', '主列表卡片标题行 + With Skill bar'],
+      ['no-skills pass-rate', '主列表卡片 No Skill bar'],
+      ['mode-delta on skill', '主列表卡片双 bar 长度差 + Δ 小字'],
+      ['crash count (per skill / total)', '顶部摘要条 + 主列表过滤 chip + 卡片小图标'],
+      ['latest ts', '明细 Trace 行当前 timestamp'],
+      ['case 列表 / case-level mode-delta', '明细 Case pills，默认 argmax|Δ|'],
+      ['(skill, case, mode) latest run', '明细 Trace 第 1+2 行 + 三 tab 内容'],
+      ['stage status + per-stage duration', 'Chat tab 底部折叠"执行日志"每段消息头'],
+      ['total duration / token / pass-fail', 'Trace 第 1 行元信息'],
+      ['case-input.md', 'Task tab'],
+      ['run-instruction.md / extract-instruction.md / judge-instruction.md', 'Task tab 二级 sub-tab'],
+      ['output.md', 'Result tab "最终文档" 子区 (默认)'],
+      ['report.md', 'Result tab "最终文档" 子区 sub-tab'],
+      ['extracted.json', 'Result tab "结构化产物" 子区 (默认)'],
+      ['score.json', 'Result tab "结构化产物" 子区 sub-tab'],
+      ['gold.json', 'Result tab "判定" 子区 查看 gold 入口'],
+      ['refs_loaded expected / actual / missing', 'Result tab "判定" 子区 refs 一行'],
+      ['run.stderr.log / extract.stderr.log / judge.stderr.log', 'Chat tab 底部折叠 "执行日志" (✗ 段默认展开)'],
+      ['run.meta.json', 'Trace 第 1 行元信息'],
+      ['total runs / last indexed / source path', '顶部摘要条'],
+      ['failed-runs roster', '主列表过滤 chip 收口'],
+      ['(skill, case, mode) 相邻 ts 切换', 'Trace 第 2 行 ts 翻页'],
+      ['metric × ts 大表 / historical runs 大列表', '不做'],
+      ['skill-snapshot/', '不做 (暂不展示, 见 non-features)']
+    ];
+
+    const flows = [
+      {
+        title: '进入',
+        nodes: ['顶部摘要', '主列表 bar 卡片', '明细空状态'],
+        action: '入口态'
+      },
+      {
+        title: '钻入明细',
+        nodes: ['点主列表卡片', '卡片高亮', '明细加载: skill / Case / Trace / Task'],
+        action: '钻入明细'
+      },
+      {
+        title: '切换 case',
+        nodes: ['点某个 Case pill', 'Trace 元信息刷新', '当前 tab 内容刷新'],
+        action: 'Case 变更'
+      },
+      {
+        title: '切换 trace mode',
+        nodes: ['点 No Skills / With Skills', 'timestamp 回到 latest', 'Chat / Result 内容跟随 mode 变化'],
+        action: 'mode 变更'
+      },
+      {
+        title: '翻 timestamp',
+        nodes: ['点上一次 / 下一次', '当前 timestamp 切换', '元信息和 tab 内容刷新'],
+        action: '同 case/mode 下翻页'
+      },
+      {
+        title: '切换 Tab',
+        nodes: ['点 Task / Chat / Result', '内容区切换', '保留 skill / case / mode'],
+        action: 'tab 变更'
+      },
+      {
+        title: 'Filter Failed',
+        nodes: ['点 crash 过滤 chip', '主列表过滤', '点过滤后的卡片进入明细'],
+        action: 'crash 过滤'
+      }
+    ];
+
+    const validationRows = [
+      ['场景 #1: 批后扫读', ['进入', '顶部摘要', '主列表 bar 卡片'], '0 步'],
+      ['场景 #2: 调试单 run', ['进入', '主列表卡片', '明细', 'Chat / Result tab'], '2 步'],
+      ['场景 #3: 跨 ts 退化版', ['进入', '主列表卡片', '明细', 'Trace 翻 timestamp'], '3 步'],
+      ['Failed roster', ['进入', 'crash 过滤', '主列表过滤', '明细'], '2 步']
+    ];
+
+    const scenarioStyles = {
+      S1: 'border-sky-300 bg-sky-100 text-sky-950',
+      S2: 'border-amber-300 bg-amber-100 text-amber-950',
+      S3: 'border-violet-300 bg-violet-100 text-violet-950'
+    };
+
+    const scenarios = [
+      {
+        id: 'S1',
+        title: '批后扫读',
+        short: '刚跑完一批',
+        body: '看整体 pass/fail、with-skills vs no-skills 差异和最新报告。'
+      },
+      {
+        id: 'S2',
+        title: '调试单 run',
+        short: '某个 run 失败',
+        body: '快速打开 stderr / instruction / output / score，定位 stage 或 metric 问题。'
+      },
+      {
+        id: 'S3',
+        title: '比较时间戳 (退化版)',
+        short: '上一次 vs 这一次',
+        body: '在 Trace 行用上一次 / 下一次翻页, 不展开趋势大表。'
+      }
+    ];
+
+    const representativeQuestions = [
+      ['Q1', '哪个 skill 的 with-skills 提升最大?', 'S1'],
+      ['Q2', 'skill X 的 case Y 在两 mode 下分数差多少?', 'S1'],
+      ['Q3', 'skill X 的 case Y 最近一次 run 的状态? PASS: latest 是默认 trace。', 'S2'],
+      ['Q4', '上一次和这一次相比发生了什么? 部分降级: 只用 Trace 翻页逐个看。', 'S3'],
+      ['Q5', 'latest run 里哪些 metric 没过，原因是什么?', 'S2'],
+      ['Q8', '这个 run 的模型实际输出 output.md 是什么?', 'S2']
+    ];
+
+    const cognitiveFlows = [
+      {
+        label: 'Flow A',
+        title: '扫读最新整体状态',
+        scenarios: ['S1'],
+        steps: ['进入工具', '默认看到 batch 摘要和 skill bar 卡片', '按 mode-delta / latest ts / crash count 排序', '扫 with-skills 大数字和两根 bar 的长度差', '点某 skill 进入明细']
+      },
+      {
+        label: 'Flow B',
+        title: 'debug 单 run',
+        scenarios: ['S2'],
+        steps: ['从主列表卡片定位 skill', 'Case 默认落到变化最大的 case', 'Trace 选 No Skills 或 With Skills', '切 Chat 看当时模型对话, 失败时展开底部"执行日志"', '切 Result 看最终文档 / 结构化产物 / 判定']
+      },
+      {
+        label: 'Flow D',
+        title: '跨 skill/case 找 crash runs',
+        scenarios: ['S1', 'S2'],
+        steps: ['点主列表上方 crash 过滤 chip', '主列表只保留 crash 或低 pass-rate skill', '卡片仍显示双 bar 和 Δ', '点击卡片进入同一套明细']
+      },
+      {
+        label: 'Flow E',
+        title: '阅读输入 / 对话 / 判定',
+        scenarios: ['S2', 'S3'],
+        steps: ['Task tab 看 case-input 和三段 instruction', 'Chat tab 看 AI 当时执行的原始对话 (system / user / assistant)', 'Result tab "最终文档" 看 output.md / report.md', 'Result tab "结构化产物" 看 extracted.json / score.json', 'Result tab "判定" 看 metric / refs / gold / facts diff']
+      }
+    ];
+
+    function scenarioChip(id, compact = false) {
+      const scenario = scenarios.find(item => item.id === id);
+      return `<span class="inline-flex items-center border px-2 py-0.5 text-xs font-semibold ${scenarioStyles[id]}">${scenario.title}</span>`;
+    }
+
+    function renderSectionFrame(id, title, kicker, accentClass, body, strong = false) {
+      return `
+        <section class="border ${strong ? 'border-slate-900 bg-white' : 'border-slate-300 bg-white'}">
+          <div class="border-l-8 ${accentClass} p-4 sm:p-5">
+            <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">${id}. ${title} · ${kicker}</div>
+            <h1 class="mb-4 text-2xl font-semibold">${title}</h1>
+            ${body}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderPersonaSection() {
+      return renderSectionFrame('一', '谁在用这个工具', '用户 / 场景 / 边界', 'border-sky-500 bg-sky-50/70', `
+        <div class="grid gap-4 lg:grid-cols-[1.05fr_1.2fr]">
+          <div class="space-y-3">
+            <div class="border border-sky-200 bg-white p-4">
+              <div class="mb-2 text-sm font-semibold text-slate-900">核心用户</div>
+              <ul class="space-y-2 text-sm leading-6 text-slate-700">
+                <li class="border-l-2 border-sky-300 pl-2">skill-eval 维护者 + 调试者。</li>
+                <li class="border-l-2 border-sky-300 pl-2">熟悉 CLI、run 目录、score/report 文件。</li>
+                <li class="border-l-2 border-sky-300 pl-2">跑完一批 case 后，需要快速扫出可疑 run。</li>
+              </ul>
+            </div>
+            <div class="border border-sky-200 bg-white p-4">
+              <div class="mb-2 text-sm font-semibold text-slate-900">关键习惯 / 认知边界</div>
+              <ul class="space-y-2 text-sm leading-6 text-slate-700">
+                <li class="border-l-2 border-slate-300 pl-2">看到花哨视觉会反弹，优先要可扫读。</li>
+                <li class="border-l-2 border-slate-300 pl-2">看到照搬物件会判定“没动脑”。</li>
+                <li class="border-l-2 border-slate-300 pl-2">需要桌面 + 移动两张截图才认可。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            ${scenarios.map(scenario => `
+              <div class="border border-slate-300 bg-white p-4">
+                <div class="mb-2">${scenarioChip(scenario.id)}</div>
+                <div class="mb-1 text-sm font-semibold text-slate-900">${scenario.short}</div>
+                <div class="text-sm leading-6 text-slate-700">${scenario.body}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `);
+    }
+
+    function renderQuestionSection() {
+      return renderSectionFrame('二', '他/她想得到什么信息', '代表性 query patterns', 'border-amber-500 bg-amber-50/70', `
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          ${representativeQuestions.map(([qid, question, scenarioId]) => `
+            <div class="border border-amber-200 bg-white p-4">
+              <div class="mb-3 flex items-center justify-between gap-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">${qid}</span>
+                ${scenarioChip(scenarioId, true)}
+              </div>
+              <div class="text-sm font-semibold leading-6 text-slate-900">${question}</div>
+            </div>
+          `).join('')}
+        </div>
+      `);
+    }
+
+    function renderOperationSection() {
+      return renderSectionFrame('三', '为此他/她会走哪些操作步骤', '用户脑里的 flow，不是页面框', 'border-violet-500 bg-violet-50/70', `
+        <div class="grid gap-3 lg:grid-cols-2">
+          ${cognitiveFlows.map(flow => `
+            <div class="border border-violet-200 bg-white p-4">
+              <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">${flow.label}</div>
+                  <div class="text-sm font-semibold text-slate-900">${flow.title}</div>
+                </div>
+                <div class="flex flex-wrap gap-1">${flow.scenarios.map(id => scenarioChip(id, true)).join('')}</div>
+              </div>
+              <ol class="space-y-2 text-sm leading-6 text-slate-700">
+                ${flow.steps.map((step, index) => `<li class="grid grid-cols-[24px_1fr] gap-2"><span class="border border-violet-200 bg-violet-50 text-center text-xs font-semibold text-violet-900">${index + 1}</span><span>${step}</span></li>`).join('')}
+              </ol>
+            </div>
+          `).join('')}
+        </div>
+      `);
+    }
+
+    function regionChip(label) {
+      const key = (label.match(/R[1-6]/) || [])[0];
+      if (!key) return `<span class="border border-slate-300 bg-white px-2 py-0.5 text-xs">${label}</span>`;
+      return `<span class="inline-flex items-center border px-2 py-0.5 text-xs font-semibold ${regionStyles[key].chip}">${label}</span>`;
+    }
+
+    function regionBox(id, title, body, extra = '') {
+      const s = regionStyles[id];
+      return `
+        <button type="button" data-region="${id}" class="region-box w-full border-2 p-3 text-left transition ${s.box} ${extra}">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            ${regionChip(id)}
+            <span class="text-xs font-semibold text-slate-600">${title}</span>
+          </div>
+          <div class="text-xs leading-relaxed text-slate-700">${body}</div>
+        </button>
+      `;
+    }
+
+    function visualBox(id, title, body, extra = '') {
+      const s = regionStyles[id];
+      // 用 div 而不是 button: detailContent / overviewCards 内部含真实可点 button,
+      // 嵌套 button 会被浏览器自动闭合外层, 把内部内容挤出去 (这是状态二崩坏的根因).
+      return `
+        <div role="button" tabindex="0" data-region="${id}" class="region-box block w-full cursor-pointer border-2 p-3 text-left transition ${s.box} ${extra}">
+          <div class="mb-2 text-sm font-semibold text-slate-900">${title}</div>
+          <div class="text-xs leading-relaxed text-slate-700">${body}</div>
+        </div>
+      `;
+    }
+
+    function regionLegend(extra = '') {
+      return `
+        <div class="border-l-4 border-slate-300 bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-600 ${extra}">
+          图例: 本图『顶部摘要条』对应 skeleton 文档的 R1 (batch-meta-strip);
+          R2 view-switcher 已取消, 过滤 chip 已并入主列表头部 (filter-chip inline);
+          『主列表区』= R3 (primary-region);
+          『明细面板』= R4 (detail-region);
+          R5 已彻底取消; 11 类 artifact 已并入 R4.4 三个 tab;
+          『底部辅助』= R6 (footer-meta).
+        </div>
+      `;
+    }
+
+    function setActiveRegion(id) {
+      document.querySelectorAll('.region-box').forEach(el => {
+        const current = el.dataset.region === id;
+        const style = regionStyles[el.dataset.region];
+        el.classList.toggle('ring-4', current);
+        if (style) el.classList.toggle(style.ring, current);
+      });
+      const panel = document.getElementById('region-inspector');
+      if (!panel) return;
+      panel.innerHTML = `
+        <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">图例 / IA 对照</div>
+        <div class="mb-3 flex items-center gap-2">${regionChip(id)}<span class="font-semibold">${regionStyles[id].name}</span><span class="text-sm text-slate-600">（${regionDescriptions[id]}）</span></div>
+        <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">此区域承载的 IA 单元</div>
+        <ul class="space-y-1 text-sm text-slate-700">
+          ${regionContent[id].map(item => `<li class="border-l-2 border-slate-300 pl-2">${item}</li>`).join('')}
+        </ul>
+      `;
+    }
+
+    function renderDesktopWireframe() {
+      const overviewRows = [
+        { skill: 'eval-news-impact', cases: 5, ts: '2026-05-20 10:34', crash: 0, no: 0.62, with: 0.78, delta: '+0.16' },
+        { skill: 'broken-skill', cases: 3, ts: '2026-05-19 18:00', crash: 2, no: 0.38, with: 0.41, delta: '+0.03' },
+        { skill: '_target-skill', cases: 2, ts: '2026-05-18 09:12', crash: 0, no: 0.55, with: 0.55, delta: '0.00' },
+        { skill: 'summarizer', cases: 4, ts: '2026-05-20 14:45', crash: 1, no: 0.49, with: 0.71, delta: '+0.22' },
+        { skill: 'classifier', cases: 6, ts: '2026-05-20 16:10', crash: 0, no: 0.58, with: 0.62, delta: '+0.04' }
+      ];
+      const historyRuns = [
+        ['2026-05-20 10:34', 'pass-rate 0.78'],
+        ['2026-05-19 18:00', 'pass-rate 0.76'],
+        ['2026-05-18 09:12', 'pass-rate 0.69'],
+        ['2026-05-17 16:40', 'pass-rate 0.71'],
+        ['2026-05-16 11:25', 'pass-rate 0.66'],
+        ['2026-05-15 08:55', 'pass-rate 0.62']
+      ];
+      const bar = (value, tone) => `
+        <div class="h-2.5 flex-1 border border-slate-300 bg-white">
+          <div class="h-full ${tone}" style="width:${Math.round(value * 100)}%"></div>
+        </div>
+      `;
+      const skillCard = (row, selected = false) => `
+        <div class="relative border ${selected ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500' : 'border-slate-300 bg-white'} p-2 text-[11px] leading-5 text-slate-700">
+          <div class="mb-1 grid grid-cols-[1fr_auto] gap-2">
+            <div>
+              <div class="text-sm font-semibold text-slate-900">${row.skill}</div>
+              <div class="text-slate-500">${row.cases} cases · 最新 ${row.ts}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xl font-semibold leading-none text-slate-950">${Math.round(row.with * 100)}%</div>
+              <div class="text-slate-600">Δ ${row.delta}</div>
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <div class="grid grid-cols-[62px_1fr] items-center gap-2">
+              <span class="text-slate-500">No Skill</span>
+              ${bar(row.no, 'bg-slate-300')}
+            </div>
+            <div class="grid grid-cols-[62px_1fr] items-center gap-2">
+              <span class="text-slate-800">With Skill</span>
+              ${bar(row.with, 'bg-slate-800')}
+            </div>
+          </div>
+          ${row.crash ? `<div class="absolute right-2 bottom-2 border border-rose-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-rose-700">crash ${row.crash}</div>` : ''}
+        </div>
+      `;
+      const overviewCards = (selected = false, suffix = '') => `
+        <div class="flex flex-col gap-2 border border-slate-300 bg-white p-2">
+          <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px]">
+            <div class="flex items-center gap-1">
+              <span class="text-slate-600">排序:</span>
+              <span class="border border-slate-300 bg-slate-50 px-2 py-1 font-semibold text-slate-700">|Δ| 降序 ▾</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-slate-600">过滤:</span>
+              <button type="button" data-group="crash-filter${suffix}" data-value="all" aria-selected="true" class="interactive-pill border border-slate-900 bg-slate-900 px-2 py-1 font-semibold text-white">全部</button>
+              <button type="button" data-group="crash-filter${suffix}" data-value="crash" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1 text-slate-700">只看 crash</button>
+            </div>
+          </div>
+          ${overviewRows.map(row => skillCard(row, selected && row.skill === 'eval-news-impact')).join('')}
+        </div>
+      `;
+      const topStrip = '数据源: /Users/.../skill-eval/runs · runs 总数 247 · crash 3 · 最近扫描 2026-05-21 10:42';
+      const taskPanel = `
+        <div class="min-h-[16rem] space-y-2" data-panel="main-tab" data-value="task">
+          <div class="flex flex-wrap gap-1 text-[11px] font-semibold">
+            <button type="button" data-group="task-subtab" data-value="case-input" aria-selected="true" class="interactive-pill border border-slate-900 bg-slate-900 px-2 py-1 text-white">case-input</button>
+            <button type="button" data-group="task-subtab" data-value="run-instruction" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1 text-slate-700">run-instruction</button>
+            <button type="button" data-group="task-subtab" data-value="extract-instruction" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1 text-slate-700">extract-instruction</button>
+            <button type="button" data-group="task-subtab" data-value="judge-instruction" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1 text-slate-700">judge-instruction</button>
+          </div>
+          <div data-panel="task-subtab" data-value="case-input" class="border border-slate-300 bg-white p-3 text-[12px] leading-6 text-slate-700">
+            <p class="mb-2 font-semibold text-slate-900">本案例: 2026-05-15 一则关于 X 公司供应链调整的新闻。</p>
+            <p>请判断新闻影响是否被正确抽取，并对事件主体、动作和影响范围做结构化复核。</p>
+            <ul class="mt-2 list-disc space-y-1 pl-5">
+              <li>关注公司名、时间、业务线和结果表述。</li>
+              <li>不要把分析师预测误判为已发生事件。</li>
+              <li>需要保留能够支撑结论的关键句。</li>
+            </ul>
+          </div>
+          <div data-panel="task-subtab" data-value="run-instruction" hidden class="border border-slate-300 bg-white p-3 text-[12px] leading-6 text-slate-700">
+            <p class="font-semibold text-slate-900">run-instruction.md</p>
+            <p>读取 case-input 后输出结构化事件草稿，要求标注 evidence quote 与不确定字段。</p>
+          </div>
+          <div data-panel="task-subtab" data-value="extract-instruction" hidden class="border border-slate-300 bg-white p-3 text-[12px] leading-6 text-slate-700">
+            <p class="font-semibold text-slate-900">extract-instruction.md</p>
+            <p>从模型输出抽取 event triple、impact scope 和事实引用，缺失字段以 null 保留。</p>
+          </div>
+          <div data-panel="task-subtab" data-value="judge-instruction" hidden class="border border-slate-300 bg-white p-3 text-[12px] leading-6 text-slate-700">
+            <p class="font-semibold text-slate-900">judge-instruction.md</p>
+            <p>对照 gold.json 与 refs_loaded.json 判定 metric，通过 evidence quote 标记失败原因。</p>
+          </div>
+        </div>
+      `;
+      const chatMsg = (role, label, name, bubble, body) => `
+        <div class="flex gap-2">
+          <div class="flex h-7 w-7 shrink-0 items-center justify-center border border-slate-400 ${bubble.avatar} text-[11px] font-semibold">${label}</div>
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">${name}</div>
+            <div class="border ${bubble.box} p-2 leading-6 text-slate-700">${body}</div>
+          </div>
+        </div>
+      `;
+      const chatPanel = `
+        <div class="min-h-[16rem] space-y-3 text-[12px]" data-panel="main-tab" data-value="chat" hidden>
+          <div class="border-b border-slate-200 pb-1 text-[11px] text-slate-500">执行阶段: run · 模型: claude-opus-4-7 · 2026-05-20 10:34</div>
+          <div class="space-y-3">
+            ${chatMsg('system', 'S', 'System', { avatar: 'bg-slate-100 text-slate-700', box: 'border-slate-300 bg-slate-50' },
+              '你是一名专业的金融新闻影响分析师。请阅读用户给出的新闻原文，输出: (1) 涉及事件清单; (2) 受影响主体 / 观察者; (3) 影响范围与置信度。保留 evidence quote。')}
+            ${chatMsg('user', 'U', 'User · case-input.md', { avatar: 'bg-blue-100 text-blue-800', box: 'border-blue-200 bg-blue-50/60' },
+              `<p>2026-05-15 一则关于 X 公司的新闻:</p>
+               <p class="mt-1">"X 公司今日宣布将海外零部件采购的 40% 转向本地合作方, 同时计划在 Q3 恢复东南亚二号厂的产能..."</p>
+               <p class="mt-1 text-slate-500">(原文共 6 段, 此处截取前 2 段)</p>`)}
+            ${chatMsg('assistant', 'A', 'Assistant · output.md', { avatar: 'bg-emerald-100 text-emerald-800', box: 'border-slate-300 bg-white' },
+              `<p>根据新闻原文, X 公司在 2026-05-15 公开了两项决定, 整体偏向供应链结构调整。</p>
+               <ul class="mt-2 list-disc space-y-1 pl-5">
+                 <li>事件 1: 海外采购本地化 (40%, evidence: "将海外零部件采购的 40% 转向本地合作方")</li>
+                 <li>事件 2: 供应链调整 (主体: X 公司, 范围: 全球)</li>
+                 <li>观察者 1: 本地零部件供应商 (正向)</li>
+               </ul>
+               <p class="mt-2 text-slate-500">(未覆盖: 产能恢复计划 — 该段未抽出为独立事件)</p>`)}
+          </div>
+          <details class="border border-slate-300 bg-slate-50">
+            <summary class="cursor-pointer list-none px-2 py-1.5 text-[11px] font-semibold text-slate-700 marker:hidden">▸ 执行日志 (3) · 默认折叠, 失败 stage 自动展开</summary>
+            <div class="space-y-1 border-t border-slate-200 p-2 text-[11px]">
+              <div class="border border-slate-300 bg-white px-2 py-1 text-slate-600">✓ run.stderr.log · 143s · 已折叠</div>
+              <div class="border border-rose-300 bg-white p-2">
+                <div class="mb-1 font-semibold text-rose-700">✗ extract.stderr.log · 88s · 已展开</div>
+                <pre class="whitespace-pre-wrap text-[11px] leading-5 text-slate-700">ValueError: missing event triple for capacity recovery
+extractor.py:87 expected 3 events, got 2</pre>
+              </div>
+              <div class="border border-slate-300 bg-white px-2 py-1 text-slate-600">✓ judge.stderr.log · 55s · 已折叠</div>
+            </div>
+          </details>
+        </div>
+      `;
+      const subSection = (title, kicker, body) => `
+        <div class="border border-slate-300 bg-white">
+          <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-2 py-1.5">
+            <div class="text-[11px] font-semibold text-slate-900">${title}</div>
+            <div class="text-[10px] text-slate-500">${kicker}</div>
+          </div>
+          <div class="p-2">${body}</div>
+        </div>
+      `;
+      const docPanelBody = `
+        <div class="mb-2 flex flex-wrap gap-1 text-[11px] font-semibold">
+          <button type="button" data-group="result-doc" data-value="output" aria-selected="true" class="interactive-pill border border-slate-900 bg-slate-900 px-2 py-1 text-white">output.md</button>
+          <button type="button" data-group="result-doc" data-value="report" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1 text-slate-700">report.md</button>
+        </div>
+        <div data-panel="result-doc" data-value="output" class="border border-slate-300 bg-white p-3 text-[12px] leading-6 text-slate-700">
+          <div class="mb-2 text-base font-semibold text-slate-900">## 影响分析报告 — X 公司 (2026-05-15)</div>
+          <p>X 公司于 2026-05-15 公开了海外采购本地化的具体比例 (40%), 同时披露 Q3 东南亚二号厂的产能恢复计划。整体偏向供应链结构调整, 短期对本地零部件供应商利好, 中期对原海外供应商存在订单流失风险。</p>
+          <p class="mt-2 font-semibold text-slate-900">关键事件</p>
+          <ul class="mt-1 list-disc space-y-1 pl-5">
+            <li>海外采购本地化 (40%, 已宣布)</li>
+            <li>供应链结构调整 (主体: X 公司, 范围: 全球)</li>
+          </ul>
+          <p class="mt-2 font-semibold text-slate-900">受影响主体</p>
+          <ul class="mt-1 list-disc space-y-1 pl-5">
+            <li>本地零部件供应商 — 正向, 高置信度</li>
+            <li>原海外供应商 — 负向, 中置信度</li>
+          </ul>
+        </div>
+        <div data-panel="result-doc" data-value="report" hidden class="border border-slate-300 bg-white p-3 text-[12px] leading-6 text-slate-700">
+          <div class="mb-2 font-semibold text-slate-900">TL;DR — Pass-rate 0.75 (3/4 metrics 通过)</div>
+          <table class="mb-3 w-full border-collapse text-[11px]">
+            <thead><tr class="bg-slate-100"><th class="border border-slate-300 px-2 py-1 text-left">metric</th><th class="border border-slate-300 px-2 py-1 text-left">值</th><th class="border border-slate-300 px-2 py-1 text-left">期望</th><th class="border border-slate-300 px-2 py-1 text-left">结果</th></tr></thead>
+            <tbody>
+              <tr><td class="border border-slate-300 px-2 py-1">facts_event_triple_recall</td><td class="border border-slate-300 px-2 py-1">0.42</td><td class="border border-slate-300 px-2 py-1">≥ 0.60</td><td class="border border-slate-300 px-2 py-1 text-rose-700">✗</td></tr>
+              <tr><td class="border border-slate-300 px-2 py-1">observers_recall</td><td class="border border-slate-300 px-2 py-1">0.75</td><td class="border border-slate-300 px-2 py-1">≥ 0.50</td><td class="border border-slate-300 px-2 py-1">✓</td></tr>
+              <tr><td class="border border-slate-300 px-2 py-1">judgment_coherence</td><td class="border border-slate-300 px-2 py-1">0.91</td><td class="border border-slate-300 px-2 py-1">≥ 0.80</td><td class="border border-slate-300 px-2 py-1">✓</td></tr>
+            </tbody>
+          </table>
+          <div class="mb-1 font-semibold text-slate-900">judgment vector</div>
+          <table class="mb-3 w-full border-collapse text-[11px]">
+            <thead><tr class="bg-slate-100"><th class="border border-slate-300 px-2 py-1 text-left">dim</th><th class="border border-slate-300 px-2 py-1 text-left">gold</th><th class="border border-slate-300 px-2 py-1 text-left">pred</th></tr></thead>
+            <tbody>
+              <tr><td class="border border-slate-300 px-2 py-1">direction</td><td class="border border-slate-300 px-2 py-1">neutral→positive</td><td class="border border-slate-300 px-2 py-1">positive</td></tr>
+              <tr><td class="border border-slate-300 px-2 py-1">scope</td><td class="border border-slate-300 px-2 py-1">global</td><td class="border border-slate-300 px-2 py-1">global</td></tr>
+            </tbody>
+          </table>
+          <div class="mb-1 font-semibold text-slate-900">rationale</div>
+          <p>模型主输出覆盖采购本地化与供应链调整, 但漏抽产能恢复事件, 导致 event recall 不达标; 其余结构性指标稳定。</p>
+        </div>
+      `;
+      const structPanelBody = `
+        <div class="mb-2 flex flex-wrap gap-1 text-[11px] font-semibold">
+          <button type="button" data-group="result-json" data-value="extracted" aria-selected="true" class="interactive-pill border border-slate-900 bg-slate-900 px-2 py-1 text-white">extracted.json</button>
+          <button type="button" data-group="result-json" data-value="score" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1 text-slate-700">score.json</button>
+        </div>
+        <div data-panel="result-json" data-value="extracted" class="border border-slate-300 bg-slate-900 p-3 text-[11px] leading-5 text-emerald-100"><pre class="whitespace-pre-wrap">{
+  "facts": {
+    "events": [
+      {"id": "e1", "subject": "X 公司", "action": "采购本地化", "ratio": 0.4, "evidence": "将海外零部件采购的 40% 转向本地合作方"},
+      {"id": "e2", "subject": "X 公司", "action": "供应链调整", "scope": "global"}
+    ],
+    "observers": [
+      {"id": "o1", "entity": "本地零部件供应商", "polarity": "positive"}
+    ]
+  },
+  "judgment": {
+    "direction": "positive",
+    "scope": "global",
+    "confidence": 0.78
+  }
+}</pre></div>
+        <div data-panel="result-json" data-value="score" hidden class="border border-slate-300 bg-slate-900 p-3 text-[11px] leading-5 text-emerald-100"><pre class="whitespace-pre-wrap">{
+  "meta": {"skill": "eval-news-impact", "case": 14, "mode": "with", "ts": "2026-05-20 10:34"},
+  "metrics": {
+    "facts_event_triple_recall": {"value": 0.42, "criteria": ">=0.60", "pass": false},
+    "observers_recall":          {"value": 0.75, "criteria": ">=0.50", "pass": true},
+    "judgment_coherence":        {"value": 0.91, "criteria": ">=0.80", "pass": true}
+  },
+  "findings_breakdown": [
+    {"metric": "facts_event_triple_recall", "gold_id": "g3", "matched": false, "note": "missing capacity recovery"}
+  ]
+}</pre></div>
+      `;
+      const verdictBody = `
+        <div class="border border-slate-300 bg-white p-2 font-semibold text-slate-900">本 run: 3 metrics 通过 / 1 失败 · pass-rate 0.75</div>
+        <div class="mt-2 space-y-1 text-[12px]">
+          <div class="border border-rose-300 bg-rose-50 p-2 text-rose-800">facts_event_triple_recall: 0.42　期望 ≥0.60　✗　原因: 漏掉产能恢复事件。</div>
+          <div class="border border-slate-300 bg-white p-2">observers_recall: 0.75　期望 ≥0.50　✓</div>
+          <div class="border border-slate-300 bg-white p-2">judgment_coherence: 0.91　期望 ≥0.80　✓</div>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900">
+          <span class="font-semibold">refs_loaded</span>
+          <span>expected 3</span><span class="text-emerald-700">·</span>
+          <span>actual 3</span><span class="text-emerald-700">·</span>
+          <span>missing <span class="font-semibold">0</span></span>
+        </div>
+        <div class="mt-2 border border-slate-400 bg-white p-2 font-semibold text-slate-900">查看 gold (ground truth) →</div>
+        <div class="mt-2 border border-slate-300 bg-white p-2 text-[12px]">
+          <div class="mb-1 font-semibold text-slate-900">facts diff (gold vs extracted)</div>
+          <div>gold: 供应链调整 / extracted: 供应链调整 ✓</div>
+          <div>gold: 采购本地化 / extracted: 采购本地化 ✓</div>
+          <div class="text-rose-700">gold: 产能恢复计划 / extracted: 缺失 ✗</div>
+        </div>
+      `;
+      const resultPanel = `
+        <div class="min-h-[16rem] space-y-2 text-[12px]" data-panel="main-tab" data-value="result" hidden>
+          ${subSection('最终文档', 'output.md / report.md', docPanelBody)}
+          ${subSection('结构化产物', 'extracted.json / score.json', structPanelBody)}
+          ${subSection('判定', 'metric · refs · gold · facts diff', verdictBody)}
+        </div>
+      `;
+      const detailContent = `
+        <div class="space-y-2 text-[11px]">
+          <div class="border-b border-slate-300 bg-white pb-2">
+            <div class="flex items-end justify-between gap-3">
+              <div class="text-2xl font-semibold text-slate-950">eval-news-impact</div>
+              <div class="text-lg font-semibold text-slate-900">62% → 78%</div>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-semibold text-slate-600">Case</span>
+            <button type="button" data-group="case" data-value="14" aria-selected="true" class="interactive-pill border border-blue-600 bg-blue-600 px-3 py-1 font-semibold text-white">Case 14</button>
+            <button type="button" data-group="case" data-value="7" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-3 py-1 text-slate-600">Case 7</button>
+            <button type="button" data-group="case" data-value="21" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-3 py-1 text-slate-600">Case 21</button>
+            <button type="button" data-group="case" data-value="3" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-3 py-1 text-slate-600">Case 3</button>
+          </div>
+          <div class="space-y-1.5 border border-slate-300 bg-slate-50 p-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-semibold text-slate-600">Trace</span>
+              <button type="button" data-group="trace" data-value="no" aria-selected="true" class="interactive-pill border border-blue-600 bg-blue-600 px-3 py-1 font-semibold text-white">No Skills</button>
+              <button type="button" data-group="trace" data-value="with" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-3 py-1 text-slate-600">With Skills</button>
+              <span class="ml-auto text-slate-700">286s · Token 100k · Pass</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-semibold text-slate-600">执行时间</span>
+              <div class="relative flex items-center gap-1">
+                <button type="button" data-ts-step="-1" class="grid h-7 w-7 place-items-center border border-slate-300 bg-white text-base leading-none text-slate-700" aria-label="上一个 timestamp">‹</button>
+                <details class="relative">
+                  <summary class="list-none border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-900 marker:hidden"><span data-ts-current>2026-05-20 10:34</span> ▾</summary>
+                  <div class="absolute left-0 z-10 mt-1 w-64 border border-slate-400 bg-white p-1 text-[11px]">
+                    ${historyRuns.map((run, index) => `<button type="button" data-ts-index="${index}" class="block w-full border ${index === 0 ? 'border-slate-900 bg-slate-900 text-white' : 'border-transparent bg-white text-slate-700'} px-2 py-1 text-left">${run[0]} · ${run[1]}</button>`).join('')}
+                  </div>
+                </details>
+                <button type="button" data-ts-step="1" class="grid h-7 w-7 place-items-center border border-slate-300 bg-white text-base leading-none text-slate-700" aria-label="下一个 timestamp">›</button>
+              </div>
+              <span class="text-[11px] text-slate-500">(同 case + mode 下相邻 ts 翻页)</span>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs font-semibold">
+            <button type="button" data-group="main-tab" data-value="task" aria-selected="true" class="interactive-pill border border-blue-600 bg-blue-600 px-3 py-1.5 text-white">Task</button>
+            <button type="button" data-group="main-tab" data-value="chat" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-3 py-1.5 text-slate-700">Chat</button>
+            <button type="button" data-group="main-tab" data-value="result" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-3 py-1.5 text-slate-700">Result</button>
+          </div>
+          ${taskPanel}
+          ${chatPanel}
+          ${resultPanel}
+        </div>
+      `;
+      return `
+        <section class="border border-slate-300 bg-white p-4">
+          <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold">桌面端 wireframe</h2>
+              <p class="text-sm text-slate-600">先展示入口态：左侧是 skill bar 卡片列表，右侧是空状态；点击卡片后进入四级嵌套明细。</p>
+            </div>
+            <div class="text-xs text-slate-500">点击区域可在右侧查看 IA 对照</div>
+          </div>
+          <div class="overflow-x-auto">
+            <div class="min-w-[980px] space-y-4 border border-slate-400 bg-slate-50 p-3">
+              <div class="border-2 border-slate-500 bg-white p-3">
+                <div class="mb-3 flex items-center justify-between">
+                  <h3 class="text-base font-semibold">状态一: 用户刚进入页面</h3>
+                  <span class="border border-slate-300 bg-slate-100 px-2 py-1 text-xs text-slate-600">尚未选择任何 run</span>
+                </div>
+                <div class="space-y-2">
+                  ${visualBox('R1', '顶部摘要条', topStrip, 'min-h-12')}
+                  <div class="grid grid-cols-12 items-start gap-2">
+                    <div class="col-span-4">
+                      ${visualBox('R3', '主列表区', `
+                        ${overviewCards(false, '-s1')}
+                      `, '')}
+                    </div>
+                    <div class="col-span-8">
+                      ${visualBox('R4', '明细面板', `
+                        <div class="flex min-h-[16rem] flex-col items-center justify-center gap-3 border border-dashed border-orange-300 bg-white/60 p-4 text-center">
+                          <div class="text-sm font-semibold text-slate-400">选择左侧任意一张 skill 卡片, 查看明细</div>
+                          <div class="min-h-28 w-96 max-w-full border border-dashed border-slate-300 bg-slate-100/70"></div>
+                        </div>
+                      `, '')}
+                    </div>
+                  </div>
+                  ${visualBox('R6', '底部辅助', '<div class="border border-dashed border-slate-300 bg-white/70 p-2 text-slate-500">可选: 分页 / 上下 run 跳转</div>', 'border-dashed min-h-12')}
+                  ${regionLegend()}
+                </div>
+              </div>
+
+              <div class="flex items-center justify-center gap-3 text-sm font-semibold text-slate-700">
+                <span class="h-px w-28 bg-slate-300"></span>
+                <span>点击任意卡片 → 右侧明细面板被填充</span>
+                <span class="h-px w-28 bg-slate-300"></span>
+              </div>
+
+              <div class="relative border border-slate-400 bg-white p-3">
+                <div class="mb-3 flex items-center justify-between">
+                  <h3 class="text-base font-semibold">状态二: 用户点了主列表里某一张卡片</h3>
+                  <span class="border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs text-emerald-900">eval-news-impact 已选中</span>
+                </div>
+              <div class="space-y-2">
+                ${visualBox('R1', '顶部摘要条', topStrip, 'min-h-12')}
+                <div class="grid grid-cols-12 items-start gap-2">
+                  <div class="col-span-4">
+                    ${visualBox('R3', '主列表区', `
+                      ${overviewCards(true, '-s2')}
+                    `, '')}
+                  </div>
+                  <div class="col-span-8">
+                    ${visualBox('R4', '明细面板', `
+                      ${detailContent}
+                    `, '')}
+                  </div>
+                </div>
+                ${visualBox('R6', '底部辅助', '<div class="border border-dashed border-slate-300 bg-white/70 p-2 text-slate-500">可选: 分页 / 上下 run 跳转</div>', 'border-dashed min-h-12')}
+                ${regionLegend()}
+              </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderMobileWireframe() {
+      const phone = (title, body) => `
+        <div class="w-64 shrink-0 border-2 border-slate-500 bg-white p-2">
+          <div class="mb-2 border-b border-slate-300 pb-1 text-center text-xs font-semibold">${title}</div>
+          <div class="space-y-2">${body}</div>
+        </div>
+      `;
+      const mobileBar = (label, value, tone) => `
+        <div class="grid grid-cols-[58px_1fr] items-center gap-1">
+          <span>${label}</span>
+          <div class="h-2 border border-slate-300 bg-white"><div class="h-full ${tone}" style="width:${value}%"></div></div>
+        </div>
+      `;
+      return `
+        <section class="border border-slate-300 bg-white p-4">
+          <h2 class="mb-1 text-lg font-semibold">移动端 wireframe</h2>
+          <p class="mb-3 text-sm text-slate-600">移动端不做并列 master-detail：先看列表页，点卡片 push 到明细页；明细页里继续切 Case、Trace 和三 tab。</p>
+          <div class="flex gap-3 overflow-x-auto pb-2">
+            ${phone('1. 列表页 (入口)', `
+              <div class="border border-blue-300 bg-blue-50 p-2 text-[11px]">数据源: /Users/wing/.../runs<br>runs 247 · crash 3 · 扫描 2026-05-21 10:42</div>
+              <div class="flex gap-1 text-[10px] font-semibold">
+                <span class="border border-slate-900 bg-slate-900 px-2 py-1 text-white">全部</span>
+                <span class="border border-slate-300 px-2 py-1">crash 过滤</span>
+              </div>
+              <div class="border-2 border-emerald-500 bg-emerald-50 p-2 text-[11px]">
+                <div class="mb-1 font-semibold">排序: |Δ| 降序</div>
+                <div class="mb-2 border border-slate-300 bg-white px-1.5 py-1 leading-5">
+                  <div class="flex justify-between gap-2"><span class="font-semibold">summarizer</span><span class="text-lg font-semibold">71%</span></div>
+                  <div class="text-slate-500">4 cases · Δ +0.22 · crash 1</div>
+                  ${mobileBar('No Skill', 49, 'bg-slate-300')}
+                  ${mobileBar('With', 71, 'bg-slate-800')}
+                </div>
+                <div class="border border-slate-300 bg-white px-1.5 py-1 leading-5">
+                  <div class="flex justify-between gap-2"><span class="font-semibold">eval-news-impact</span><span class="text-lg font-semibold">78%</span></div>
+                  <div class="text-slate-500">5 cases · Δ +0.16 · crash 0</div>
+                  ${mobileBar('No Skill', 62, 'bg-slate-300')}
+                  ${mobileBar('With', 78, 'bg-slate-800')}
+                </div>
+              </div>
+            `)}
+            <div class="self-center text-2xl text-slate-400">-></div>
+            ${phone('2. 明细页 (点列表卡片后 push)', `
+              <div class="border-2 border-orange-500 bg-orange-50 p-2 text-[11px]">
+                <div class="mb-2 border border-slate-300 bg-white px-1 py-0.5">← 返回</div>
+                <div class="mb-2 flex justify-between gap-2">
+                  <span class="text-base font-semibold">eval-news-impact</span>
+                  <span class="font-semibold">62% → 78%</span>
+                </div>
+                <div class="mb-2 flex flex-wrap gap-1">
+                  <button type="button" data-group="case-mobile" data-value="14" aria-selected="true" class="interactive-pill border border-blue-600 bg-blue-600 px-2 py-1 text-white">Case 14</button>
+                  <button type="button" data-group="case-mobile" data-value="7" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1">Case 7</button>
+                  <button type="button" data-group="case-mobile" data-value="21" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1">Case 21</button>
+                </div>
+                <div class="mb-1 flex gap-1">
+                  <button type="button" data-group="trace-mobile" data-value="no" aria-selected="true" class="interactive-pill border border-blue-600 bg-blue-600 px-2 py-1 text-white">No Skills</button>
+                  <button type="button" data-group="trace-mobile" data-value="with" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1">With Skills</button>
+                </div>
+                <div class="mb-1 border border-slate-300 bg-white p-1">286s · Token 100k · Pass</div>
+                <div class="mb-2 flex items-center gap-1">
+                  <button type="button" data-ts-step="-1" class="grid h-7 w-7 place-items-center border border-slate-300 bg-white">‹</button>
+                  <details class="min-w-0 flex-1">
+                    <summary class="truncate border border-slate-300 bg-white p-1 font-semibold marker:hidden"><span data-ts-current>2026-05-20 10:34</span></summary>
+                    <div class="border border-slate-300 bg-white p-1">
+                      <button type="button" data-ts-index="0" class="block w-full bg-slate-900 px-1 py-0.5 text-left text-white">2026-05-20 10:34 · pass-rate 0.78</button>
+                      <button type="button" data-ts-index="1" class="block w-full px-1 py-0.5 text-left">2026-05-19 18:00 · pass-rate 0.76</button>
+                      <button type="button" data-ts-index="2" class="block w-full px-1 py-0.5 text-left">2026-05-18 09:12 · pass-rate 0.69</button>
+                      <button type="button" data-ts-index="3" class="block w-full px-1 py-0.5 text-left">2026-05-17 16:40 · pass-rate 0.71</button>
+                      <button type="button" data-ts-index="4" class="block w-full px-1 py-0.5 text-left">2026-05-16 11:25 · pass-rate 0.66</button>
+                    </div>
+                  </details>
+                  <button type="button" data-ts-step="1" class="grid h-7 w-7 place-items-center border border-slate-300 bg-white">›</button>
+                </div>
+                <div class="mb-2 flex gap-1 font-semibold">
+                  <button type="button" data-group="main-tab-mobile" data-value="task" aria-selected="true" class="interactive-pill border border-blue-600 bg-blue-600 px-2 py-1 text-white">Task</button>
+                  <button type="button" data-group="main-tab-mobile" data-value="chat" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1">Chat</button>
+                  <button type="button" data-group="main-tab-mobile" data-value="result" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-2 py-1">Result</button>
+                </div>
+                <div data-panel="main-tab-mobile" data-value="task">
+                  <div class="mb-1 flex flex-wrap gap-1">
+                    <button type="button" data-group="task-subtab-mobile" data-value="case-input" aria-selected="true" class="interactive-pill border border-slate-900 bg-slate-900 px-1.5 py-1 text-white">case-input</button>
+                    <button type="button" data-group="task-subtab-mobile" data-value="run-instruction" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-1.5 py-1">run-instruction</button>
+                    <button type="button" data-group="task-subtab-mobile" data-value="extract-instruction" aria-selected="false" class="interactive-pill border border-slate-300 bg-white px-1.5 py-1">extract-instruction</button>
+                  </div>
+                  <div data-panel="task-subtab-mobile" data-value="case-input" class="border border-slate-300 bg-white p-2 leading-5">
+                    本案例: 2026-05-15 关于 X 公司供应链调整的新闻。关注事件主体、动作和影响范围。
+                  </div>
+                  <div data-panel="task-subtab-mobile" data-value="run-instruction" hidden class="border border-slate-300 bg-white p-2 leading-5">
+                    run-instruction: 输出结构化事件草稿和 evidence quote。
+                  </div>
+                  <div data-panel="task-subtab-mobile" data-value="extract-instruction" hidden class="border border-slate-300 bg-white p-2 leading-5">
+                    extract-instruction: 抽取 event triple、impact scope 和事实引用。
+                  </div>
+                </div>
+                <div data-panel="main-tab-mobile" data-value="chat" hidden class="space-y-1 border border-slate-300 bg-white p-2 leading-5">
+                  <div class="text-[10px] text-slate-500">run · claude-opus-4-7 · 10:34</div>
+                  <div class="border border-slate-200 bg-slate-50 p-1"><span class="font-semibold">S:</span> 你是金融新闻影响分析师...</div>
+                  <div class="border border-blue-200 bg-blue-50/60 p-1"><span class="font-semibold">U:</span> 2026-05-15 关于 X 公司的新闻...</div>
+                  <div class="border border-slate-200 bg-white p-1"><span class="font-semibold">A:</span> 事件 1: 采购本地化; 事件 2: 供应链调整...</div>
+                  <div class="border border-slate-200 bg-slate-50 p-1 text-slate-600">▸ 执行日志 (3) · 折叠</div>
+                </div>
+                <div data-panel="main-tab-mobile" data-value="result" hidden class="space-y-1 border border-slate-300 bg-white p-2 leading-5">
+                  <div class="border border-slate-200 p-1"><span class="font-semibold">最终文档:</span> output.md / report.md</div>
+                  <div class="border border-slate-200 p-1"><span class="font-semibold">结构化产物:</span> extracted.json / score.json</div>
+                  <div class="border border-slate-200 p-1"><span class="font-semibold">判定:</span> metric / refs / gold / facts diff</div>
+                </div>
+              </div>
+            `)}
+          </div>
+          <div class="mt-3 border-l-4 border-slate-300 bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-600">
+            图例: 对应 R3 / R4. R5 已彻底取消; 11 类 artifact 已并入 R4.4 三个 tab.
+          </div>
+        </section>
+      `;
+    }
+
+    function renderFlow() {
+      return `
+        <section class="border border-slate-300 bg-white p-4">
+          <h2 class="mb-3 text-lg font-semibold">交互骨架</h2>
+          <div class="grid gap-3 lg:grid-cols-2">
+            ${flows.map((flow, i) => `
+              <div class="border border-slate-300 p-3">
+                <div class="mb-2 flex items-center justify-between gap-2">
+                  <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">${flow.title}</div>
+                  <div class="text-xs font-semibold text-slate-700">${flow.action}</div>
+                </div>
+                <div class="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-2">
+                  ${flow.nodes.map((node, nodeIndex) => `
+                    ${nodeIndex ? `<svg class="self-center" width="30" height="18" viewBox="0 0 30 18" aria-hidden="true">
+                      <path d="M1 9h22" stroke="#64748b" stroke-width="2" fill="none"></path>
+                      <path d="M22 3l7 6-7 6" stroke="#64748b" stroke-width="2" fill="none"></path>
+                    </svg>` : ''}
+                    <div class="min-h-14 border border-slate-400 ${nodeIndex === 0 ? 'bg-slate-50' : 'bg-white'} p-2 text-sm">${node}</div>
+                  `).join('')}
+                </div>
+                <div class="mt-2 border-l-2 border-slate-300 pl-2 text-xs text-slate-600">${flow.nodes.join(' → ')}</div>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderRegionMap() {
+      return `
+        <section class="border border-slate-300 bg-white p-4">
+          <h2 class="mb-3 text-lg font-semibold">IA 单元 → 落点</h2>
+          <p class="mb-3 text-xs leading-5 text-slate-600">图例: 下面的『主列表区』『明细面板』即 skeleton 文档中的 R3 / R4 等。</p>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[700px] border-collapse text-sm">
+              <thead>
+                <tr class="bg-slate-100 text-left">
+                  <th class="border border-slate-300 px-3 py-2">IA 单元</th>
+                  <th class="border border-slate-300 px-3 py-2">落点</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${regionMapRows.map(([unit, region]) => `
+                  <tr>
+                    <td class="border border-slate-300 px-3 py-2">${unit}</td>
+                    <td class="border border-slate-300 px-3 py-2">
+                      <div class="flex flex-wrap gap-1">${region.split('+').map(part => regionChip(part.trim())).join('')}</div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderValidation() {
+      return `
+        <section class="border border-slate-300 bg-white p-4">
+          <h2 class="mb-3 text-lg font-semibold">校验目标 (路径长度)</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[720px] border-collapse text-sm">
+              <thead>
+                <tr class="bg-slate-100 text-left">
+                  <th class="border border-slate-300 px-3 py-2">persona / flow 场景</th>
+                  <th class="border border-slate-300 px-3 py-2">可视路径</th>
+                  <th class="border border-slate-300 px-3 py-2">路径长度</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${validationRows.map(([persona, path, length]) => `
+                  <tr>
+                    <td class="border border-slate-300 px-3 py-2">${persona}</td>
+                    <td class="border border-slate-300 px-3 py-2">
+                      <div class="flex flex-wrap items-center gap-1">
+                        ${path.map((step, i) => `${i ? '<span class="text-slate-400">-></span>' : ''}${regionChip(step)}`).join('')}
+                      </div>
+                    </td>
+                    <td class="border border-slate-300 px-3 py-2 font-semibold">${length}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderLayer2() {
+      return `
+        <div class="space-y-5">
+          ${renderPersonaSection()}
+          ${renderQuestionSection()}
+          ${renderOperationSection()}
+
+          ${renderSectionFrame('四', '由此推出的页面框架与交互', 'master-detail skeleton', 'border-slate-900 bg-slate-100', `
+            <div class="mb-4 grid gap-4 lg:grid-cols-[1fr_320px]">
+              <div class="border border-slate-300 bg-white p-4">
+                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">设计意图</div>
+                <h2 class="mb-2 text-2xl font-semibold">Runs viewer = 窄主列表 + 宽明细面板</h2>
+                <p class="mb-2 text-sm font-semibold leading-6 text-slate-900">明细驱动, 主列表只负责发现和切换 skill。</p>
+                <p class="text-sm leading-6 text-slate-700">基于以上 3 段, 推出窄主列表 (bar 卡片) + 宽明细 (skill→case→mode→tab 四级嵌套)。artifact 不再平铺, 按语义并入 Task / Chat / Result 三个 tab。</p>
+              </div>
+              <div class="border-2 border-dashed border-slate-400 bg-slate-100 p-4">
+                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">不是 hero</div>
+                <div class="space-y-2 text-sm text-slate-700">
+                  <div class="border border-slate-300 bg-white px-3 py-2">不做单一焦点 metric 卡片</div>
+                  <div class="border border-slate-300 bg-white px-3 py-2">不做营销 slogan + CTA 区块</div>
+                  <div class="border border-slate-300 bg-white px-3 py-2">不做悬浮 workbench surface</div>
+                </div>
+              </div>
+            </div>
+
+            <section class="grid gap-4 xl:grid-cols-[1fr_320px]">
+              <div class="space-y-4">
+                ${renderDesktopWireframe()}
+                ${renderMobileWireframe()}
+              </div>
+              <aside id="region-inspector" class="h-fit border border-slate-300 bg-white p-4 xl:sticky xl:top-24">
+                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">图例 / IA 对照</div>
+                <div class="mb-3 flex items-center gap-2">${regionChip('R3')}<span class="font-semibold">primary-region</span><span class="text-sm text-slate-600">（主列表区）</span></div>
+                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">此区域承载的 IA 单元</div>
+                <ul class="space-y-1 text-sm text-slate-700">
+                  ${regionContent.R3.map(item => `<li class="border-l-2 border-slate-300 pl-2">${item}</li>`).join('')}
+                </ul>
+              </aside>
+            </section>
+
+            <div class="mt-4">
+              ${renderFlow()}
+            </div>
+
+            <section class="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
+              ${renderRegionMap()}
+              <aside class="border-2 border-rose-300 bg-rose-50 p-4">
+                <h2 class="mb-3 text-lg font-semibold text-rose-950">明确不做 (non-features)</h2>
+                <div class="flex flex-wrap gap-2 text-sm">
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不做 hero focal object</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不画 stage status 三色块</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不画 11 类 artifact 平铺列表</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不做 metric × ts 趋势大表 / 不做独立 Trend 视图</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">跨 ts 比较退化为 Trace inline 翻页</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不做 overlay/drawer/modal</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不做营销 block</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不做 glass surface</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">不做固定 grounding rail</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">首屏不放 artifact</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">首屏不放大型 metric 卡片</span>
+                  <span class="border border-rose-300 bg-white px-2 py-1 text-rose-900">skill-snapshot 暂不展示 (Flow E 边缘, 当前不需要)</span>
+                </div>
+              </aside>
+            </section>
+
+            <div class="mt-4">
+              ${renderValidation()}
+            </div>
+          `, true)}
+        </div>
+      `;
+    }
+
+    const placeholders = {
+      l1: '<section class="border border-slate-300 bg-white p-6"><h1 class="mb-2 text-2xl font-semibold">Layer 1 — IA</h1><p class="text-slate-600">待可视化 Layer 1。来源仍是 web-goal-docs/02-information-architecture-r5.md。</p></section>',
+      l3: '<section class="border border-slate-300 bg-white p-6"><h1 class="mb-2 text-2xl font-semibold">Layer 3 — Components</h1><p class="text-slate-600">待可视化 Layer 3。</p></section>',
+      l4: '<section class="border border-slate-300 bg-white p-6"><h1 class="mb-2 text-2xl font-semibold">Layer 4 — Assembly</h1><p class="text-slate-600">待可视化 Layer 4。</p></section>'
+    };
+
+    const tabs = document.querySelectorAll('.tab');
+    const content = document.getElementById('content');
+
+    function setPillState(button, active) {
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      button.classList.toggle('border-blue-600', active);
+      button.classList.toggle('bg-blue-600', active);
+      button.classList.toggle('text-white', active);
+      button.classList.toggle('font-semibold', active);
+      button.classList.toggle('border-slate-300', !active);
+      button.classList.toggle('bg-white', !active);
+      button.classList.toggle('text-slate-600', !active);
+      const darkGroups = ['task-subtab', 'task-subtab-mobile', 'result-doc', 'result-json'];
+      if (darkGroups.includes(button.dataset.group)) {
+        button.classList.toggle('border-slate-900', active);
+        button.classList.toggle('bg-slate-900', active);
+        button.classList.toggle('border-blue-600', false);
+        button.classList.toggle('bg-blue-600', false);
+      }
+    }
+
+    function initLayer2Interactions() {
+      const tsItems = Array.from(document.querySelectorAll('[data-ts-index]'));
+      const tsLabels = [...new Set(tsItems.map(item => item.textContent.split(' · ')[0]))];
+      let tsIndex = 0;
+      function setTs(index) {
+        tsIndex = Math.max(0, Math.min(index, tsLabels.length - 1));
+        const label = tsLabels[tsIndex] || '2026-05-20 10:34';
+        document.querySelectorAll('[data-ts-current]').forEach(el => { el.textContent = label; });
+        tsItems.forEach(item => {
+          const active = item.textContent.split(' · ')[0] === label;
+          item.classList.toggle('border-slate-900', active);
+          item.classList.toggle('bg-slate-900', active);
+          item.classList.toggle('text-white', active);
+          item.classList.toggle('border-transparent', !active);
+          item.classList.toggle('bg-white', !active);
+          item.classList.toggle('text-slate-700', !active);
+        });
+      }
+      content.onclick = event => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        if (button.dataset.group) {
+          const { group, value } = button.dataset;
+          content.querySelectorAll(`button[data-group="${group}"]`).forEach(item => setPillState(item, item === button));
+          content.querySelectorAll(`[data-panel="${group}"]`).forEach(panel => { panel.hidden = panel.dataset.value !== value; });
+        }
+        if (button.dataset.tsStep) setTs(tsIndex + Number(button.dataset.tsStep));
+        if (button.dataset.tsIndex) {
+          const label = button.textContent.split(' · ')[0];
+          setTs(tsLabels.indexOf(label));
+          button.closest('details')?.removeAttribute('open');
+        }
+      };
+      setTs(0);
+    }
+
+    function render(layerId) {
+      content.innerHTML = layerId === 'l2' ? renderLayer2() : placeholders[layerId];
+      tabs.forEach(tab => {
+        const active = tab.dataset.layer === layerId;
+        tab.className = `tab border px-3 py-1.5 text-sm font-medium ${active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`;
+      });
+      document.querySelectorAll('.region-box').forEach(el => {
+        el.addEventListener('mouseenter', () => setActiveRegion(el.dataset.region));
+        el.addEventListener('click', () => setActiveRegion(el.dataset.region));
+      });
+      if (layerId === 'l2') initLayer2Interactions();
+      history.replaceState(null, '', '#' + layerId);
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', () => render(tab.dataset.layer)));
+    const initial = (location.hash || '#l2').replace('#', '');
+    render(['l1', 'l2', 'l3', 'l4'].includes(initial) ? initial : 'l2');
+  </script>
+</body>
+</html>

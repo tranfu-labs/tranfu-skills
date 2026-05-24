@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>二、显示框架 — UI 审查协议 r2 Layer 查看器</title>
+<style>
+  body { font-family: -apple-system, system-ui, "PingFang SC", sans-serif; margin: 24px; background: #f5f5f5; color: #222; }
+  h1 { color: #444; }
+  h2 { color: #444; margin-top: 36px; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+  .notice { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px 14px; border-radius: 3px; margin: 16px 0 24px; font-size: 13px; color: #6b5b00; }
+  .state { display: grid; grid-template-columns: 1fr 340px; gap: 20px; background: #fff; border: 1px solid #ccc; margin: 16px 0; padding: 20px; }
+  .canvas { min-width: 0; }
+  .region { border: 2px dashed #888; padding: 12px 14px; margin: 10px 0; background: #fafafa; }
+  .region-tag { background: #ddd; color: #333; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-bottom: 10px; display: inline-block; border-radius: 2px; }
+  .region-body { font-size: 13px; color: #333; line-height: 1.8; }
+  .mock-row { padding: 6px 0; border-bottom: 1px dotted #ddd; }
+  .mock-row:last-child { border-bottom: none; }
+  .mock-row.selected { background: #e8f0fe; padding: 8px; border-left: 3px solid #4a7fc1; }
+  .legend { background: #fffbe6; border: 1px solid #f0c14b; padding: 14px; font-size: 13px; line-height: 1.8; align-self: start; position: sticky; top: 20px; }
+  .legend h3 { margin: 0 0 8px; font-size: 13px; color: #6b5b00; }
+  .legend ul { margin: 0; padding-left: 18px; }
+  .legend li { margin: 6px 0; }
+  .legend code { background: #fff; padding: 1px 4px; border: 1px solid #f0c14b; border-radius: 2px; font-size: 12px; color: #333; }
+  .empty { color: #888; font-style: italic; padding: 12px; }
+  .arrow { text-align: center; color: #888; font-size: 20px; margin: 12px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; }
+  .bar-wrap { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #555; }
+  .bar { display: inline-block; height: 6px; background: #888; vertical-align: middle; }
+  .bar-light { background: #ccc; }
+  .pill { display: inline-block; padding: 1px 7px; border: 1px solid #aaa; background: #fff; font-size: 12px; color: #444; margin-right: 4px; }
+  .pill-on { background: #444; color: #fff; border-color: #444; }
+  .pill-blue { background: #e8f0fe; color: #2a4d8a; border-color: #4a7fc1; }
+  .nested { background: #f0f0f0; border: 1px dashed #bbb; padding: 8px 10px; margin-top: 8px; font-size: 12px; }
+  .head-row { font-size: 12px; color: #555; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dotted #ccc; }
+</style>
+</head>
+<body>
+
+<h1>二、显示框架 — UI 审查协议 r2 Layer 查看器</h1>
+<div class="notice">
+  <strong>注:</strong> 本页所有内容为<strong>模拟数据</strong>, 仅用于展示信息密度与排版. 字段与对应数据的对照关系见每个状态右侧"图例". 灰盒 wireframe, 不上品牌色 (高亮行用淡蓝表达选中). 配套文档: <code>02-skeleton.md</code>
+</div>
+
+<!-- ============ 入口态 ============ -->
+<h2>入口态 (用户刚进入页面, 还没点任何卡片)</h2>
+<div class="state">
+  <div class="canvas">
+
+    <div class="region">
+      <span class="region-tag">头部摘要区</span>
+      <div class="region-body">
+        <div class="mock-row">数据源: /Users/wing/Develop/skill-eval/runs  ·  runs 总数 247  ·  崩溃 3  ·  最近扫描 2026-05-21 10:42</div>
+        <div class="mock-row">当前过滤: 全部</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="region">
+        <span class="region-tag">主列表区</span>
+        <div class="region-body">
+          <div class="head-row">
+            排序: <span class="pill pill-on">差值绝对值 ↓</span> <span class="pill">最新时间戳</span> <span class="pill">崩溃数</span>
+            &nbsp;&nbsp;过滤: <span class="pill pill-on">全部</span> <span class="pill">只看崩溃</span>
+          </div>
+          <div class="mock-row">
+            <strong>eval-news-impact</strong>  ·  5 cases  ·  最新 2026-05-20 10:34<br>
+            启用 skill <strong>78%</strong>  ·  Δ +0.16<br>
+            <span class="bar-wrap">不启用 <span class="bar bar-light" style="width:62px"></span> 0.62</span>
+            &nbsp;<span class="bar-wrap">启用 <span class="bar" style="width:78px"></span> 0.78</span>
+          </div>
+          <div class="mock-row">
+            <strong>broken-skill</strong>  ·  3 cases  ·  最新 2026-05-19 18:00  ·  崩溃 2<br>
+            启用 skill <strong>41%</strong>  ·  Δ +0.03
+          </div>
+          <div class="mock-row">
+            <strong>summarizer</strong>  ·  4 cases  ·  最新 2026-05-20 14:45  ·  崩溃 1<br>
+            启用 skill <strong>71%</strong>  ·  Δ +0.22
+          </div>
+          <div class="mock-row">classifier  ·  6 cases  ·  62%  ·  Δ +0.04</div>
+          <div class="mock-row">_target-skill  ·  2 cases  ·  55%  ·  Δ 0.00</div>
+        </div>
+      </div>
+
+      <div class="region">
+        <span class="region-tag">明细区</span>
+        <div class="region-body">
+          <div class="empty">尚未选中任何 skill 卡片, 请在左侧主列表区选一行</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">底部辅助区</span>
+      <div class="region-body">
+        <div class="empty">占位: 分页 / 上一 run / 下一 run (当前虚位)</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="legend">
+    <h3>图例 — 模拟数据 → 字段</h3>
+    <ul>
+      <li>"/Users/.../runs" → 字段 <code>数据源路径</code></li>
+      <li>"runs 总数 247" → 字段 <code>runs 总数</code></li>
+      <li>"崩溃 3" → 字段 <code>崩溃总数</code></li>
+      <li>"2026-05-21 10:42" → 字段 <code>最近扫描时间</code></li>
+      <li>"全部 / 只看崩溃" → 字段 <code>崩溃过滤标签</code></li>
+      <li>"差值绝对值 ↓ / 最新时间戳 / 崩溃数" → 字段 <code>排序选择</code></li>
+      <li>"eval-news-impact 78%" → 字段 <code>skill 名 + 启用 skill 通过率</code></li>
+      <li>"Δ +0.16" → 字段 <code>双模式差值</code></li>
+      <li>两根 bar (0.62 / 0.78) → 字段 <code>不启用 skill / 启用 skill 双 bar</code></li>
+      <li>"5 cases · 最新 2026-05-20 10:34" → 字段 <code>cases 数 + 最新时间戳 (按 skill)</code></li>
+      <li>"崩溃 2 / 崩溃 1" → 字段 <code>按 skill 崩溃数 (角标)</code></li>
+      <li>明细区"空状态" → 入口态无数据绑定</li>
+    </ul>
+  </aside>
+</div>
+
+<div class="arrow">↓ 用户在主列表区点了 eval-news-impact 这张卡片 ↓</div>
+
+<!-- ============ 选中态 ============ -->
+<h2>选中态 (主列表区某行高亮 + 明细区填充)</h2>
+<div class="state">
+  <div class="canvas">
+
+    <div class="region">
+      <span class="region-tag">头部摘要区</span>
+      <div class="region-body">
+        <div class="mock-row">数据源: /Users/wing/Develop/skill-eval/runs  ·  runs 总数 247  ·  崩溃 3  ·  最近扫描 2026-05-21 10:42</div>
+        <div class="mock-row">当前过滤: 全部</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="region">
+        <span class="region-tag">主列表区 (eval-news-impact 高亮)</span>
+        <div class="region-body">
+          <div class="head-row">排序 / 过滤 (同入口态)</div>
+          <div class="mock-row selected">
+            <strong>eval-news-impact</strong>  ·  78%  ·  Δ +0.16  <em>(选中, 蓝色描边高亮)</em>
+          </div>
+          <div class="mock-row">broken-skill  ·  41%  ·  Δ +0.03  ·  崩溃 2</div>
+          <div class="mock-row">summarizer  ·  71%  ·  Δ +0.22  ·  崩溃 1</div>
+          <div class="mock-row">classifier  ·  62%  ·  Δ +0.04</div>
+          <div class="mock-row">_target-skill  ·  55%  ·  Δ 0.00</div>
+        </div>
+      </div>
+
+      <div class="region">
+        <span class="region-tag">明细区 (填充)</span>
+        <div class="region-body">
+          <strong>skill 头:</strong> eval-news-impact  ·  <strong>62% → 78%</strong>
+          <div class="nested">
+            <strong>Case 切换器:</strong>
+            <span class="pill pill-blue">Case 14 (差值最大)</span>
+            <span class="pill">Case 7</span>
+            <span class="pill">Case 21</span>
+            <span class="pill">Case 3</span>
+          </div>
+          <div class="nested">
+            <strong>Trace 模式 + 时间戳:</strong><br>
+            第 1 行: <span class="pill pill-blue">不启用 skill</span> <span class="pill">启用 skill</span>  ·  286s · Token 100k · Pass<br>
+            第 2 行: <span class="pill">‹</span> <span class="pill">2026-05-20 10:34 ▾</span> <span class="pill">›</span>  (同 case+模式下相邻时间戳翻页)
+          </div>
+          <div class="nested">
+            <strong>三 tab (Task / Chat / Result):</strong><br>
+            <span class="pill pill-on">Task</span> <span class="pill">Chat</span> <span class="pill">Result</span><br>
+            Task 默认显示 sub-tab:
+            <span class="pill pill-on">case-input</span> <span class="pill">run-instruction</span> <span class="pill">extract-instruction</span> <span class="pill">judge-instruction</span><br>
+            <em>正文区域: case-input.md 的内容渲染</em>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">底部辅助区</span>
+      <div class="region-body">
+        <div class="empty">占位: 分页 / 上一 run / 下一 run (当前虚位)</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="legend">
+    <h3>图例 — 模拟数据 → 字段</h3>
+    <ul>
+      <li>主列表区淡蓝高亮行 → 状态属性 "selected = true" (服务调试路线第一步)</li>
+      <li>"eval-news-impact · 62% → 78%" → 字段 <code>skill 头 + 双模式总览</code></li>
+      <li>"Case 14 / 7 / 21 / 3" → 字段 <code>Case 切换器</code> (默认落差值最大那个)</li>
+      <li>"不启用 skill / 启用 skill" → 字段 <code>Trace 模式切换</code></li>
+      <li>"286s · Token 100k · Pass" → 字段 <code>run.meta 元信息</code></li>
+      <li>"‹ 2026-05-20 10:34 ▾ ›" → 字段 <code>时间戳翻页</code></li>
+      <li>"Task / Chat / Result" → 字段 <code>Task / Chat / Result 三 tab</code></li>
+      <li>"case-input / run-instruction / extract-instruction / judge-instruction" → 字段 <code>case-input.md</code> + <code>三段 instruction</code></li>
+    </ul>
+  </aside>
+</div>
+
+<div class="arrow">↓ 用户在主列表区头部点了 "只看崩溃" 过滤标签 ↓</div>
+
+<!-- ============ 崩溃过滤态 ============ -->
+<h2>崩溃过滤态 (主列表区列表收口, 仅显示崩溃 > 0 的 skill)</h2>
+<div class="state">
+  <div class="canvas">
+
+    <div class="region">
+      <span class="region-tag">头部摘要区</span>
+      <div class="region-body">
+        <div class="mock-row">数据源: /Users/wing/Develop/skill-eval/runs  ·  runs 总数 247  ·  崩溃 3  ·  最近扫描 2026-05-21 10:42</div>
+        <div class="mock-row">当前过滤: <strong>只看崩溃</strong></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="region">
+        <span class="region-tag">主列表区 (仅崩溃 > 0)</span>
+        <div class="region-body">
+          <div class="head-row">
+            排序: <span class="pill pill-on">差值绝对值 ↓</span>
+            &nbsp;&nbsp;过滤: <span class="pill">全部</span> <span class="pill pill-on">只看崩溃 ← 已激活</span>
+          </div>
+          <div class="mock-row">
+            <strong>broken-skill</strong>  ·  3 cases  ·  41%  ·  Δ +0.03  ·  <strong>崩溃 2</strong>
+          </div>
+          <div class="mock-row">
+            <strong>summarizer</strong>  ·  4 cases  ·  71%  ·  Δ +0.22  ·  <strong>崩溃 1</strong>
+          </div>
+          <div class="mock-row empty">其余 3 张卡片 (eval-news-impact / classifier / _target-skill) 被隐藏</div>
+        </div>
+      </div>
+
+      <div class="region">
+        <span class="region-tag">明细区</span>
+        <div class="region-body">
+          <div class="empty">未选中, 仍是空状态; 如已选中则维持"选中态"内容</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="region">
+      <span class="region-tag">底部辅助区</span>
+      <div class="region-body">
+        <div class="empty">占位: 分页 / 上一 run / 下一 run (当前虚位)</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="legend">
+    <h3>图例 — 模拟数据 → 字段</h3>
+    <ul>
+      <li>头部摘要区"当前过滤: 只看崩溃" → 字段 <code>崩溃过滤标签</code> 的当前状态投影</li>
+      <li>主列表区头部"只看崩溃 ← 已激活" → 字段 <code>崩溃过滤标签</code> 控件本体</li>
+      <li>"broken-skill 崩溃 2 / summarizer 崩溃 1" → 字段 <code>按 skill 崩溃数 (角标)</code></li>
+      <li>"其余 3 张卡片被隐藏" → 派生自 <code>崩溃过滤标签</code>, 仅保留 <code>按 skill 崩溃数 &gt; 0</code> 的行</li>
+      <li>明细区空状态 → 与"入口态"明细区一致, 表明过滤不联动明细 (区域间关系: 不联动)</li>
+    </ul>
+  </aside>
+</div>
+
+</body>
+</html>
