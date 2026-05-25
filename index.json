@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-25T04:24:02.850Z",
+  "generated_at": "2026-05-25T05:32:32.031Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -32,7 +32,7 @@
     {
       "name": "ai-startup-feasibility-check",
       "type": "own",
-      "description": "AI 创业方向可行性自检。当用户做 AI 行业/赛道市场分析、研究 AI 创业方向、评估 AI 投资机会、判断 AI 项目是否值得做、问\"X 这个项目怎么样\"、\"X 赛道值得进入吗\"、\"X 是不是好生意\"、\"我想做 X 创业\"、\"评估 X 项目\"，或与 elite-market-researcher / market-analysis 技能联合使用做 AI 相关研究时，必须使用此技能。本技能强制对研究目标应用 13 条 AI 创业禁止清单 + 三维评分体系（替代风险 / 杠杆方向 / 单位经济）+ 10 题自检表，产出结构化的可行性诊断报告。所有涉及 AI 创业方向判断的任务都应主动触发此技能；与 elite-market-researcher 技能并用时，本技能产出\"AI 创业可行性自检\"章节作为研报附录。",
+      "description": "AI 创业方向可行性强制自检（v2）。在以下任一情境下必须使用此技能：(1) 用户做任何含 AI / 大模型 / LLM / Agent / AIGC / Copilot / 生成式 AI / Claude / GPT / Anthropic / OpenAI / DeepSeek / Qwen / 豆包 / Kimi / MCP / A2A / 模型公司 / 智能体 / 智能驾驶 / 智能座舱 等关键词的市场研究、行业分析、赛道判断、竞争格局分析、行业研报；(2) 用户评估 AI 创业方向、AI 投资机会、AI 项目可行性、AI 创业公司、AI startup；(3) 用户描述一个项目并问\"怎么样 / 值不值得做 / 能不能成 / X 赛道值得进入吗 / X 是不是好生意 / 我想做 X / 评估 X 项目 / 帮我看看 X / 这个项目能做吗\"；(4) 用户分析 AI 创业方向时寻找介入机会、判断生态机会、研究开放平台介入路径；(5) 与 elite-market-researcher / market-analysis 等市场研究技能联合使用做 AI 相关任何研究时（即使用户没明确要求自检，只要话题在 AI 领域内，本技能必须并行触发）。本技能强制对研究目标应用 13 条 AI 创业禁止清单 + 三维评分体系（替代风险 / 杠杆方向 / 单位经济）+ 10 题自检表，产出结构化的可行性诊断报告。与 elite-market-researcher 并用时，本技能产出\"AI 创业可行性自检\"章节作为研报强制附录，禁止省略。本技能优先级高于一般市场研究——在 AI 相关研究中，没有这一层自检的报告视为不合格。",
       "path": "own-skills/ai-startup-feasibility-check",
       "files": [
         "README.md",
@@ -42,7 +42,7 @@
         "references/prohibition-list.md",
         "references/three-survivors-framework.md"
       ],
-      "sha": ""
+      "sha": "b70ac715a395c75d06e3460062aa2de65de30c49"
     },
     {
       "name": "business-analysis-pipeline",
