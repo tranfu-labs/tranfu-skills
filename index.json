@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-21T12:11:26.487Z",
+  "generated_at": "2026-05-25T05:32:32.031Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -17,7 +17,7 @@
         "templates/section-使用技巧.md",
         "templates/section-同类对比.md"
       ],
-      "sha": "c6eee4819f60f0e21a2c5353c34a2e10fb554aae"
+      "sha": "71088c9c262e5a1fb90a04ccea037eefa449faca"
     },
     {
       "name": "tranfu-router",
@@ -27,7 +27,22 @@
       "files": [
         "SKILL.md"
       ],
-      "sha": "42aae7bf8eddffef5829a205cb801f696d8fed8b"
+      "sha": "2dc57023f5d063816de8e840d39a227824175b71"
+    },
+    {
+      "name": "ai-startup-feasibility-check",
+      "type": "own",
+      "description": "AI 创业方向可行性强制自检（v2）。在以下任一情境下必须使用此技能：(1) 用户做任何含 AI / 大模型 / LLM / Agent / AIGC / Copilot / 生成式 AI / Claude / GPT / Anthropic / OpenAI / DeepSeek / Qwen / 豆包 / Kimi / MCP / A2A / 模型公司 / 智能体 / 智能驾驶 / 智能座舱 等关键词的市场研究、行业分析、赛道判断、竞争格局分析、行业研报；(2) 用户评估 AI 创业方向、AI 投资机会、AI 项目可行性、AI 创业公司、AI startup；(3) 用户描述一个项目并问\"怎么样 / 值不值得做 / 能不能成 / X 赛道值得进入吗 / X 是不是好生意 / 我想做 X / 评估 X 项目 / 帮我看看 X / 这个项目能做吗\"；(4) 用户分析 AI 创业方向时寻找介入机会、判断生态机会、研究开放平台介入路径；(5) 与 elite-market-researcher / market-analysis 等市场研究技能联合使用做 AI 相关任何研究时（即使用户没明确要求自检，只要话题在 AI 领域内，本技能必须并行触发）。本技能强制对研究目标应用 13 条 AI 创业禁止清单 + 三维评分体系（替代风险 / 杠杆方向 / 单位经济）+ 10 题自检表，产出结构化的可行性诊断报告。与 elite-market-researcher 并用时，本技能产出\"AI 创业可行性自检\"章节作为研报强制附录，禁止省略。本技能优先级高于一般市场研究——在 AI 相关研究中，没有这一层自检的报告视为不合格。",
+      "path": "own-skills/ai-startup-feasibility-check",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "cases/tf-nezha.md",
+        "references/case-library.md",
+        "references/prohibition-list.md",
+        "references/three-survivors-framework.md"
+      ],
+      "sha": "b70ac715a395c75d06e3460062aa2de65de30c49"
     },
     {
       "name": "business-analysis-pipeline",
@@ -94,10 +109,28 @@
         "examples/research-iceblue.png",
         "examples/research-public-copy.png",
         "examples/research-skyblue.png",
+        "examples/verge-iceblue/manifest.json",
+        "examples/verge-iceblue/render-verge-iceblue.html",
+        "examples/verge-iceblue/tranfu-daily-verge-iceblue-1080x1350.png",
         "references/report-schema.md",
         "scripts/render_daily_report.py"
       ],
-      "sha": "47eacd6d5dca3b0c81a9e0f3c8b4c8a898def2fe"
+      "sha": "316f52c8986719315e2763f3d9a3b80b2057e4ef"
+    },
+    {
+      "name": "elite-market-researcher",
+      "type": "own",
+      "description": "顶尖市场研究员模式。当用户要求\"做市场分析\"\"分析XX赛道\"\"研究XX行业\"\"竞争格局分析\"\"投资机会判断\"\"创业方向评估\"\"market research\"\"industry analysis\"\"赛道判断\"\"做行业研报\"\"帮我看看XX市场\"，或任何涉及对一个市场/行业/赛道做严肃决策依据的研究任务时，必须使用此技能。本技能将AI拉入McKinsey合伙人 + 投行首席分析师 + 顶级VC合伙人 + 行业操盘手的复合心智，输出领先行业3-5年视野、具备反共识洞察、可直接支撑亿元级决策的深度研究报告。任何\"了解一下市场\"以上严肃度的研究请求，都应主动触发此技能。可与 market-analysis 技能配合使用（本技能负责心智与质量，market-analysis 负责搜索流程）。",
+      "path": "own-skills/elite-market-researcher",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "cases/tf-nezha.md",
+        "references/contrarian-thinking-patterns.md",
+        "references/quality-checklist-detailed.md",
+        "references/six-principles-deep-dive.md"
+      ],
+      "sha": "d0bfbbff855f72c19caf33bf9da253744cb421bb"
     },
     {
       "name": "goal-driven-decomposition",
@@ -133,7 +166,7 @@
         "cases/tf-nezha.md",
         "references/methodology.md"
       ],
-      "sha": "413204fca3e67eccb0030adbec5e9c0234033b86"
+      "sha": "892028f8769a0d6fcdad99b269d61661840a5e77"
     },
     {
       "name": "project-packaging",
@@ -202,6 +235,31 @@
       "sha": "11a94e09032f8f4ce06a7f87e6f20dbc221f4524"
     },
     {
+      "name": "visual-pipeline",
+      "type": "own",
+      "description": "当用户要设计一个页面 (UI/视觉/产品层, 不是只写代码) 或修改已有视觉设计时, 驱动三段流水线 (显示信息 → 显示框架 → 风格+实践), 每页独立, 先文档后 HTML. 输入 = \"已知用户场景 + 已知要显示什么\", 输出 = 高保真选定版. 不用于: 文案小改 / 单 bug 代码修复 / 纯后端.",
+      "path": "own-skills/visual-pipeline",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "cases/aquarius-wing.md",
+        "change-flow.md",
+        "examples/_visual-index/01-display-info.md",
+        "examples/_visual-index/02-skeleton.html",
+        "examples/_visual-index/02-skeleton.md",
+        "examples/_visual-index/03-alt-设计感衬线.html",
+        "examples/_visual-index/03-selected.html",
+        "examples/_visual-index/03-style.md",
+        "examples/_visual-index/README.md",
+        "stages/01-display-info.template.md",
+        "stages/02-skeleton.template.html",
+        "stages/02-skeleton.template.md",
+        "stages/03-style.template.html",
+        "stages/03-style.template.md"
+      ],
+      "sha": "ee11720f74bd1468bbea8c378d55c28e21f25f4d"
+    },
+    {
       "name": "write-spec",
       "type": "own",
       "description": "从模糊想法或功能需求生成结构化 PRD/feature spec，含目标、非目标、用户故事、验收标准、成功指标。触发：写 spec / 写 PRD / 规划功能 / scope 一下",
@@ -223,6 +281,18 @@
       ],
       "sha": "fdadf35afb85ab3db3ef2300a6a8610c37696bdc",
       "source_url": "https://github.com/multica-ai/andrej-karpathy-skills"
+    },
+    {
+      "name": "claude-design-system",
+      "type": "external",
+      "description": "Anthropic 内部 Claude 设计制品工具的 system prompt 镜像 (社区抓取), 422 行讲清 Claude 怎么做 HTML 原型 / React 组件 / 幻灯片 / 动画 / 设计系统适配. 当用户问 \"Claude 怎么出高质量设计 / 我要给自己的 Claude 设计 agent 抄一份基线 prompt / 为什么 Claude 输出的 React 总因 const styles 冲突 / Claude 做幻灯片为什么会 1-indexed slide label\" 时, 读这份 prompt 当参考材料. Do NOT trigger when: 用户要真做设计实现 (走 ui-ux-pro-max) / 审 UI 代码 (走 web-design-guidelines) / 只画架构图 (走 fireworks-tech-graph) / 单纯用 Claude.ai 不需要装它.",
+      "path": "external-skills/claude-design-system",
+      "files": [
+        "README.md",
+        "SKILL.md"
+      ],
+      "sha": "2f7bfc4c3f05fbe644aa52b73957de6a3eb6e317",
+      "source_url": "https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Design-Sys-Prompt.txt"
     },
     {
       "name": "fireworks-tech-graph",
