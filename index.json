@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-05-25T05:32:32.031Z",
+  "generated_at": "2026-05-26T07:57:28.870Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -42,7 +42,7 @@
         "references/prohibition-list.md",
         "references/three-survivors-framework.md"
       ],
-      "sha": "b70ac715a395c75d06e3460062aa2de65de30c49"
+      "sha": "020f2a0138d13723831e16038e787c42ad776335"
     },
     {
       "name": "business-analysis-pipeline",

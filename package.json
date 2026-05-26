@@ -2,7 +2,13 @@
   "private": true,
   "name": "tranfu-skills-repo",
   "scripts": {
-    "build:index": "node scripts/build-index.mjs"
+    "build:index": "node scripts/build-index.mjs",
+    "validate": "node scripts/validate-all.mjs",
+    "validate:all": "node scripts/validate-all.mjs --all",
+    "validate:json": "node scripts/validate-all.mjs --json",
+    "validate:frontmatter": "node scripts/validate-frontmatter.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:cov": "node --test --experimental-test-coverage tests/*.test.mjs"
   },
   "type": "module"
 }
