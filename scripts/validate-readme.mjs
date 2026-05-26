@@ -23,9 +23,6 @@ const KEYWORD_CATEGORIES = [
   { id: "limit", pattern: /限制|不适用|known limit|caveat|边界/i },
 ];
 
-function softSeverity() {
-  return process.env.STRICT_README === "1" ? SEVERITY.ERROR : SEVERITY.WARNING;
-}
 
 const TEMPLATE_HINT =
   "add sections covering ≥ 3 of: ## 同类对比 / ## 价值 (when to use) / ## 使用技巧 / ## 输入与输出 / ## 已知限制";
@@ -111,7 +108,7 @@ export function validateSkillReadme(skillDir, rootDir = process.cwd()) {
         skill,
         path: readmeRel,
         rule: "readme.too-few-sections",
-        severity: softSeverity(),
+        severity: SEVERITY.ERROR,
         message: `found ${sections.length} level-2 (## ) sections, need ≥ ${MIN_H2}`,
         fix_hint: TEMPLATE_HINT,
       }),
@@ -133,7 +130,7 @@ export function validateSkillReadme(skillDir, rootDir = process.cwd()) {
         skill,
         path: readmeRel,
         rule: "readme.no-value-section",
-        severity: softSeverity(),
+        severity: SEVERITY.ERROR,
         message: `matched ${hits.size}/${KEYWORD_CATEGORIES.length} keyword categories (${[...hits].join(",") || "none"}); need ≥ ${MIN_KEYWORD_CATEGORIES}`,
         fix_hint: TEMPLATE_HINT,
       }),
