@@ -1,5 +1,6 @@
 {
-  "//": "GitHub login → 卡片显示昵称. 未列出回退 @<login>. lark_id 单独走 Secret LARK_USER_IDS_JSON, 不在此文件 (避免敏感数据进 git). 仅给本 repo 的 workflows 使用.",
+  "//": "GitHub login → 卡片显示昵称. 未列出回退 @<login>. lark_id 单独走 Secret LARK_USER_IDS_JSON, 不在此文件 (避免敏感数据进 git). 仅给本 repo 的 workflows 使用. _ 前缀 (e.g. _maintainers) 为元数据, 不参与 login lookup.",
+  "_maintainers": ["aquarius-wing"],
   "aquarius-wing": "Wing",
   "BruceL017": "小北",
   "griffithkk3-del": "空空",

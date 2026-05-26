@@ -35,6 +35,14 @@ jobs:
       - name: collect validate JSON on failure
         if: failure()
         run: npm run validate:json > /tmp/validate.json || true
+      - name: upload validate-output artifact on failure
+        # lark-ci-notify.yml 通过 workflow_run 触发后会下载此 artifact 渲染错误明细.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validate-output
+          path: /tmp/validate.json
+          retention-days: 7
       - name: post PR comment with repro command
         if: failure() && github.event_name == 'pull_request'
         env:
