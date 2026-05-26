@@ -1,6 +1,10 @@
 ---
 name: tranfu-publish
 description: 当用户说"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例"时, 起草 PR 内容 (frontmatter / README §同类对比 / README §使用技巧 / case-file / PR title+body) 全部按 templates/ 渲染, 用户拍 [发布] 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).
+version: 0.1.0
+author: aquarius-wing
+updated_at: 2026-05-26
+origin: meta
 type: meta
 ---
 

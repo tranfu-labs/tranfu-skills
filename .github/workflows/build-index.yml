@@ -20,6 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+      - run: npm run validate:frontmatter
       - run: npm run build:index
       - name: Publish index.json to rolling `catalog` release
         # 仅 main push 触发. PR 上只跑 build:index 做 sanity check, 不发布.
