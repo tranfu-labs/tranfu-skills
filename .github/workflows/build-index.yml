@@ -23,6 +23,8 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+      - name: run validator unit tests
+        run: npm test
       - name: validate (changed only on PR, all on push)
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
