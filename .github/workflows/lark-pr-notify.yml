@@ -117,6 +117,15 @@ jobs:
             )
           fi
 
+          # 决策树 A 分支 (见 goal-docs/41-lark-ci-notify-design-r1.md):
+          # SKILL 改动 + 非 close 事件 → SKIP, 让 workflow_run 触发的 lark-ci-notify
+          # 在 CI 完成后推一张合并卡 (含 SKILL 详情 + CI 状态).
+          # closed/merged 事件无论 SKILL 还是非 SKILL 都走完整聚合卡 (不依赖 CI).
+          if [ "$ACTION" != "closed" ] && [ "${#changes[@]}" -gt 0 ]; then
+            echo "SKILL changes detected on non-close event ($ACTION); deferring to lark-ci-notify.yml. Skipping this notification."
+            exit 0
+          fi
+
           if [ "${#changes[@]}" -eq 0 ]; then
             echo "No SKILL.md changes in scope; sending '其它' card."
 

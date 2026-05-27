@@ -1,0 +1,315 @@
+name: Notify Lark on CI completion (PR-context)
+
+# 见 claude-skills-goal-docs/41-lark-ci-notify-design-r1.md 决策树.
+# 简述: build-index.yml 跑完 (PR 触发的)→ 这里根据 conclusion + 是否 SKILL 改动决定推哪张 Lark 卡.
+#   - SKILL 改动 + fail → 合并卡 (@ 作者, 含 SKILL 详情 + 错误明细)
+#   - SKILL 改动 + success → 合并卡 (@ 作者 + @ 维护者, 含 SKILL 详情 + ✓)
+#   - 非 SKILL + fail → 极简卡 (@ 维护者, 基建挂了人工 review)
+#   - 非 SKILL + success → SKIP (一次过不打扰)
+#   - cancelled/skipped/timed_out → SKIP
+
+on:
+  workflow_run:
+    workflows: ["Build index.json"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    # Job 级守卫:
+    # - event == pull_request: push-to-main 跑的 build-index 不通知 (那是 catalog publish 路径)
+    # - conclusion in {success, failure}: cancelled/skipped/timed_out 不通知
+    # 注: pull_requests[] 为空 (fork PR) 的二次过滤在主 step bash 里 (`length()` 表达式
+    #     函数在 GH Actions expression 语法里不存在, 不能在 if 里用)
+    if: >
+      github.event.workflow_run.event == 'pull_request'
+      && (github.event.workflow_run.conclusion == 'success'
+          || github.event.workflow_run.conclusion == 'failure')
+    steps:
+      - name: Checkout (for .github/collaborators.json + SKILL frontmatter)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download validate-output artifact (only if upstream failed)
+        if: github.event.workflow_run.conclusion == 'failure'
+        uses: actions/download-artifact@v4
+        with:
+          name: validate-output
+          path: /tmp/validate-artifact
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Build and send Lark card
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LARK_WEBHOOK_URL: ${{ secrets.LARK_WEBHOOK_URL }}
+          LARK_USER_IDS_JSON: ${{ secrets.LARK_USER_IDS_JSON }}
+          REPO: ${{ github.repository }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          # 用 toJSON 整数组传进来, 在 shell 里用 jq 取 [0].number, 这样 fork PR (空数组) 安全降级
+          PR_LIST_JSON: ${{ toJSON(github.event.workflow_run.pull_requests) }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${LARK_WEBHOOK_URL:-}" ]; then
+            echo "::error::LARK_WEBHOOK_URL secret is not set."
+            exit 1
+          fi
+
+          # ===== 0. fork PR 守卫 (workflow_run.pull_requests[] 在 fork PR 时为空) =====
+          PR_NUMBER=$(printf '%s' "$PR_LIST_JSON" | jq -r '.[0].number // empty')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No associated PR number (likely fork PR with empty pull_requests[]); skipping."
+            exit 0
+          fi
+
+          # ===== 1. Fetch PR meta =====
+          pr_json=$(gh api "repos/$REPO/pulls/$PR_NUMBER")
+          PR_TITLE=$(printf '%s' "$pr_json" | jq -r '.title // ""')
+          PR_URL=$(printf '%s' "$pr_json" | jq -r '.html_url // ""')
+          PR_AUTHOR=$(printf '%s' "$pr_json" | jq -r '.user.login // ""')
+          SHORT_SHA="${HEAD_SHA:0:7}"
+
+          # ===== 2. Resolve author display + lark_id =====
+          COLLAB_FILE=".github/collaborators.json"
+          author_nick=""
+          author_lark_id=""
+          if [ -f "$COLLAB_FILE" ]; then
+            author_nick=$(jq -r --arg k "$PR_AUTHOR" '.[$k] // empty' "$COLLAB_FILE" 2>/dev/null || true)
+          fi
+          if [ -n "${LARK_USER_IDS_JSON:-}" ]; then
+            author_lark_id=$(printf '%s' "$LARK_USER_IDS_JSON" \
+              | jq -r --arg k "$PR_AUTHOR" '.[$k] // empty' 2>/dev/null || true)
+          fi
+          if [ -n "$author_nick" ]; then
+            DISPLAY_AUTHOR="$author_nick"
+          else
+            DISPLAY_AUTHOR="@$PR_AUTHOR"
+          fi
+          author_at=""
+          [ -n "$author_lark_id" ] && author_at="<at id=${author_lark_id}></at>"
+
+          # ===== 3. Resolve maintainers (_maintainers in collaborators.json) =====
+          maintainer_ats=""
+          if [ -f "$COLLAB_FILE" ]; then
+            mapfile -t maintainers < <(jq -r '._maintainers[]? // empty' "$COLLAB_FILE" 2>/dev/null || true)
+            for m in "${maintainers[@]}"; do
+              # 去重: maintainer 跟 author 是同一人时跳过
+              [ "$m" = "$PR_AUTHOR" ] && continue
+              m_lark=""
+              if [ -n "${LARK_USER_IDS_JSON:-}" ]; then
+                m_lark=$(printf '%s' "$LARK_USER_IDS_JSON" \
+                  | jq -r --arg k "$m" '.[$k] // empty' 2>/dev/null || true)
+              fi
+              [ -n "$m_lark" ] && maintainer_ats+="<at id=${m_lark}></at>"
+            done
+          fi
+
+          # ===== 4. Detect SKILL.md changes =====
+          SKILL_LINE_RE='^[a-z]+	(own|external|meta)-skills/[^/]+/SKILL\.md$'
+          mapfile -t skill_changes < <(
+            gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate \
+              --jq '.[] | "\(.status)\t\(.filename)"' \
+              | grep -E "$SKILL_LINE_RE" || true
+          )
+          have_skill_changes=0
+          [ "${#skill_changes[@]}" -gt 0 ] && have_skill_changes=1
+
+          echo "Conclusion=$CONCLUSION SKILL_changes=$have_skill_changes (count=${#skill_changes[@]}) PR_author=$PR_AUTHOR"
+
+          # ===== 5. Branch on conclusion × skill-changes =====
+          if [ "$CONCLUSION" = "success" ] && [ "$have_skill_changes" = "0" ]; then
+            echo "Non-SKILL PR CI 一次过, skip notification (already announced on opened/sync)."
+            exit 0
+          fi
+
+          # ===== 6. Build SKILL summary rows (only if SKILL changes present) =====
+          skill_rows=""
+          if [ "$have_skill_changes" = "1" ]; then
+            for line in "${skill_changes[@]}"; do
+              status="${line%%	*}"
+              path="${line#*	}"
+              case "$status" in
+                added)    s_emoji="🆕"; s_label="新增" ;;
+                modified) s_emoji="✏️"; s_label="更新" ;;
+                removed)  s_emoji="🗑";  s_label="删除" ;;
+                renamed)  s_emoji="🔀"; s_label="重命名" ;;
+                *)        s_emoji="❔"; s_label="$status" ;;
+              esac
+              top="${path%%/*}"
+              rest="${path#*/}"
+              skill_name="${rest%/SKILL.md}"
+              case "$top" in
+                own-skills)      cat_emoji="🧩"; cat="原创" ;;
+                external-skills) cat_emoji="🌐"; cat="推荐" ;;
+                meta-skills)     cat_emoji="🛠";  cat="Meta" ;;
+                *)               cat_emoji="📦"; cat="$top" ;;
+              esac
+              skill_rows+="- ${s_emoji} **${skill_name}** · ${cat_emoji} ${cat} · ${s_label}"$'\n'"  \`${path}\`"$'\n\n'
+            done
+          fi
+
+          # ===== 7. Build CI failure detail (only if conclusion=failure AND artifact present) =====
+          ci_summary_md=""
+          ci_detail_md=""
+          if [ "$CONCLUSION" = "failure" ]; then
+            artifact_file="/tmp/validate-artifact/validate.json"
+            if [ -f "$artifact_file" ]; then
+              # Strip leading "> validate:json\n> node ..." npm prefix lines (if present), keep JSON
+              json_only=$(sed -nE '/^\{/,$p' "$artifact_file")
+              if [ -n "$json_only" ]; then
+                # Per-validator counts
+                ci_summary_md=$(printf '%s' "$json_only" \
+                  | jq -r '
+                    .results // []
+                    | group_by(.validator)
+                    | map("• \(.[0].validator) (\(length))")
+                    | join("\n")
+                  ' 2>/dev/null || echo "")
+
+                # Full detail with truncation at ~20KB to stay under Lark's 30KB card limit
+                full_detail=$(printf '%s' "$json_only" \
+                  | jq -r '
+                    .results // []
+                    | map("✗ `\(.path)\(if .line != null then ":\(.line)" else "" end)` — `\(.rule)`: \(.message)\n  ↳ \(.fix_hint // "")")
+                    | join("\n")
+                  ' 2>/dev/null || echo "")
+                if [ ${#full_detail} -gt 20000 ]; then
+                  ci_detail_md="${full_detail:0:20000}"$'\n\n'"_(已截断, 点 [查看 CI run] 看全)_"
+                else
+                  ci_detail_md="$full_detail"
+                fi
+              fi
+            fi
+            [ -z "$ci_summary_md" ] && ci_summary_md="_(无法解析 validate-output artifact, 点 [查看 CI run] 看 log)_"
+            [ -z "$ci_detail_md" ] && ci_detail_md="_(无明细)_"
+          fi
+
+          # ===== 8. Pick header + at-line based on branch =====
+          # at-line 拼接用 ${var:+ }, 避免 author_at 为空时留前导空格
+          if [ "$CONCLUSION" = "failure" ] && [ "$have_skill_changes" = "0" ]; then
+            # Non-SKILL + fail: 极简卡 @ maintainer
+            color="red"
+            header_title="⚠️ CI 挂了 (非 skill 改动) · ${PR_TITLE}"
+            if [ -n "$maintainer_ats" ]; then
+              at_line="${maintainer_ats} 基建/CI 挂了, 请人工 review"
+            else
+              at_line="_(无 maintainer 映射)_ 基建/CI 挂了, 请人工 review"
+            fi
+            payload_template="minimal"
+          elif [ "$CONCLUSION" = "failure" ]; then
+            # SKILL + fail: 合并卡 @ author
+            color="red"
+            header_title="❌ CI 拒绝 · ${PR_TITLE}"
+            at_line="${author_at}${author_at:+ }${DISPLAY_AUTHOR}"
+            payload_template="merged-fail"
+          else
+            # SKILL + success: 合并卡 @ author + maintainer
+            color="green"
+            header_title="✅ CI 通过 · ${PR_TITLE}"
+            at_line="${author_at}${maintainer_ats}"
+            at_line="${at_line}${at_line:+ }${DISPLAY_AUTHOR}"
+            [ -n "$maintainer_ats" ] && at_line="${at_line} · maintainers"
+            payload_template="merged-pass"
+          fi
+
+          # ===== 9. Build card JSON =====
+          payload=$(jq -n \
+            --arg header_title "$header_title" \
+            --arg color "$color" \
+            --arg at_line "$at_line" \
+            --arg display_author "$DISPLAY_AUTHOR" \
+            --arg pr_author "$PR_AUTHOR" \
+            --arg pr_title "$PR_TITLE" \
+            --arg pr_url "$PR_URL" \
+            --arg pr_number "$PR_NUMBER" \
+            --arg repo "$REPO" \
+            --arg branch "$HEAD_BRANCH" \
+            --arg sha "$SHORT_SHA" \
+            --arg run_url "$RUN_URL" \
+            --arg template "$payload_template" \
+            --arg skill_rows "$skill_rows" \
+            --arg skill_count "${#skill_changes[@]}" \
+            --arg ci_summary "$ci_summary_md" \
+            --arg ci_detail "$ci_detail_md" \
+            '
+            def col(content): {tag: "column", width: "weighted", weight: 1,
+                               elements: [{tag: "markdown", content: content}]};
+
+            ([
+              {tag: "markdown", content: $at_line},
+              {tag: "column_set", columns: [
+                col("**提交者**\n" + $display_author),
+                col("**分支**\n`" + $branch + "`"),
+                col("**SHA**\n`" + $sha + "`")
+              ]}
+            ]
+            + (if $template == "minimal"
+               then [
+                 {tag: "markdown", content: "**说明**\n本 PR 未改动任何 `SKILL.md`, CI 挂了通常意味着脚本 / 工作流 / 依赖问题, 不在常规作者修复范围。"}
+               ]
+               else [
+                 {tag: "markdown", content: "**SKILL 改动 (" + $skill_count + " 个)**\n" + $skill_rows}
+               ] end)
+            + (if $template == "merged-fail"
+               then [
+                 {tag: "markdown", content: "**CI 失败汇总 (按 validator)**\n" + $ci_summary},
+                 {tag: "markdown", content: "**全部错误明细**\n" + $ci_detail},
+                 {tag: "markdown", content: "**本地复跑**\n```\nnpm run validate -- --json\n```"}
+               ]
+               elif $template == "merged-pass"
+               then [
+                 {tag: "markdown", content: "**CI 状态**\n✓ 全部 validator 通过, 51 单元测试全过"}
+               ]
+               else [] end)
+            + [
+              {tag: "hr"},
+              {tag: "markdown", content: ("_" + $repo + " · PR #" + $pr_number + "_")},
+              {tag: "button", text: {tag: "plain_text", content: "Open PR"}, type: "primary", width: "fill", url: $pr_url},
+              {tag: "button", text: {tag: "plain_text", content: "查看 CI run"}, type: "default", width: "fill", url: $run_url}
+            ]) as $elements |
+
+            {
+              msg_type: "interactive",
+              card: {
+                schema: "2.0",
+                header: {
+                  title: {tag: "plain_text", content: $header_title},
+                  template: $color
+                },
+                body: {elements: $elements}
+              }
+            }
+            ')
+
+          echo "Card payload:"
+          echo "$payload" | head -c 4000
+
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -d "$payload" "$LARK_WEBHOOK_URL")
+          body=$(echo "$response" | sed '$d')
+          code=$(echo "$response" | tail -n1)
+
+          echo "HTTP $code"
+          echo "$body"
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Lark webhook returned HTTP $code"
+            exit 1
+          fi
+          if echo "$body" | jq -e 'select(.code != null and .code != 0)' >/dev/null 2>&1; then
+            echo "::error::Lark API error: $body"
+            exit 1
+          fi
