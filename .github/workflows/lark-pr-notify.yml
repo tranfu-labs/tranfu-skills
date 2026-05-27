@@ -1,4 +1,4 @@
-name: Notify Lark on skill changes
+name: lark-pr-notify
 
 on:
   pull_request:
