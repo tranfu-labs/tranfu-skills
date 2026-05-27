@@ -10,7 +10,7 @@ name: Notify Lark on CI completion (PR-context)
 
 on:
   workflow_run:
-    workflows: ["Build index.json"]
+    workflows: ["CI (test + validate + build index)"]
     types: [completed]
 
 permissions:
@@ -367,9 +367,10 @@ jobs:
           CARD_TEMPLATE: ${{ steps.card.outputs.card_template }}
         run: |
           set -euo pipefail
-          # lark-notify status state = job.status (是否成功发卡/postStatus 本身), 不直接 mirror CI conclusion
-          # description 体现 CI + Lark 综合状态, target_url 指向 lark-ci-notify run 自己
-          if [ "$JOB_STATUS" = "failure" ]; then
+          # lark-notify status state = CI 失败 OR lark-notify 自身失败 → failure
+          # 这样 "All checks passed" 的常识不被 lark-notify 反告知 (CI 红时 lark-notify 也跟着红, 不混淆)
+          # desc 解释具体是哪种 (CI 拒绝 vs Lark 卡发不出去)
+          if [ "$JOB_STATUS" = "failure" ] || [ "$CONCLUSION" = "failure" ]; then
             state="failure"
           else
             state="success"

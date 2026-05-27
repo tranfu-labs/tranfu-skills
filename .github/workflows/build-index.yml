@@ -1,4 +1,4 @@
-name: Build index.json
+name: CI (test + validate + build index)
 on:
   pull_request:
     paths:
