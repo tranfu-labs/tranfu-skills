@@ -43,27 +43,8 @@ jobs:
           name: validate-output
           path: /tmp/validate.json
           retention-days: 7
-      - name: post PR comment with repro command
-        if: failure() && github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          {
-            echo "## validate-all failed"
-            echo ""
-            echo "Reproduce locally:"
-            echo '```'
-            echo 'npm run validate -- --json'
-            echo '```'
-            echo ""
-            echo "<details><summary>Structured output</summary>"
-            echo ""
-            echo '```json'
-            cat /tmp/validate.json 2>/dev/null || echo "{}"
-            echo '```'
-            echo "</details>"
-          } > /tmp/comment.md
-          gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md || true
+      # PR comment 现由 lark-ci-notify.yml 在 workflow_run 触发后渲染 (Q1),
+      # 跟 Lark 卡内容同款: SKILL 改动 + 按 validator 分组 + 全部错误明细 + 复跑命令.
       - run: npm run build:index
       - name: Publish index.json to rolling `catalog` release
         # 仅 main push 触发. PR 上只跑 build:index 做 sanity check, 不发布.
