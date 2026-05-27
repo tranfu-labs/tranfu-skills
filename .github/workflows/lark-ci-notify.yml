@@ -1,4 +1,4 @@
-name: Notify Lark on CI completion (PR-context)
+name: lark-ci-notify
 
 # 见 claude-skills-goal-docs/41-lark-ci-notify-design-r1.md 决策树.
 # 简述: build-index.yml 跑完 (PR 触发的)→ 这里根据 conclusion + 是否 SKILL 改动决定推哪张 Lark 卡.
@@ -10,7 +10,7 @@ name: Notify Lark on CI completion (PR-context)
 
 on:
   workflow_run:
-    workflows: ["CI (test + validate + build index)"]
+    workflows: ["ci"]
     types: [completed]
 
 permissions:
