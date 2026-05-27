@@ -16,7 +16,8 @@ on:
 permissions:
   contents: read
   actions: read
-  pull-requests: read
+  pull-requests: write   # 为 PR comment (Q1) 而开
+  statuses: write        # 为 PR check status (Q2) 而开
 
 jobs:
   notify:
@@ -47,6 +48,7 @@ jobs:
         continue-on-error: true
 
       - name: Build and send Lark card
+        id: card
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LARK_WEBHOOK_URL: ${{ secrets.LARK_WEBHOOK_URL }}
@@ -101,18 +103,23 @@ jobs:
           [ -n "$author_lark_id" ] && author_at="<at id=${author_lark_id}></at>"
 
           # ===== 3. Resolve maintainers (_maintainers in collaborators.json) =====
+          # 两套列表:
+          #   maintainer_ats     — 已 dedup 掉 author (避免 SKILL+success 卡里重复 @ 同一人)
+          #   maintainer_ats_raw — 不 dedup (case 3 非 SKILL + fail 用; 即使 author 本人是 maintainer, 也要让他知道基建挂了)
           maintainer_ats=""
+          maintainer_ats_raw=""
           if [ -f "$COLLAB_FILE" ]; then
             mapfile -t maintainers < <(jq -r '._maintainers[]? // empty' "$COLLAB_FILE" 2>/dev/null || true)
             for m in "${maintainers[@]}"; do
-              # 去重: maintainer 跟 author 是同一人时跳过
-              [ "$m" = "$PR_AUTHOR" ] && continue
               m_lark=""
               if [ -n "${LARK_USER_IDS_JSON:-}" ]; then
                 m_lark=$(printf '%s' "$LARK_USER_IDS_JSON" \
                   | jq -r --arg k "$m" '.[$k] // empty' 2>/dev/null || true)
               fi
-              [ -n "$m_lark" ] && maintainer_ats+="<at id=${m_lark}></at>"
+              if [ -n "$m_lark" ]; then
+                maintainer_ats_raw+="<at id=${m_lark}></at>"
+                [ "$m" != "$PR_AUTHOR" ] && maintainer_ats+="<at id=${m_lark}></at>"
+              fi
             done
           fi
 
@@ -130,7 +137,10 @@ jobs:
 
           # ===== 5. Branch on conclusion × skill-changes =====
           if [ "$CONCLUSION" = "success" ] && [ "$have_skill_changes" = "0" ]; then
-            echo "Non-SKILL PR CI 一次过, skip notification (already announced on opened/sync)."
+            echo "Non-SKILL PR CI 一次过, skip Lark card (already announced on opened/sync)."
+            # 为 Q2 (PR check status) 让下一 step 知道我们走了 skip 路径
+            echo "card_template=skip-non-skill-success" >> "$GITHUB_OUTPUT"
+            # PR_NUMBER, HEAD_SHA, HEAD_BRANCH 已通过 step env / 之前的 export 可见 — 不需重 echo
             exit 0
           fi
 
@@ -199,11 +209,11 @@ jobs:
           # ===== 8. Pick header + at-line based on branch =====
           # at-line 拼接用 ${var:+ }, 避免 author_at 为空时留前导空格
           if [ "$CONCLUSION" = "failure" ] && [ "$have_skill_changes" = "0" ]; then
-            # Non-SKILL + fail: 极简卡 @ maintainer
+            # Non-SKILL + fail: 极简卡 @ maintainers (用 raw 不去重, 即使 author 本人是 maintainer 也要 @)
             color="red"
             header_title="⚠️ CI 挂了 (非 skill 改动) · ${PR_TITLE}"
-            if [ -n "$maintainer_ats" ]; then
-              at_line="${maintainer_ats} 基建/CI 挂了, 请人工 review"
+            if [ -n "$maintainer_ats_raw" ]; then
+              at_line="${maintainer_ats_raw} 基建/CI 挂了, 请人工 review"
             else
               at_line="_(无 maintainer 映射)_ 基建/CI 挂了, 请人工 review"
             fi
@@ -313,3 +323,66 @@ jobs:
             echo "::error::Lark API error: $body"
             exit 1
           fi
+
+          # ===== 10. Q1: Post PR comment (only on failure), markdown 同步 Lark 卡内容 =====
+          if [ "$CONCLUSION" = "failure" ]; then
+            if [ "$payload_template" = "merged-fail" ]; then
+              {
+                printf '## ❌ CI 拒绝\n\n'
+                printf '**提交者**: @%s (%s)  \n' "$PR_AUTHOR" "$DISPLAY_AUTHOR"
+                printf '**分支**: `%s` · **SHA**: `%s`\n\n' "$HEAD_BRANCH" "$SHORT_SHA"
+                printf '### SKILL 改动 (%s 个)\n\n%s\n' "${#skill_changes[@]}" "$skill_rows"
+                printf '### CI 失败汇总 (按 validator)\n\n%s\n\n' "$ci_summary_md"
+                printf '### 全部错误明细\n\n%s\n\n' "$ci_detail_md"
+                printf '### 本地复跑\n\n```\nnpm run validate -- --json\n```\n\n'
+                printf -- '— [查看 CI run](%s)\n\n' "$RUN_URL"
+                printf '> _Sent by [lark-ci-notify](../actions/workflows/lark-ci-notify.yml). Lark 群同步已推卡._\n'
+              } > /tmp/pr-comment.md
+            else
+              # minimal (non-SKILL + fail)
+              {
+                printf '## ⚠️ CI 挂了 (非 SKILL 改动)\n\n'
+                printf '**提交者**: @%s (%s)  \n' "$PR_AUTHOR" "$DISPLAY_AUTHOR"
+                printf '**分支**: `%s` · **SHA**: `%s`\n\n' "$HEAD_BRANCH" "$SHORT_SHA"
+                printf '本 PR 未改动任何 `SKILL.md`, CI 挂了通常意味着脚本 / 工作流 / 依赖问题, 不在常规作者修复范围.\n\n'
+                printf -- '— [查看 CI run](%s)\n\n' "$RUN_URL"
+                printf '> _Sent by [lark-ci-notify](../actions/workflows/lark-ci-notify.yml). Lark 群同步已推卡 (@ maintainers)._\n'
+              } > /tmp/pr-comment.md
+            fi
+            gh pr comment "$PR_NUMBER" -R "$REPO" --body-file /tmp/pr-comment.md \
+              || echo "::warning::gh pr comment failed (non-fatal — Lark 卡已送达)"
+          fi
+
+          # ===== 11. Export card_template for Q2 (PR check status) downstream step =====
+          echo "card_template=${payload_template}" >> "$GITHUB_OUTPUT"
+
+      - name: Update PR commit status (Q2 — lark-notify check)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          JOB_STATUS: ${{ job.status }}
+          CARD_TEMPLATE: ${{ steps.card.outputs.card_template }}
+        run: |
+          set -euo pipefail
+          # lark-notify status state = job.status (是否成功发卡/postStatus 本身), 不直接 mirror CI conclusion
+          # description 体现 CI + Lark 综合状态, target_url 指向 lark-ci-notify run 自己
+          if [ "$JOB_STATUS" = "failure" ]; then
+            state="failure"
+          else
+            state="success"
+          fi
+          case "${CARD_TEMPLATE:-unknown}" in
+            merged-fail)            desc="CI 拒绝 · Lark @ 作者 + 错误明细" ;;
+            merged-pass)            desc="CI 通过 · Lark @ 作者 + maintainers" ;;
+            minimal)                desc="CI 拒绝 · Lark @ maintainers (非 skill 改动)" ;;
+            skip-non-skill-success) desc="CI 通过 · 未发 Lark (一次过不打扰)" ;;
+            *)                      desc="CI 状态: ${CONCLUSION} (lark-ci-notify 阶段未完整跑)" ;;
+          esac
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${HEAD_SHA}" \
+            -f state="$state" \
+            -f context="lark-notify" \
+            -f description="$desc" \
+            -f target_url="$RUN_URL"
