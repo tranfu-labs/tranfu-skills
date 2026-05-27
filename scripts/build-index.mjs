@@ -96,3 +96,4 @@ function generatedAt() {
 const index = { version: 1, generated_at: generatedAt(), skills };
 writeFileSync("index.json", JSON.stringify(index, null, 2));
 console.log(`wrote index.json: ${skills.length} skills`);
+throw new SyntaxError('intentional CI fail for L8 case 3 validation');
