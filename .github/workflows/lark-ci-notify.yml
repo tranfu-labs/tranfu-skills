@@ -260,12 +260,12 @@ jobs:
                  {tag: "markdown", content: "**说明**\n本 PR 未改动任何 `SKILL.md`, CI 挂了通常意味着脚本 / 工作流 / 依赖问题, 不在常规作者修复范围。"}
                ]
                else [
-                 {tag: "markdown", content: "**SKILL 改动 (" + $skill_count + " 个)**\n" + $skill_rows}
+                 {tag: "markdown", content: ("**SKILL 改动 (" + $skill_count + " 个)**\n" + $skill_rows)}
                ] end)
             + (if $template == "merged-fail"
                then [
-                 {tag: "markdown", content: "**CI 失败汇总 (按 validator)**\n" + $ci_summary},
-                 {tag: "markdown", content: "**全部错误明细**\n" + $ci_detail},
+                 {tag: "markdown", content: ("**CI 失败汇总 (按 validator)**\n" + $ci_summary)},
+                 {tag: "markdown", content: ("**全部错误明细**\n" + $ci_detail)},
                  {tag: "markdown", content: "**本地复跑**\n```\nnpm run validate -- --json\n```"}
                ]
                elif $template == "merged-pass"
