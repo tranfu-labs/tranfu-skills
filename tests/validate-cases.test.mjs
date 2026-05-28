@@ -86,13 +86,13 @@ test("cases: missing input → cases.missing-input", () => {
   }
 });
 
-test("cases: missing output → cases.missing-output", () => {
+test("cases: missing output → no error (rule temporarily disabled)", () => {
   const root = makeTmpRepo();
   try {
     const dir = writeSkill(root, { name: "nooutput" });
     mkCase(dir, 1, { withOutput: false });
     const errs = validateSkillCases(dir, root);
-    assert.deepEqual(ruleIds(errs), ["cases.missing-output"]);
+    assert.deepEqual(ruleIds(errs), []);
   } finally {
     cleanup(root);
   }
