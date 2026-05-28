@@ -2,9 +2,9 @@
 name: goal-driven-decomposition
 description: >-
   Solve "build/make/design X" goals AND follow-up edits ("做一个网站", "build a tool", "加用户登录", "X 偏了改一下"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).
-version: 0.1.0
+version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-05-17
+updated_at: 2026-05-28
 origin: own
 ---
 
@@ -233,7 +233,7 @@ Before any prior weighting, check whether `goal-docs/` already exists in the use
    The scope Agent does NOT design solutions; it scopes the work. Main agent reads its output and proceeds.
 4. **Append to CHANGELOG.md** — one entry per round with: trigger (user's exact request), type, scope (affected modules), eventual outcome (filled in after validation closes).
 5. **Execute by type**:
-   - **新增**: for each affected dim D, run Step 2 doc-relay producing new `D-r{N+1}-1-{name}-stakeholder.md` etc. Other dims do NOT get re-run.
+   - **新增**: for each affected dim D, run Step 2 doc-relay producing new `D-r{N+1}-1-{name}-stakeholder.md` etc. Other dims do NOT get re-run. If D is a brand-new capability with no existing 模块号 (not in r1's goal-tree — e.g. `logo` showing up at r4), allocate the next free integer per §Filename convention §Cross-round new modules, and append the new dim to `20-goal-tree-r{N+1}.md`.
    - **修正**: SKIP Step 2 entirely. The design intent didn't change — only the implementation needs to catch up. Jump to Step 6 (validation): the plan Agent adds a new check entry whose `trace` quotes the user's verbatim request (e.g., `trace: "user request 2026-05-08: 现在的问题是 canvas 位置左偏了"`). Then the normal fix loop runs.
    - **画像变更**: scope Agent surfaces the analysis to the user — "this changes premises in dimensions {A, B, C}; want to redo all? selective? abandon iteration and start fresh as a new project?" Wait for user direction. Then write `00-用户画像-r{N+1}.md` and run Step 2 only on user-confirmed dimensions.
 6. After Step 2 (if any) or directly: run Step 6 (validation) in iteration mode — see Step 6 §"Iteration mode" for delta plan / inheritance-aware run.
@@ -243,8 +243,13 @@ Before any prior weighting, check whether `goal-docs/` already exists in the use
 Two shapes — depending on whether the file has a separate "name" slot (the dimension's human-readable label) or not.
 
 - **With name slot** (dimensions): `{模块号}-{用户级轮次}-{名称}-{对话/iter轮次}-{角色}.md`
-  - e.g. `02-UI-r1-1-stakeholder.md` (dim 02 / user-round 1 / dialogue turn 1 / persona's brief)
-  - e.g. `02-UI-r1-2-design.md` (dialogue turn 2 — the "final" after persona's reaction)
+  - e.g. `02-UI-r1-1-stakeholder.md` (dim 02 / user-round 1 / dialogue **turn 1** — persona's brief)
+  - e.g. `02-UI-r1-2-design.md` (**turn 2** — design draft replying to turn 1)
+  - e.g. `02-UI-r1-3-stakeholder-reaction.md` (**turn 3** — persona's reaction to the draft)
+  - e.g. `02-UI-r1-4-design.md` (**turn 4** — final design after reaction; **SKIP** if turn 3 said "looks good, ship it")
+
+  **Iter is a SHARED counter across the whole doc-relay**, NOT per-role. Each file gets the *next* turn number. **Two files in the same round must NEVER share an iter** — `02-UI-r1-1-stakeholder.md` + `02-UI-r1-1-design.md` is wrong (two "turns" at the same dialogue position is meaningless). The design replying to a stakeholder brief at turn 1 must be turn 2: `02-UI-r1-2-design.md`. Odd turns are stakeholder voice (brief / reaction); even turns are design voice (draft / final). Turn N+1 always replies to turn N.
+
 - **Without name slot** (validation files / persona / scope / changelog): `{模块号}-{用户级轮次}-[{iter}-]{角色}.md` (or unprefixed for goal-level meta)
   - e.g. `90-validation-plan-r1.md` (no iter — single doc per round)
   - e.g. `91-validation-run-r1-1.md` (iter = fix-loop iteration)
@@ -254,12 +259,14 @@ Two shapes — depending on whether the file has a separate "name" slot (the dim
 | Role | iter slot | meaning |
 |------|-----------|---------|
 | persona / scope / plan / changelog | none | one per round (or rolling) |
-| stakeholder / design | required | 1 = brief/draft, 2 = reaction/final |
+| stakeholder / design / stakeholder-reaction | required | shared dialogue turn across all three roles (NOT per-role); turn N+1 replies to turn N. Typical sequence: 1 stakeholder → 2 design → 3 stakeholder-reaction → 4 design (final, only if reaction triggered re-design) |
 | validation-run / fix-attempt | required | fix-loop iter (1..3) |
 
-**Find current state of a dimension**: largest `r{N}` for that dim's `design` files; within that round, the largest dialogue-turn (2 if reaction had pushback, else 1). Optionally maintain `STATE.md` as a snapshot table.
+**Find current state of a dimension**: per Step 7.5 root invariant, root contains at most ONE `0X-{dim}-r{N}-{iter}-design.md` per dim — just read it. (Pre-archive fallback if Step 7.5 hasn't run yet: largest `r{N}` for that dim's `design` files; within that round, the largest dialogue-turn — typically iter 4 if reaction triggered re-design, else iter 2.) Optionally maintain `STATE.md` as a snapshot table.
 
 **Check IDs preserve their birth round**: a check introduced in r1 stays `VAL-r1-005` forever, even when r3 inherits it. New checks in r2 are `VAL-r2-001`, etc. This makes archeology trivial.
+
+**Cross-round new modules** *(9th iter)*: when r{N+1}'s scope Agent classifies the request as 新增 and the new capability does not map to any existing 模块号 (true gap in r1's goal-tree — e.g. logo asset matrix appearing at r4 of a site project that had only enumerated content/UI/functional dims 01–16), allocate the **next free integer in the same band** (product dims 01–19; goal-tree / scope meta 20–29; gate / acceptance 30–39; build-plan / fix-brief 40–59; retro / validation / meta 90–99; persona / true-goal / DoD / unprefixed goal-level docs use 00 or no prefix). If the product-dim band 01–19 is exhausted, surface to user — do NOT silently spill into 20–29 (reserved). The round slot stays at the user-level round, NOT a module-local round. E.g.: r1=01–16, r4 introduces logo → `17-logo-r4-1-stakeholder.md`, not `logo-r1-...`. Module-local rounds (`logo-r2-implementation-brief.md` style) are **out-of-convention orphans** — they don't merge into the inheritance graph, scope Agent can't find them via `0X-{dim}-r{*}-design.md` glob, and check archeology breaks. If you find such orphans in an existing `goal-docs/`, rename them into convention before the next round starts.
 
 ## Step 1 — Prior weighting (the step LLMs skip)
 
@@ -857,6 +864,8 @@ loop:
 
 When the round being run is r{N} for N > 1 (i.e., this is an update to a project that already has an r{N-1} validation history), the three docs change shape from "full snapshot" to "delta + reference":
 
+**Inheritance reads** *(10th iter)* — per Step 7.5 root invariant, prior-round validation plans/runs live in `_archive-r{N-1}/`, not at root. The plan Agent reads `_archive-r{N-1}/90-validation-plan-r{N-1}-resolved.md` to inherit checks; paths are deterministic from round number, so no glob walking needed. If the prior round was never archived (pre–Step 7.5 backfill state), read from root as fallback.
+
 **`90-validation-plan-r{N}.md`** — delta plan with four sections:
 
 ```markdown
@@ -1052,6 +1061,93 @@ After all slices in `20-goal-tree-r{N}.md` have passed Step 3.5 milestone gate A
 **When to skip**: project was a single tiny slice with no drift and no surprises (every Step 3.5 / Step 3.7 PASSED with no bounce). In that case write a 3-line stub retro: "no drift, no new refs, prior was accurate." Don't pad with manufactured lessons. Pattern-only stubs are signal too — they tell the next-project's prior that this entity type's prior is mature and probably trustworthy.
 
 **Anti-pattern**: skipping retro on the grounds that "the user got what they wanted." User satisfaction does not imply the prior was correct — the user might have gotten what they wanted via 4 rounds of bouncing, and the lesson is in those bounces. Project completion ≠ no lessons learned.
+
+## Step 7.5 — Root-as-answer archive gate *(10th iter)*
+
+Triggered after Step 7 retro is written. Enforces the invariant **root = latest converged answer per artifact; everything else (process, receipts, superseded versions) lives in `_archive-r{N}/`**. Without this gate, `goal-docs/` conflates "what does this project look like now" with "how we got here" — design.md from 3 different rounds, every stakeholder brief, every validation run sit at the same level, and "current state" becomes unreadable.
+
+### The root invariant
+
+After the gate runs, root contains exactly:
+
+- `00-用户画像-r{LATEST}.md` (older r{N}s → archive)
+- `00-true-goal-r{LATEST}.md`
+- `10-DoD-r{LATEST}.md`
+- `20-goal-tree-r{LATEST}.md`
+- `99-retro-r{LATEST}.md`
+- For each dim D: ONE `0X-{dim}-r{N}-{iter}-design.md` — the per-dim latest (max r{N}, max iter within). Different dims may have different "latest rounds" — a dim untouched in r2 keeps its r1 design at root, because r1 IS the latest for that dim. The "round" doesn't own design.md; the *dim* does.
+- `CHANGELOG.md` / `STATE.md` / `user_goal_surface.md` / `CLAUDE.md` / `MEMORY.md` — rolling or immutable goal-level meta
+
+Everything else moves to `_archive-r{N}/` keyed by birth-round:
+
+- **Process** — `*-stakeholder.md`, `*-stakeholder-reaction.md`, `40-build-plan-*`, `40-align-check-*`, `40-plan-react-*`, `35-acceptance-*`, `50-fix-brief-*` / `50-build-brief-*`, `92-fix-attempt-*`, `UPDATE-r{N}-*.md`
+- **Receipts** — `90-validation-plan-r{N}.md` (+ `-resolved`), `91-validation-run-r{N}-*`, `30-milestone-gate-{slice-id}-r{N}.md` (+ gate PNGs), `91-val-*.png` / `91-r{N}-*.png` / `92-r{N}-*.png`, `blind-compare-r{N}-*.md`, `40-align-check-*` and similar role-anchored audits
+- **Candidates** — `0X-{dim}-r{N}-{iter}-design-samples/` directories, `blind-compare-crops-r{N}-*/` directories
+- **Superseded answers** — any `0X-{dim}-r{N}-{iter}-design.md` that is NOT the per-dim latest; older `00-用户画像` / `00-true-goal` / `10-DoD` / `20-goal-tree` / `99-retro`
+
+### Why audit trail goes to archive *(change from 9th iter)*
+
+Prior version of this step kept the audit trail (stakeholder / reaction / validation-* / gate / blind-compare) at root on the grounds that r{N+1} iteration mode needs it. That was the wrong cut.
+
+The audit trail is *process* — receipts for how we arrived at the answer. The answer itself is design.md (and persona/DoD/goal-tree). Iteration mode in r{N+1} reads inheritance from `_archive-r{N-1}/` (paths are deterministic from round number, so no glob walking needed). Keeping receipts at root conflates "what we decided" with "how we decided it" and the "what" loses — anyone trying to answer "what does this project look like now?" by reading `goal-docs/` drowns in process.
+
+### Trigger and gate
+
+`99-retro-r{N}.md` exists for the just-completed round. Main agent prompts user verbatim:
+
+```
+r{N} 这一轮按预期完成了吗？
+① 是, 归档 r{N} 过程产物到 _archive-r{N}/, 根只留最新答案
+② 否, 留根 (说明哪里没达预期 — 可能要开 r{N+1} 修正)
+```
+
+Wait for user input. Do not act on ① without explicit user choice.
+
+**Why user-gated, not auto-archive on retro write**: archiving is irreversible visual context loss. The user is the only one who can say "this round delivered what I expected" — main agent must NOT infer round-closure from "all checks passed" (user satisfaction ≠ tool-verified completion).
+
+### On ① — archive
+
+Two-commit pattern (per project CLAUDE.md convention so any wrong move is `git revert`-able):
+
+```bash
+# 1. snapshot
+git add goal-docs/ && git commit -m "docs(goal-docs): snapshot before r{N} archive"
+
+# 2. compute keep set (latest persona/DoD/goal-tree/true-goal/retro + per-dim latest design.md + goal-level meta), then mv everything else born in r{N} into _archive-r{N}/
+mkdir -p goal-docs/_archive-r{N}
+git mv <enumerated non-keep files born in r{N}> goal-docs/_archive-r{N}/
+git commit -m "chore(goal-docs): archive r{N} process; root = latest answer per artifact"
+```
+
+The per-dim "find non-latest design.md" step requires per-dim iteration (can't be a single glob):
+
+```
+for each dim D appearing in goal-docs/0X-{dim}-r{*}-{iter}-design.md:
+  keep = max-r{N}, max-iter within that round  →  STAYS at root
+  all others  →  git mv into _archive-r{birth_round}/
+```
+
+### Backfill mode
+
+If `_archive-r*/` doesn't exist for any of r1..r{N-1} (existing project with N closed rounds never archived — the typical state when this step is introduced to a long-running project), the gate's first run is a backfill. Iterate rounds in order (r1, r2, …, r{LATEST}), running the same partitioning per round. Latest round retains the per-dim latest design.md + round-anchor docs at root; earlier rounds typically contribute zero files to root (because their everything has been superseded), unless a dim was last touched in that round and never re-touched.
+
+### On ② — don't archive
+
+Treat "没达预期" as a Step 0a iteration trigger. Route through scope Agent — surface is most likely 修正 (build didn't match design) or 画像变更 (persona was off). Do NOT archive a round the user isn't satisfied with, even if every Step 3.5 / 3.7 PASSED.
+
+### Why iteration mode still works post-archive
+
+- **Step 0a "Find current state of a dim"** is now trivial — root has at most ONE design.md per dim, just read it.
+- **Step 6 iteration mode** reads inheritance from `_archive-r{N-1}/90-validation-plan-r{N-1}-resolved.md` — paths are deterministic from round number, no glob walking needed.
+- **Step 0a 修正 routing** ("why did we decide X for dim D in r{N-2}?"): scope Agent reads `_archive-r{N-2}/0X-{D}-r{N-2}-{iter}-design.md` directly when archeology is needed. Archived files are *queryable when needed, invisible when not*.
+
+### Anti-patterns
+
+- **Auto-archiving on retro write without user gate** — saves a round-trip but loses the only signal distinguishing "delivered" from "delivered the wrong thing." A round where every Step 3.5/3.7 PASSED but the user says "we shipped, but it's not what I wanted" must trigger r{N+1}, not archive.
+- **Keeping audit trail at root** *(the 9th-iter mistake)* — root drowns in receipts. "What does this project look like now?" becomes unanswerable by `ls goal-docs/`. Receipts belong in archive.
+- **Moving the LATEST design.md of a dim to archive because "the round closed"** — a dim's design.md is the latest converged answer for that dim regardless of which round produced it. A dim untouched since r1 keeps its r1 design.md at root. The "round" doesn't own design.md; the *dim* does.
+- **Round-anchor mismatch** — archiving the latest `00-用户画像-r{N}.md` because "we already wrote r{N+1}", but `00-用户画像-r{N+1}.md` doesn't exist yet (Step 0a's 画像变更 branch requires user-approved persona regen). If no r{N+1} persona exists, r{N} persona IS the latest and stays at root.
+- **Archiving candidate-sample PNGs into a "kept" assets directory** — candidate PNGs in `0X-{dim}-r{N}-{iter}-design-samples/` are most ephemeral; the final pick is preserved in `*-design.md` + the actual rendered artifact. Elevating them to a persistent `_assets/` confuses them with validation-evidence PNGs (which also go to archive, just under their birth round).
 
 ## Anti-patterns to avoid
 
