@@ -32,6 +32,13 @@ jobs:
           else
             npm run validate:all
           fi
+      - name: virustotal scan (PR, changed skills only; soft-fail on errors)
+        # 仅 PR 跑; fork PR 无 secret → script 自己降级 warning, 不挂 CI.
+        # 阈值 malicious≥3 才 fail; rate-limit / 网络异常 / 超时一律 soft-fail.
+        if: github.event_name == 'pull_request'
+        env:
+          VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+        run: npm run validate:vt
       - name: collect validate JSON on failure
         if: failure()
         run: npm run validate:json > /tmp/validate.json || true

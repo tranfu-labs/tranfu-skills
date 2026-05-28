@@ -11,7 +11,6 @@ import {
 } from "./lib/validator-types.mjs";
 
 import { validateSkillFile, findSkillFiles } from "./validate-frontmatter.mjs";
-import { validateSkillReadme, findSkillDirs as findReadmeSkillDirs } from "./validate-readme.mjs";
 import { validateSkillCases, findSkillDirs as findCasesSkillDirs } from "./validate-cases.mjs";
 import { validateSkillSecurity, findSkillDirs as findSecuritySkillDirs } from "./validate-security.mjs";
 
@@ -40,7 +39,6 @@ function discoverAllSkillDirs(rootDir) {
   for (const file of findSkillFiles(rootDir)) {
     set.add(skillDirFromSkillMd(file));
   }
-  for (const d of findReadmeSkillDirs(rootDir)) set.add(d);
   for (const d of findCasesSkillDirs(rootDir)) set.add(d);
   for (const d of findSecuritySkillDirs(rootDir)) set.add(d);
   return [...set].sort();
@@ -124,7 +122,6 @@ function validateOne(skillDir, rootDir) {
   if (existsSync(skillMd)) {
     results.push(...validateSkillFile(skillMd, rootDir));
   }
-  results.push(...validateSkillReadme(skillDir, rootDir));
   results.push(...validateSkillCases(skillDir, rootDir));
   results.push(...validateSkillSecurity(skillDir, rootDir));
   return results;

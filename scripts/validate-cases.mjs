@@ -130,59 +130,48 @@ export function validateSkillCases(skillDir, rootDir = process.cwd()) {
     );
   }
 
-  if (numericDirs.length > 0) {
-    numericDirs.sort((a, b) => a.n - b.n);
-    const expected = numericDirs.map((_, i) => i + 1);
-    const actual = numericDirs.map((d) => d.n);
+  for (const d of numericDirs) {
+    const inputDir = join(d.full, "input");
+    const outputDir = join(d.full, "output");
+    const caseRel = relative(rootDir, d.full);
 
-    for (let i = 0; i < expected.length; i++) {
-      if (actual[i] !== expected[i]) {
-        results.push(
-          makeError({
-            validator: VALIDATOR,
-            skill,
-            path: relative(rootDir, numericDirs[i].full),
-            rule: "cases.non-sequential",
-            severity: SEVERITY.ERROR,
-            message: `expected cases/${expected[i]}/ but found cases/${actual[i]}/`,
-            fix_hint: `rename to cases/${expected[i]}/ so numeric dirs are 1..N contiguous`,
-          }),
-        );
-        break;
-      }
+    if (!isNonEmptyDir(inputDir)) {
+      results.push(
+        makeError({
+          validator: VALIDATOR,
+          skill,
+          path: caseRel,
+          rule: "cases.missing-input",
+          severity: SEVERITY.ERROR,
+          message: `case ${d.name}/ missing non-empty input/ subdir`,
+          fix_hint: `create ${caseRel}/input/PROMPT.md describing the case input`,
+        }),
+      );
+    } else if (!existsSync(join(inputDir, "PROMPT.md"))) {
+      results.push(
+        makeError({
+          validator: VALIDATOR,
+          skill,
+          path: caseRel,
+          rule: "cases.missing-prompt-md",
+          severity: SEVERITY.ERROR,
+          message: `case ${d.name}/input/ missing PROMPT.md`,
+          fix_hint: `add ${caseRel}/input/PROMPT.md (the user prompt that drives this case); supporting files in input/ are allowed alongside`,
+        }),
+      );
     }
-
-    for (const d of numericDirs) {
-      const inputDir = join(d.full, "input");
-      const outputDir = join(d.full, "output");
-      const caseRel = relative(rootDir, d.full);
-
-      if (!isNonEmptyDir(inputDir)) {
-        results.push(
-          makeError({
-            validator: VALIDATOR,
-            skill,
-            path: caseRel,
-            rule: "cases.missing-input",
-            severity: SEVERITY.ERROR,
-            message: `case ${d.name}/ missing non-empty input/ subdir`,
-            fix_hint: `create ${caseRel}/input/ and add ≥ 1 file representing the case input`,
-          }),
-        );
-      }
-      if (!isNonEmptyDir(outputDir)) {
-        results.push(
-          makeError({
-            validator: VALIDATOR,
-            skill,
-            path: caseRel,
-            rule: "cases.missing-output",
-            severity: SEVERITY.ERROR,
-            message: `case ${d.name}/ missing non-empty output/ subdir`,
-            fix_hint: `create ${caseRel}/output/ and add ≥ 1 file representing the expected output`,
-          }),
-        );
-      }
+    if (!isNonEmptyDir(outputDir)) {
+      results.push(
+        makeError({
+          validator: VALIDATOR,
+          skill,
+          path: caseRel,
+          rule: "cases.missing-output",
+          severity: SEVERITY.ERROR,
+          message: `case ${d.name}/ missing non-empty output/ subdir`,
+          fix_hint: `create ${caseRel}/output/ and add ≥ 1 file representing the expected output`,
+        }),
+      );
     }
   }
 
