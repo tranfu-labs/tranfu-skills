@@ -1,14 +1,6 @@
 name: ci
 on:
   pull_request:
-    paths:
-      - "meta-skills/**"
-      - "own-skills/**"
-      - "external-skills/**"
-      - "scripts/build-index.mjs"
-      - ".github/workflows/build-index.yml"
-      - "package.json"
-      - "index.json"
   push:
     branches: [main]
 jobs:
