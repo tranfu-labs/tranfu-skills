@@ -1,6 +1,7 @@
 {
   "private": true,
   "name": "tranfu-skills-repo",
+  "license": "MIT",
   "scripts": {
     "build:index": "node scripts/build-index.mjs",
     "validate": "node scripts/validate-all.mjs",
