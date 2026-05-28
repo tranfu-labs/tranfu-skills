@@ -10,10 +10,14 @@ function ruleIds(errs) {
   return errs.map((e) => e.rule).sort();
 }
 
-function mkCase(skillDir, n, { withInput = true, withOutput = true } = {}) {
+function mkCase(skillDir, n, { withInput = true, withPrompt = true, withOutput = true } = {}) {
   if (withInput) {
     mkdirSync(join(skillDir, "cases", String(n), "input"), { recursive: true });
-    writeFileSync(join(skillDir, "cases", String(n), "input", "x.txt"), "a");
+    if (withPrompt) {
+      writeFileSync(join(skillDir, "cases", String(n), "input", "PROMPT.md"), "drive\n");
+    } else {
+      writeFileSync(join(skillDir, "cases", String(n), "input", "x.txt"), "a");
+    }
   }
   if (withOutput) {
     mkdirSync(join(skillDir, "cases", String(n), "output"), { recursive: true });
@@ -45,6 +49,31 @@ test("cases: valid 1+2 sequential → 0 errors", () => {
   }
 });
 
+test("cases: input/ exists but no PROMPT.md → cases.missing-prompt-md", () => {
+  const root = makeTmpRepo();
+  try {
+    const dir = writeSkill(root, { name: "noprompt" });
+    mkCase(dir, 1, { withPrompt: false });
+    const errs = validateSkillCases(dir, root);
+    assert.deepEqual(ruleIds(errs), ["cases.missing-prompt-md"]);
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("cases: input/ has PROMPT.md + supporting file → 0 errors", () => {
+  const root = makeTmpRepo();
+  try {
+    const dir = writeSkill(root, { name: "withaux" });
+    mkCase(dir, 1);
+    writeFileSync(join(dir, "cases/1/input/screenshot.png"), "fake-png");
+    const errs = validateSkillCases(dir, root);
+    assert.equal(errs.length, 0, JSON.stringify(errs));
+  } finally {
+    cleanup(root);
+  }
+});
+
 test("cases: missing input → cases.missing-input", () => {
   const root = makeTmpRepo();
   try {
@@ -69,14 +98,15 @@ test("cases: missing output → cases.missing-output", () => {
   }
 });
 
-test("cases: skip number (1, 3) → cases.non-sequential", () => {
+test("cases: gaps in numbering (1, 3, 7) → 0 errors (no sequential constraint)", () => {
   const root = makeTmpRepo();
   try {
-    const dir = writeSkill(root, { name: "skip" });
+    const dir = writeSkill(root, { name: "gaps" });
     mkCase(dir, 1);
     mkCase(dir, 3);
+    mkCase(dir, 7);
     const errs = validateSkillCases(dir, root);
-    assert.ok(errs.some((e) => e.rule === "cases.non-sequential"));
+    assert.equal(errs.length, 0, JSON.stringify(errs));
   } finally {
     cleanup(root);
   }
