@@ -1,0 +1,174 @@
+---
+title: "用 goal-driven-decomposition 给"系列文章"做前置准备"
+session_id: "46da000c-112b-41f4-ac66-a91d4fe466df"
+date: "2026-05-28"
+project_dir: "/Users/wing/Develop/skill-docs"
+skill: "goal-driven-decomposition"
+artifacts:
+  - user_goal_surface.md
+  - 00-true-goal-r1.md
+  - 00-用户画像-r1.md
+description: "一段真实的 Claude Code 对话：用户想写一个面向非 CS 5 年职场人的 skill 入门系列，AI 用 goal-driven-decomposition skill 做前置准备（surface / true_goal / persona）。"
+---
+
+{/*
+  这是一份"对话还原"MDX。
+  期望在外部站点中通过 MDX provider 注入下面四个组件：
+    <ChatMessage role="user|assistant"> ... </ChatMessage>
+    <ToolCall name="..." input="..." />
+    <ToolResult>...</ToolResult>
+    <SubagentRun description="..." />
+  组件未注入时，MDX 也能作为纯 Markdown 阅读——所有真实内容都在标签之间。
+*/}
+
+# 对话还原 — 给 skill 入门系列做前置准备
+
+> 用户的真实诉求：要写一个让"工作 5 年左右、非计算机行业"的人从 0 学会用 skill、最后能发布 skill 的系列文章。**当前阶段不写正文**，先把风格 / 单篇形式 / 系列目录这三件前置工作做对。
+>
+> 本对话调用了本地 `goal-driven-decomposition` skill，走到了 cold-start 协议的 **persona 阶段闭环**（surface → true_goal → persona r1，含一次 modal 重写），随后用户暂停审稿。
+
+---
+
+<ChatMessage role="user">
+
+我们本地的 goal-driven-decomposition skill 最近有更新吗
+
+</ChatMessage>
+
+<ChatMessage role="assistant">
+
+本地 `goal-driven-decomposition` skill 最近有更新：
+
+- `SKILL.md` — **2026-05-27 17:13**（昨天）
+- `HISTORY.md` — **2026-05-19 18:52**
+
+该目录不是 git repo，所以没有 commit 历史，只能看文件 mtime。如果你想看具体改了什么，可以告诉我对比方向（比如和某个备份对比，或让我读现在的 SKILL.md 概述新增内容）。
+
+</ChatMessage>
+
+---
+
+<ChatMessage role="user">
+
+好，我的目标是想要写一个系列文章，目标用户工作了 5 年左右的相关非计算机行业的人才让他们可以知道从 0 到自己会用 skill 然后发布。现在重点不是文章本身，而是把前置工作准备好，文章风格、形式、系列文章或者说目录
+
+</ChatMessage>
+
+<ChatMessage role="assistant">
+
+<ToolCall name="Skill" input="goal-driven-decomposition" />
+
+发现 `docs-1.md` 已有一篇样章（公众号体 / LLM/Agent/MCP 概念扫盲 / 编号小节）。这改变了切入方式——你已经有 voice 了，前置准备应该 anchor 在这个 voice 上。
+
+在跑完整 goal-driven 协议前，先跟你对齐一下范围：
+
+**我读到的**
+- true_goal = 让非 CS 5 年职场人 0→会用 skill→发布 skill
+- 当前阶段交付物：**风格手册 + 单篇形式约定 + 系列目录**（不写正文）
+- 已有锚点：`docs-1.md`（公众号体，可作 hero-ref）
+- 平台先验：公众号（从排版反推）
+
+**我准备跑的协议**
+1. 建 `goal-docs/` + 写 `user_goal_surface.md` / `00-true-goal-r1.md`
+2. 起 persona Agent → `00-用户画像-r1.md`（先验：5 年互联网/咨询 PM，被 AI 术语劝退过，公众号读者；hero-ref = `docs-1.md` + 你后续补的截图）
+3. DoD + Goal Tree Agent → 三个 dim：**文章风格 (sample) / 单篇形式 (sample) / 系列目录 (enumerate)**；slice-1 = 拿 `docs-1` 当末轮试金石跑一遍三 dim 闭环
+4. 之后才进 doc-relay
+
+**两个 gate 想先问你**
+1. persona 我猜的是"互联网产品/运营/咨询"为 modal — 你心里有更具体的人吗？（一个真实朋友 / 你自己 5 年前 / 公众号后台留言里某类人）
+2. 平台是公众号 only，还是公众号 + 小红书 + 即刻多端？这影响"单篇形式"的硬约束
+
+回我这两个就开跑。
+
+</ChatMessage>
+
+---
+
+<ChatMessage role="user">
+
+1. 我想要的是那种，流程普通人都能听得懂，而且他的流程也可以很好的 AI 化的，有较多繁琐的智力化的操作
+2. 不需要考虑，只需要考虑一篇不会太长，4500 字就够长了，读起来 10 分钟左右
+
+</ChatMessage>
+
+<ChatMessage role="assistant">
+
+清楚了。Persona shape：**"流程化的脑力劳动者"** —— 律师、咨询、财务、编辑、教师、营销、投研这类。共同点是流程能被外行听懂 + 工作里有大量"繁琐但要判断"的环节。
+
+我现在建 `goal-docs/` 并起 persona Agent。
+
+<ToolCall name="Write" input="goal-docs/user_goal_surface.md" />
+<ToolCall name="Write" input="goal-docs/00-true-goal-r1.md" />
+<SubagentRun description="起草 persona 用户画像 r1" />
+
+Persona 落了：**林姐, 32, 互联网 in-house 法务**, 代表"看材料→抽信息→对规则→出结论"这类智力流水线工作者（可套换到财务 / 编辑 / 咨询 / 招聘等）。审美 hero = `docs-1.md` + 阮一峰概念解释 + 少数派派评; anti = CSDN tutorial + 营销标题党 + 学术翻译腔。
+
+完整 doc：`/Users/wing/Develop/skill-docs/goal-docs/00-用户画像-r1.md`
+
+**两个 gate 想先问你再继续**：
+
+1. **法务作 modal** 行吗？还是你心里另有更合适的人（财务 / 编辑 / 咨询 / 译者 / ...）？不换的话也没关系——卡里写了"代表一类工作流，不是法务本身"。
+2. **林姐愿意花的总时长？** Agent 先验 5-8 小时（3-5 晚 × 1-1.5h）→ 对应 **5-7 篇系列**。如果你想做 10-12 篇深系列，这个数要往上调。
+
+回这两个就并行起 DoD + GoalTree。
+
+</ChatMessage>
+
+---
+
+<ChatMessage role="user">
+
+1. 法务？我最担心的就是专有名词太多其它专业的人看不懂
+2. 不对，按照最终目标阶段性来，比如基础目标可以只有 4、5 篇，成为高手再有 4、5 篇，有阶段性收尾和学习成果
+
+</ChatMessage>
+
+<ChatMessage role="assistant">
+
+两个 pushback 都听到了：
+
+1. 法务专有名词重 → 换 modal 到**词汇更通用的工作流**（候选：内容编辑 / 新媒体、营销文案、译者、教师备课。我倾向**内容/新媒体编辑**，词汇 100% 大众化，跟 `docs-1.md` 读者重合度最高）
+2. 系列要**阶段性**：基础（4-5 篇）→ 阶段性收尾产物 → 高手（4-5 篇）→ 阶段性收尾产物。映射 true_goal 三段式：0→会用 / 会用→发布
+
+第 1 点要回 persona Agent 改 modal；第 2 点直接进 GoalTree。
+
+<SubagentRun description="改 persona modal: 法务 → 词汇更通用" />
+
+Persona r1 已重写：
+- **Modal 换成**：公众号小编 / 内容编辑（词汇 100% 大众，流程：选题→改稿→排版→标题→数据；跟 `docs-1.md` 读者 100% 重合）
+- **新增 §1.3 分阶段偏好**：关键句 "她最怕'学了 3 篇还没攒出能立刻用的东西'" + 喜欢的承诺句式 "读完本阶段你将得到 X（具体实物）"
+- **§6 新增硬约束**：系列必两阶段，每阶段开头明示阶段产物
+
+文件：`/Users/wing/Develop/skill-docs/goal-docs/00-用户画像-r1.md`
+
+要不要瞄一眼（尤其新 modal 的 §1.1 5 个场景 + §1.3）再 OK？
+
+OK 之后我就并行起 **DoD Agent** + **GoalTree Agent**（后者把两阶段结构 + 每阶段收尾产物钉进 goal-tree）。
+
+</ChatMessage>
+
+---
+
+<ChatMessage role="user">
+
+看一下再 OK，跑 DoD 和 GoalTree
+
+</ChatMessage>
+
+<ChatMessage role="assistant">
+
+文件路径：`/Users/wing/Develop/skill-docs/goal-docs/00-用户画像-r1.md`
+
+重点扫这几节：
+- **§1.1** 5 个真实场景（选题汇总 / 改稿对规范 / 模板化写作 / 资料汇编 / 追素材）
+- **§1.3** 分阶段偏好（新增）
+- **§6** 关键约束（新增"系列必两阶段，每阶段明示阶段产物"硬约束）
+- **§7.7** 新增自检题（校准阶段承诺句式）
+
+OK 就回我一声，我并行起 DoD + GoalTree。
+
+</ChatMessage>
+
+---
+
+> **会话状态**：暂停在 persona r1 审稿。下一步将并行起 DoD + GoalTree Agent，把"两阶段、每阶段一个具体收尾产物"钉进目标树，再进 doc-relay。
