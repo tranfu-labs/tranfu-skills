@@ -8,9 +8,9 @@ description: >
   Also triggers for: "这个项目还缺什么", "帮我完善项目结构", "准备开源".
   Do NOT trigger when: user wants to write code, fix bugs, or do code review.
 userInvocable: true
-version: 0.1.0
+version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-05-14
+updated_at: 2026-05-29
 origin: own
 ---
 
@@ -21,6 +21,18 @@ origin: own
 IMPORTANT: 你是引导者，不是生成器。NEVER 一次性生成所有缺失文件。MUST 逐项确认用户意图后再行动。
 
 ## 第一步：扫描项目，生成清单
+
+**前置 — 确认 cwd 是项目根**:
+
+```bash
+git rev-parse --show-toplevel 2>/dev/null
+```
+
+若返回路径 `!= pwd`, 说明当前是某 git repo 的**子目录**, 或 cwd 不在 git repo 内. 提示用户:
+
+> 当前目录 `{{pwd}}` 不是 git repo 根 (实际根是 `{{toplevel}}` / 或无 git). 继续扫描会针对**当前子目录**, 不扫整 repo. 确认继续? 或切到正确目录再跑.
+
+得到确认后再往下. 子目录内的项目 (e.g. monorepo 子包 / parent-tracked 的 sibling 项目) 是合法场景, 但用户必须明确知道扫描范围.
 
 检查以下各项是否存在且质量达标。对每项给出状态：
 
@@ -103,14 +115,20 @@ MUST 等用户选择要处理哪些项。NEVER 自动开始全部补全。
 > 如果你安装了 readme-generator skill，我可以调用它来生成。
 
 - 用户有 skill → 引导使用对应 skill
-- 用户无 skill 且无主张 → 启动 SubAgent 生成
+- 用户无 skill 且无主张 → 进入下面分支
 
-SubAgent 生成时 MUST 包含：
-1. 项目名称 + 一句话描述
-2. 安装步骤（从 package.json/Cargo.toml 等推断）
-3. 快速开始 / 使用示例
-4. 至少一个 badge（CI 状态或版本号）
-5. License 引用
+**所有写作 / 优化必须依据 [`references/readme-playbook.md`](references/readme-playbook.md)** — 结构 (15 节按需启用)、首句价值原则、措辞 5 类检查、反例清单都在那里. 不要在 SKILL.md 里复述.
+
+#### MISSING — 从零生成
+启 SubAgent, prompt 中 reference 路径 `references/readme-playbook.md` 第 6 节, 喂项目信息 (技术栈 / 仓库类型 / 目标读者). 生成后 MUST 再走一轮第 5 节的 validation, 不直接交付.
+
+#### WEAK — 优化已有
+按 `references/readme-playbook.md` 第 5 节的 micro-slice 流程:
+1. 用第 1-4 节扫现状, 列 diff 表 (位置 / 现状 / 建议 / 理由)
+2. 自反思 1 轮再提交给用户
+3. 应用 1-3 处 Edit (不重写整文件), 启 fresh validation agent
+4. 按 "必改 / 建议改 / 可不改" 分级处理, 重启 fresh agent
+5. 止损: 最多 3 轮
 
 ### LICENSE（MISSING）
 
@@ -125,38 +143,42 @@ SubAgent 生成时 MUST 包含：
 
 ### .gitignore（WEAK 或 MISSING）
 
-根据项目技术栈（从 package.json、Cargo.toml、go.mod 等推断）自动生成。
-可参考 github/gitignore 仓库的模板。MUST 包含 `.env*` 和 IDE 配置。
+按 [`references/gitignore-by-stack.md`](references/gitignore-by-stack.md) 处理:
+
+- **栈识别**: 按第 2 节表格扫存在文件 (package.json / Cargo.toml / go.mod / pyproject.toml …) 推断主栈, 多命中即 monorepo (问用户是否拆 workspace-level .gitignore).
+- **MISSING**: 必含段 (第 0 节) + 主栈段 (第 1 节对应小节) 拼接生成.
+- **WEAK** (按第 4 节判定: 缺 `.env*` / 缺主栈 build 目录 / 缺 IDE 配置): **追加缺失段, 不重写**.
+- 反例避开 (第 3 节): 别忽略 lockfile, 别用通配压掉有意义的 keep 文件.
 
 ### CONTRIBUTING.md（MISSING）
 
-询问用户：
-> 你的项目有特定的贡献规范吗？比如：
-> - Commit 规范（Conventional Commits？）
-> - 分支策略（Git Flow？Trunk-based？）
-> - 代码审查要求
-> 如果没有特定要求，我可以生成一个通用模板。
+按 [`references/contributing-playbook.md`](references/contributing-playbook.md) 处理:
+
+1. 问第 2 节的 5 个关键选择题 (Commit 规范 / 分支策略 / 审查人数 / 合并方式 / DCO). 用户无主张走默认 (Conventional Commits + Trunk-based + 1 approver + Squash + 无 DCO).
+2. 用第 3 节通用模板填充用户的选项 + 项目实际命令 (从 package.json scripts / Makefile 推断 `{{install-cmd}}` / `{{test-cmd}}` / `{{lint-cmd}}`).
+3. 按第 4 节变体裁剪: 内部仓删 Fork/DCO + 加联系人, 公开 OSS 加行为准则 link + first-time contributor 提示.
+4. 反例避开 (第 5 节): 别堆套话, 别只列名字不给例子, 别说"任何贡献都欢迎"不给动作.
 
 ### Issue / PR 模板（MISSING）
 
-询问用户：
-> 需要哪些 Issue 模板？常见选择：
-> - Bug Report
-> - Feature Request
-> - Question / Discussion
->
-> PR 模板需要包含哪些 checklist？
+按 [`references/issue-pr-templates.md`](references/issue-pr-templates.md) 处理:
 
-用户无主张 → 启动 SubAgent 生成常见模板。
+1. 一次性问完 (第 4 节话术): 全套默认 / 最小集 (bug + PR) / 自定义.
+2. 用 **Issue Forms (`.yml`)** 不用 Markdown 模板 — 强制必填.
+3. 必含 `config.yml` 禁用 blank issues + 提供 Discussions / Security 联系入口 (第 1.4 节).
+4. PR 模板用第 2.1 节骨架, 按仓库类型 (内部 / 公开 OSS / 文档型) 走第 2.2 变体提示.
+5. 反例避开 (第 3 节): Issue 必填 ≤ 4 项, PR checklist ≤ 7 条, Security 不走公开 Issue.
 
 ### GitHub Actions CI（MISSING）
 
-询问用户：
-> 你需要什么 CI 流程？根据你的项目，建议：
-> - lint + type check（检测到 eslint/tsc）
-> - test（检测到 vitest/jest）
-> - build（检测到 next build/vite build）
-> 要全部加还是选择性加？
+按 [`references/ci-recipes.md`](references/ci-recipes.md) 处理:
+
+1. 用第 4 节话术问用户 — 完整 (lint + typecheck + test + build) / 最小 (只 test) / 自定义.
+2. 按主栈套第 1 节对应 recipe (Node / Python / Rust / Go), 替换检测到的命令.
+3. **必带** 第 0 节通用骨架: `concurrency` 段防冗余跑、pin action version 到 `@v4`+.
+4. 公开仓 + matrix 慎用 (第 1.5 节警示), 默认单 OS 单版本.
+5. **Path filter 陷阱** (第 2.1 节): 如果 workflow 是 branch ruleset 的 required check, 默认**不加 path filter**, 让它总跑.
+6. 文件命名按第 5 节约定: 主 CI `ci.yml`, 发布 `release.yml`.
 
 ### Badges（MISSING）
 
