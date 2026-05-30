@@ -2,11 +2,12 @@
 tranfu-publish PR body 模板, 3 路径共用 (own / external / case).
 
 原则:
-- 自检清单只列当前 CI hard gate.
-- README / source_url / prompt 文案质量 / output 都放到"非 CI 说明"或"风险点", 不放进阻塞清单.
+- 自检清单只列 validator hard gate.
+- README / cases / output / source_url 的 catalog 暴露情况单独说明.
+- prompt 文案质量、HTTP 验活、上游维护状态放到"风险点", 不放进阻塞清单.
 - `{...}` 是占位符, 真写 PR 时替换.
 
-多 skill 一 PR: 对每个 skill 重复 "### skill: <name>" + 下方元信息 / 自检 / 非 CI 说明.
+多 skill 一 PR: 对每个 skill 重复 "### skill: <name>" + 下方元信息 / 自检 / catalog surface / 质量说明.
 -->
 
 ## 元信息
@@ -20,7 +21,7 @@ tranfu-publish PR body 模板, 3 路径共用 (own / external / case).
 {variant: external}
 - origin: external
 - version: {new}
-- source_url: {url or "N/A — CI 不要求"}
+- source_url: {url or "N/A — validator 不要求; 缺失则 catalog 无 source_url 字段"}
 - 本 PR 写入: SKILL.md{optional_files, e.g. " + README.md"}
 {variant: case}
 - 新增 case 编号: {n}
@@ -64,17 +65,23 @@ tranfu-publish PR body 模板, 3 路径共用 (own / external / case).
 - [ ] 本地已跑 `npm run validate -- --target <own|external>-skills/{name} --json`
 - [~] N/A — 本 PR 不改 SKILL.md frontmatter / 代码脚本
 
-## 非 CI 说明
+## Catalog surface
 
 <!--
-这些不是当前 CI blocker. 只说明状态, 不作为发布拦截条件.
+build:index 会把已有文件写进 index.json skills[].files; external source_url 写了才进 catalog 字段.
+这些不是 validator blocker, 但影响 catalog 展示/分发.
 -->
 
-- README.md: {存在 / 缺失 / 未改 / 本 PR 可选补充}
+- README.md: {会进入 catalog files / 缺失, catalog 不展示 / 未改}
+- cases/: {会进入 catalog files, 列关键路径 / 缺失, catalog 不展示 case / N/A}
+- output/: {会进入 catalog files / 缺失, catalog 不展示 output / N/A}
+- source_url: {会进入 catalog 字段 / 缺失, catalog 无 source_url / N/A}
+
+## 质量说明
+
+- HTTP 验活: {通过 / 失败 / 未跑 / N/A}
 - README 辅助段落 (`同类 Skill 对比` / `使用技巧`): {存在 / 缺失 / 未改 / N/A}
-- source_url / HTTP 验活: {通过 / 失败 / 未跑 / N/A}
 - PROMPT.md 文案质量: {真实来源 / 用户提供 / TODO placeholder / N/A}
-- output/: {已收 / 缺失 / N/A}
 - VirusTotal: {本地未跑 / CI 有 secret 后跑 / N/A}
 
 ## 风险点

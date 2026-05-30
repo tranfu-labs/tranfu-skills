@@ -22,7 +22,7 @@
 
   <!-- Title -->
   <text x="660" y="42" text-anchor="middle" font-size="24" font-weight="700" fill="#0f172a">tranfu-publish — 框架图</text>
-  <text x="660" y="66" text-anchor="middle" font-size="13" fill="#64748b">3 路径 (own / external / case) · hard gate = CI + git 安全 · README/source_url/output 非阻塞</text>
+  <text x="660" y="66" text-anchor="middle" font-size="13" fill="#64748b">3 路径 (own / external / case) · validator hard gate + catalog surface · 用户确认后 PR</text>
 
   <!-- Trigger phrases -->
   <rect x="80" y="90" width="1160" height="56" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
@@ -48,13 +48,13 @@
   <text x="112" y="370" font-size="12" fill="#1e3a8a">1. CI: frontmatter 6 字段 + description ≤1024</text>
 
   <rect x="100" y="390" width="340" height="32" rx="6" fill="#ffffff" stroke="#bfdbfe"/>
-  <text x="112" y="410" font-size="12" fill="#1e3a8a">2. README/同类/使用技巧: 可选, 不阻塞</text>
+  <text x="112" y="410" font-size="12" fill="#1e3a8a">2. README/cases/output 存在 → catalog files</text>
 
   <rect x="100" y="430" width="340" height="32" rx="6" fill="#ffffff" stroke="#bfdbfe"/>
   <text x="112" y="450" font-size="12" fill="#1e3a8a">3. cases/: 存在才校验; legacy 必迁</text>
 
   <rect x="100" y="470" width="340" height="32" rx="6" fill="#ffffff" stroke="#bfdbfe"/>
-  <text x="112" y="490" font-size="12" fill="#1e3a8a">4. PR body 只列 CI 自检 + 非 CI 说明</text>
+  <text x="112" y="490" font-size="12" fill="#1e3a8a">4. PR body: validator 自检 + catalog surface</text>
 
   <rect x="100" y="510" width="340" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
   <text x="112" y="528" font-size="12" font-weight="600" fill="#1e3a8a">5. 写 own-skills/&lt;name&gt;/; 不提交 index.json</text>
@@ -68,7 +68,7 @@
   <text x="502" y="370" font-size="12" fill="#064e3b">1. CI: thin SKILL.md frontmatter 6 字段</text>
 
   <rect x="490" y="390" width="340" height="32" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
-  <text x="502" y="410" font-size="12" fill="#064e3b">2. source_url / HTTP 验活: 推荐, 非 CI</text>
+  <text x="502" y="410" font-size="12" fill="#064e3b">2. source_url 写了 → catalog 字段</text>
 
   <rect x="490" y="430" width="340" height="32" rx="6" fill="#ffffff" stroke="#a7f3d0"/>
   <text x="502" y="450" font-size="12" fill="#064e3b">3. README 可选; 不因缺失中止</text>
@@ -94,7 +94,7 @@
   <text x="892" y="450" font-size="12" fill="#713f12">3. n 无 leading zero; 全 cases/ 无 legacy</text>
 
   <rect x="880" y="470" width="340" height="32" rx="6" fill="#ffffff" stroke="#fde68a"/>
-  <text x="892" y="490" font-size="12" fill="#713f12">4. prompt 质量/output 是非 CI 说明</text>
+  <text x="892" y="490" font-size="12" fill="#713f12">4. 新 case/output 存在 → catalog files</text>
 
   <rect x="880" y="510" width="340" height="28" rx="6" fill="#fde68a" stroke="#ca8a04"/>
   <text x="892" y="528" font-size="12" font-weight="600" fill="#854d0e">5. 仅动本 case 目录, 除非需迁 legacy</text>
@@ -107,7 +107,7 @@
   <!-- Preview gate -->
   <rect x="180" y="596" width="960" height="92" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="2" filter="url(#soft)"/>
   <text x="660" y="622" text-anchor="middle" font-size="15" font-weight="700" fill="#991b1b">Step 2 · 预览门禁 — 完整渲染给用户审, 不写盘</text>
-  <text x="660" y="646" text-anchor="middle" font-size="12" fill="#7f1d1d">CI 自检 + 非 CI 说明 + 风险点 + PR title/body, 全部 markdown 形式</text>
+  <text x="660" y="646" text-anchor="middle" font-size="12" fill="#7f1d1d">validator 自检 + catalog surface + 风险点 + PR title/body, 全部 markdown 形式</text>
   <text x="660" y="668" text-anchor="middle" font-size="12" font-weight="600" fill="#7f1d1d">[发布] 走提交流程    [改] 重新预览    [取消] 中止</text>
 
   <!-- Step 3: commit + push + PR -->
@@ -120,5 +120,5 @@
   <!-- Legend / out-of-scope -->
   <rect x="80" y="836" width="1160" height="58" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="100" y="858" font-size="12" font-weight="600" fill="#475569">不接 (留给 tranfu-router):</text>
-  <text x="100" y="878" font-size="12" fill="#475569">search / install / list / installed / update / uninstall / doctor   ·   README/source_url/output 非 CI   ·   不删现有 skill</text>
+  <text x="100" y="878" font-size="12" fill="#475569">search / install / list / installed / update / uninstall / doctor   ·   README/cases/output/source_url 影响 catalog 但不阻塞   ·   不删现有 skill</text>
 </svg>

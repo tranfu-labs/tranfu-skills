@@ -13,6 +13,10 @@ CI 不检查:
 - prompt 是否含触发关键词
 - prompt 是否有 frontmatter
 
+Catalog:
+- build:index 会把本文件路径写进 index.json skills[].files.
+- output/ 和附件存在时也会被列进 files; 缺失不阻塞, 但 catalog 看不到.
+
 写法建议:
 - 优先使用真实用户 prompt.
 - 没有来源时问用户; 用户确认继续时可写 TODO placeholder, 并在 PR body 标风险.
@@ -20,7 +24,7 @@ CI 不检查:
 -->
 
 {一句到三句 prompt, 或 `<TODO: 补一个真实使用 prompt>`.
-建议写真实用户口吻; 但这不是 CI gate.}
+建议写真实用户口吻; 但这不是 validator hard gate.}
 
 {若需要支撑材料, e.g.}
 ![参考截图](./reference.png)

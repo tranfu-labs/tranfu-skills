@@ -40,7 +40,7 @@
 
 ## output/ 收集
 
-`cases/<n>/output/` 当前不是 CI gate.
+`cases/<n>/output/` 当前不是 validator hard gate. 如果存在, `build:index` 会把 output 文件列进 catalog `files`.
 
 有产物时建议收:
 

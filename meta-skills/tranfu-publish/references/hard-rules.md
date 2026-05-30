@@ -1,6 +1,6 @@
 # Hard Rules
 
-本 skill 的 hard rule 只分两类: 发布安全门禁、当前 CI hard gate. CI 不检查的内容只能作为建议或风险说明, 不能阻塞发布.
+本 skill 的 hard rule 分三类: 发布安全门禁、validator hard gate、catalog surface. CI validator 不检查的内容不能阻塞发布, 但 `build:index` 会暴露的文件/字段必须说明清楚.
 
 ## 发布安全门禁
 
@@ -24,7 +24,17 @@
 - `curl|sh` / `wget|sh` 必须加 `allow_curl_pipe_sh: true`.
 - VirusTotal 只有 `malicious >= 3` 是 blocker; 无 key / 限流 / 网络错误是 warning.
 
-## 非 CI 项不能阻塞
+## Catalog surface 要说明但不能阻塞
+
+`build:index` 会递归把已有文件写进 `index.json.skills[].files`, 也会把 external `source_url` 写进 catalog 字段. 因此:
+
+- README 存在会进 catalog files; 缺失不阻塞, 但 catalog 不展示 README 文件.
+- cases/input/output 存在会进 catalog files; 缺失不阻塞, 但 catalog 不展示这些案例/产物.
+- external `source_url` 存在会进 catalog 字段; 缺失不阻塞, 但 catalog 没有上游链接字段.
+
+预览和 PR body 必须写清楚这些 catalog 影响.
+
+## 质量建议不能阻塞
 
 下面这些可以补, 但不能作为"不满足就中止"的条件:
 
@@ -39,11 +49,11 @@
 - PR body section 名不完全匹配模板.
 - 没跑 `tfs update --check-only`.
 
-处理方式: 在预览和 PR body 的"非 CI 说明 / 风险点"写清楚, 由 reviewer 决定.
+处理方式: 在预览和 PR body 的"catalog surface / 风险点"写清楚, 由 reviewer 决定.
 
 ## 内容建议
 
-这些建议有助于检索和 review, 但不是 CI gate:
+这些建议有助于检索和 review, 但不是 validator hard gate:
 
 - README 给人看, SKILL.md 给 LLM 看; 不要把 README 辅助段落塞进 SKILL.md.
 - 有真实 case prompt 就优先用真实来源; 没有来源时不要伪装成真实用户, 可以写透明 TODO 并标风险.

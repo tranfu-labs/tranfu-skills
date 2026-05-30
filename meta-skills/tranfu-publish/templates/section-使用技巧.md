@@ -1,7 +1,7 @@
 <!--
 README.md 可选 section 模板.
 
-当前 CI 不要求 README.md, 也不要求本 section. 仅在用户希望补 README 或现有 README 已经需要整理时使用.
+当前 validator 不要求 README.md, 也不要求本 section. 如果 README 存在, build:index 会把 README.md 写进 catalog files. 本 section 仅在用户希望补 README 或现有 README 已经需要整理时使用.
 
 落点建议:
 - own: own-skills/{name}/README.md
