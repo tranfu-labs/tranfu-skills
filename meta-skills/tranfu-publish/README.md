@@ -30,7 +30,7 @@ own 路径若本地源缺 `README.md` → AI 报错中止, **不自动起草** (
 
 1. AI `TaskCreate` 7 项任务列, 让你从头看到进度
 2. AI 识别路径 → 定位 $REPO (公司库本地 clone) + $SRC (own/case 时本地源 path); own 路径预检 README.md 存在
-3. AI 起草: SKILL.md frontmatter (6 字段) / README.md §同类对比 + §使用技巧 / cases/<n>/input/PROMPT.md / PR title + body (按 `templates/` 渲染, 不自创结构)
+3. AI 起草: SKILL.md frontmatter (CI gate: 6 字段非空 + description ≤ 1024) / README.md §同类对比 + §使用技巧 / cases/<n>/input/PROMPT.md / PR title + body (按 `templates/` 渲染, 不自创结构)
 4. AI 写完整预览到 `/tmp/tranfu-publish-preview-*.md`, chat 给简要摘要, 通过 `AskUserQuestion` form 问 `[发布] / [改] / [取消]`
 5. 拿到 `[发布]` 才执行: 切 `skill/<name>` 分支 → cp/写文件 → commit → push → `gh pr create`. `index.json` 由 CI 自动 rebuild, 作者不管
 6. 输出 PR URL
@@ -57,7 +57,7 @@ own 路径若本地源缺 `README.md` → AI 报错中止, **不自动起草** (
 
 旧 `templates/case-file.md` (含 recommender / reason_kind / scenario_tag frontmatter) 已 EOL — `validate-cases.mjs` 不再认这种格式.
 
-AI 渲染 PR / SKILL.md / case 文件**必须**用这些模板. 不允许换成 GitHub 通用习惯写法 (`## Summary` / `## Validation` / `## Test plan` / `## Rollback`) — 本仓库 lark 通知 + lint workflow 都按模板段名读, 换名 = 静默失效.
+AI 渲染 PR / SKILL.md / case 文件**必须**用这些模板. 不允许换成 GitHub 通用习惯写法 (`## Summary` / `## Validation` / `## Test plan` / `## Rollback`). PR body 不是 CI gate; 模板用于稳定 review 和 Lark 展示, 真正 gate 以仓库 `scripts/validate-*` 为准.
 
 ## 关键概念
 

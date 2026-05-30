@@ -223,16 +223,15 @@ index.json                    catalog 快照和老 CLI 兼容数据源
 
 ### frontmatter 字段
 
-| 字段 | own | external | 说明 |
-|---|---|---|---|
-| name | ✓ | ✓ | kebab-case = 目录名 |
-| description | ✓ | ✓ | ≤ 100 字，含触发场景 |
-| version | ✓ | ✓ | semver |
-| author | ✓ | ✓ | 原作者 GitHub handle |
-| updated_at | ✓ | ✓ | ISO8601 仅日期 |
-| origin | ✓ | ✓ | `own` 或 `external` |
-| source_url | — | ✓ | 上游 URL |
-| recommend_reason | — | ✓ | ≤ 200 字 |
+| 字段 | own | external | meta | CI gate | 发布约定 |
+|---|---|---|---|---|---|
+| name | ✓ | ✓ | ✓ | 必填非空 | kebab-case，等于目录名 |
+| description | ✓ | ✓ | ✓ | 必填非空，≤ 1024 字符 | 含触发场景 |
+| version | ✓ | ✓ | ✓ | 必填非空 | semver |
+| author | ✓ | ✓ | ✓ | 必填非空 | 原作者 / 维护者 handle |
+| updated_at | ✓ | ✓ | ✓ | 必填非空 | `YYYY-MM-DD` |
+| origin | ✓ | ✓ | ✓ | 必填非空 | `own` / `external` / `meta`，匹配父目录 |
+| source_url | — | ✓ | — | 不检查 | external 指向上游 URL，publish 阶段验活 |
 
 `published_*` 字段仅写在本地 skill 的 `SKILL.md`（由 `tranfu-publish` 写入），不进本仓库。`installed_*` 字段仅写在装机端 `SKILL.md`（由 `tfs install` 写入），也不进本仓库。
 

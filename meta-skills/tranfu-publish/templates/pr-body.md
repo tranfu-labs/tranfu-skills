@@ -5,15 +5,16 @@ AI 按下方 {variant: own | external | case} 标记挑相应 block 填.
 
 多 skill 一 PR: §元信息 / §Motivation / §自检清单 重复 N 次, 每段顶部加 `### skill: <name>`.
 
-NEVER 把模板段换成 GitHub 通用习惯写法 (## Summary / ## Validation / ## Test plan / ## Rollback) —
-本仓库自检 + lark 通知 + lint workflow 按下面这些 section 名读. 换名 = 静默失效.
+NEVER 把模板段换成 GitHub 通用习惯写法 (## Summary / ## Validation / ## Test plan / ## Rollback).
+PR body 不是 CI gate; 这个模板用于稳定 review/Lark 展示, gate 以 scripts/validate-* 为准.
 
 NEVER 给 PR body 加 `## Test plan` 段 — 用户不是 QA, 自检清单已含 AI 能判定的项.
 
 NEVER 在 PR body 重复 README 的 §同类对比 / §使用技巧 内容 — reviewer 点 README 看权威源, PR body 不二次维护.
 
 自检清单对齐 validate-frontmatter.mjs / validate-cases.mjs / validate-security.mjs:
-  - frontmatter 6 项必填: name / description / version / author / updated_at / origin
+  - frontmatter: name / description / version / author / updated_at / origin 必填非空;
+    description ≤ 1024. 当前 CI 不检查 semver/date/source_url/name-dir/origin-root.
   - cases 新格式: cases/<n>/input/PROMPT.md (旧 cases/<recommender>.md 现在是 ERROR)
   - security: 无 eval / Function / child_process / curl|sh (除非 frontmatter 加 allow_*)
 -->
@@ -53,7 +54,7 @@ NEVER 在 PR body 重复 README 的 §同类对比 / §使用技巧 内容 — r
 出现 `- [ ]` 是合法信号: 告诉 reviewer "AI 跑下来发现这项卡住了, 请你来定夺".
 
 对齐 CI 校验:
-  - validate-frontmatter — 6 字段必填 + description ≤ 1024 字符
+  - validate-frontmatter — 6 字段必填非空 + description ≤ 1024 字符
   - validate-cases — 新格式 cases/<n>/input/PROMPT.md, 不能有 legacy *.md, 不能有 leading zero (01/)
   - validate-security — 不引 eval / Function / child_process / curl|sh (允许时加 allow_* frontmatter)
 -->
@@ -62,13 +63,13 @@ NEVER 在 PR body 重复 README 的 §同类对比 / §使用技巧 内容 — r
 - [ ] README.md 存在 (作者本人写, AI 未起草)
 - [ ] README.md 有 `## 同类 Skill 对比` 段
 - [ ] README.md 有 `## 使用技巧` 段
-- [ ] SKILL.md frontmatter 6 项齐 (name / description / version / author / updated_at / origin: own); description ≤ 1024 字符
+- [ ] SKILL.md frontmatter 通过 CI gate (name / description / version / author / updated_at / origin 六项非空; description ≤ 1024 字符)
 - [ ] cases/1/input/PROMPT.md 存在, 真实用户口吻含触发关键词 (不是 cases/{author}.md 老格式)
 - [ ] cases/ 下无 legacy *.md (cases.legacy-single-file), 数字目录无 leading zero (01/ → 1/)
 - [ ] 无 eval / Function / child_process / curl|sh, 或已在 SKILL.md frontmatter 加 allow_* flag
 {variant: external}
-- [ ] SKILL.md 薄指针 + source_url 有效 (HTTP 200, 已 WebFetch 验过)
-- [ ] SKILL.md frontmatter 6 项齐 (name / description / version / author / updated_at / origin: external); 没 version 的话 fallback 1.0.0
+- [ ] SKILL.md frontmatter 通过 CI gate (name / description / version / author / updated_at / origin 六项非空; description ≤ 1024 字符)
+- [ ] SKILL.md 薄指针 + source_url 已填并在起草阶段 WebFetch 验过 (publish 约定, 当前 CI 不检查)
 - [ ] README.md 存在 (薄推荐, AI 起草)
 - [ ] README.md 有 `## 同类 Skill 对比` + `## 使用技巧` 段
 {variant: case}

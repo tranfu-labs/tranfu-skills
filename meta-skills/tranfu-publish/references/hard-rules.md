@@ -33,15 +33,15 @@ SKILL.md 顶层只列最关键的 5 条 (git 安全 / 用户确认 / CI 必过).
 - ❌ **own 路径 $SRC 没 README.md 不自动起草** — 报错让作者先写. README 是给人看的入口, 必须作者亲自定调
 - ❌ **own 路径不带 cases/1/input/PROMPT.md = 违规** — own 必须至少一个 case
 - ❌ **external 路径强制 case = 违规** — external 不需要 case
-- ❌ **必须按 `templates/` 渲染** — 不允许换成 `## Summary / ## Validation / ## Rollback` 这种 GitHub 通用习惯写法. 本仓库 lark 通知 + lint workflow 按模板段名读, 换名 = 静默失效
+- ❌ **必须按 `templates/` 渲染** — 不允许换成 `## Summary / ## Validation / ## Rollback` 这种 GitHub 通用习惯写法. PR body 不是 CI gate, 但模板能让 review / Lark 展示稳定
 
 ## CI 校验对齐
 
 - ❌ **写 legacy `cases/<recommender>.md` 单文件 = 违规** — CI `validate-cases.mjs` `cases.legacy-single-file` ERROR
 - ❌ **数字目录用 leading zero (`cases/01/`) = 违规** — CI `cases.leading-zero` ERROR
-- ❌ **SKILL.md frontmatter 缺 6 字段中任一 = 违规** — CI `validate-frontmatter` ERROR
+- ❌ **SKILL.md frontmatter 缺 6 字段中任一或值为空 = 违规** — CI `validate-frontmatter.missing-field` ERROR
 - ❌ **`description > 1024 字符 = 违规** — CI `frontmatter.description-too-long` ERROR
-- ❌ **external 没 version = 违规** — CI 强制必填, 没上游版本就 fallback `1.0.0`
+- ❌ **把 publish 约定写成 CI gate = 违规** — 当前 CI 不检查 name=目录 / semver / updated_at 日期 / origin 枚举 / external source_url; 这些可以保留为 publish 约定, 但 PR body 和预览自检要分开写
 - ❌ **skill 代码引 `eval / Function / child_process / curl|sh` 不加豁免 = 违规** — `validate-security.mjs` ERROR. 需要 exec 加 `allow_exec: true`; curl|sh 加 `allow_curl_pipe_sh: true`. 加豁免前先想想能不能换 explicit download + checksum
 
 ## 边界

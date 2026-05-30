@@ -4,18 +4,20 @@
 
 ## validate-frontmatter
 
-`scripts/validate-frontmatter.mjs`. SKILL.md 必填 6 字段:
+`scripts/validate-frontmatter.mjs`. SKILL.md frontmatter 当前 CI gate:
 
 | 字段 | 取值 |
 |---|---|
-| `name` | kebab-case, 与目录名一致 |
-| `description` | ≤ 1024 字符. 写"做什么 + 何时触发 + 不触发"; 不写 body 段 |
-| `version` | semver. own 首发 `0.1.0`. external 上游没有就 fallback `1.0.0` (claude-design-system 漏 version 被 #89 修过) |
-| `author` | `gh api user -q .login` (own) 或上游作者 (external) |
-| `updated_at` | `date -u +%Y-%m-%d` |
-| `origin` | `own` / `external` / `meta` 之一 |
+| `name` | 必填非空 |
+| `description` | 必填非空, ≤ 1024 字符. 写"做什么 + 何时触发 + 不触发"; 不写 body 段 |
+| `version` | 必填非空 |
+| `author` | 必填非空 |
+| `updated_at` | 必填非空 |
+| `origin` | 必填非空 |
 
-description 超长是最常踩的坑. 任一字段缺 = PR 挂.
+description 超长是最常踩的坑. 任一字段缺 / 空值 / description > 1024 会挂 CI.
+
+当前 CI **不检查** `name` 是否等于目录、`version` 是否 semver、`updated_at` 是否日期、`origin` 是否匹配父目录、external 是否有 `source_url`. 这些是 publish 阶段约定; 不要在 PR body 里写成 CI gate.
 
 ## validate-cases
 
