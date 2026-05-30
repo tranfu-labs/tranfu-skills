@@ -1,5 +1,5 @@
 <!--
-cases/<n>/input/PROMPT.md 模板.
+cases/<n>/input/PROMPT.md 提示.
 
 CI 真实要求:
 - 路径是 cases/<n>/input/PROMPT.md

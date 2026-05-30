@@ -39,14 +39,13 @@
 下面这些可以补, 但不能作为"不满足就中止"的条件:
 
 - README.md 缺失.
-- README 缺 `## 同类 Skill 对比`.
-- README 缺 `## 使用技巧`.
+- README 文案结构不完整.
 - `source_url` 缺失.
 - `source_url` HTTP 验活失败.
 - external 上游 license / 维护状态未查清.
 - `PROMPT.md` 不是 1-3 句、不是用户口吻、没有触发关键词.
 - `cases/<n>/output/` 缺失.
-- PR body section 名不完全匹配模板.
+- PR body section 名不完全匹配参考骨架.
 - 没跑 `tfs update --check-only`.
 
 处理方式: 在预览和 PR body 的"catalog surface / 风险点"写清楚, 由 reviewer 决定.
@@ -59,7 +58,7 @@
 - 有真实 case prompt 就优先用真实来源; 没有来源时不要伪装成真实用户, 可以写透明 TODO 并标风险.
 - `source_url` 能写就写; HTTP 验活能跑就跑.
 - `output/` 有代表性产物就收, 没有就不建空目录.
-- PR body 优先使用 `templates/pr-body.md`, 但自检清单只列 CI hard gate.
+- PR body 可参考 `templates/pr-body.md`, 但不要为了模板硬凑内容; 自检清单只列 validator hard gate.
 
 ## 边界
 

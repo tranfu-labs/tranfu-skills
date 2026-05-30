@@ -12,7 +12,7 @@
 
 | 路径 | 触发语示例 | Validator hard gate | Catalog surface / 非阻塞建议 |
 |---|---|---|---|
-| **own** | "把本地 X 发到公司库" / "publish X" | `SKILL.md` frontmatter 6 字段 + description 长度; 如有 `cases/` 则 case 格式合法; 安全扫描过 | README / cases / output 存在就会进 catalog `files`; 同类对比、使用技巧是质量建议 |
+| **own** | "把本地 X 发到公司库" / "publish X" | `SKILL.md` frontmatter 6 字段 + description 长度; 如有 `cases/` 则 case 格式合法; 安全扫描过 | README / cases / output 存在就会进 catalog `files`; README 内容自由, 不硬凑固定段落 |
 | **external** | "把这个 skill 推到公司库" / "推荐 https://..." | 薄 `SKILL.md` frontmatter 过 validator; 如有脚本则安全扫描过 | `source_url` 写了会进 catalog 字段; README / cases / output 存在就会进 catalog `files`; HTTP 验活是质量建议 |
 | **case** | "给公司库 X 加个案例 / 补一个用法" | 新增 `cases/<n>/input/PROMPT.md`; `n` 纯数字无 leading zero; 目标 `cases/` 无 legacy/异常项 | 新 case 会进 catalog `files`; 真实用户口吻、附件、output 是质量建议 |
 
@@ -58,14 +58,14 @@ Validator 不要求 README.md 存在, 也不检查 README section. own 路径源
 - 不写旧格式 `cases/<recommender>.md`.
 - 不接 search / install / list / update / uninstall / doctor 意图; 这些走 `tranfu-router`.
 
-## 共享模板
+## 保留的轻量骨架
 
 | 文件 | 用途 | 阻塞性 |
 |---|---|---|
-| `templates/pr-body.md` | PR body 骨架 + CI hard gate 自检 | 推荐使用, 自检项只列 CI |
-| `templates/case-prompt.md` | 新增 `cases/<n>/input/PROMPT.md` 时的写法提示 | case 路径使用 |
-| `templates/section-同类对比.md` | README 可选 section | 非 validator; README 存在会进 catalog |
-| `templates/section-使用技巧.md` | README 可选 section | 非 validator; README 存在会进 catalog |
+| `templates/pr-body.md` | PR body 参考骨架, 分开 validator / catalog / 质量说明 | 推荐使用, 不强制套格式 |
+| `templates/case-prompt.md` | 新增 `cases/<n>/input/PROMPT.md` 时的路径和内容提示 | case 路径参考 |
+
+README section 模板已移除. README 不是发布 gate, 也不需要为了 catalog 硬凑固定段落.
 
 ## 依赖
 
@@ -84,4 +84,4 @@ Validator 不要求 README.md 存在, 也不检查 README section. own 路径源
 - `SKILL.md` — 完整三路径步骤.
 - `references/ci-checks.md` — 当前 CI validator 细则.
 - `references/hard-rules.md` — hard gate、catalog surface 与质量建议边界.
-- `templates/` — PR body / case prompt / README 可选 section.
+- `templates/` — PR body 参考骨架 / case prompt 提示.

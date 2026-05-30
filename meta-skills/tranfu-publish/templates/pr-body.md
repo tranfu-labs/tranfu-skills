@@ -1,5 +1,5 @@
 <!--
-tranfu-publish PR body 模板, 3 路径共用 (own / external / case).
+tranfu-publish PR body 参考骨架, 3 路径共用 (own / external / case).
 
 原则:
 - 自检清单只列 validator hard gate.
@@ -7,7 +7,9 @@ tranfu-publish PR body 模板, 3 路径共用 (own / external / case).
 - prompt 文案质量、HTTP 验活、上游维护状态放到"风险点", 不放进阻塞清单.
 - `{...}` 是占位符, 真写 PR 时替换.
 
-多 skill 一 PR: 对每个 skill 重复 "### skill: <name>" + 下方元信息 / 自检 / catalog surface / 质量说明.
+多 skill 一 PR: 可以对每个 skill 重复 "### skill: <name>" + 下方元信息 / 自检 / catalog surface / 质量说明.
+
+不用硬套本文件的全部 section; 只要 reviewer 能看清 validator hard gate、catalog surface 和风险点即可.
 -->
 
 ## 元信息
@@ -80,7 +82,7 @@ build:index 会把已有文件写进 index.json skills[].files; external source_
 ## 质量说明
 
 - HTTP 验活: {通过 / 失败 / 未跑 / N/A}
-- README 辅助段落 (`同类 Skill 对比` / `使用技巧`): {存在 / 缺失 / 未改 / N/A}
+- README 质量说明: {已有自然说明 / 缺失 / 未改 / N/A}
 - PROMPT.md 文案质量: {真实来源 / 用户提供 / TODO placeholder / N/A}
 - VirusTotal: {本地未跑 / CI 有 secret 后跑 / N/A}
 
