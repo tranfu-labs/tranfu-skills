@@ -1,49 +1,57 @@
-# Hard rules (完整版)
+# Hard Rules
 
-SKILL.md 顶层只列最关键的 5 条 (git 安全 / 用户确认 / CI 必过). 这里是完整清单 + 背后原因. 写新 case 路径分支 / 改流程 时回头查这份.
+本 skill 的 hard rule 只分两类: 发布安全门禁、当前 CI hard gate. CI 不检查的内容只能作为建议或风险说明, 不能阻塞发布.
 
-## git / 发布安全
+## 发布安全门禁
 
-- ❌ **不直推 main** — 一定走 `skill/<name>` 或 `skill/batch-<timestamp>` 分支. `main` 受 branch protection
-- ❌ **永远不 force push** — 即使本地分支搞乱了, 也 `reset` 出新分支重 push
-- ❌ **不删现有 skill** — publish 只加不删. 删除 skill 走另外的 PR + 人工 review
-- ❌ **不跨仓 PR** — 只发到 `tranfu-labs/tranfu-skills`
-- ❌ **不要手动 add / commit `index.json`** — CI (build-index.yml) 处理, 手动加进来会冲突
-- ❌ **`gh` 失败 → 报错, 不重试** — auth / network 问题应该让用户介入, 不是 retry loop
+- 不直推 `main`; 一定走新分支.
+- 不 force push.
+- 不删现有 skill. 删除 skill 需要单独 PR + 人工 review.
+- 不跨仓 PR; 只发到 `tranfu-labs/tranfu-skills`.
+- 不手动 add / commit `index.json`; CI 处理.
+- 用户确认前不写公司库文件、不 push、不开 PR.
+- `gh` 失败就报错; 不做 retry loop.
 
-## 用户确认门禁
+## CI hard gate
 
-- ❌ **跳 §0 版本预检 = 违规** — 必须 `tfs update --check-only --json` 检测 + 升级后中止本轮让用户重 trigger. AI 边升级边继续 = 旧版逻辑在跑
-- ❌ **§0 没建 TaskCreate 任务列就开始干活 = 违规** — 用户从头看不到进度
-- ❌ **不静默走 `gh pr create`** — 用户必须从 §7 form 拍 `[发布]`
-- ❌ **不动公司库任何文件 until §8 [发布]** — §1-7 全部是起草, 不写盘
-- ❌ **§7 用 [1][2][3] 文字而非 AskUserQuestion form = 违规** — 用户拍按钮才是显式确认
-- ❌ **PR body 留"用户要勾"的项 = 违规** — 自检清单全 AI 判, 用户不是 QA
+只按 validator 真实规则判断:
 
-## 内容质量 / 触发集污染
+- `SKILL.md` frontmatter 有 `name`, `description`, `version`, `author`, `updated_at`, `origin` 六项且非空.
+- `description <= 1024`.
+- 如果存在 `cases/`: 不写 legacy `cases/<author>.md`; 数字目录不能 leading zero; 每个数字目录必须有非空 `input/` 和 `input/PROMPT.md`; `cases/` 下不能有异常条目.
+- `.mjs/.js/.ts/.sh/.py` 里不能出现 `eval` / `Function`.
+- 引入 `child_process` 必须加 `allow_exec: true`.
+- `curl|sh` / `wget|sh` 必须加 `allow_curl_pipe_sh: true`.
+- VirusTotal 只有 `malicious >= 3` 是 blocker; 无 key / 限流 / 网络错误是 warning.
 
-- ❌ **没来源 AI 自己编 prompt 装用户口吻 = 违规** — `references/case-sources.md` §4 来源全 miss 时必须 AskUserQuestion. 编出来的 prompt 会污染 router 检索测试
-- ❌ **case PROMPT.md 写 AI 体 / 加 frontmatter = 违规** — 必须纯文本真实用户口吻, 不带 frontmatter
-- ❌ **case 路径用 placeholder 兜底 = 违规** — placeholder 仅 own 首发可用 (作者后补), case 本身就是来加 case 的
-- ❌ **多 skill URL 让用户选哪个发 = 违规** — 自动全收, 一个 PR 多 commit
+## 非 CI 项不能阻塞
 
-## 落点 / 模板纪律
+下面这些可以补, 但不能作为"不满足就中止"的条件:
 
-- ❌ **§同类对比 / §使用技巧 落 SKILL.md = 违规** — 必须落 README.md. README 给人看, SKILL.md 给 LLM 看, 不同读者
-- ❌ **own 路径 $SRC 没 README.md 不自动起草** — 报错让作者先写. README 是给人看的入口, 必须作者亲自定调
-- ❌ **own 路径不带 cases/1/input/PROMPT.md = 违规** — own 必须至少一个 case
-- ❌ **external 路径强制 case = 违规** — external 不需要 case
-- ❌ **必须按 `templates/` 渲染** — 不允许换成 `## Summary / ## Validation / ## Rollback` 这种 GitHub 通用习惯写法. 本仓库 lark 通知 + lint workflow 按模板段名读, 换名 = 静默失效
+- README.md 缺失.
+- README 缺 `## 同类 Skill 对比`.
+- README 缺 `## 使用技巧`.
+- `source_url` 缺失.
+- `source_url` HTTP 验活失败.
+- external 上游 license / 维护状态未查清.
+- `PROMPT.md` 不是 1-3 句、不是用户口吻、没有触发关键词.
+- `cases/<n>/output/` 缺失.
+- PR body section 名不完全匹配模板.
+- 没跑 `tfs update --check-only`.
 
-## CI 校验对齐
+处理方式: 在预览和 PR body 的"非 CI 说明 / 风险点"写清楚, 由 reviewer 决定.
 
-- ❌ **写 legacy `cases/<recommender>.md` 单文件 = 违规** — CI `validate-cases.mjs` `cases.legacy-single-file` ERROR
-- ❌ **数字目录用 leading zero (`cases/01/`) = 违规** — CI `cases.leading-zero` ERROR
-- ❌ **SKILL.md frontmatter 缺 6 字段中任一 = 违规** — CI `validate-frontmatter` ERROR
-- ❌ **`description > 1024 字符 = 违规** — CI `frontmatter.description-too-long` ERROR
-- ❌ **external 没 version = 违规** — CI 强制必填, 没上游版本就 fallback `1.0.0`
-- ❌ **skill 代码引 `eval / Function / child_process / curl|sh` 不加豁免 = 违规** — `validate-security.mjs` ERROR. 需要 exec 加 `allow_exec: true`; curl|sh 加 `allow_curl_pipe_sh: true`. 加豁免前先想想能不能换 explicit download + checksum
+## 内容建议
+
+这些建议有助于检索和 review, 但不是 CI gate:
+
+- README 给人看, SKILL.md 给 LLM 看; 不要把 README 辅助段落塞进 SKILL.md.
+- 有真实 case prompt 就优先用真实来源; 没有来源时不要伪装成真实用户, 可以写透明 TODO 并标风险.
+- `source_url` 能写就写; HTTP 验活能跑就跑.
+- `output/` 有代表性产物就收, 没有就不建空目录.
+- PR body 优先使用 `templates/pr-body.md`, 但自检清单只列 CI hard gate.
 
 ## 边界
 
-- ❌ **不接 router 范围意图** — search / install / list / installed / update / uninstall / doctor 全留给 `tranfu-router`
+- 多 skill URL / 路径默认全收; 用户明确缩小范围时再收窄.
+- 不接 router 范围意图: search / install / list / installed / update / uninstall / doctor 留给 `tranfu-router`.

@@ -1,26 +1,23 @@
 <!--
-tranfu-publish 使用技巧 — README.md body section 模板.
-own / external 路径必跑, case 跳过. 不进 frontmatter. 整段 ≤500 字 / 每子段 ≤3 bullet / 全段 ≤9 bullet.
+README.md 可选 section 模板.
 
-落点 (HARD): 落 README.md, **不**落 SKILL.md — README 给人看, SKILL.md 给 LLM 看, 不同读者.
-  - own:      own-skills/{name}/README.md, `## 同类 Skill 对比` 之后
-  - external: external-skills/{name}/README.md, `## 同类 Skill 对比` 之后
-横向同类对比 vs 纵向使用技巧, 焦点严格分离.
+当前 CI 不要求 README.md, 也不要求本 section. 仅在用户希望补 README 或现有 README 已经需要整理时使用.
+
+落点建议:
+- own: own-skills/{name}/README.md
+- external: external-skills/{name}/README.md
+不要把本段塞进 SKILL.md.
 -->
 
 ## 使用技巧
 
-> 由 tranfu-publish 引导起草 (作者 / 推荐者答, AI 整合, 推荐者签字).
-> 帮助阅读者纵向上手 — tacit knowledge 在此. 横向同类对比见上方 §同类 Skill 对比.
+> 可选说明, 帮助阅读者纵向上手.
 
 ### 材料方案
-- {1-3 行, 每行 ≤30 字; 作者/推荐者考虑过的其他做法 + 为什么选这个}
-- (0 条则 "暂无")
+- {1-3 行, 每行 ≤30 字; 可写暂无}
 
 ### 推荐用法
-- {1-3 行, 每行 ≤30 字; 第一次跑的建议步骤 / 前置条件 / 最佳搭配}
-- (0 条则 "暂无")
+- {1-3 行, 每行 ≤30 字; 可写暂无}
 
 ### 已知限制
-- {1-3 行, 每行 ≤30 字; 现在跑不动的场景 / 已知 bug / 设计 trade-off}
-- (0 条则 "暂无")
+- {1-3 行, 每行 ≤30 字; 可写暂无}

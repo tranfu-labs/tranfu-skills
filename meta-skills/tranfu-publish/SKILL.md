@@ -1,199 +1,181 @@
 ---
 name: tranfu-publish
-description: 当用户说"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例"时, 起草 PR 内容 (frontmatter / README §同类对比 / README §使用技巧 / cases/<n>/input/PROMPT.md / PR title+body) 全部按 templates/ 渲染, 用户拍 [发布] 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).
-version: 0.2.0
+description: 当用户说"发布本地 skill X 到公司库 / 推荐外部 skill URL 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例"时, 按当前 CI gate 准备并提交 tranfu-skills PR: SKILL.md frontmatter、现有/新增 cases 格式、安全扫描自检; README、同类对比、使用技巧、source_url HTTP 验活、case output 都是非阻塞建议. 用户确认后才 git push / gh pr create. Do NOT trigger when search / install / list / update / uninstall / doctor.
+version: 0.2.1
 author: aquarius-wing
-updated_at: 2026-05-28
+updated_at: 2026-05-30
 origin: meta
 type: meta
 ---
 
 # tranfu-publish
 
-把本地写的 / 推荐的 skill / 案例发到公司库 `tranfu-labs/tranfu-skills` 走 PR. AI 起草所有内容, 用户审完拍 form `[发布]` 才提交.
+把本地写的 / 推荐的 / 需要补案例的 skill 发到 `tranfu-labs/tranfu-skills` 走 PR.
 
-## 路径 + 必备产物
+本 skill 的内容门禁只对齐当前 CI. CI 不要求的内容, 不再阻塞发布; 只能作为建议、风险点或 PR body 里的非 CI 说明.
 
-| path | 触发 | 必备产物 |
-|---|---|---|
-| **own** | "发布本地 X" / "publish X" | `own-skills/<name>/{SKILL.md, README.md, cases/1/input/PROMPT.md}` |
-| **external** | "推荐 URL" / "把这个推到公司库" | `external-skills/<name>/{SKILL.md (薄指针, frontmatter 含 version), README.md}` |
-| **case** | "加案例 / 补用法" | `<own\|external>-skills/<name>/cases/<next-n>/input/PROMPT.md` |
+## CI Gate 边界
 
-多 skill (URL/本地路径含 ≥2 `SKILL.md`): 自动全收, 一个 PR 多 commit. 不让用户选.
+### 会阻塞发布的项
 
-## 模板 (`templates/` — 渲染必用, 不自创结构)
+1. **发布安全门禁**: 不直推 `main`, 不 force push, 不手动提交 `index.json`, 用户确认后才写公司库文件 / push / 开 PR.
+2. **CI hard gate**: 以 `.github/workflows/build-index.yml` 和 validator 代码为准:
+   - `validate-frontmatter`: `SKILL.md` frontmatter 有 6 个非空字段: `name`, `description`, `version`, `author`, `updated_at`, `origin`; `description` 长度 ≤ 1024.
+   - `validate-cases`: 只有当 skill 目录下存在 `cases/` 时才检查. `cases/` 下只能有数字目录、`README.md` 或 legacy `*.md`; legacy `*.md` 是 ERROR; 数字目录不能 leading zero, 且必须有非空 `input/` 和 `input/PROMPT.md`.
+   - `validate-security`: 扫 `.mjs/.js/.ts/.sh/.py`, 禁 `eval`, `Function`; `child_process` 需 `allow_exec: true`; `curl|sh` / `wget|sh` 需 `allow_curl_pipe_sh: true`.
+   - `validate:vt`: PR 上跑. 无 secret / 限流 / 网络错误是 warning; `malicious >= 3` 才阻塞.
 
-- `pr-body.md` — PR body 骨架 (variant: own / external / case) + 对齐 CI 自检清单
-- `case-prompt.md` — `cases/<n>/input/PROMPT.md` 写法提示
-- `section-同类对比.md` — README.md `## 同类 Skill 对比` 骨架 (own / external 用; 不落 SKILL.md)
-- `section-使用技巧.md` — README.md `## 使用技巧` 骨架 (own / external 用)
+### 不再阻塞发布的项
 
-旧 `case-file.md` (含 recommender / reason_kind frontmatter) 已 EOL.
+- `README.md` 是否存在.
+- README 是否有 `## 同类 Skill 对比` / `## 使用技巧`.
+- `source_url` 是否存在或 HTTP 200.
+- `PROMPT.md` 是否是真实用户口吻、是否含触发关键词.
+- `cases/<n>/output/` 是否存在.
+- PR body 是否使用固定 section 名.
 
-## 详细参考 (按需查, 不必预读)
+这些项可以补, 但不能因为缺失而中止. 缺失时在预览和 PR body 的"非 CI 说明 / 风险点"里讲清楚.
 
-- `references/ci-checks.md` — frontmatter / cases / security 3 个 validator 的细则 + 本地复跑
-- `references/case-sources.md` — PROMPT.md 来源优先级 (对话历史 → examples → legacy → AskUserQuestion) + form 文案 + output/ 收集
-- `references/hard-rules.md` — 完整 hard rules 清单 + 背后原因. 改流程前回头查
+## 路径
+
+| path | 触发 | CI 需要保证 | 非阻塞建议 |
+|---|---|---|---|
+| **own** | "发布本地 X" / "publish X" | `own-skills/<name>/SKILL.md` frontmatter 过 validator; 如果带 `cases/`, 全部 case 格式过 validator; 安全扫描过 | README、README 两个辅助 section、首个 case、output |
+| **external** | "推荐 URL" / "把这个推到公司库" | `external-skills/<name>/SKILL.md` frontmatter 过 validator; 如有代码/脚本则安全扫描过 | `source_url`、README、HTTP 验活、上游 license/维护状态 |
+| **case** | "加案例 / 补用法" | 新增 `<own|external>-skills/<name>/cases/<n>/input/PROMPT.md`; `n` 纯数字无 leading zero; 目标 skill 现有 `cases/` 也不能有 legacy/异常项 | prompt 质量、附件、output |
+
+多 skill (URL/本地路径含 ≥2 `SKILL.md`): 自动全收, 一个 PR 可多 commit. 除非用户明确缩小范围, 不让用户重复选择.
+
+## 模板
+
+- `templates/pr-body.md` — PR body 骨架, 自检清单只放 CI hard gate.
+- `templates/case-prompt.md` — 仅在创建 case 时使用; 写法建议和 CI 真实检查分开.
+- `templates/section-同类对比.md` — README 可选辅助 section.
+- `templates/section-使用技巧.md` — README 可选辅助 section.
+
+旧 `case-file.md` 已 EOL; 不写 legacy `cases/<author>.md`.
+
+## 详细参考
+
+- `references/ci-checks.md` — 当前 CI / validator 的精确规则.
+- `references/case-sources.md` — case prompt 来源建议; 全 miss 不再是 CI blocker.
+- `references/hard-rules.md` — git 安全门禁 + CI hard gate + 非 CI 建议边界.
 
 ## 标准流程
 
-### 0. 版本预检 (HARD — 早于一切)
+### 0. 工作区预检
 
-进 skill 第一件事:
+1. 找 `$REPO` 和 `$SRC`.
+2. 可选检查 `tfs update --check-only --json`; 失败或落后不阻塞当前发布, 只在风险点说明. 用户明确要求先升级时才升级并中止本轮.
+3. 建任务列或普通计划均可; 任务列不是 CI gate.
 
-1. exec `tfs update --check-only --json`, parse `{self, skills}`
-2. 任一落后 (`self.status === "outdated"` 或 `skills[]` 含 `tranfu-publish` `status === "outdated"`) → exec `tfs update --json` 升级 → 输出 1 行 `已升级: tfs CLI X→Y / skill (sha A→B)` → **中止本轮**, 让用户重发意图加载新版
-3. 全 noop → 进 §0.5
+### 1. 定位 `$REPO` + `$SRC`
 
-不许边升级边继续 — 旧版逻辑会在跑.
+**`$REPO`** = 公司库本地 clone. 检测优先级:
+1. 用户原话给的 path.
+2. cwd 含 `.git` 且 `git remote -v` origin 指向 `tranfu-skills`.
+3. `~/work/tranfu-skills`.
+4. 都没找到: 提示 `gh repo clone tranfu-labs/tranfu-skills ~/work/tranfu-skills`, 中止.
 
-### 0.5. 建 TaskCreate 任务列
-
-固定 7 项 (按 path 微调措辞):
-
-1. 预检 + 定位 — 找 `$REPO` + `$SRC`. own 路径检查 `$SRC/README.md` 存在 (缺则报错中止, 不起草 README)
-2. 识别 path + 检测多 skill
-3. 起草 SKILL.md frontmatter — 6 字段必填, 见 `references/ci-checks.md`
-4. 起草 README.md §同类对比 + §使用技巧 — own / external 必跑, case 跳过
-5. 起草 `cases/<n>/input/PROMPT.md` (+ 选填 output/) — own 必须 `cases/1/`, case 必须新 `cases/<next-n>/`, external 跳过. 来源见 `references/case-sources.md`
-6. 起草 PR title + body — 按 `templates/pr-body.md`, 自检清单 AI 据实勾
-7. 拍 [发布] 后: 切分支 / 写文件 / commit / push / 开 PR
-
-### 1. 定位 $REPO + $SRC
-
-**$REPO** = 公司库本地 clone. 检测优先级:
-1. 用户原话给的 path
-2. cwd 含 `.git` 且 `git remote -v` origin 指向 `tranfu-skills`
-3. `~/work/tranfu-skills`
-4. 都没 → 提示 `gh repo clone tranfu-labs/tranfu-skills ~/work/tranfu-skills`, 中止
-
-**$SRC** = 本地 skill 源:
-- own: 用户原话 / `find ~/.claude/skills -name <name>`
-- external: 不要本地拷贝, `WebFetch` 验 source_url HTTP 200, `gh api repos/<owner>/<repo>/contents` 检测 multi-skill
-- case: `$REPO/<own|external>-skills/<name>/`. 查 `cases/` 已有最大数字, n = max+1 (或填空缺号)
+**`$SRC`**:
+- own: 用户原话 / 本地路径 / `~/.claude/skills` 等常见目录中含 `SKILL.md` 的 skill.
+- external: URL 是推荐来源; 公司库只需要薄 `SKILL.md`. `source_url` 推荐写, 但 CI 不要求.
+- case: `$REPO/<own|external>-skills/<name>/`; 计算 `cases/` 已有最大数字, `n = max + 1` (也可用空缺号).
 
 ### 2. 识别 path
 
-AI 自判按顺序匹配, 第一条命中即定:
+按顺序匹配:
 
 | 信号 | path |
 |---|---|
 | HTTP URL (github / gitlab / npm) | external |
-| 本地 fs path 且含 SKILL.md | own |
-| `$REPO/<own\|external>-skills/<name>/` 已存在 | case |
 | 关键词 "加案例 / 补用法 / 加 prompt 示例" | case |
+| 本地 fs path 且含 `SKILL.md` | own |
+| `$REPO/<own|external>-skills/<name>/` 已存在 | case |
 | 关键词 "推荐这个 / 推到公司库" | external |
 | 关键词 "发布我写的 / 提我的 skill" | own |
 
-全 miss → `AskUserQuestion` form 3 选项 (own / external / case + 各自一句描述).
+全 miss 才问用户.
 
-### 3. 起草 SKILL.md frontmatter
+### 3. 准备 `SKILL.md` frontmatter
 
-CI 强制 6 字段, 详见 `references/ci-checks.md` §validate-frontmatter. 要点:
+CI 只检查 6 字段非空 + `description <= 1024`. 这些约定推荐遵守, 但不要把 CI 没检查的项说成 CI blocker:
 
-- **own**: `origin: own`, `version: 0.1.0` (首发), 不应有 `source_url`
-- **external**: `origin: external`, `source_url` 必填 (HTTP 200), `version` 上游有则填否则 fallback `1.0.0` (历史 claude-design-system 漏过被 #89 修)
-- **case**: 不动 frontmatter
-- description ≤ 1024 字符, 含触发关键词 + "Do NOT trigger when"
+- own: `origin: own`, 首发通常 `version: 0.1.0`.
+- external: `origin: external`, `version` 没上游值时填 `1.0.0`; `source_url` 推荐写但不属于 CI hard gate.
+- meta: `origin: meta`.
+- description 写"做什么 + 何时触发 + Do NOT trigger when", 并控制长度.
 
-### 4. 起草 README.md §同类对比 + §使用技巧
+### 4. README 处理 (非阻塞)
 
-own / external 必跑, case 跳过. 落 README.md 不落 SKILL.md (README 给人看, SKILL 给 LLM 看, 读者不同).
+README 不是 CI gate:
 
-按 `templates/section-同类对比.md` + `templates/section-使用技巧.md` 渲染:
+- own: `$SRC/README.md` 缺失时不报错中止; 直接发布 `SKILL.md` 也可以. 如果已有 README, 可建议补 `## 同类 Skill 对比` / `## 使用技巧`, 但用户不补也能继续.
+- external: README 可由 AI 起草, 也可以不写. 缺 README 不阻塞.
+- case: 默认不动 README.
 
-- own: $SRC README 已有这两段 → AI 评估是否符合模板 (≤3 候选 / 独特价值 ≤3 句 / 3 子段), 不符在 §7 给 diff 建议. 缺段 → AI append 到末尾
-- external: 整份 README 由 AI 起草 (含 §推荐场景 + §同类对比 + §使用技巧), 推荐者通常不写
+如果补 README, 可用 `templates/section-同类对比.md` 和 `templates/section-使用技巧.md`; 这些是协作质量建议, 不是 CI 要求.
 
-§同类对比要点: 内部候选跑 `tfs list --json` 选最近; 外部候选 `WebSearch` 找对标 + `WebFetch` 验活; 独特价值 ≤3 句每句 ≤30 字, 不要"更快/更好/更优雅".
+### 5. cases 处理
 
-§使用技巧 3 子段: 材料方案 / 推荐用法 / 已知限制. 每子段 ≤3 bullet, 全段 ≤9 bullet ≤500 字.
+CI 不是"所有 skill 必须有 case"; 它只检查存在的 `cases/` 是否合规.
 
-### 5. 起草 cases/<n>/input/PROMPT.md (+ output/)
+- own: 如果 `$SRC` 没有 `cases/`, 不强制新增 `cases/1/`. 如果 `$SRC` 有 legacy `cases/*.md`, 必须迁到数字目录或删除, 否则 CI 会挂.
+- external: 不强制 case.
+- case: 因为用户目标就是新增 case, 需要写 `cases/<n>/input/PROMPT.md`; `n` 不能 leading zero.
 
-按 `templates/case-prompt.md` 渲染. 来源优先级 + form 文案 + output 收集**完整规则在 `references/case-sources.md`**.
+`PROMPT.md` 内容质量建议见 `references/case-sources.md`. CI 只看路径和文件存在; 不检查真实口吻、触发关键词或 frontmatter.
 
-短版来源链:
-
-1. 对话历史里有用户真实 prompt
-2. $SRC `examples/` `references/`
-3. legacy `cases/<author>.md` (own 独有, 提信号 + 删旧)
-4. 全 miss → AskUserQuestion form: `[一句话] / [贴 md 路径] / [跳过用 placeholder]` (case 不出现第 3 项)
-
-没来源 AI 自己编 prompt 装用户口吻 = 污染 router 检索测试集, 一定要走 form.
-
-PROMPT.md: 纯文本无 frontmatter, 1-3 句真实用户口吻, 含触发关键词. output/ 推荐有 (放 skill 跑出来的产物), validator 暂不强制.
-
-### 6. 起草 PR title + body
+### 6. PR title + body
 
 **title**:
-- 单 skill: `skill: 加 <name> (own | external | case)` ≤ 70 字符
-- 多 skill: `skill: 加 <name1>, <name2>, ... (<path_type> ×N)` ≤ 70 字符
+- 单 skill: `skill: 加 <name> (own | external | case)` ≤ 70 字符.
+- 多 skill: `skill: 加 <name1>, <name2>, ... (<path_type> ×N)` ≤ 70 字符.
 
-**body**: 按 `templates/pr-body.md` 选 variant 渲染. 自检清单对齐 CI 3 validator, AI 据实勾 (`[x]` 达成 / `[ ]` 没达成留给 reviewer 看 / `[~] N/A — 一句原因` 真不适用). 不留"需用户跑测试"项, 也不允许整段删自检清单.
+**body**: 按 `templates/pr-body.md` 渲染. 自检清单只列 CI hard gate; README/source_url/prompt 质量/output 放到"非 CI 说明"或"风险点".
 
-### 7. 预览门禁 (HARD — AskUserQuestion form, 不用 [1][2][3] 文字)
+### 7. 预览门禁 (安全门禁)
 
-**完整渲染**写 `/tmp/tranfu-publish-preview-<timestamp>.md` (含所有 skill 的 frontmatter + README 新增段 + PROMPT.md + PR title + body). chat 只发简要摘要 + 文件路径.
+写 `/tmp/tranfu-publish-preview-<timestamp>.md`, chat 发摘要 + 文件路径. 摘要必须区分:
 
-简要摘要含: 路径 / 分支 / 落点列表 / PR title / §同类对比 1 句摘要 / §使用技巧 1 句摘要 / PROMPT.md 1 句摘要 / CI 校验自检 (frontmatter / cases / security 各 pass-fail) / 风险点.
+- CI hard gate: frontmatter / cases / security / VT 是否预计通过.
+- 非 CI 说明: README、source_url、prompt 质量、output 是否缺失.
+- 风险点: 上游稳定性、脚本权限、缺少示例等.
 
-然后 `AskUserQuestion`:
-- question: `发布这 N 个 skill 到 tranfu-skills 公司库?`
-- header: `发布预览`
-- 选项: `[发布]` (Recommended) / `[改]` / `[取消]`
+用户明确确认 `[发布]` 后才进入提交. `[改]` 先修改再重新预览. `[取消]` 中止.
 
-阻塞: `[发布]` → §8; `[改]` 改后**重跑整个 §7**; `[取消]` 中止; Other 自由文字当 `[改]` 处理.
-
-NEVER 在拿 `[发布]` 之前动公司库文件.
-
-### 8. 提交 (仅 §7 拿到 [发布] 后)
+### 8. 提交
 
 按 path 改动:
 
 | path | 改动 | git add |
 |---|---|---|
-| own | `cp -r $SRC $REPO/own-skills/<name>/` | `own-skills/<name>/` |
-| external | 写 `$REPO/external-skills/<name>/{SKILL.md, README.md}` | `external-skills/<name>/` |
-| case | 新建 `$REPO/<own\|external>-skills/<name>/cases/<n>/input/PROMPT.md` (+ 选填 output/) | 该 case 目录 |
+| own | 写/复制 `own-skills/<name>/SKILL.md` 及用户确认要带的可选文件 | `own-skills/<name>/` |
+| external | 写 `external-skills/<name>/SKILL.md` 及用户确认要带的可选文件 | `external-skills/<name>/` |
+| case | 新建 `.../cases/<n>/input/PROMPT.md` (+ 选填附件/output) | 该 case 目录 |
 
-`index.json` **不要手动 add / commit** — CI 处理.
+`index.json` 不手动 add / commit.
 
 步骤:
 
-1. `cd $REPO && git checkout main && git pull --ff-only && git checkout -b skill/<name>` (多 skill: `skill/batch-<timestamp>`)
-2. 写文件
-3. (推荐) 本地预跑 `npm run validate -- --target <skill-dir> --json`, 有 error 回 §7 修
-4. `git add <path>` + `git commit -m "skill: 加 <name> (<path_type>)"`. 多 skill 多 commit
-5. `git push -u origin <branch>`
-6. 开 PR (§9)
+1. 从最新 `main` / `origin/main` 切新分支 (`skill/<name>` 或批量分支).
+2. 写文件.
+3. 本地跑 `npm run validate -- --target <skill-dir> --json`; 改 validator 才需要额外跑 `npm test`.
+4. `git add <path>` + `git commit`.
+5. `git push -u origin <branch>`.
+6. `gh pr create --base main --head <branch> --title ... --body-file ...`.
 
-### 9. 提 PR
+失败就报错, 不重试循环.
 
-```bash
-gh pr create --base main --head $BRANCH \
-  --title "<§6 title>" \
-  --body "$(cat <<'EOF'
-<§6 body>
-EOF
-)"
-```
+## 顶层 hard rules
 
-成功 → 输出 PR URL. 失败 → 报错, 不重试.
-
-PR 开完 CI 自动跑 (`.github/workflows/build-index.yml`): `npm test` / `npm run validate` / `npm run validate:vt` / `npm run build:index`. 挂了 Lark + PR comment 按 validator 分组给错误明细 + 复跑命令. 本地复现一行: `npm run validate -- --target <skill-path> --json`.
-
-## 顶层 Hard rules (完整清单见 `references/hard-rules.md`)
-
-- ❌ **跳 §0 版本预检 / 跳 TaskCreate** — 旧版逻辑会在跑
-- ❌ **不直推 main / 永远不 force push** — 走 `skill/<name>` 分支
-- ❌ **不动公司库文件 until §7 拍 [发布]** — §1-7 全部是起草
-- ❌ **不静默 `gh pr create`** — 必须从 §7 form 拍 `[发布]`
-- ❌ **没来源 AI 自己编 prompt** — 走 `references/case-sources.md` §4 form 问用户
-- ❌ **不接 router 意图** — search / install / list / update / uninstall / doctor 留给 `tranfu-router`
+- 不直推 `main`; 不 force push.
+- 不手动提交 `index.json`.
+- 用户确认前不写公司库文件、不 push、不开 PR.
+- CI gate 只按 validator 真实规则判断; README/source_url/prompt 质量/output 不得作为阻塞项.
+- 不写 legacy `cases/<author>.md`.
+- 不接 router 意图: search / install / list / update / uninstall / doctor 留给 `tranfu-router`.
 
 ## 常用工具
 
-`TaskCreate` / `TaskUpdate` / `AskUserQuestion` / `gh repo clone` / `gh api repos/<o>/<r>/contents` / `git checkout -b skill/<name>` / `gh pr create` / `tfs list --json` / `npm run validate -- --target` / `WebSearch` / `WebFetch`.
+`gh repo clone` / `gh api repos/<o>/<r>/contents` / `git switch -c` / `gh pr create` / `tfs list --json` / `npm run validate -- --target` / `WebSearch` / `WebFetch`.

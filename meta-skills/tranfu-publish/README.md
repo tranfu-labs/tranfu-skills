@@ -1,26 +1,41 @@
 # tranfu-publish
 
-把本地写的 skill / 推荐的外部 skill / 案例发到公司库 `tranfu-labs/tranfu-skills` 走 PR. AI 起草, 用户审完拍 `y` 才提交.
+把本地写的 skill / 推荐的外部 skill / 已入库 skill 的新案例发到 `tranfu-labs/tranfu-skills` 走 PR.
+
+核心变化: 本 skill 现在只把当前 CI 会拦的内容当 gate. README、同类对比、使用技巧、`source_url` 验活、case output 都是非阻塞建议, 不再因为缺失而中止发布。
 
 ![框架图](./framework.png)
 
 ## 什么时候用它
 
-三类触发, 对应三条内部路径 (AI 自动判, 信号不清才问 `AskUserQuestion` form):
+三类触发, 对应三条路径:
 
-| 路径 | 触发语示例 | 适用 | 必备产物 |
+| 路径 | 触发语示例 | CI hard gate | 非阻塞建议 |
 |---|---|---|---|
-| **own** | "把本地 X 发到公司库" / "publish X" | 自己写的 skill | SKILL.md + README.md + cases/1/input/PROMPT.md |
-| **external** | "把这个 skill 推到公司库" / "推荐 https://..." | 外部 skill | SKILL.md (薄指针, frontmatter 含 version) + README.md |
-| **case** | "给公司库 X 加个案例 / 补一个用法" | 已在公司库的 skill, 想补 case | cases/<next-n>/input/PROMPT.md |
+| **own** | "把本地 X 发到公司库" / "publish X" | `SKILL.md` frontmatter 6 字段 + description 长度; 如有 `cases/` 则 case 格式合法; 安全扫描过 | README、首个 case、output |
+| **external** | "把这个 skill 推到公司库" / "推荐 https://..." | 薄 `SKILL.md` frontmatter 过 validator; 如有脚本则安全扫描过 | `source_url`、README、HTTP 验活、上游维护状态 |
+| **case** | "给公司库 X 加个案例 / 补一个用法" | 新增 `cases/<n>/input/PROMPT.md`; `n` 纯数字无 leading zero; 目标 `cases/` 无 legacy/异常项 | 真实用户口吻、附件、output |
 
-own 路径若本地源缺 `README.md` → AI 报错中止, **不自动起草** (README 是给人看的入口, 作者亲自定调).
+CI 不要求 README.md 存在, 也不检查 README section. own 路径源缺 README 时继续发布, 只在 PR 里说明缺失。
 
-新 `cases/` 格式 (2026-05 后, `validate-cases.mjs` 强制): 数字目录 `cases/<n>/input/PROMPT.md` (纯文本, 无 frontmatter, 真实用户口吻). 旧 `cases/<recommender>.md` 单文件格式已 EOL, CI 会挂.
+## CI Gate
 
-## 怎么用 (触发示例)
+当前 CI 来自 `.github/workflows/build-index.yml`:
 
-跟 Claude 说:
+- `npm test`
+- `npm run validate` (PR changed-only; main push all)
+- `npm run validate:vt` (PR changed-only; 多数失败是 warning, `malicious >= 3` 才拦)
+- `npm run build:index`
+
+对单个 skill 的内容 gate 以 validator 代码为准:
+
+- `validate-frontmatter`: `name`, `description`, `version`, `author`, `updated_at`, `origin` 非空; `description <= 1024`.
+- `validate-cases`: 只有存在 `cases/` 时检查; legacy `cases/*.md`、leading zero、缺 `input/PROMPT.md` 会挂.
+- `validate-security`: `.mjs/.js/.ts/.sh/.py` 内的 `eval`, `Function`, 未豁免 `child_process`, 未豁免 `curl|sh` 会挂.
+
+## 怎么用
+
+跟 Claude / Codex 说:
 
 - "把我本地这个 `xxx` skill 发到公司库"
 - "我看到一个不错的 skill (https://github.com/foo/bar-skill), 推荐给公司库"
@@ -28,58 +43,45 @@ own 路径若本地源缺 `README.md` → AI 报错中止, **不自动起草** (
 
 ## 你会看到什么
 
-1. AI `TaskCreate` 7 项任务列, 让你从头看到进度
-2. AI 识别路径 → 定位 $REPO (公司库本地 clone) + $SRC (own/case 时本地源 path); own 路径预检 README.md 存在
-3. AI 起草: SKILL.md frontmatter (6 字段) / README.md §同类对比 + §使用技巧 / cases/<n>/input/PROMPT.md / PR title + body (按 `templates/` 渲染, 不自创结构)
-4. AI 写完整预览到 `/tmp/tranfu-publish-preview-*.md`, chat 给简要摘要, 通过 `AskUserQuestion` form 问 `[发布] / [改] / [取消]`
-5. 拿到 `[发布]` 才执行: 切 `skill/<name>` 分支 → cp/写文件 → commit → push → `gh pr create`. `index.json` 由 CI 自动 rebuild, 作者不管
-6. 输出 PR URL
+1. AI 识别 path, 定位 `$REPO` 和 `$SRC`.
+2. AI 生成最小可过 CI 的 `SKILL.md` / case 变更, 并把 README/source_url/prompt/output 这类非 CI 项列成建议或风险.
+3. AI 写完整预览到 `/tmp/tranfu-publish-preview-*.md`, chat 给摘要.
+4. 用户确认 `[发布]` 后, 才切分支、写文件、commit、push、`gh pr create`.
+5. 输出 PR URL.
 
-**不会**:
+## 不会做
 
-- ❌ 不直推 main (始终走 `skill/<name>` 或 `skill/batch-<ts>` 分支)
-- ❌ 不静默 `gh pr create` (必须用户从 form 拍 `[发布]`)
-- ❌ 不动公司库任何文件 until 用户拍 `[发布]` (前面全是起草, 不写盘)
-- ❌ own 路径源缺 README.md 不自动起草 (报错让作者先写)
-- ❌ 不 force push
-- ❌ 不删现有 skill
-- ❌ 不跨仓 PR (只发 `tranfu-labs/tranfu-skills`)
-- ❌ 不接 search / install / list / update / uninstall 意图 — 那些走 `tranfu-router`
+- 不直推 `main`.
+- 不 force push.
+- 不手动 add / commit `index.json`.
+- 不因 README 缺失、README section 缺失、`source_url` 验活失败、output 缺失而阻塞发布.
+- 不写旧格式 `cases/<recommender>.md`.
+- 不接 search / install / list / update / uninstall / doctor 意图; 这些走 `tranfu-router`.
 
-## 共享模板 (`templates/`)
+## 共享模板
 
-| 文件 | 用途 | 路径覆盖 |
+| 文件 | 用途 | 阻塞性 |
 |---|---|---|
-| `templates/pr-body.md` | PR body 骨架 (variant: own / external / case) + 对齐 CI 3 个 validator 的自检清单 | 三路径全用 |
-| `templates/case-prompt.md` | `cases/<n>/input/PROMPT.md` 写法提示 (纯文本, 无 frontmatter) | own · case · (external 选填) |
-| `templates/section-同类对比.md` | **README.md** `## 同类 Skill 对比` section 骨架 | own · external |
-| `templates/section-使用技巧.md` | **README.md** `## 使用技巧` section 骨架 | own · external |
-
-旧 `templates/case-file.md` (含 recommender / reason_kind / scenario_tag frontmatter) 已 EOL — `validate-cases.mjs` 不再认这种格式.
-
-AI 渲染 PR / SKILL.md / case 文件**必须**用这些模板. 不允许换成 GitHub 通用习惯写法 (`## Summary` / `## Validation` / `## Test plan` / `## Rollback`) — 本仓库 lark 通知 + lint workflow 都按模板段名读, 换名 = 静默失效.
-
-## 关键概念
-
-- **path (own / external / case)**: AI 在 §0 自动判. 用户原话给, 或按触发语关键词推 (`URL` → external, `加案例` → case, 其他 → own).
-- **$REPO**: 公司库本地 clone path. 优先用户原话给, 次用 cwd 检测, 再 `~/work/tranfu-skills`.
-- **$SRC**: 本地 skill 源 path (own / case 用). external 不需要 (skill body 不进公司库, 仅薄指针).
-- **case 目录**: 加新 case = 新建 `cases/<next-n>/input/PROMPT.md` (n = 已有最大数字 +1, 或填空缺号). 不再有 recommender 字段, 推荐者归属走 commit message / PR 作者.
+| `templates/pr-body.md` | PR body 骨架 + CI hard gate 自检 | 推荐使用, 自检项只列 CI |
+| `templates/case-prompt.md` | 新增 `cases/<n>/input/PROMPT.md` 时的写法提示 | case 路径使用 |
+| `templates/section-同类对比.md` | README 可选 section | 非 CI |
+| `templates/section-使用技巧.md` | README 可选 section | 非 CI |
 
 ## 依赖
 
-- 公司库 push 权限 + 本地 clone 在 `$REPO` (或 `gh repo clone tranfu-labs/tranfu-skills`)
-- `gh` CLI 已 auth (`gh auth status` 跑通)
-- `git`, `node` (跑 `npm run build:index`)
-- `WebFetch` / `WebSearch` (external 路径需要)
+- 公司库 push 权限 + 本地 clone 在 `$REPO`.
+- `gh` CLI 已 auth.
+- `git`, `node`.
+- `WebFetch` / `WebSearch` 只在需要补外部说明或验活时使用; 不是 CI gate.
 
-## 配套 skill (互相不调用)
+## 配套 skill
 
-- `tranfu-router` — 搜 / 装 / 列 / 升 / 卸 公司库 skill (本 skill 不接这些意图)
-- `tfs` CLI — `tfs list --json` 查公司库现有 skill (起草 §同类对比 用)
+- `tranfu-router` — 搜 / 装 / 列 / 升 / 卸 公司库 skill.
+- `tfs` CLI — 可查公司库现有 skill, 也可辅助 README 对比; 不属于 CI gate.
 
 ## 参考
 
-- `SKILL.md` — 完整三路径步骤 + Hard rules
-- `framework.svg` — 同 `framework.png` 矢量版
-- `templates/` — PR body / case 文件 / SKILL section 骨架
+- `SKILL.md` — 完整三路径步骤.
+- `references/ci-checks.md` — 当前 CI validator 细则.
+- `references/hard-rules.md` — hard gate 与非 CI 建议边界.
+- `templates/` — PR body / case prompt / README 可选 section.

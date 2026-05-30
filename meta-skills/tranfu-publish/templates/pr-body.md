@@ -1,21 +1,12 @@
 <!--
 tranfu-publish PR body 模板, 3 路径共用 (own / external / case).
-AI 按下方 {variant: own | external | case} 标记挑相应 block 填.
-{...} 是占位符, 真写 PR 时替换.
 
-多 skill 一 PR: §元信息 / §Motivation / §自检清单 重复 N 次, 每段顶部加 `### skill: <name>`.
+原则:
+- 自检清单只列当前 CI hard gate.
+- README / source_url / prompt 文案质量 / output 都放到"非 CI 说明"或"风险点", 不放进阻塞清单.
+- `{...}` 是占位符, 真写 PR 时替换.
 
-NEVER 把模板段换成 GitHub 通用习惯写法 (## Summary / ## Validation / ## Test plan / ## Rollback) —
-本仓库自检 + lark 通知 + lint workflow 按下面这些 section 名读. 换名 = 静默失效.
-
-NEVER 给 PR body 加 `## Test plan` 段 — 用户不是 QA, 自检清单已含 AI 能判定的项.
-
-NEVER 在 PR body 重复 README 的 §同类对比 / §使用技巧 内容 — reviewer 点 README 看权威源, PR body 不二次维护.
-
-自检清单对齐 validate-frontmatter.mjs / validate-cases.mjs / validate-security.mjs:
-  - frontmatter 6 项必填: name / description / version / author / updated_at / origin
-  - cases 新格式: cases/<n>/input/PROMPT.md (旧 cases/<recommender>.md 现在是 ERROR)
-  - security: 无 eval / Function / child_process / curl|sh (除非 frontmatter 加 allow_*)
+多 skill 一 PR: 对每个 skill 重复 "### skill: <name>" + 下方元信息 / 自检 / 非 CI 说明.
 -->
 
 ## 元信息
@@ -23,69 +14,69 @@ NEVER 在 PR body 重复 README 的 §同类对比 / §使用技巧 内容 — r
 - skill: {name}
 - path: {own-skills/{name}/ | external-skills/{name}/ | <own|external>-skills/{name}/cases/{n}/}
 {variant: own}
-- version: {new} (此次: {bump_desc, e.g. "first publish" 或 "0.1.0 → 0.1.1 (patch)"})
 - origin: own
-- author: {handle}
-- 包含: SKILL.md + README.md + cases/1/input/PROMPT.md (+ 选填 cases/1/output/)
+- version: {new}
+- 本 PR 写入: SKILL.md{optional_files, e.g. " + README.md + cases/1/input/PROMPT.md"}
 {variant: external}
 - origin: external
-- source_url: {url}
-- recommender (走 commit message / PR 作者归属, 不进文件): {handle}
-- 包含: SKILL.md (薄指针, frontmatter 含 version) + README.md
+- version: {new}
+- source_url: {url or "N/A — CI 不要求"}
+- 本 PR 写入: SKILL.md{optional_files, e.g. " + README.md"}
 {variant: case}
-- 新增 case 编号: {n} (下一个未占的整数)
-- 新增: <own|external>-skills/{name}/cases/{n}/input/PROMPT.md (+ 选填 output/)
+- 新增 case 编号: {n}
+- 本 PR 写入: <own|external>-skills/{name}/cases/{n}/input/PROMPT.md{optional_files}
 
 ## Motivation
 
-{1-3 句: 为什么加这个 / 业务背景 / 触发推荐的具体场景}
+{1-3 句: 为什么加这个 / 背景 / 用户触发场景}
 
-## 自检清单 (AI 据实勾, 不留给用户)
+## CI 自检清单 (AI 据实勾)
 
 <!--
-规则:
-  - AI 实际检查后, 达成 → `- [x]`
-  - 实际没达成 → 老实留 `- [ ]`, 让 reviewer 看到. NEVER 偷偷勾上
-  - 真不适用 (e.g. case-only PR 不动 SKILL.md) → `- [~] N/A — 一句原因`
-  - 不允许整段删自检清单, 也不允许把项删掉装作没出现
+勾选规则:
+- 达成: [x]
+- 没达成: [ ]
+- 不适用: [~] N/A — 一句原因
 
-跑完整流程到 §6 时, own/external 必备产物已在 §0 预检 + §5 起草阶段 ensure, 大多数项应是 `- [x]`.
-出现 `- [ ]` 是合法信号: 告诉 reviewer "AI 跑下来发现这项卡住了, 请你来定夺".
-
-对齐 CI 校验:
-  - validate-frontmatter — 6 字段必填 + description ≤ 1024 字符
-  - validate-cases — 新格式 cases/<n>/input/PROMPT.md, 不能有 legacy *.md, 不能有 leading zero (01/)
-  - validate-security — 不引 eval / Function / child_process / curl|sh (允许时加 allow_* frontmatter)
+只列 CI hard gate:
+- validate-frontmatter: 6 字段非空 + description ≤ 1024
+- validate-cases: 如果存在 cases/, 只能有数字目录/README.md/legacy *.md; legacy 是 ERROR; 数字目录无 leading zero; input/PROMPT.md 存在
+- validate-security: eval / Function / child_process / curl|sh
+- validate:vt: malicious >= 3 才阻塞; 本地无 key通常只能标 N/A
 -->
 
 {variant: own}
-- [ ] README.md 存在 (作者本人写, AI 未起草)
-- [ ] README.md 有 `## 同类 Skill 对比` 段
-- [ ] README.md 有 `## 使用技巧` 段
-- [ ] SKILL.md frontmatter 6 项齐 (name / description / version / author / updated_at / origin: own); description ≤ 1024 字符
-- [ ] cases/1/input/PROMPT.md 存在, 真实用户口吻含触发关键词 (不是 cases/{author}.md 老格式)
-- [ ] cases/ 下无 legacy *.md (cases.legacy-single-file), 数字目录无 leading zero (01/ → 1/)
-- [ ] 无 eval / Function / child_process / curl|sh, 或已在 SKILL.md frontmatter 加 allow_* flag
+- [ ] SKILL.md frontmatter 6 字段非空 (name / description / version / author / updated_at / origin)
+- [ ] description ≤ 1024 字符
+- [ ] 如有 cases/: 无 legacy `cases/*.md`, 无 leading zero, 每个数字 case 有 `input/PROMPT.md`
+- [ ] 安全扫描范围内无 `eval` / `Function` / 未豁免 `child_process` / 未豁免 `curl|sh`
+- [ ] 本地已跑 `npm run validate -- --target own-skills/{name} --json`
 {variant: external}
-- [ ] SKILL.md 薄指针 + source_url 有效 (HTTP 200, 已 WebFetch 验过)
-- [ ] SKILL.md frontmatter 6 项齐 (name / description / version / author / updated_at / origin: external); 没 version 的话 fallback 1.0.0
-- [ ] README.md 存在 (薄推荐, AI 起草)
-- [ ] README.md 有 `## 同类 Skill 对比` + `## 使用技巧` 段
+- [ ] SKILL.md frontmatter 6 字段非空 (name / description / version / author / updated_at / origin)
+- [ ] description ≤ 1024 字符
+- [ ] 如有 cases/: 无 legacy `cases/*.md`, 无 leading zero, 每个数字 case 有 `input/PROMPT.md`
+- [ ] 安全扫描范围内无 `eval` / `Function` / 未豁免 `child_process` / 未豁免 `curl|sh`
+- [ ] 本地已跑 `npm run validate -- --target external-skills/{name} --json`
 {variant: case}
-- [ ] 不动目标 skill 的 SKILL.md / README.md (本 PR 只动 cases/)
-- [ ] 新 case 编号是下一个未占整数, 无 leading zero
-- [ ] cases/<n>/input/PROMPT.md 存在, 内容真实用户口吻
+- [ ] 新 case 路径是 `cases/{n}/input/PROMPT.md`
+- [ ] case 编号 `{n}` 是正整数且无 leading zero
+- [ ] 目标 skill 的 `cases/` 下无 legacy `*.md` 或异常条目
+- [ ] 本地已跑 `npm run validate -- --target <own|external>-skills/{name} --json`
+- [~] N/A — 本 PR 不改 SKILL.md frontmatter / 代码脚本
 
-## 不在范围 (告诉 reviewer 不用查)
+## 非 CI 说明
 
-- {示例: 不依赖外部 API key / 不验证 source_url 上游 skill 自身代码质量 / 不验 README 文笔}
+<!--
+这些不是当前 CI blocker. 只说明状态, 不作为发布拦截条件.
+-->
 
-## 风险点 (所有 variant 必填, 无则 N/A; **不**允许整段删除)
+- README.md: {存在 / 缺失 / 未改 / 本 PR 可选补充}
+- README 辅助段落 (`同类 Skill 对比` / `使用技巧`): {存在 / 缺失 / 未改 / N/A}
+- source_url / HTTP 验活: {通过 / 失败 / 未跑 / N/A}
+- PROMPT.md 文案质量: {真实来源 / 用户提供 / TODO placeholder / N/A}
+- output/: {已收 / 缺失 / N/A}
+- VirusTotal: {本地未跑 / CI 有 secret 后跑 / N/A}
 
-{variant: own}
-- 该 skill 是否会 git push / 改本地状态 / 调外部 API: {N/A 或描述}
-- frontmatter 在本地源 vs 公司库副本是否需要展开: {N/A 或描述}
-{variant: external}
-- source_url 上游 skill 的稳定性 (vaporware / 长期不维护 / license 不明): {N/A 或描述}
-{variant: case}
-- {N/A 或描述, case-only PR 一般 N/A}
+## 风险点
+
+{没有则写 N/A. 有缺 README、source_url 未验活、placeholder prompt、上游维护不明、allow_* 豁免等, 都写在这里.}
