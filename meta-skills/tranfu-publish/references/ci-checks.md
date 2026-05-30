@@ -1,75 +1,130 @@
 # CI 校验细节
 
-`.github/workflows/build-index.yml` 跑 3 个 validator. PR 是 changed-only, push main 是全量.
+这份文件描述当前 CI. 注意区分:
+
+- validator hard gate: 不满足会挂 CI.
+- catalog surface: `build:index` 会写入 `index.json`, 影响展示/分发, 但缺失不会挂 CI.
+
+`.github/workflows/build-index.yml`:
+
+- PR: `npm test` → `npm run validate` (changed-only) → `npm run validate:vt` (changed-only) → `npm run build:index`
+- main push: `npm test` → `npm run validate:all` → `npm run build:index` → 发布 `catalog` release
 
 ## validate-frontmatter
 
-`scripts/validate-frontmatter.mjs`. SKILL.md 必填 6 字段:
+脚本: `scripts/validate-frontmatter.mjs`.
 
-| 字段 | 取值 |
-|---|---|
-| `name` | kebab-case, 与目录名一致 |
-| `description` | ≤ 1024 字符. 写"做什么 + 何时触发 + 不触发"; 不写 body 段 |
-| `version` | semver. own 首发 `0.1.0`. external 上游没有就 fallback `1.0.0` (claude-design-system 漏 version 被 #89 修过) |
-| `author` | `gh api user -q .login` (own) 或上游作者 (external) |
-| `updated_at` | `date -u +%Y-%m-%d` |
-| `origin` | `own` / `external` / `meta` 之一 |
+CI 检查:
 
-description 超长是最常踩的坑. 任一字段缺 = PR 挂.
+- `SKILL.md` 必须有 frontmatter block.
+- 下列 6 个字段必须存在且非空:
+  - `name`
+  - `description`
+  - `version`
+  - `author`
+  - `updated_at`
+  - `origin`
+- `description` 字符数必须 ≤ 1024.
+
+CI **不**检查:
+
+- `name` 是否 kebab-case 或是否等于目录名.
+- `version` 是否 semver.
+- `origin` 是否只能是 `own` / `external` / `meta`.
+- external 是否有 `source_url`.
+- README 是否存在.
+
+发布约定仍建议按目录名、semver、`origin` 枚举写, 但不能把这些约定说成 CI blocker.
 
 ## validate-cases
 
-`scripts/validate-cases.mjs`. 新格式:
+脚本: `scripts/validate-cases.mjs`.
 
-```
+CI 只在 skill 目录存在 `cases/` 时检查. 没有 `cases/` = 通过.
+
+允许结构:
+
+```text
 cases/
-  1/input/PROMPT.md   # 必须存在, 必须非空
-  1/input/<aux>       # 选填截图/数据
-  1/output/           # 推荐有, 验证暂停 (TODO)
-  2/, 3/, ...         # 顺序无要求, gap 允许 (1/3/7 也合法)
+  1/input/PROMPT.md
+  1/input/<aux>
+  1/output/           # 当前不检查
+  2/
   README.md           # ignored
 ```
 
-挂的规则:
+会挂的规则:
 
-- `cases.legacy-single-file` — `cases/<author>.md` 这种旧文件 = ERROR. 必须迁
-- `cases.mixed-legacy-and-new` — 新旧并存 = ERROR
-- `cases.leading-zero` — `cases/01/` `cases/02/` = ERROR. 用 `1/` `2/`
-- `cases.missing-input` — `cases/<n>/input/` 缺或全是 dotfile = ERROR
-- `cases.missing-prompt-md` — `input/` 在但没 `PROMPT.md` = ERROR
-- `cases.unexpected-entry` — cases/ 下出现非数字非 README 的目录 = ERROR
+- `cases.legacy-single-file` — `cases/<author>.md` 旧格式 = ERROR.
+- `cases.mixed-legacy-and-new` — legacy `*.md` 和数字目录并存 = ERROR.
+- `cases.leading-zero` — `cases/01/` / `cases/02/` = ERROR.
+- `cases.missing-input` — 数字 case 缺非空 `input/` = ERROR.
+- `cases.missing-prompt-md` — `input/` 存在但缺 `PROMPT.md` = ERROR.
+- `cases.unexpected-entry` — `cases/` 下出现非数字目录、非 `README.md`、非 legacy `*.md` 的条目 = ERROR.
 
-`.gitkeep` / `.DS_Store` 等 dotfile 都被忽略.
+CI 不读取 `PROMPT.md` 内容, 不检查真实用户口吻、触发关键词、frontmatter 或字数. 这些只是检索质量建议.
+
+`output/` 校验当前暂停. 不建空 `output/` 更稳; 但缺 `output/` 不是当前 blocker.
 
 ## validate-security
 
-`scripts/validate-security.mjs`. 扫描 skill 目录下所有 `.mjs / .js / .ts / .sh / .py`. 触发规则:
+脚本: `scripts/validate-security.mjs`.
 
-| 规则 | 模式 | 豁免 frontmatter |
+扫描 skill 目录下所有 `.mjs / .js / .ts / .sh / .py`, 跳过 symlink、`node_modules`、`.git`、大于 1MB 的文件.
+
+| 规则 | 模式 | 允许豁免 |
 |---|---|---|
-| `security.eval` | `eval(...)` | (无, 一律拒) |
-| `security.new-function` | `new Function(...)` / `Function(...)` | (无, 一律拒) |
+| `security.eval` | `eval(...)` | 无 |
+| `security.new-function` | `new Function(...)` / `Function(...)` | 无 |
 | `security.child-process-import` | import 或 require `child_process` | `allow_exec: true` |
-| `security.curl-pipe-sh` | `curl ... \| sh` 或 `wget ... \| sh` | `allow_curl_pipe_sh: true` |
+| `security.curl-pipe-sh` | `curl ... | sh` 或 `wget ... | sh` | `allow_curl_pipe_sh: true` |
 
-要 exec 系统命令: SKILL.md frontmatter 加 `allow_exec: true`. 要 curl|sh: 加 `allow_curl_pipe_sh: true`. 加豁免前先想想能不能换成 explicit download + checksum verify.
+加豁免前先判断是否能换成更明确的下载、校验或非 shell 实现.
+
+## validate-virustotal
+
+脚本: `scripts/validate-virustotal.mjs`.
+
+- PR 上 changed-only 跑.
+- 没有 `VIRUSTOTAL_API_KEY`、限流、网络异常、超时: warning, 不阻塞.
+- zip 超过 32MB: warning, 不阻塞.
+- `malicious >= 3`: ERROR, 阻塞.
+
+## build:index
+
+`npm run build:index` 在 PR 上做 sanity check, main push 后发布到 `catalog` release.
+
+它会递归执行 `files: listFiles(skillDir)`, 所以这些已有文件都会进入 `index.json` / catalog:
+
+- `README.md`
+- `cases/<n>/input/PROMPT.md`
+- `cases/<n>/output/...`
+- `references/...`
+- `templates/...`
+
+external skill 的 `source_url` 只有 frontmatter 里写了才会进入 catalog 字段.
+
+缺 README / cases / output / source_url 不会让 `build:index` 失败; 但会改变 catalog 里可见的文件/字段. 发布预览和 PR body 要说明这一点.
+
+不要手动 add / commit `index.json`; CI 负责生成发布产物.
 
 ## 本地复跑
+
+单个 skill:
 
 ```bash
 npm run validate -- --target <skill-path> --json
 ```
 
-PR 挂了的话, Lark + PR comment 会按 validator 分组列错误明细 + 复跑命令. 一行命令本地复现, 修完 push 同分支即可.
+改了 validator 或 workflow 相关逻辑:
 
-## 其他 CI 步骤
+```bash
+npm test
+npm run validate -- --target meta-skills/tranfu-publish --json
+```
 
-- `npm test` — validator 单元测试 (`tests/validate-*.test.mjs`). 改 validator 时跟着改测试
-- `npm run validate:vt` — VirusTotal 扫描. 只在 PR 跑, 有 secret 才有效, fork PR / 限流 / 网络异常 soft-fail 不阻断合并. malicious≥3 才挂
-- `npm run build:index` — 重建 catalog `index.json`. push main 后发到 `catalog` release. **不要手动 add / commit `index.json`**, CI 处理
+全量:
 
-## 试运行期发布规则
-
-- `main` 受保护, 走 PR
-- 当前 CODEOWNER `@aquarius-wing`
-- `1.0.0+` 必须人工审 + commit message 加 `[MAJOR]` 前缀
+```bash
+npm run validate:all
+```
