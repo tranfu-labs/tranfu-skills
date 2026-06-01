@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Domain Framing"
+  short_description: "把经验文档定位到正确的 skill 任务域、边界和验收"
+  default_prompt: "Use $skill-domain-framing to turn this incident note or guardrail doc into a skill framing decision before writing the skill."
