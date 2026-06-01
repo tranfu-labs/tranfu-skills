@@ -1,0 +1,4 @@
+interface:
+  display_name: "社交分享 Head 编写"
+  short_description: "编写 IM/social 分享可抓取的网页 head"
+  default_prompt: "Use $write-social-preview-head to write the HTML head for an IM/social-shareable page."
