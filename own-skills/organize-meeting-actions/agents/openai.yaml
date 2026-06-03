@@ -1,4 +1,0 @@
-interface:
-  display_name: "Organize Meeting Actions"
-  short_description: "整理多人协作会议行动项，校验四字段，并同步小王工作安排"
-  default_prompt: "Use $organize-meeting-actions to turn meeting notes into accountable action items."
