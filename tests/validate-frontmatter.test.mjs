@@ -20,6 +20,29 @@ test("frontmatter: valid → 0 errors", () => {
   }
 });
 
+test("frontmatter: external metadata fields are optional", () => {
+  const root = makeTmpRepo();
+  try {
+    writeRawSkillMd(root, {
+      root: "external-skills",
+      name: "ext",
+      content: `---
+name: ext
+description: external stub
+origin: external
+source_url: https://github.com/example/ext
+---
+
+# x
+`,
+    });
+    const errs = validateSkillFile(join(root, "external-skills/ext/SKILL.md"), root);
+    assert.equal(errs.length, 0, `unexpected errors: ${JSON.stringify(errs)}`);
+  } finally {
+    cleanup(root);
+  }
+});
+
 test("frontmatter: missing required field → frontmatter.missing-field", () => {
   const root = makeTmpRepo();
   try {
