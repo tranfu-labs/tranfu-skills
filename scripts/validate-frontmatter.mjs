@@ -11,7 +11,8 @@ import {
 } from "./lib/validator-types.mjs";
 
 const ROOTS = ["meta-skills", "own-skills", "external-skills"];
-const REQUIRED_FIELDS = ["name", "description", "version", "author", "updated_at", "origin"];
+const BASE_REQUIRED_FIELDS = ["name", "description", "origin"];
+const OWN_REQUIRED_FIELDS = ["version", "author", "updated_at"];
 const MAX_DESCRIPTION_LENGTH = 1024;
 const VALIDATOR = "frontmatter";
 
@@ -93,6 +94,11 @@ function skillNameFromPath(rel) {
   return rel;
 }
 
+function requiredFieldsForPath(rel) {
+  if (rel.split("/")[0] === "external-skills") return BASE_REQUIRED_FIELDS;
+  return [...BASE_REQUIRED_FIELDS, ...OWN_REQUIRED_FIELDS];
+}
+
 export function validateSkillFile(filePath, rootDir = process.cwd()) {
   const markdown = readFileSync(filePath, "utf8");
   const { data, error } = parseFrontmatter(markdown);
@@ -115,7 +121,7 @@ export function validateSkillFile(filePath, rootDir = process.cwd()) {
     return results;
   }
 
-  for (const field of REQUIRED_FIELDS) {
+  for (const field of requiredFieldsForPath(rel)) {
     if (!Object.prototype.hasOwnProperty.call(data, field) || String(data[field]).trim() === "") {
       results.push(
         makeError({

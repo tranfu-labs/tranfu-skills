@@ -1,43 +1,54 @@
 {
   "version": 1,
-  "generated_at": "2026-05-26T07:57:28.870Z",
+  "generated_at": "2026-06-05T02:37:59.201Z",
   "skills": [
     {
       "name": "tranfu-publish",
       "type": "meta",
-      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 起草 PR 内容 (frontmatter / README §同类对比 / README §使用技巧 / case-file / PR title+body) 全部按 templates/ 渲染, 用户拍 [发布] 才走 gh pr create. 不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill).",
+      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐外部 skill URL 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 按当前 CI gate 准备并提交 tranfu-skills PR: validator hard gate 包括 SKILL.md frontmatter、现有/新增 cases 格式、安全扫描; build:index 会把 README/cases/output 等已有文件和 external source_url 暴露到 catalog, 但缺失不阻塞. 用户确认后才 git push / gh pr create. Do NOT trigger when search / install / list / update / uninstall / doctor.",
+      "version": "0.2.1",
+      "author": "aquarius-wing",
+      "updated_at": "2026-05-30",
       "path": "meta-skills/tranfu-publish",
       "files": [
         "README.md",
         "SKILL.md",
         "framework.png",
         "framework.svg",
-        "templates/case-file.md",
-        "templates/pr-body.md",
-        "templates/section-使用技巧.md",
-        "templates/section-同类对比.md"
+        "references/case-sources.md",
+        "references/ci-checks.md",
+        "references/hard-rules.md",
+        "templates/case-prompt.md",
+        "templates/pr-body.md"
       ],
-      "sha": "71088c9c262e5a1fb90a04ccea037eefa449faca"
+      "sha": "71edfefe3e4506395067a837278d48c4eda1de9f"
     },
     {
       "name": "tranfu-router",
       "type": "meta",
       "description": "当用户说\"搜公司 skill 关于 X / 装 X 到 user / project / 列公司库 skill / 列已装的公司 skill / 升级公司 skill / 卸载公司 skill X / 诊断 tfs 环境\"时, 调本地 tranfu-skills CLI (二进制 tfs) 完成. 自动识别当前 runtime (Claude Code / Codex CLI) 通过 --runtime 传给 tfs, 用 --json 解析结果. Do NOT 接发布 / publish / 推 skill 到公司库意图 (那走 tranfu-publish skill).",
+      "version": "0.1.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-05-26",
       "path": "meta-skills/tranfu-router",
       "files": [
+        "README.md",
         "SKILL.md"
       ],
-      "sha": "2dc57023f5d063816de8e840d39a227824175b71"
+      "sha": "d630043de9ddf79138783a0a699b15daa8a21cb8"
     },
     {
       "name": "ai-startup-feasibility-check",
       "type": "own",
       "description": "AI 创业方向可行性强制自检（v2）。在以下任一情境下必须使用此技能：(1) 用户做任何含 AI / 大模型 / LLM / Agent / AIGC / Copilot / 生成式 AI / Claude / GPT / Anthropic / OpenAI / DeepSeek / Qwen / 豆包 / Kimi / MCP / A2A / 模型公司 / 智能体 / 智能驾驶 / 智能座舱 等关键词的市场研究、行业分析、赛道判断、竞争格局分析、行业研报；(2) 用户评估 AI 创业方向、AI 投资机会、AI 项目可行性、AI 创业公司、AI startup；(3) 用户描述一个项目并问\"怎么样 / 值不值得做 / 能不能成 / X 赛道值得进入吗 / X 是不是好生意 / 我想做 X / 评估 X 项目 / 帮我看看 X / 这个项目能做吗\"；(4) 用户分析 AI 创业方向时寻找介入机会、判断生态机会、研究开放平台介入路径；(5) 与 elite-market-researcher / market-analysis 等市场研究技能联合使用做 AI 相关任何研究时（即使用户没明确要求自检，只要话题在 AI 领域内，本技能必须并行触发）。本技能强制对研究目标应用 13 条 AI 创业禁止清单 + 三维评分体系（替代风险 / 杠杆方向 / 单位经济）+ 10 题自检表，产出结构化的可行性诊断报告。与 elite-market-researcher 并用时，本技能产出\"AI 创业可行性自检\"章节作为研报强制附录，禁止省略。本技能优先级高于一般市场研究——在 AI 相关研究中，没有这一层自检的报告视为不合格。",
+      "version": "0.1.1",
+      "author": "tf-nezha",
+      "updated_at": "2026-05-25",
       "path": "own-skills/ai-startup-feasibility-check",
       "files": [
         "README.md",
         "SKILL.md",
-        "cases/tf-nezha.md",
+        "cases/1/input/PROMPT.md",
         "references/case-library.md",
         "references/prohibition-list.md",
         "references/three-survivors-framework.md"
@@ -48,6 +59,9 @@
       "name": "business-analysis-pipeline",
       "type": "own",
       "description": "当用户说\"评估 AI 产品商业可行性 / 分析这个产品方向 / 创业方向评估 / 投资尽调 / 出商业分析报告\"时, 走 PEST → 波特五力 → SWOT → BMC → 机会矩阵 → 战略建议 → 执行摘要 7 步 pipeline, 用 KF 编号交叉引用前序模块, 输出 120 分制 (S/A/B/C/D 五级) 结构化商业分析报告.",
+      "version": "0.1.0",
+      "author": "06666666",
+      "updated_at": "2026-05-13",
       "path": "own-skills/business-analysis-pipeline",
       "files": [
         "README.md",
@@ -59,6 +73,9 @@
       "name": "credibility-review",
       "type": "own",
       "description": "Review a draft 踩坑记 or 养成记 article (for tranfu-site or anywhere following the same rules) by spawning two independent fresh agents in parallel — A 轨 simulates a reader with dual-axis 耐心/信任 scoring, B 轨 runs anti-pattern catalog detection — then composes a tri-state verdict (可发 / 待审查 / 退稿). Trigger when user says 审稿/审一下/检查文章/帮我看下这篇/check this draft/review this article/抓一下问题/看看哪里不对, OR pastes a markdown article tagged 踩坑/养成 and asks for feedback, OR provides a path to such a file in tranfu-site/src/content/posts/. Output combines reader-trajectory + catalog hits — NOT a rewrite. Anchored to tranfu-site/goal-docs/05-design-踩坑记-final.md + 06-design-养成记-final.md.",
+      "version": "0.1.2",
+      "author": "aquarius-wing",
+      "updated_at": "2026-05-11",
       "path": "own-skills/credibility-review",
       "files": [
         "README.md",
@@ -96,13 +113,16 @@
       "name": "daily-report",
       "type": "own",
       "description": "当用户要把 AI 新闻、日报素材或结构化 JSON 渲染成 TranFu 公开发布图片时使用。 Do NOT trigger when: 用户只要纯文本日报、文章改写、通用图片生成或非 AI 主题海报。",
+      "version": "0.1.0",
+      "author": "griffithkk3-del",
+      "updated_at": "2026-05-18",
       "path": "own-skills/daily-report",
       "files": [
         "README.md",
         "SKILL.md",
         "agents/openai.yaml",
         "assets/logos/tranfu.png",
-        "cases/griffithkk3-del.md",
+        "cases/1/input/PROMPT.md",
         "examples/dark-aqua.png",
         "examples/dark-iceblue.png",
         "examples/research-iceblue-10-items.png",
@@ -121,11 +141,14 @@
       "name": "elite-market-researcher",
       "type": "own",
       "description": "顶尖市场研究员模式。当用户要求\"做市场分析\"\"分析XX赛道\"\"研究XX行业\"\"竞争格局分析\"\"投资机会判断\"\"创业方向评估\"\"market research\"\"industry analysis\"\"赛道判断\"\"做行业研报\"\"帮我看看XX市场\"，或任何涉及对一个市场/行业/赛道做严肃决策依据的研究任务时，必须使用此技能。本技能将AI拉入McKinsey合伙人 + 投行首席分析师 + 顶级VC合伙人 + 行业操盘手的复合心智，输出领先行业3-5年视野、具备反共识洞察、可直接支撑亿元级决策的深度研究报告。任何\"了解一下市场\"以上严肃度的研究请求，都应主动触发此技能。可与 market-analysis 技能配合使用（本技能负责心智与质量，market-analysis 负责搜索流程）。",
+      "version": "0.1.0",
+      "author": "tf-nezha",
+      "updated_at": "2026-05-21",
       "path": "own-skills/elite-market-researcher",
       "files": [
         "README.md",
         "SKILL.md",
-        "cases/tf-nezha.md",
+        "cases/1/input/PROMPT.md",
         "references/contrarian-thinking-patterns.md",
         "references/quality-checklist-detailed.md",
         "references/six-principles-deep-dive.md"
@@ -136,17 +159,29 @@
       "name": "goal-driven-decomposition",
       "type": "own",
       "description": "Solve \"build/make/design X\" goals AND follow-up edits (\"做一个网站\", \"build a tool\", \"加用户登录\", \"X 偏了改一下\"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).",
+      "version": "0.2.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-05-28",
       "path": "own-skills/goal-driven-decomposition",
       "files": [
         "HISTORY.md",
-        "SKILL.md"
+        "SKILL.md",
+        "cases/1/input/PROMPT.md",
+        "cases/1/output/00-true-goal-r1.md",
+        "cases/1/output/00-用户画像-r1.md",
+        "cases/1/output/README.md",
+        "cases/1/output/conversation.mdx",
+        "cases/1/output/user_goal_surface.md"
       ],
-      "sha": "7f5bd29706d110a68df75f906c7108b2e02a4494"
+      "sha": "3f7ca64b2544749bffdac46c3cb6b717e7be3f09"
     },
     {
       "name": "lark-safe-write",
       "type": "own",
       "description": "\"Lark/Feishu wiki 安全写入流程：强制先备份、再写入、后验证，防止覆盖丢失。支持创建新 wiki 节点和更新现有文档内容。当用户需要向飞书知识库写入、更新、覆盖文档时，必须遵循本 skill 的完整流程。\"",
+      "version": "1.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-05-12",
       "path": "own-skills/lark-safe-write",
       "files": [
         "README.en.md",
@@ -159,11 +194,14 @@
       "name": "market-analysis",
       "type": "own",
       "description": "全景市场分析技能。当用户说\"分析XX市场\"、\"帮我做市场调研\"、\"XX行业市场分析\"、\"竞争格局分析\"、\"市场机会在哪里\"、\"market analysis\"、\"行业研究\"、\"赛道分析\"时，必须使用此技能。该技能通过全网多维度搜索，综合行业报告、竞品动态、用户声音、投融资信息，输出结构化市场分析报告并挖掘机会点。只要涉及市场、行业、赛道、竞争格局相关分析，都应主动触发此技能。",
+      "version": "0.1.0",
+      "author": "tf-nezha",
+      "updated_at": "2026-05-12",
       "path": "own-skills/market-analysis",
       "files": [
         "README.md",
         "SKILL.md",
-        "cases/tf-nezha.md",
+        "cases/1/input/PROMPT.md",
         "references/methodology.md"
       ],
       "sha": "892028f8769a0d6fcdad99b269d61661840a5e77"
@@ -172,16 +210,27 @@
       "name": "project-packaging",
       "type": "own",
       "description": "GitHub 项目完备性检查与补全引导。扫描项目，生成缺失清单，按优先级逐项引导用户补全。 不直接生成所有内容，而是引导用户决策后再执行。 Always trigger for: project packaging, 项目包装, 项目美化, 项目完善, open source ready, 开源准备, github setup, 补全项目, project health, project checklist, 项目清单. Also triggers for: \"这个项目还缺什么\", \"帮我完善项目结构\", \"准备开源\". Do NOT trigger when: user wants to write code, fix bugs, or do code review.",
+      "version": "0.2.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-05-29",
       "path": "own-skills/project-packaging",
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "references/ci-recipes.md",
+        "references/contributing-playbook.md",
+        "references/gitignore-by-stack.md",
+        "references/issue-pr-templates.md",
+        "references/readme-playbook.md"
       ],
-      "sha": "f87e25350c11742eb0dae1a358e398a8a4d04683"
+      "sha": "948047485fc6a16b1e3f3cdb7adc1ca3f70ea02f"
     },
     {
       "name": "project-scoring",
       "type": "own",
       "description": "Use when user says \"评估这个 AI 项目\" to score AI workflows and produce a decision memo.",
+      "version": "0.2.0",
+      "author": "griffithkk3-del",
+      "updated_at": "2026-05-21",
       "path": "own-skills/project-scoring",
       "files": [
         "README.md",
@@ -201,6 +250,9 @@
       "name": "prompt-review",
       "type": "own",
       "description": "Multi-round prompt/skill review loop. Launches a reviewer subagent that audits prompt files against an embedded engineering checklist, reports findings via SendMessage, and re-reviews after fixes until all issues are resolved. Self-contained — no network dependency. Always trigger for: review prompt, review skill, review agent, audit prompt, check prompt quality, prompt engineering review, skill review, agent review, evaluate prompt, lint prompt. Also triggers for: \"帮我审一下这个 prompt\", \"检查提示词质量\", \"评审这个 agent 定义\", \"这个 skill 写得怎么样\", \"优化提示词\". Do NOT trigger when: user wants to review CODE (not prompts), run tests, or do functional QA.",
+      "version": "0.1.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-05-13",
       "path": "own-skills/prompt-review",
       "files": [
         "README.md",
@@ -212,6 +264,9 @@
       "name": "skill-reverse-engineer",
       "type": "own",
       "description": "Reverse-engineer, audit, and improve AI agent skills. Use when analyzing SKILL.md files, prompt workflows, agent instructions, or skill directories.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-05-12",
       "path": "own-skills/skill-reverse-engineer",
       "files": [
         ".gitignore",
@@ -227,6 +282,9 @@
       "name": "structured-thinking-advisor",
       "type": "own",
       "description": "当用户说\"帮我审视这份文档 / 优化这段表达 / 重构这个结构 / 这思路对吗 / 帮我深度共创\"时, 以\"结构化思考与系统设计顾问\"介入：拆解结构、校验逻辑、提炼方法论、给 2-3 个不同维度的优化版本, 主动指出问题而非复述.",
+      "version": "0.1.0",
+      "author": "06666666",
+      "updated_at": "2026-05-13",
       "path": "own-skills/structured-thinking-advisor",
       "files": [
         "README.md",
@@ -238,11 +296,14 @@
       "name": "visual-pipeline",
       "type": "own",
       "description": "当用户要设计一个页面 (UI/视觉/产品层, 不是只写代码) 或修改已有视觉设计时, 驱动三段流水线 (显示信息 → 显示框架 → 风格+实践), 每页独立, 先文档后 HTML. 输入 = \"已知用户场景 + 已知要显示什么\", 输出 = 高保真选定版. 不用于: 文案小改 / 单 bug 代码修复 / 纯后端.",
+      "version": "0.1.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-05-24",
       "path": "own-skills/visual-pipeline",
       "files": [
         "README.md",
         "SKILL.md",
-        "cases/aquarius-wing.md",
+        "cases/1/input/PROMPT.md",
         "change-flow.md",
         "examples/_visual-index/01-display-info.md",
         "examples/_visual-index/02-skeleton.html",
@@ -263,6 +324,9 @@
       "name": "write-spec",
       "type": "own",
       "description": "从模糊想法或功能需求生成结构化 PRD/feature spec，含目标、非目标、用户故事、验收标准、成功指标。触发：写 spec / 写 PRD / 规划功能 / scope 一下",
+      "version": "0.1.0",
+      "author": "cnrandomgod-jpg",
+      "updated_at": "2026-05-12",
       "path": "own-skills/write-spec",
       "files": [
         "README.md",
@@ -274,10 +338,12 @@
       "name": "andrej-karpathy-skills",
       "type": "external",
       "description": "基于 Andrej Karpathy 对 LLM 编码陷阱的观察，改善 Claude Code 行为的单文件行为准则。减少过度工程、无关改动和意图偏差。触发：任何 Claude Code 编码对话自动生效。",
+      "version": "0.1.0",
+      "author": "multica-ai",
+      "updated_at": "2026-05-13",
       "path": "external-skills/andrej-karpathy-skills",
       "files": [
-        "SKILL.md",
-        "cases/BruceL017.md"
+        "SKILL.md"
       ],
       "sha": "fdadf35afb85ab3db3ef2300a6a8610c37696bdc",
       "source_url": "https://github.com/multica-ai/andrej-karpathy-skills"
@@ -286,18 +352,24 @@
       "name": "claude-design-system",
       "type": "external",
       "description": "Anthropic 内部 Claude 设计制品工具的 system prompt 镜像 (社区抓取), 422 行讲清 Claude 怎么做 HTML 原型 / React 组件 / 幻灯片 / 动画 / 设计系统适配. 当用户问 \"Claude 怎么出高质量设计 / 我要给自己的 Claude 设计 agent 抄一份基线 prompt / 为什么 Claude 输出的 React 总因 const styles 冲突 / Claude 做幻灯片为什么会 1-indexed slide label\" 时, 读这份 prompt 当参考材料. Do NOT trigger when: 用户要真做设计实现 (走 ui-ux-pro-max) / 审 UI 代码 (走 web-design-guidelines) / 只画架构图 (走 fireworks-tech-graph) / 单纯用 Claude.ai 不需要装它.",
+      "version": "1.0.0",
+      "author": "elder-plinius",
+      "updated_at": "2026-05-22",
       "path": "external-skills/claude-design-system",
       "files": [
         "README.md",
         "SKILL.md"
       ],
-      "sha": "2f7bfc4c3f05fbe644aa52b73957de6a3eb6e317",
+      "sha": "73a9067601a8d93c67c42ae443666b4f91d79a4f",
       "source_url": "https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Design-Sys-Prompt.txt"
     },
     {
       "name": "fireworks-tech-graph",
       "type": "external",
       "description": "Use when the user wants to create any technical diagram - architecture, data flow, flowchart, sequence, agent/memory, or concept map - and export as SVG+PNG. Trigger on: \"画图\" \"帮我画\" \"生成图\" \"做个图\" \"架构图\" \"流程图\" \"可视化一下\" \"出图\" \"generate diagram\" \"draw diagram\" \"visualize\" or any system/flow description the user wants illustrated.",
+      "version": "0.1.0",
+      "author": "yizhiyanhua-ai",
+      "updated_at": "2026-05-09",
       "path": "external-skills/fireworks-tech-graph",
       "files": [
         "SKILL.md"
@@ -309,6 +381,9 @@
       "name": "openspec",
       "type": "external",
       "description": "当用户做多轮迭代或长期维护项目时, 用 /opsx:propose → /opsx:apply → /opsx:archive 把每个 change 拆成 proposal/specs/design/tasks 文件夹, archive 后规范沉淀到 specs/, 下次改同一模块 AI 可读历史规范",
+      "version": "1.3.1",
+      "author": "Fission-AI",
+      "updated_at": "2026-05-12",
       "path": "external-skills/openspec",
       "files": [
         "SKILL.md"
@@ -320,10 +395,12 @@
       "name": "seo-audit",
       "type": "external",
       "description": "Single-page SEO audit skill. Give it a URL, get a structured HTML report covering 20+ checks (robots.txt / sitemap / canonical / hreflang / Schema / E-E-A-T / TDK / H1 / 内链 / 关键词). Script + LLM 混合架构. Trigger when user says \"audit this page\", \"审一下 SEO\", \"查 SEO\", \"SEO 体检\", \"seo audit\", \"技术 SEO 报告\". Do NOT trigger when: 用户要全站爬虫 / 关键词排名追踪 / 反链分析 (这些是 SEO 工具如 Ahrefs/Semrush 的范围, 不是本 skill 范围).",
+      "version": "1.0.0",
+      "author": "JeffLi1993",
+      "updated_at": "2026-05-20",
       "path": "external-skills/seo-audit",
       "files": [
-        "SKILL.md",
-        "cases/mccree.md"
+        "SKILL.md"
       ],
       "sha": "ccac4056cf90d2cbf3464ff48d508234e4a3dc34",
       "source_url": "https://github.com/JeffLi1993/seo-audit-skill/tree/main/seo-audit"
@@ -332,10 +409,12 @@
       "name": "seo-audit-full",
       "type": "external",
       "description": "Deep single-page SEO audit. Basic 20+ checks + Core Web Vitals (CrUX field data) + GSC crawl status + Content E-E-A-T depth + Robots Meta + OG/Social + 竞品 gap. Trigger when user says \"deep SEO audit\", \"完整 SEO 体检\", \"深度 SEO\", \"审一下 Core Web Vitals\", \"GSC 数据 + SEO 综合分析\", \"seo audit full\". Do NOT trigger when: 用户只要快速自查 (走 seo-audit basic) / 全站爬虫 (走 Screaming Frog 类工具) / 关键词追踪 (走 Ahrefs).",
+      "version": "1.0.0",
+      "author": "JeffLi1993",
+      "updated_at": "2026-05-20",
       "path": "external-skills/seo-audit-full",
       "files": [
-        "SKILL.md",
-        "cases/mccree.md"
+        "SKILL.md"
       ],
       "sha": "d8a4be39ab8e23c54e30346f0562e7373d089ea3",
       "source_url": "https://github.com/JeffLi1993/seo-audit-skill/tree/main/seo-audit-full"
@@ -344,10 +423,12 @@
       "name": "superpowers",
       "type": "external",
       "description": "当你在做复杂编码任务、想用成体系的 agent workflow 提高推进效率时使用",
+      "version": "5.1.0",
+      "author": "obra",
+      "updated_at": "2026-05-12",
       "path": "external-skills/superpowers",
       "files": [
-        "SKILL.md",
-        "cases/griffithkk3-del.md"
+        "SKILL.md"
       ],
       "sha": "381a65c1c92056d1bf2cd935541a00d801f7efe4",
       "source_url": "https://github.com/obra/superpowers"
@@ -356,10 +437,12 @@
       "name": "ui-ux-pro-max",
       "type": "external",
       "description": "AI-powered design intelligence with 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 15+ tech stacks. Trigger when user asks for design system / 配色 / 字体搭配 / UI 风格选型 / 落地页结构 / 图表选型 / UX 守则 / \"帮我做一套设计系统\". Do NOT trigger when: 用户只要写功能代码 / 修 bug / 项目结构包装 (走 project-packaging).",
+      "version": "2.5.0",
+      "author": "NextLevelBuilder",
+      "updated_at": "2026-05-20",
       "path": "external-skills/ui-ux-pro-max",
       "files": [
-        "SKILL.md",
-        "cases/mccree.md"
+        "SKILL.md"
       ],
       "sha": "c9f5899c2a3a78432146bb75a5cfd421ec106f9b",
       "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"
@@ -368,10 +451,12 @@
       "name": "web-design-guidelines",
       "type": "external",
       "description": "Review UI code for Web Interface Guidelines compliance (100+ rules: a11y / focus / forms / performance / UX). Trigger when user says \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", \"check my site against best practices\", \"审一下前端\", \"查 a11y\". Do NOT trigger when: 用户想生成设计系统 (走 ui-ux-pro-max) / 审 prompt 而非代码 (走 prompt-review) / 只画架构图 (走 fireworks-tech-graph).",
+      "version": "1.0.0",
+      "author": "vercel",
+      "updated_at": "2026-05-20",
       "path": "external-skills/web-design-guidelines",
       "files": [
-        "SKILL.md",
-        "cases/mccree.md"
+        "SKILL.md"
       ],
       "sha": "33cc3f798348a1fc7ac92c036d5d8dece29ff736",
       "source_url": "https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines"
