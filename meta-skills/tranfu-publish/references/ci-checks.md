@@ -17,13 +17,15 @@
 CI 检查:
 
 - `SKILL.md` 必须有 frontmatter block.
-- 下列 6 个字段必须存在且非空:
+- 下列基础字段必须存在且非空:
   - `name`
   - `description`
+  - `origin`
+- `own-skills/` 和 `meta-skills/` 额外要求:
   - `version`
   - `author`
   - `updated_at`
-  - `origin`
+- `external-skills/` 的 `version` / `author` / `updated_at` 是可选字段; 写了会进入 catalog, 不写不会被 CI 强制补齐.
 - `description` 字符数必须 ≤ 1024.
 
 CI **不**检查:

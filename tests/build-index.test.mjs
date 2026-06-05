@@ -118,6 +118,9 @@ test("valid frontmatter → skill included in index", () => {
     assert.ok(goodSkill, "good-skill should be in index");
     assert.equal(goodSkill.type, "own", "type should be own");
     assert.equal(goodSkill.description, "A well-formed skill for testing");
+    assert.equal(goodSkill.version, "0.1.0");
+    assert.equal(goodSkill.author, "test");
+    assert.equal(goodSkill.updated_at, "2026-01-01");
     assert.ok(Array.isArray(goodSkill.files), "files should be array");
     assert.ok(goodSkill.files.includes("SKILL.md"), "files should include SKILL.md");
   } finally {
@@ -193,6 +196,13 @@ test("external type preserves source_url field", () => {
     const extSkill = indexJson.skills.find((s) => s.name === "ext-skill");
     assert.ok(extSkill, "ext-skill should be in index");
     assert.equal(extSkill.type, "external", "type should be external");
+    assert.equal(extSkill.version, "0.1.0");
+    assert.equal(extSkill.author, "external-author");
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(extSkill, "updated_at"),
+      false,
+      "absent optional metadata should not be synthesized"
+    );
     assert.equal(
       extSkill.source_url,
       "https://github.com/example/ext-skill",

@@ -74,10 +74,15 @@ for (const [root, type] of Object.entries(ROOTS)) {
       console.error(`skip ${skillDir}: missing frontmatter name/description`);
       continue;
     }
+    const optionalMetadata = {};
+    for (const field of ["version", "author", "updated_at"]) {
+      if (fm[field]) optionalMetadata[field] = fm[field];
+    }
     skills.push({
       name: fm.name,
       type,
       description: fm.description,
+      ...optionalMetadata,
       path: skillDir,
       files: listFiles(skillDir),
       sha: blobSha(skillMd),

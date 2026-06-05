@@ -227,9 +227,9 @@ index.json                    catalog 快照和老 CLI 兼容数据源
 |---|---|---|---|
 | name | ✓ | ✓ | kebab-case = 目录名 |
 | description | ✓ | ✓ | ≤ 100 字，含触发场景 |
-| version | ✓ | ✓ | semver |
-| author | ✓ | ✓ | 原作者 GitHub handle |
-| updated_at | ✓ | ✓ | ISO8601 仅日期 |
+| version | ✓ | 可选 | semver |
+| author | ✓ | 可选 | 原作者 GitHub handle |
+| updated_at | ✓ | 可选 | ISO8601 仅日期 |
 | origin | ✓ | ✓ | `own` 或 `external` |
 | source_url | — | ✓ | 上游 URL |
 | recommend_reason | — | ✓ | ≤ 200 字 |
