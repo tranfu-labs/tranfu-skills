@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill 创建工作流"
+  short_description: "在平台编写前门禁 skill 创建和更新请求"
+  default_prompt: "使用 $skill-create-workflow，让这个 skill 请求依次经过内容适配、领域框定和平台创建流程。"
