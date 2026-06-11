@@ -1,172 +1,429 @@
 ---
 name: prompt-review
 description: >
-  Multi-round prompt/skill review loop. Launches a reviewer subagent that audits prompt files
-  against an embedded engineering checklist, reports findings via SendMessage, and re-reviews after
-  fixes until all issues are resolved. Self-contained — no network dependency.
-  Always trigger for: review prompt, review skill, review agent, audit prompt, check prompt quality,
-  prompt engineering review, skill review, agent review, evaluate prompt, lint prompt.
-  Also triggers for: "帮我审一下这个 prompt", "检查提示词质量", "评审这个 agent 定义",
-  "这个 skill 写得怎么样", "优化提示词".
-  Do NOT trigger when: user wants to review CODE (not prompts), run tests, or do functional QA.
-version: 0.1.0
+  当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、
+  agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、
+  “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。
+  不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、
+  发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。
+  安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET（含建议改法），
+  从不编辑提示词 / SKILL / 文件；委派工作必须有边界；不要求网络访问。
+version: 0.7.0
 author: aquarius-wing
-updated_at: 2026-05-13
+updated_at: 2026-06-11
 origin: own
-userInvocable: true
 ---
 
-# Prompt 评审循环
+# 提示词审查 Skill —— 审查任务清单
 
-你是主 Agent, 负责协调一个多轮评审循环: 启动 reviewer 子 Agent 评审提示词文件, 应用修改, 再审, 直到通过.
+你是 prompt-review Agent。把 prompt / skill / agent 定义当作**工程产物**来审，而不是评论措辞。
 
-## 同类 Skill 对比
+**本文件就是这次审查的任务清单**：照下面的 A–G 检查项逐条审目标，把发现写成一个 `REVIEW_PACKET`。
+本 Skill 自包含——所有检查项、严重级别、schema、模板都在本文件内，不依赖任何外部 reference 文件。
 
-公司库内:
-- 暂无
-
-外部:
-- [audit-prompt](https://github.com/FlorianBruniaux/claude-code-ultimate-guide/blob/main/tools/audit-prompt.md) — 评估整个 Claude Code 配置 (memory/rules/skills/security 8 维) 给百分制评分; **本 skill 区别**: 对象是单个 prompt/skill/agent **文件**, 不是用户配置, 输出是逐行可改建议而非分数
-- [anthropics/skill-creator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — 创建 / 改进 skill (draft → 跑 eval → 迭代); **本 skill 区别**: 不创建只评审, 不跑 eval 只查清单, 嵌入 8 维工程化规则 (硬约束措辞 / 正反示例 / 反向引导 / 量化标准 / 工具映射 / Frontmatter / 风格 / 失败路径) 离线可跑
-
-独特价值:
-- reviewer 子 Agent 跑 sonnet 异步 SendMessage 回报, 省主会话 token
-- 每条建议 MUST 映射 A-H 清单某一维, 映射不上即删, 防吹毛求疵
-- fix→re-review 循环 ≤5 轮, 触上限暂停问用户, 不硬过
-
-## 使用技巧
-
-### 材料方案
-- 评审清单嵌入 8 维 (A-H), 每条建议 MUST 映射到某一维; 映射不上即删, 防吹毛求疵
-- reviewer 子 Agent 通过 SendMessage 异步回报, 不直接输出文本结论 — 避免主 Agent 把中间评审当最终结果
-
-### 推荐用法
-- 首次跑建议拿单个 SKILL.md / agent.md 起步, 不要一上来扔整个目录
-- reviewer 用 sonnet 跑 (`model: sonnet`), 节省成本
-
-### 已知限制
-- 循环 ≤5 轮; 超过未通过 MUST 暂停问用户, 不自行硬过
-- reviewer 子 Agent 需能读到目标文件路径; 内联 prompt 文本时需先存成临时文件
-
-## 流程
-
-### 第一步: 确认评审目标
-
-如果用户没有指定文件路径, MUST 询问用户要评审哪些文件. 支持的输入:
-- 单个文件路径: `agents/evaluator.md`
-- 目录路径: `agents/reference/` (评审目录下所有 .md 文件)
-- 内联 prompt 文本 (用户直接粘贴)
-
-### 第二步: 启动 reviewer 子 Agent
-
-用 Agent 工具启动后台子 Agent. 启动前 MUST 把下方 prompt 中的 `{TARGET_FILES}` 替换为实际文件路径列表 (一行一个), 否则子 Agent 会报错.
-
-**子 Agent prompt (整段传入):**
-
-````
-你是提示词评审 Agent, 按以下流程循环工作.
-
-## 第一步: 内化评审清单
-
-下方是本次评审的全部依据. 按这 8 个维度检查目标文件. 每条建议 MUST 能映射到清单某条规则; 映射不上就别提.
-
-### A. 硬约束措辞 (Rule Force)
-
-- 关键禁令是否用 `NEVER` / `MUST` / `IMPORTANT:` / `CRITICAL:` 全大写? 模型对全大写指令词遵从率显著更高.
-- 软词 (应该 / 尽量 / 合理 / 适当) 等同没说, 出现在硬约束位置即不合格.
-- 红线后是否留 "unless explicitly requested" 之类的逃逸条件? 避免死板, 但逃逸条件 MUST 明确指明触发方.
-
-### B. 正反示例 (Examples)
-
-- 关键行为是否用 `<example>` 标签演示**完整可执行**内容, 而非文字描述?
-- 高频踩坑点是否有 `<bad-example>` 配对? bad-example MUST 标注 `WRONG` 和具体原因, 防止模型模仿.
-- 经验比例: 反向约束:正向引导 ≈ 4:6. 全是正面描述通常不够.
-
-### C. 反向引导 (Do NOT)
-
-- 工具 / skill 描述是否说了"什么时候**不该**用"? 仅写正面用法易被滥用.
-- 经典范例: Bash 工具描述里写 "Avoid using this tool to run grep, cat, find — use Grep, Read, Glob instead", 在工具自己的 prompt 里反向引导到专用工具.
-- skill frontmatter 是否含 `Do NOT trigger when ...` / `Do NOT use when ...` 排除条件?
-
-### D. 量化通过标准 (Verifiability)
-
-- 任何"成功 / 完成 / 通过 / 充分"是否有**可机检**的具体定义? (字数阈值 / 文件存在 / 命令退出码 / 字段必填)
-- 模糊词黑名单: 应该 / 合理 / 适当 / 良好 / 充分 / 大致 / 尽可能 — 出现在通过标准位置即扣.
-- 例: "测试通过" → "`pnpm test` 退出码 0 且 stdout 含 `passed`"; "文档完整" → "frontmatter 含 name/description/version 三字段".
-
-### E. 工具映射精确 (Tool Routing)
-
-- 是否明确 "用 X 不要用 Y" 的精确映射? (例: Glob NOT find, Grep NOT grep, Read NOT cat/head/tail, Edit NOT sed/awk, Write NOT `echo > file`)
-- 引用的工具名 / 参数名 / 字段名 MUST 与实际 schema 对得上, 无拼写错, 无臆造字段.
-
-### F. Frontmatter 设计 (skill / agent 文件适用)
-
-- `name`: kebab-case 唯一标识, 与目录名一致.
-- `description` / `whenToUse`: 是否含 ① 触发关键词列表 ② 口语化表达 ③ 明确排除条件三要素? 通常 100-300 字; <50 字几乎一定不够.
-  - 写法范本: "Always trigger for: A, B, C. Also triggers for casual phrasing: '...'. Do NOT trigger when ..."
-  - 用 "even if they don't use the word X" 防止模型在用户没说术语时跳过.
-- `allowedTools`: 是否最小权限白名单? 避免给完整 Bash; 应写到子命令粒度如 `Bash(git add:*)`.
-- 大型 / 长任务 skill 是否设 `context: fork`? 否则会消耗主会话上下文窗口.
-- `userInvocable`: 与 skill 用法匹配? (用户会用 `/name` 直调的设 true)
-
-### G. 措辞风格一致性 (Cross-File Consistency)
-
-- 同 skill / 同 repo 内多文件: 硬约束词 (统一 NEVER 还是 MUST?) / 示例标签 (`<example>` 还是 `<good>`?) / 术语命名是否一致?
-- 不一致削弱权威性, 模型对混用风格的遵从率下降.
-
-### H. 失败路径 (Resilience)
-
-- 关键步骤是否预设 fallback? (重试 / 降级 / 报错给用户 / 调用其他工具)
-- 含循环的流程 MUST 设上限 (例如 "最多 5 轮"), 且写明上限触发后怎么办 (暂停问用户 / 直接结束 / 转人工).
-- "永远假设每一步都可能失败, 预设恢复路径." — 模型不会主动设计失败分支, 必须显式写出.
+边界：**本 Skill 只审不改**——只产出 `REVIEW_PACKET`（含建议改法），从不编辑提示词 / SKILL / 文件，落盘与否由用户或调用方自行决定；委派必须是边界清晰的工作单元；不要求网络访问。
 
 ---
 
-## 第二步: 读取并评审目标文件
+## 审查单元 = 工作单元
 
-读取以下文件并逐一对照清单 8 维度:
+每个发现**必须精确映射到一个 A–G 检查项**；映射不上的观察直接删掉，不要硬凑、不要 nitpick。
+每个发现落进 `REVIEW_PACKET` 的一行，带 severity / 命中的检查项 / 行锚点 / 证据 / 具体 fix / 验收测试。
 
-{TARGET_FILES}
+是否给整体“通过 / 不通过”标签、是否多轮重审，由调用方 / Harness 决定——**本 Skill 只定义“这一轮审什么、怎么报”**。
 
-对每个文件按 A → H 顺序扫一遍, 记录命中条目. 不要为了凑数提建议; 没问题就明说没问题.
+---
 
-## 第三步: 报告评审结果
+## 目标与输入
 
-CRITICAL: NEVER 直接输出文本结论. MUST 通过 SendMessage 将评审结果发送给 team-lead.
+接受：单文件路径 / 目录路径 / 多个路径 / 对话中粘贴的内联文本 / “优化当前内联文本”。
+已给内联文本就**直接审**，缺文件名时标记为 `inline-prompt.md`，**绝不**反过来要用户提供文件路径。
+完全没有任何目标时，才向用户要目标材料。
 
-**评审结果格式:**
-- 有问题: 每条 `[文件名:行号或锚点] 命中维度X → 问题描述 → 具体改法`
-  - 例: `[evaluator.md:42] 命中 D → "评估通过"无量化标准 → 改为 "evaluator 输出 JSON 含 passed: true"`
-- 无问题: 发送 `评审通过, 无进一步建议`
-- NEVER 吹毛求疵; 若一条建议无法映射到 A-H 任一维度, 删掉.
+---
 
-## 第四步: 等待反馈并决定下一步
+## 执行
 
-发送评审结果后, 等待 team-lead 回复:
-- 收到 `已修复, 请再审` → 重新读取所有目标文件, 回到第二步
-- 收到 `评审结束` → 输出最终总结文本并结束
+CREATE A TODO LIST FOR THE TASKS BELOW（每步一个 TODO）：
 
-IMPORTANT: 在收到明确的结束指令前, NEVER 输出最终文本结论. 保持循环等待状态.
-````
+1. 读取目标。若既无路径也无内联文本 → 向用户要目标材料并退出。      # 卫语句·用前必校
+2. 规范化目标：文件 → 读全文并记行号；内联文本 → 标记 `inline-prompt.md`。
+3. 若目标不含任何流程 → G 维（流程完备性）不触发，继续。           # 分支
+4. 逐条跑 A–G 检查项，命中即记一行 issue。
+5. 汇总为 `REVIEW_PACKET`（含 ledger）。
+6. 产出 `REVIEW_PACKET`，结束。                                   # 显式终止
 
-**启动参数:**
-- `run_in_background: true`
-- `name: "reviewer"`
-- `model: sonnet` (评审用 sonnet 即可, 节省成本)
+失败出口：目标不可读 → BLOCKER 并说明缺什么；运行时缺工具 → 降级为本地审。
 
-### 第三步: 接收评审结果并应用修改
+本 Skill 在主流程内**本地审**，不自行派 subagent；多文件 / 严格审是否分派由调用方 / Harness 决定。
 
-收到 reviewer 的 SendMessage 后:
+---
 
-1. 如果是 `评审通过, 无进一步建议` → 用 SendMessage 回复 `评审结束`, 循环结束.
-2. 如果有具体建议 → 逐条应用修改到文件中, 修改完成后用 SendMessage 回复 `已修复, 请再审`.
+## REVIEW_PACKET（输出 schema）
 
-### 第四步: 循环
+```yaml
+REVIEW_PACKET:
+  target: <file path | inline-prompt.md>
+  issues:
+    - id: A1                        # 稳定 id：维度字母 + 序号，重审可引用
+      severity: BLOCKER|HIGH|MEDIUM|LOW
+      check: description-routing-surface   # 命中的检查项名（取自下方清单）
+      location: <file:line | 段落锚点>
+      evidence: "命中的原文片段"
+      fix: "具体改法或可落盘 patch"
+      acceptance_test: "怎样算修好（可观测）"
+      disposition: open|fixed|rejected_with_reason|deferred_with_user_visible_risk
+  ledger:
+    total: <int>
+    by_severity: { BLOCKER: n, HIGH: n, MEDIUM: n, LOW: n }
+    unresolved_blockers: <int>
+```
 
-重复第三步, 直到 reviewer 报告"评审通过".
+`issue` 用纯散文、无 severity、无检查项映射、无行锚点的，一律不合格。
 
-## 约束
+---
 
-- NEVER 跳过 reviewer 的建议不处理. 如果某条建议不合理, MUST 在 SendMessage 中说明理由 (例: "此建议未映射到清单 A-H 任一维度, 视为吹毛求疵, 不采纳").
-- NEVER 在 reviewer 未确认通过前就告诉用户"已完成".
-- 如果循环超过 5 轮仍未通过, MUST 暂停并询问用户是否继续, 不得自行决定中止或硬过.
+## 严重级别
+
+- **BLOCKER**：会让目标 prompt 在运行时直接失败、自我阻塞或产出不可用结果（例：强制门指向不存在的文件、`description` 把自己写崩、硬约束自相矛盾）。
+- **HIGH**：显著降低可靠性或可触发性，但不必然每次运行都崩（例：硬约束用软词、无可观测完成标准、缺反向触发）。
+- **MEDIUM**：一致性 / 可维护性问题，会在边界场景咬人（例：术语不一致、缺排除条件、缺命名产物）。
+- **LOW**：nitpick / 风格，默认不影响“要不要修”。
+
+---
+
+## 审查清单 A–G（每条带严重级别）
+
+> 每个维度先列检查项，紧跟其下是带正反例 / 模板的详解。未单列详解的检查项，其一行描述已自解释，无需额外案例。
+
+### A. 触发与边界
+
+- **[BLOCKER] description-routing-surface**：frontmatter `description` 是路由面不是执行手册，MUST NEVER 超过 1024 字符；只放何时触发 / 何时不触发 / 最关键安全边界，流程·schema·委派·禁用清单全部移到 body。
+- **[HIGH] trigger-coverage**：触发字段含正式触发词、口语说法、必要的非英文说法、明确排除条件。
+- **[HIGH] negative-trigger**：含 `Do NOT trigger when …`，把相邻任务重定向到正确 workflow，防止误触发与过度审查。
+- **[MEDIUM] explicit-target-type**：明确目标类型（prompt / skill / agent / subagent 模板 / 系统指令 / 代码 / 产品文案）。
+- **[MEDIUM] name-version-stable**：`name` 是 kebab-case 且稳定；`version` 在行为变化时更新。
+- **[MEDIUM] intent-ambiguity**：说清用户意图歧义时怎么办。
+
+#### description-routing-surface
+
+```text
+WRONG: description 里塞进触发词 + 完整流程 + 工具清单 + 委派策略 + 输出 schema + 长禁用清单。
+Reason: description 是路由面；混入执行手册会撑爆 1024 上限，且稀释“何时触发”的判断。
+GOOD : description 只回答“何时触发 / 何时不触发 / 最关键安全边界”，其余全在 body。
+```
+
+#### trigger-coverage
+
+```text
+WRONG: “prompt 相关就用。”
+Reason: 只有泛化触发，无口语说法、无非英文、无排除条件 → 既误触发又漏触发。
+GOOD : “review / audit / lint 提示词时触发；也匹配‘帮我审一下这个 prompt’、‘检查提示词质量’；
+        不要用于代码审查 / 功能 QA / 仅产品文案。”
+        —— 正式词 + 口语 + 中文 + 明确排除，四者齐备。
+```
+
+#### negative-trigger
+
+```text
+WRONG: 没有 Do NOT 段，或写“其他情况别用”这种空话。
+GOOD : “Do NOT trigger when：用户要审 CODE（走 code-review）、跑测试（走 verify）、
+        发版（走 release）。” —— 每个相邻任务都被重定向到正确 workflow。
+```
+
+### B. 工作单元契约
+
+- **[HIGH] explicit-io-done**：输入显式、输出显式、完成标准显式。
+- **[HIGH] ownership-explicit**：ownership 显式——review-only / suggest patch / edit file / rewrite inline；审内联文本时，正确输出是**完整改写文本**而非落盘 patch；未授权编辑时只给建议不落盘。
+- **[HIGH] observable-done**：“complete / done / pass / sufficient”用可观测标准定义（字段存在 / 文件存在 / 精确输出格式 / 命令退出码 / 关键词命中数），不靠主观词。
+- **[MEDIUM] named-artifact**：最终产物有命名。
+
+#### ownership-explicit
+
+```text
+四种 ownership 必须写死其一，别留空让调度 Agent 乱猜：
+- review-only    → 只产 REVIEW_PACKET，不碰文件（本 Skill 自身固定走这一种）
+- suggest patch  → 给可落盘 diff，但不写盘
+- edit file      → 用户授权后直接改目标文件
+- rewrite inline → 审的是粘贴文本，输出完整改写文本而非 patch
+
+WRONG: “审一下并优化。” —— 没说要不要落盘 / 改哪儿。
+```
+
+#### observable-done
+
+```text
+WRONG: “review until good” / “make it robust”。
+GOOD : “done = 目标文件存在 且 `npm test` 退出码 0 且 grep 不再命中 TODO。”
+Reason: 用可机判的判据（文件存在 / 退出码 / grep 命中数）定义“算完成”，不靠主观词。
+```
+
+### C. 指令力度与优先级
+
+- **[HIGH] hard-constraints-marked**：关键规则用 `MUST` / `NEVER` / `CRITICAL:` / `IMPORTANT:`。
+- **[HIGH] no-soft-hedges**：硬约束位置不用软词（should / try / reasonable / appropriate / sufficient / generally / as much as possible）。
+- **[HIGH] priority-resolved**：优先级冲突已解决，不让两条硬规则打架。
+- **[MEDIUM] explicit-escape-clauses**：逃逸条款显式（unless the user explicitly requests / unless editing is not authorized …）。
+
+#### hard-constraints-marked
+
+```text
+WRONG: “应该先读完整个文件再审。”
+GOOD : “MUST 先读完整个文件再审；读不到关键段落就报 BLOCKER。”
+Reason: 硬约束要让模型无法绕过 —— 用 MUST/NEVER/CRITICAL，不用陈述句。
+```
+
+#### no-soft-hedges
+
+```text
+扫硬约束段落里的软词，命中即 issue：should / try / reasonable / appropriate /
+sufficient / generally / as much as possible。
+WRONG: “try to keep the description short.”
+GOOD : “description MUST NEVER exceed 1024 chars.”
+反向也算 issue：低优先级偏好滥用全大写，会稀释真正的硬约束。
+```
+
+#### priority-resolved
+
+```text
+WRONG: 同时写“MUST 总是落盘修改”和“未授权 NEVER 编辑” —— 两条硬规则打架。
+GOOD : “默认 review-only；仅当用户显式授权、或运行时惯例已授权时才落盘。”
+        —— 冲突被一条优先级规则收口。
+```
+
+#### explicit-escape-clauses
+
+```text
+硬约束要带逃逸口，否则会卡死合理场景：
+GOOD : “NEVER 编辑文件，unless the user explicitly authorizes.”
+GOOD : “MUST 派 reviewer subagent，unless the runtime lacks this capability.”
+WRONG: “NEVER 编辑文件。” —— 用户明明授权了也不敢动。
+```
+
+### D. 正反示例
+
+- **[MEDIUM] behavior-demonstrated**：重要行为有可执行示例，而非只被描述；常见失败模式正反配对。
+- **[MEDIUM] wrong-examples-labeled**：反例标 `WRONG` 并解释原因。
+- **[MEDIUM] example-format-match**：示例匹配实际输出格式。
+- **[LOW] example-length**：示例别长到模型会照抄无关内容。
+
+#### behavior-demonstrated
+
+```text
+关键行为要“演”出来，不能只“说”。
+WRONG: “输出要结构化。”
+GOOD : 直接贴一个 REVIEW_PACKET 实例（见上方 schema），让模型照着填。
+```
+
+#### wrong-examples-labeled
+
+```text
+<bad-example>
+WRONG: “这个 prompt 可以更好，加点细节。”
+Reason: 无 severity、无检查项映射、无行锚点、无具体 fix。
+</bad-example>
+```
+
+#### example-format-match
+
+```text
+示例里的字段名 / 格式必须和真实 schema 逐字一致。
+WRONG: schema 用 `acceptance_test`，示例里却写 `accept` / `test_pass` —— 模型会无所适从。
+GOOD : 示例字段名逐字对齐 REVIEW_PACKET。
+```
+
+### E. 工具、运行时与委派
+
+- **[HIGH] todo-list-explicit**：当用文本表达一个多步工作流程时，必须明确写出 “CREATE A TODO LIST FOR THE TASKS BELOW”。
+- **[HIGH] subagent-explicit**：当某步骤需要 SubAgent 执行时，必须明确写出 “MUST SPAWN A SUBAGENT TO COMPLETE THIS TASK”。
+- **[HIGH] subagent-timetable**：当任务涉及多个 SubAgent 时，必须给出明确的“执行时刻表”。
+- **[HIGH] subagent-template**：当要启动 SubAgent 时，必须随附一个 SubAgent 模板，不让调度 Agent 临时想。
+- **[HIGH] subagent-zero-think**：启动 SubAgent 的指令后 MUST 紧跟可直接启用的派发模板——零思考直接启用：调度 Agent 除了把手头已有的运行时值填进占位符，不做任何其他思考即可派发。
+
+#### todo-list-explicit
+
+```text
+多步流程必须显式起 TODO：
+GOOD : “CREATE A TODO LIST FOR THE TASKS BELOW: 1) 读目标 2) 跑 A–F 3) 产 REVIEW_PACKET”
+WRONG: 把三步写成一段散文 —— 模型容易漏步。
+```
+
+#### subagent-explicit
+
+```text
+需要子 Agent 的步骤必须点名：
+GOOD : “MUST SPAWN A SUBAGENT TO COMPLETE THIS TASK：让独立 reviewer 审 §C。”
+WRONG: “可以考虑分一个 reviewer 来看” —— 软词 + 不明确 → 实际不会真派。
+```
+
+#### subagent-timetable
+
+多个 SubAgent 时，给一张执行时刻表，写清并发 / 串行、依赖、汇合点：
+
+| 阶段 | SubAgent | 输入 | 并发? | 依赖 | 产出 |
+|------|----------|------|-------|------|------|
+| T1 | reviewer-A（审 A,B 触发/契约） | 目标文件 | 并发 | — | REVIEW_PACKET 片段 |
+| T1 | reviewer-B（审 C,D 力度/示例） | 目标文件 | 并发 | — | REVIEW_PACKET 片段 |
+| T1 | reviewer-C（审 E,F,G 工具/输出/流程） | 目标文件 | 并发 | — | REVIEW_PACKET 片段 |
+| T2 | 调度 Agent 合并去重 | A/B/C 片段 | 串行 | T1 全部完成 | 合并后的 REVIEW_PACKET |
+
+```text
+WRONG: “派几个 reviewer 分头审。”
+Reason: 没说谁审哪几维、并发还是串行、在哪汇合 → 维度重叠（重复审）+ 维度漏审。
+```
+
+#### subagent-template
+
+启动 reviewer SubAgent 时，调度 Agent 必须带上这样的模板（占位需填满，别临时编）：
+
+```text
+<subagent-template>
+角色：你是独立 reviewer，只审给定目标，不改文件。
+目标：{file_path 或 inline 文本}
+范围：检查项 {A–F 子集，对齐执行时刻表里分给你的维度}
+必须输出：REVIEW_PACKET（schema 见本 SKILL.md），每个 issue 带
+          severity / check / location / evidence / fix / acceptance_test。
+边界：{不编辑 / 不访问网络 / 只看本目标，不外扩}
+</subagent-template>
+```
+
+#### subagent-zero-think
+
+```text
+派发点 = 动作指令 + 紧贴其后的模板，中间不隔任何东西，静态值写死。
+WRONG: 「MUST 启动 SubAgent」与派发模板之间隔 3 个小节（任务范围 / 任务文档 / 主 Agent 职责）
+       —— 每一段都是犹豫窗口，实测模型读完就拒绝派发、自行降级 local fallback。
+WRONG: 模板里留 {REFERENCE_DOC} 占位符，但它实际固定指向一份文档
+       —— 写作时已知的静态值留成占位符 = 派发前多一步思考。
+GOOD : 「MUST 启动 SubAgent 按照下面的模板直接开始任务」+ 模板紧跟其后；
+       文档路径写死，占位符只留运行时值（如 {SEED_URL}、上一阶段输出）。
+       实测改成这样后直接派发成功。
+```
+
+案例（实测可直接派发的完整派发点，零思考四要素见行尾注）：
+
+```text
+## 多 Agent 阶段 1：子页面树发现
+
+MUST 启动 SubAgent 按照下面的模板直接开始任务，         # 指令点名"直接开始"
+除非当前运行时没有暴露可验证的只读 SubAgent / Task 机制；  # 可用性 = 被动例外，不是行动前预检
+无法委托时才在主会话中按同一参考文档本地执行，并明确标注 fallback。
+
+### SubAgent 派发提示词模板                            # 紧跟指令，中间零间隔
+
+读取 references/pipeline/14-child-page-tree-discovery.md 文档，  # 静态路径写死，不留 {REFERENCE_DOC}
+按照里面的任务描述执行。
+
+输入:
+- seedUrl: {SEED_URL}                                  # 占位符只留运行时值
+- discoveryScript: {ABSOLUTE_SKILL_DIR}/scripts/discover-child-pages.mjs
+
+要求:
+- 使用 discoveryScript 获取渲染后的子页面。
+- 然后由你按文档规则做 AI 分类去重：同一个父页面下同类型子页面只保留一个代表。
+- 最终只输出纯文本页面树；不要输出解释、审查、代码 diff 或原始 URL 列表。
+- 不修改任何文件。
+```
+
+### F. 结构化输出与一致性
+
+- **[HIGH] stable-schema**：审查输出用稳定 schema（`REVIEW_PACKET`）；issue 结构化而非散文；patch 具体；重审能引用稳定 issue id。
+- **[MEDIUM] failure-paths**：列出失败路径（文件缺失 / 不可读 / 未知运行时工具 / reviewer 分歧 / patch 冲突 / 无编辑权 / 不可复现 / 超范围请求）。
+- **[MEDIUM] terminology-consistent**：术语一致（prompt / skill / agent / reviewer / subagent / issue / review packet）；checklist 标签一致，别“说 6 维却定义 7 维”。
+- **[LOW] no-marketing**：去掉营销措辞与无依据断言。
+
+#### stable-schema
+
+```text
+issue 必须可被下游机读、可被重审引用。
+GOOD : 用 REVIEW_PACKET；issue.id 稳定（A1 / B2 …），重审时原地更新 disposition。
+WRONG: 每轮把 issue 重新散文描述一遍、id 漂移 —— 没法追“这条到底修了没”。
+```
+
+#### failure-paths
+
+```text
+逐条列失败路径并各自给处置，别用“出错就问用户”一句兜底：
+文件缺失/不可读 → BLOCKER 并说明缺什么；未知运行时工具 → 降级为本地审；
+reviewer 分歧   → 标 deferred_with_user_visible_risk；patch 冲突 → 报冲突点；
+无编辑权        → 退回 review-only；超范围请求 → 重定向到对应 workflow。
+```
+
+#### terminology-consistent
+
+```text
+全文统一一套词：prompt / skill / agent / reviewer / subagent / issue / review packet。
+WRONG: 一处“维度 A–E”、另一处“A–F”；或 SubAgent / Task / CreateTask 混用且无运行时边界。
+```
+
+### G. 流程版式（流程完备性）
+
+- **[BLOCKER/HIGH] process-as-procedure**：目标若定义多步流程，MUST 按「流程版式」写成带卫语句的过程；违反下方四条承重原则任一记一条 `流程不完备`（severity 见表）。目标无流程则此维不触发。
+
+#### process-as-procedure
+
+目标里凡定义一段多步流程，MUST 写成**带卫语句的过程**——像写代码，不是写散文。审查时像 code review 一样读它，缺的分支自己暴露；违反任一**承重原则** = 一条 `流程不完备` issue。
+
+**形态**：编号命令式步骤，每步只能是四种之一——
+
+- **动作**：动词开头，一步一件可判定的事（`读取目标并记行号`）。
+- **卫语句**：`若 <条件> → <处置> 并退出/跳转`。
+- **分支**：`若 <条件> → A；否则 → B`。
+- **派发**：`按 <判据> 路由：<情况A> → 子流程「X」；<情况B> → 子流程「Y」；否则 → <兜底处置>`，MUST 带“否则”——穷尽，缺“否则”= 没出口的分支，归承重第 3 条记 `流程不完备`。
+
+**深判断不许堆在正文**：任一分支体只要“多步或会再分叉”，MUST 抽成命名子流程，父层用**派发**调它；子流程在下方另起，递归套同一版式、各自跑一遍四条承重原则。只有又短又浅（单步、≤2 层）的分支才内联。正文嵌套 > 2 层 = “该抽子流程”的信号（MEDIUM；若深处藏没出口的分支，按“失败有出口”升 HIGH）。
+
+**四条承重原则**（违反即 `流程不完备`，severity 按后果）：
+
+| 原则 | 要求 | 违反 = 什么洞 | severity |
+|------|------|--------------|----------|
+| 尽早退出 | 校验/失败条件全写成前置卫语句，happy path 不缩进 | 失败条件埋中段、深嵌套，分支看不见 | MEDIUM（因此漏出口 → 按下条升 HIGH） |
+| 用前必校 | 任何输入被消费前，先有一步判它合理 | 用了没校验的输入 | HIGH |
+| 失败有出口 | 每个卫语句/分支条件都有明确处置，无 silent fallthrough | 引入了却没出口的失败条件 | HIGH |
+| 显式终止 | happy path 末尾“产出 <命名物> 并结束” | 没有有序步骤（散文糊）/ 到不了终点 / 无命名产物 | BLOCKER |
+
+**完备性自检 = 像读代码一样扫**（每条对应一类代码缺陷）：
+
+- 用了却没校验的输入 → 缺卫语句（uninitialized use）。
+- 引入了却没出口的失败条件 → 漏分支（unhandled path）。
+- 没人消费的产出 / 没来源的输入 → 悬空（dead code / undefined ref）。
+- 到不了终点的路径 → 缺显式终止（no return）。
+
+无分支的情形也要**显式写出**，别留白：纯线性写“无外部失败，唯一失败=目标不可读→BLOCKER”，而不是不写。
+
+```text
+WRONG: “判断输入是否合理；不合理就指出问题；然后逐条审；最后给结论。”
+Reason: 散文糊成一团 —— 无有序步骤、无显式终止、“不合理”没写退出、校验与审挤在一条 happy path 上深嵌套。
+
+GOOD :
+  流程：prompt-review
+  1. 读取目标。若既无路径也无内联文本 → 向用户要材料并退出。     # 卫语句·用前必校
+  2. 规范化目标。文件→读全文记行号；内联→标记 inline-prompt.md。
+  3. 若目标不含任何流程 → G 维不触发，继续。                    # 分支
+  4. 逐条跑 A–G，命中即记一行 issue。
+  5. 汇总为 REVIEW_PACKET（含 ledger）。
+  6. 产出 REVIEW_PACKET，结束。                                # 显式终止
+  失败出口：目标不可读→BLOCKER 并说明缺什么；运行时缺工具→降级本地审。
+```
+
+嵌套压平（深判断 → 派发 + 子流程，复杂度抽走而非堆在正文）：
+
+```text
+WRONG（3 层嵌套，漏掉的“否则”看不出来）:
+  1. 判类型；若文件 → 若可读 → 若 md → … 否则 …；否则 …；若目录 → …；若内联 → …
+
+GOOD（父层穷尽派发，深逻辑抽进子流程）:
+  2. 按类型路由：文件→子流程「审文件」；目录→子流程「审目录」；内联→子流程「审内联」；
+     否则 → 报 BLOCKER「未知输入类型」并退出。        # 派发·穷尽带兜底
+  子流程「审文件」：1. 若不可读→报 BLOCKER 返回空  2. 读全文记行号  3. 跑 A–G 返回 issue
+  子流程「审目录」：1. 列目录；空→返回空  2. 每文件→调「审文件」汇集(DRY)  3. 返回
+```
+
+---
+
+## 已知边界
+
+- 本 Skill 不证明 prompt 在生产中可用。
+- 不跑行为 eval（除非运行时提供且用户要求）。
+- 不审应用代码正确性。
+- 不要求网络访问。
