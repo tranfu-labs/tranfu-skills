@@ -1,0 +1,6 @@
+interface:
+  display_name: "Strategy First Development"
+  short_description: "Align strategy, UX, stack, architecture before coding."
+  default_prompt: "Use $strategy-first-development to turn this product idea into a validated strategy, reference-backed tech stack, architecture plan, and implementation workflow before coding."
+policy:
+  allow_implicit_invocation: true
