@@ -1,6 +1,6 @@
 ---
 name: strategy-first-development
-description: "Use when starting or rescuing an AI/software product build where the user wants development experience captured as a repeatable agent workflow: discuss strategy before coding, define product/project shape, create or compare expected UI screenshots, search GitHub for mature projects, choose proven frameworks and technical stack, optimize architecture/modules/workflow, avoid reinventing wheels, and only then implement. Trigger on requests like 总结开发经验的skill, 先确定战略目标, 产品形态, 给agent看预期截图, 生成预期页面, 搜索github成熟项目, 确定技术栈, 优化架构, 不要重复造轮子, 使用成熟框架."
+description: "先定战略、产品形态、预期体验、GitHub成熟项目和技术栈，再让agent开发。"
 version: 0.1.0
 author: griffithkk3-del
 updated_at: 2026-06-12
@@ -10,6 +10,20 @@ origin: own
 # Strategy First Development
 
 Use this skill to convert a vague product or engineering request into a strategy-led implementation plan before coding. The goal is to prevent agents from rushing into arbitrary stacks, one-off UI, duplicate infrastructure, or fragile custom logic when mature projects and frameworks already exist.
+
+## When To Use
+
+Use this skill when the user says or implies:
+
+- 总结开发经验的 skill;
+- 先和 AI 多讨论战略目标、项目形态、产品形态;
+- 给 agent 看预期截图, 或让 agent 生成预期页面给用户选择;
+- 搜索 GitHub 成熟项目, 确定技术栈;
+- 优化架构、模块、工作流程;
+- 不要重复造轮子, 最后使用成熟框架;
+- 启动一个复杂产品/工程项目, 但目标、体验或技术路线还不清楚。
+
+Do not use this skill for one-line commands, small copy edits, simple translations, or already-scoped bug fixes unless the user asks to rethink strategy or architecture.
 
 ## Operating Principle
 
@@ -24,7 +38,7 @@ Do not start implementation until the agent has enough evidence to answer:
 
 If the user explicitly asks to implement immediately, still do a compressed version of this workflow unless the task is trivial or already fully specified.
 
-## Workflow
+## Steps
 
 ### 1. Strategy Conversation Gate
 
@@ -155,7 +169,7 @@ Final handoff must say:
 - verification commands and results;
 - remaining risks, assumptions, or follow-up decisions.
 
-## Anti-Patterns To Stop
+## What NOT to do
 
 Stop and reset if the agent is about to:
 
