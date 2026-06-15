@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate Product Logo"
+  short_description: "Generate product-aware glass logo concepts"
+  default_prompt: "Use $generate-product-logo to create logo options for my product after checking the product information."
