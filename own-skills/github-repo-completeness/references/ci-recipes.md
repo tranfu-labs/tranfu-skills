@@ -1,6 +1,6 @@
 # GitHub Actions CI playbook
 
-> project-packaging skill 在 `.github/workflows/` 缺失时引用本文件.
+> github-repo-completeness skill 在 `.github/workflows/` 缺失时引用本文件.
 
 ---
 

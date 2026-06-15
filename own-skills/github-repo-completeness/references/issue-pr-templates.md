@@ -1,6 +1,6 @@
 # Issue / PR 模板 playbook
 
-> project-packaging skill 在 `.github/ISSUE_TEMPLATE/` 或 `pull_request_template.md` 状态为 **MISSING** 时引用本文件.
+> github-repo-completeness skill 在 `.github/ISSUE_TEMPLATE/` 或 `pull_request_template.md` 状态为 **MISSING** 时引用本文件.
 
 ---
 

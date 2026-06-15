@@ -1,6 +1,6 @@
 # .gitignore playbook
 
-> project-packaging skill 在 `.gitignore` 状态为 **MISSING / WEAK** 时引用本文件.
+> github-repo-completeness skill 在 `.gitignore` 状态为 **MISSING / WEAK** 时引用本文件.
 > 来源参考: [github/gitignore](https://github.com/github/gitignore) 官方模板, 这里做精简 + 跨栈整理.
 
 ---

@@ -1,6 +1,6 @@
 ---
 name: ui-ux-pro-max
-description: AI-powered design intelligence with 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 15+ tech stacks. Trigger when user asks for design system / 配色 / 字体搭配 / UI 风格选型 / 落地页结构 / 图表选型 / UX 守则 / "帮我做一套设计系统". Do NOT trigger when: 用户只要写功能代码 / 修 bug / 项目结构包装 (走 project-packaging).
+description: AI-powered design intelligence with 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 15+ tech stacks. Trigger when user asks for design system / 配色 / 字体搭配 / UI 风格选型 / 落地页结构 / 图表选型 / UX 守则 / "帮我做一套设计系统". Do NOT trigger when: 用户只要写功能代码 / 修 bug / 项目结构包装 (走 github-repo-completeness).
 version: 2.5.0
 author: NextLevelBuilder
 updated_at: 2026-05-20

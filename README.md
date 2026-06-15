@@ -171,10 +171,10 @@ README 里的 prompt 会让 agent 读取安装/卸载文档并驱动本机 `tfs`
 | [`credibility-review`](./own-skills/credibility-review/) | 文章可信度审稿 |
 | [`daily-report`](./own-skills/daily-report/) | AI 日报图片渲染 |
 | [`elite-market-researcher`](./own-skills/elite-market-researcher/) | 高强度市场研究心智 |
+| [`github-repo-completeness`](./own-skills/github-repo-completeness/) | GitHub 项目完备性检查与补全 |
 | [`goal-driven-decomposition`](./own-skills/goal-driven-decomposition/) | 复杂构建 / 设计目标分解 |
 | [`lark-safe-write`](./own-skills/lark-safe-write/) | Lark / 飞书 wiki 安全写入 |
 | [`market-analysis`](./own-skills/market-analysis/) | 全景市场分析 |
-| [`project-packaging`](./own-skills/project-packaging/) | GitHub 项目完备性检查 |
 | [`project-scoring`](./own-skills/project-scoring/) | AI 项目评分决策 memo |
 | [`prompt-review`](./own-skills/prompt-review/) | prompt / skill 多轮审查 |
 | [`skill-reverse-engineer`](./own-skills/skill-reverse-engineer/) | 反向分析和改进 agent skill |

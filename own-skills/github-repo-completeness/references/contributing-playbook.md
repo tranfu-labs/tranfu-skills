@@ -1,6 +1,6 @@
 # CONTRIBUTING playbook
 
-> project-packaging skill 在 `CONTRIBUTING.md` 状态为 **MISSING / WEAK** 时引用本文件.
+> github-repo-completeness skill 在 `CONTRIBUTING.md` 状态为 **MISSING / WEAK** 时引用本文件.
 
 ---
 
