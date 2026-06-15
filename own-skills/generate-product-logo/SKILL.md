@@ -1,6 +1,6 @@
 ---
 name: generate-product-logo
-description: Generate product-aware logo concepts in a minimalist 3D frosted-glass style. Use when the user asks to create, explore, refine, or export a product logo, app icon, browser icon, favicon, social-preview logo, or brand mark. Ask for missing product context before image generation. Do NOT trigger when the user only wants generic image generation, non-logo brand copy, trademark/legal clearance, vectorization of an existing final logo, or unrelated UI design.
+description: Generate product-aware logo concepts in a minimalist 3D frosted-glass style. Use when the user asks to create, explore, refine, or export a product logo, app icon, browser icon, favicon, social-preview logo, or brand mark. Also match Chinese requests like "做个/设计 Logo", "做 app icon/favicon", or "品牌标记". Ask for missing product context before image generation. Do NOT trigger when the user only wants generic image generation, non-logo brand copy, trademark/legal clearance, vectorization of an existing final logo, or unrelated UI design.
 version: 0.1.0
 author: 06666666
 updated_at: 2026-06-15
@@ -15,7 +15,7 @@ Before generating, read `references/style-and-workflow.md`. If the task asks to 
 
 ## Product Gate
 
-Do not generate a logo until the product has enough shape to guide the mark.
+CRITICAL: MUST NOT generate any logo until the product gate is satisfied; if any required field is missing, ask one product-gate question and STOP.
 
 Minimum required product information:
 
@@ -42,13 +42,15 @@ Optional inputs to respect when provided:
 
 ## Workflow
 
-1. Confirm the product gate is satisfied.
-2. Translate the product shape into 2-4 logo directions.
+CREATE A TODO LIST FOR THE TASKS BELOW (one TODO per step):
+
+1. Confirm the product gate is satisfied. If it is not satisfied, follow the Product Gate question rule and STOP before image generation.
+2. Translate the product shape into 3-4 logo directions.
 3. Use the base-plus-directional-symbol style unless the user asks for another metaphor.
 4. Generate square 1:1 image concepts with image generation.
 5. Save project-bound outputs into a durable workspace path, usually `outputs/logos/<product-slug>/<round-name>/`.
 6. Verify every generated candidate is a real image and square.
-7. Create a comparison contact sheet and a small-size preview, ideally at 32px.
+7. MUST create a comparison contact sheet and a 32px nearest-neighbor preview.
 8. Recommend the strongest candidate based on product fit and small-size recognition.
 9. Wait for selection before producing final browser icons, social-preview images, or implementation changes.
 
@@ -72,6 +74,13 @@ Reason: brand copy and generic image generation are outside this skill; it is on
 - If image generation is unavailable or fails, report the blocker and do not describe nonexistent outputs.
 - If generated candidates are not real square images, regenerate or mark them unusable before making a recommendation.
 - If bundled reference files are missing, continue from the written style contract and mention that the visual references could not be inspected.
+
+## Neighbor Workflows
+
+- Generic image generation without logo or icon intent belongs to the active image-generation workflow, not this skill.
+- Non-logo brand copy belongs to a copywriting or brand-messaging workflow, not this skill.
+- Unrelated UI or page design should use `visual-pipeline`, `tranfu-website-design`, or the active product-design workflow.
+- Trademark clearance, legal review, and production vectorization require specialist review or a dedicated vector/logo production workflow.
 
 ## Direction Rules
 
@@ -106,4 +115,4 @@ Show the generated comparison image and the small-size preview when possible. Ke
 - where the files were saved;
 - what selection is needed next.
 
-Do not claim the generated raster image is a final production vector or trademark-cleared logo. After selection, offer the next concrete production step: final polish, favicon/app-icon exports, social preview, or site integration.
+MUST NEVER claim the generated raster image is a production-ready vector or a trademark-cleared logo. After selection, offer the next concrete production step: final polish, favicon/app-icon exports, social preview, or site integration.
