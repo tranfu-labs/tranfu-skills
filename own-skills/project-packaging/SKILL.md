@@ -1,16 +1,18 @@
 ---
 name: project-packaging
 description: >
-  GitHub 项目完备性检查与补全引导。扫描项目，生成缺失清单，按优先级逐项引导用户补全。
+  GitHub 项目完备性检查与补全引导。扫描已有 repo，生成缺失清单，按优先级逐项引导用户补全。
   不直接生成所有内容，而是引导用户决策后再执行。
-  Always trigger for: project packaging, 项目包装, 项目美化, 项目完善, open source ready,
+  Always trigger for: project packaging, 项目包装, 项目完善, open source ready,
   开源准备, github setup, 补全项目, project health, project checklist, 项目清单.
   Also triggers for: "这个项目还缺什么", "帮我完善项目结构", "准备开源".
-  Do NOT trigger when: user wants to write code, fix bugs, or do code review.
+  Do NOT trigger when: 写代码 / 修 bug / code review；从零起草需求或 PRD（走 write-spec）；
+  scaffold 全新空项目骨架（走脚手架类 skill）；发版 / 打包发布版本（走 release）；
+  发布 skill 到公司库（走 tranfu-publish）；部署上线（走 coolify-deploy）。
 userInvocable: true
-version: 0.2.0
+version: 0.3.0
 author: aquarius-wing
-updated_at: 2026-05-29
+updated_at: 2026-06-15
 origin: own
 ---
 
@@ -20,6 +22,13 @@ origin: own
 
 IMPORTANT: 你是引导者，不是生成器。NEVER 一次性生成所有缺失文件。MUST 逐项确认用户意图后再行动。
 
+CREATE A TODO LIST FOR THE TASKS BELOW（开工前先建，逐步勾掉，NEVER 跳过第二步的用户确认门）:
+
+1. 扫描项目，生成 P0–P3 缺失清单。
+2. 展示清单，等用户选定要处理的项与优先级（确认门，MUST 停下等输入）。
+3. 逐项引导补全（每项先问偏好/是否已装同伴 skill 再动手）。
+4. 收尾：重跑第一步检查脚本，确认选中项无残留 MISSING/WEAK，汇总产物交用户最终确认。
+
 ## 第一步：扫描项目，生成清单
 
 **前置 — 确认 cwd 是项目根**:
@@ -28,11 +37,17 @@ IMPORTANT: 你是引导者，不是生成器。NEVER 一次性生成所有缺失
 git rev-parse --show-toplevel 2>/dev/null
 ```
 
-若返回路径 `!= pwd`, 说明当前是某 git repo 的**子目录**, 或 cwd 不在 git repo 内. 提示用户:
+按命令的**退出码**分三条出口处理:
 
-> 当前目录 `{{pwd}}` 不是 git repo 根 (实际根是 `{{toplevel}}` / 或无 git). 继续扫描会针对**当前子目录**, 不扫整 repo. 确认继续? 或切到正确目录再跑.
+- **退出码 0 且返回路径 == pwd** → 正常, 是 repo 根, 往下走。
+- **退出码 0 但返回路径 != pwd** → 当前是某 git repo 的**子目录**。提示用户:
+  > 当前目录 `{{pwd}}` 不是 git repo 根 (实际根是 `{{toplevel}}`)。继续扫描只针对**当前子目录**, 不扫整 repo。确认继续? 或切到正确目录再跑。
 
-得到确认后再往下. 子目录内的项目 (e.g. monorepo 子包 / parent-tracked 的 sibling 项目) 是合法场景, 但用户必须明确知道扫描范围.
+  子目录场景 (monorepo 子包 / parent-tracked 的 sibling 项目) 合法, 但用户必须明确知道扫描范围。得到确认后再往下。
+- **退出码 != 0（不在任何 git repo 内 / 无 git 命令）** → MUST 停下并提示, 不要盲扫:
+  > 当前目录 `{{pwd}}` 不在 git repo 内 (或本机无 git)。完备性检查依赖 repo 上下文。要我仍按当前目录当作项目根扫描吗? 还是你先 `git init` / 切到正确目录?
+
+  仅在用户明确确认后, 才把当前目录当项目根继续。
 
 检查以下各项是否存在且质量达标。对每项给出状态：
 
@@ -69,15 +84,15 @@ git rev-parse --show-toplevel 2>/dev/null
 # GitHub repo 的 description 和 topics
 ```
 
-对于存在的文件，MUST 用 Read 检查内容质量：
+对于存在的文件，MUST 用 Read 检查内容质量。下表给出**可观测判据**——OK/WEAK 的边界以这些可 grep / 可计数的信号为准，不靠主观感觉，避免每次运行结果漂移：
 
-| 文件 | 质量达标标准 |
-|------|-------------|
-| README.md | 有项目描述、安装步骤、使用示例、至少一个 badge |
-| LICENSE | 非空，包含有效的开源协议文本 |
-| .gitignore | 覆盖该语言/框架的常见忽略项（node_modules、.env 等） |
-| CONTRIBUTING.md | 有提交规范、开发环境搭建、PR 流程 |
-| CHANGELOG.md | 遵循 Keep a Changelog 格式 |
+| 文件 | 达标含义 | OK 的可观测判据（全中=OK，缺一即 WEAK） |
+|------|---------|------------------------------------------|
+| README.md | 有描述、安装、示例、badge | 标题 (`#`) ≥ 3 个；含至少一个代码块 (```)；命中 badge 标记 (`img.shields.io` 或 `![`...`](`...`badge`...`)`)；首屏 ≤ 3 行内出现项目一句话定位 |
+| LICENSE | 有效开源协议 | 非空；命中协议关键词之一 (`MIT` / `Apache License` / `GNU GENERAL PUBLIC` / `BSD` / `MPL`) |
+| .gitignore | 覆盖主栈忽略项 | 命中 `.env` 或 `.env*`；命中主栈 build/依赖目录 (Node: `node_modules`；Python: `__pycache__` 或 `.venv`；Rust: `target`；Go: 二进制/`/bin`) |
+| CONTRIBUTING.md | 有规范/搭建/流程 | 同时命中"提交/commit"、"环境/install/setup"、"PR/pull request"三类关键词 |
+| CHANGELOG.md | Keep a Changelog 格式 | 命中 `## [` 版本块；命中 `Unreleased` 或 `Added`/`Changed`/`Fixed` 任一分类标题 |
 
 ## 第二步：展示清单，确认优先级
 
@@ -120,7 +135,25 @@ MUST 等用户选择要处理哪些项。NEVER 自动开始全部补全。
 **所有写作 / 优化必须依据 [`references/readme-playbook.md`](references/readme-playbook.md)** — 结构 (15 节按需启用)、首句价值原则、措辞 5 类检查、反例清单都在那里. 不要在 SKILL.md 里复述.
 
 #### MISSING — 从零生成
-启 SubAgent, prompt 中 reference 路径 `references/readme-playbook.md` 第 6 节, 喂项目信息 (技术栈 / 仓库类型 / 目标读者). 生成后 MUST 再走一轮第 5 节的 validation, 不直接交付.
+MUST SPAWN A SUBAGENT 来起草 README, 按下面模板直接开始, 不要自己在主线程里写。生成后 MUST 再走一轮第 5 节的 validation, 不直接交付。
+
+```text
+你是 README 起草者, 只负责按 playbook 生成一份 README 草稿。
+读取并严格遵循: <项目绝对路径>/references/readme-playbook.md 第 6 节 (结构) + 第 1-4 节 (首句价值 / 措辞检查)。
+
+项目信息 (运行时填):
+- 技术栈: {技术栈}
+- 仓库类型: {内部 / 公开 OSS / 文档型}
+- 目标读者: {目标读者}
+- 已有线索: {从 package.json / 现有片段提取的描述、命令}
+
+范围与边界:
+- 只产出 README.md 草稿文本, 返回给主线程, 不写入任何文件。
+- NEVER 编造未提供的功能 / 命令 / badge; 不确定项标注 "需用户确认"。
+- NEVER 改动 README 以外的任何文件。
+
+输出: 完整 README.md 草稿 + 一行"哪些信息是占位/待确认"。
+```
 
 #### WEAK — 优化已有
 按 `references/readme-playbook.md` 第 5 节的 micro-slice 流程:
@@ -188,12 +221,19 @@ MUST 等用户选择要处理哪些项。NEVER 自动开始全部补全。
 - License 类型
 - 代码覆盖率（如果有测试）
 
+### 收尾（逐项处理完后 MUST 执行，覆盖逐项与"全部按默认"两种路径）
+
+1. 重跑第一步的检查脚本 + 质量表判据，确认**本轮选中处理的项**已从 MISSING/WEAK 转为 OK（未选的项不强求）。
+2. 汇总本轮新增/修改的文件清单，连同关键内容摘要一并展示给用户做最终确认。
+3. 若仍有项未达标，如实说明原因（缺信息 / 用户未定 License 等），不要静默标记完成。
+
+NEVER 在没有这一步确认的情况下宣布"项目已完备"。
+
 ## 约束
 
-- NEVER 一次性生成所有缺失文件——逐项确认，逐项处理
+- NEVER 一次性生成所有缺失文件——逐项确认，逐项处理。**唯一例外**：用户显式说"全部按默认"时可批量处理，但仍 MUST 走收尾步骤，在最后统一展示所有生成内容让用户确认。
 - NEVER 替用户选择 License 类型——MUST 询问
 - NEVER 生成与项目技术栈不匹配的内容（如给 Rust 项目生成 npm 相关配置）
-- 用户说"全部按默认"时，可以批量处理，但 MUST 在最后展示所有生成内容让用户确认
 - 如果用户已安装相关 skill（readme-generator、license-checker 等），优先引导使用而非重新生成
 
 ## 同类 Skill 对比
@@ -202,6 +242,9 @@ MUST 等用户选择要处理哪些项。NEVER 自动开始全部补全。
 
 ### 公司库内
 - [write-spec](../write-spec/SKILL.md) — 从模糊想法生成 PRD/feature spec; **本 skill 区别**: project-packaging 扫描已有项目结构补漏 (README/LICENSE/CI/templates), write-spec 是从零起草需求文档
+- [project-init-docs](../project-init-docs/SKILL.md) — 新项目从产品/项目/开发三段生成初始文档; **本 skill 区别**: project-packaging 针对**已有 repo** 审计现状再逐项补漏, init-docs 是新项目冷启动产出整套文档, 二者都会生成 README/CONTRIBUTING 但触发时机 (已有 vs 冷启) 不同
+- `release` (外部已装 skill) — 版本号/changelog/打 tag 发版; **本 skill 区别**: project-packaging 只补"完备性"文件 (含一个空的 CHANGELOG 骨架), 不做版本号 bump / tag / 发布动作, 那是 release 的职责
+- [tranfu-publish](../../meta-skills/tranfu-publish/SKILL.md) — 把 skill 发布到公司库; **本 skill 区别**: project-packaging 处理的是普通 GitHub repo 的完备性, 与"把 skill 提交到 tranfu-skills"无关
 
 ### 外部世界
 - [Claude-Code-Scaffolding-Skill (hmohamed01)](https://github.com/hmohamed01/Claude-Code-Scaffolding-Skill) — 在 IDE 里 scaffold 全新项目骨架; **本 skill 区别**: project-packaging 针对**已有 repo** 做完备性审计 + 逐项补, 不创建空项目
