@@ -1,0 +1,4 @@
+interface:
+  display_name: "TranFu Website Design"
+  short_description: "Apply TranFu website UI rules"
+  default_prompt: "Use $tranfu-website-design to create or review a TranFu website UI change against the brand design spec."
