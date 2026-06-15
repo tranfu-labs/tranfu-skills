@@ -1,6 +1,6 @@
 # tranfu-publish
 
-把本地写的 skill / 推荐的外部 skill / 案例发到公司库 `tranfu-labs/tranfu-skills` 走 PR. AI 起草, 用户审完拍 `y` 才提交.
+把本地写的 skill / 推荐的外部 skill / 案例发到公司库 `tranfu-labs/tranfu-skills` 走 PR. **触发即发布**: AI 识别意图 → 起草 → 自动 push + 开 PR, 中途不打印预览、不等用户拍板.
 
 ![框架图](./framework.png)
 
@@ -10,7 +10,7 @@
 
 | 路径 | 触发语示例 | 适用 | 必备产物 |
 |---|---|---|---|
-| **own** | "把本地 X 发到公司库" / "publish X" | 自己写的 skill | SKILL.md + README.md + cases/<author>.md |
+| **own** | "把本地 X 发到公司库" / "publish X" | 自己写的 skill | SKILL.md + README.md (cases/ 可选, 源里有就带) |
 | **external** | "把这个 skill 推到公司库" / "推荐 https://..." | 外部 skill | SKILL.md (薄指针) + README.md, 无 case |
 | **case** | "给公司库 X 加个案例 / 补一个用法" | 已在公司库的 skill, 想补 case | cases/<recommender>.md |
 
@@ -26,38 +26,37 @@ own 路径若本地源缺 `README.md` → AI 报错中止, **不自动起草** (
 
 ## 你会看到什么
 
-1. AI `TaskCreate` 7 项任务列, 让你从头看到进度
+1. AI 版本预检 (tfs 落后则先自升再让你重发意图)
 2. AI 识别路径 → 定位 $REPO (公司库本地 clone) + $SRC (own/case 时本地源 path); own 路径预检 README.md 存在
 3. AI 起草: SKILL.md frontmatter / README.md §同类对比 + §使用技巧 / case-file / PR title + body (按 `templates/` 渲染, 不自创结构)
-4. AI 写完整预览到 `/tmp/tranfu-publish-preview-*.md`, chat 给简要摘要, 通过 `AskUserQuestion` form 问 `[发布] / [改] / [取消]`
-5. 拿到 `[发布]` 才执行: 切 `skill/<name>` 分支 → cp/写文件 → commit → push → `gh pr create`. `index.json` 由 CI 自动 rebuild, 作者不管
-6. 输出 PR URL
+4. 起草完**直接执行**: 切 `skill/<name>` 分支 → cp/写文件 → commit → push → `gh pr create`. `index.json` 由 CI 自动 rebuild, 作者不管
+5. 输出 PR URL
 
 **不会**:
 
 - ❌ 不直推 main (始终走 `skill/<name>` 或 `skill/batch-<ts>` 分支)
-- ❌ 不静默 `gh pr create` (必须用户从 form 拍 `[发布]`)
-- ❌ 不动公司库任何文件 until 用户拍 `[发布]` (前面全是起草, 不写盘)
 - ❌ own 路径源缺 README.md 不自动起草 (报错让作者先写)
 - ❌ 不 force push
 - ❌ 不删现有 skill
 - ❌ 不跨仓 PR (只发 `tranfu-labs/tranfu-skills`)
 - ❌ 不接 search / install / list / update / uninstall 意图 — 那些走 `tranfu-router`
 
+> 触发即发布、无二次确认。若不想真的提 PR, 不要触发本 skill。
+
 ## 共享模板 (`templates/`)
 
 | 文件 | 用途 | 路径覆盖 |
 |---|---|---|
 | `templates/pr-body.md` | PR body 骨架 (variant: own / external / case) | 三路径全用 |
-| `templates/case-file.md` | case 文件骨架 (frontmatter 8-enum `reason_kind` + 4 段 body) | external · case |
+| `templates/case-file.md` | case 文件骨架 (frontmatter 8-enum `reason_kind` + 4 段 body) | case (own/external 不起草) |
 | `templates/section-同类对比.md` | **README.md** `## 同类 Skill 对比` section 骨架 | own · external |
 | `templates/section-使用技巧.md` | **README.md** `## 使用技巧` section 骨架 | own · external |
 
-AI 渲染 PR / SKILL.md / case 文件**必须**用这些模板. 不允许换成 GitHub 通用习惯写法 (`## Summary` / `## Validation` / `## Test plan` / `## Rollback`) — 本仓库 lark 通知 + lint workflow 都按模板段名读, 换名 = 静默失效.
+README 的 `## 同类 Skill 对比` / `## 使用技巧` 段名照模板保持一致 (catalog + 人读约定, 别换成 `## Summary` 之类). PR body 模板只是把 skill 信息 1:1 贴成表格 — CI / 飞书通知都把 body 原样转发, 不解析段名, 怎么写无所谓.
 
 ## 关键概念
 
-- **path (own / external / case)**: AI 在 §0 自动判. 用户原话给, 或按触发语关键词推 (`URL` → external, `加案例` → case, 其他 → own).
+- **path (own / external / case)**: AI 自动判. 用户原话给, 或按触发语关键词推 (`URL` → external, `加案例` → case, 其他 → own).
 - **$REPO**: 公司库本地 clone path. 优先用户原话给, 次用 cwd 检测, 再 `~/work/tranfu-skills`.
 - **$SRC**: 本地 skill 源 path (own / case 用). external 不需要 (skill body 不进公司库, 仅薄指针).
 - **case 文件**: 同一 recommender 对同一 skill 只开一份 `.md`, 多场景 append, 不开 `<recommender>-1.md` 这种碎裂文件.
