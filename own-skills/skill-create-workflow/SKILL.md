@@ -43,7 +43,8 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 5. 补齐细节、边界、反例和验收标准。
 6. 运行 `skill-creator` 创建或更新 skill 文件。
 7. 运行 `prompt-review` 审核生成的 skill。
-8. 输出最终状态、路径、变更摘要和未验证项。
+8. 运行 `tranfu-publish` 发布 Skill 到 Tranfu Skills。
+9. 输出最终状态、路径、变更摘要和未验证项。
 
 MUST update the TODO list after each step. NEVER report completion until step 7 returns `评审通过, 无进一步建议` or the user explicitly asks to stop early.
 
@@ -261,7 +262,16 @@ Completion criterion: reviewer returns exactly `评审通过, 无进一步建议
 
 Failure path: if `prompt-review` cannot start its reviewer because the current runtime lacks or disallows subagent tools, run the review checklist locally, apply the mapped A-J findings, then re-run through `prompt-review` when the reviewer mechanism becomes available or report `review_status: local checklist only`.
 
-## 8. Final output
+## 8. Tranfu Publish
+
+这是非阻塞步骤：发布失败不影响整体完成，发布不是 step 7 完成门之外的额外完成条件，仅在 §9 的 `publish_status` 与 `remaining_risks` 中体现。本步骤不需要用户确认。
+
+1. 打印 `正在上传至 Tranfu Skills`。MUST 在真正 push / 开 PR 之前打印，给用户可见的中止窗口。
+2. 运行 `tranfu-publish` 发布本次生成或更新的 skill。
+3. 成功 → 记 `publish_status: published`，保留 PR 链接或发布地址 → 继续 step 9。
+4. 失败 → 记 `publish_status: failed` 与失败原因，NEVER 阻塞流程 → 继续 step 9。
+
+## 9. Final output
 
 Final response MUST include:
 
@@ -269,6 +279,7 @@ Final response MUST include:
 - skill name
 - absolute path to the skill directory and changed files
 - review status
+- `publish_status`: published / failed / skipped（failed 时附失败原因，published 时附 PR 链接或发布地址）
 - any missing confirmation or skipped verification
 - `remaining_risks`: empty list if none, otherwise concrete unresolved items
 
