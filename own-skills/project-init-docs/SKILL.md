@@ -4,15 +4,16 @@ description: >
   当用户在一个代码仓库里说"初始化"时，分析真实仓库并一次性搭建 AI 驱动开发所需的知识与规格基线：
   AGENTS.md（AI 项目操作手册）、CLAUDE.md（指向 AGENTS.md 的一行指针）、
   docs/architecture/module-map.md（模块地图）、openspec/specs/<domain>/spec.md（业务域事实规格）、
-  openspec/changes/（先设计再实现的变更工作区）、docs/adr/（架构决策记录）。
-  触发词包括"初始化""初始化项目""init 一下文档""搭 AI 协作脚手架""建 AGENTS.md 体系"，
+  openspec/changes/（先设计再实现的变更工作区）、docs/adr/（架构决策记录）、
+  docs/wireframes/（字符图线框，默认生成）。
+  触发词包括"初始化""初始化项目""init 一下文档""搭 AI 协作脚手架""建 AGENTS.md 体系""加线框图/页面版式"，
   也覆盖口语化说法，例如"帮我把项目文档初始化一下""搭一套 AI 能看懂的文档底座""把项目结构和规范记录下来"，
   即使用户只说"初始化"也在仓库语境内触发。
   内容必须来自对真实仓库的分析而非空白模板，幂等不破坏已存在文件。
   任何目录级"怎么在这工作"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。
   不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、
   只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。
-version: 0.2.0
+version: 0.3.0
 author: aquarius-wing
 updated_at: 2026-06-15
 origin: own
@@ -47,10 +48,12 @@ origin: own
 - `scripts/fill.sh`：基线产物的唯一事实源。`--list` 列目标清单；`--auto [domain...]` 对所有缺失/为空目标自动填充；`<target>` 只填单个目标。已存在且非空的目标一律 SKIP，绝不覆盖。
 
 产物分两类：
-- **static（纯静态）**：所有 `CLAUDE.md` 指针、`openspec/changes/AGENTS.md` + `_template/`、`docs/adr/AGENTS.md` + `0000-record-architecture-decisions.md`。内容与仓库无关，缺失/为空时由 `fill.sh` 写死，AI 不手敲。
-- **repo-fact（真实事实）**：根 `AGENTS.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`。缺失/为空时 `fill.sh` 只铺「小节标题 + `TODO: 需人工确认`」骨架，真实命令/模块/业务规则仍由 AI 填正文。
+- **static（纯静态）**：所有 `CLAUDE.md` 指针、`openspec/changes/AGENTS.md` + `_template/`、`docs/adr/AGENTS.md` + `0000-record-architecture-decisions.md`；以及线框图的 `docs/wireframes/{AGENTS.md,CLAUDE.md,legend.md,_template/page.md}`。内容与仓库无关，缺失/为空时由 `fill.sh` 写死，AI 不手敲。
+- **repo-fact（真实事实）**：根 `AGENTS.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`；以及线框图的 `docs/wireframes/flow.md`（页面流转图，默认铺）和 `docs/wireframes/pages/<page>.md`（探测到路由时追加）。缺失/为空时 `fill.sh` 只铺骨架（repo-fact 文件铺「小节标题 + `TODO`」，页面文件铺「比例尺+断点框+注释表」模板，flow.md 铺「流程示例+TODO 步骤表」），真实命令/模块/业务规则/页面版式/流转关系仍由 AI 填正文。
 
-小节契约放在 `references/file-templates.md`，是契约的逐字组成部分。填 repo-fact 正文前必须先读它。static 文件全文以 `scripts/fill.sh` 为准，不在别处另存。
+线框图**默认随基线一起铺**（不做 UI 判定，与 `adr/`、`changes/` 同级）：静态骨架（`AGENTS.md/CLAUDE.md/legend.md/_template/page.md`）与 `flow.md` 骨架无条件生成；页面文件按真实路由用 `--pages <页...>` 追加。**是否保留由仓库根 `AGENTS.md` 的「线框图」一节决定**——初始化只负责铺好并写下这条规则，等以后项目性质明确（如确认为无界面的工具/库类）再照根 `AGENTS.md` 删除 `docs/wireframes/`。静态线框图全文存放在 `assets/wireframes/`，由 `fill.sh` cat 过去。
+
+小节契约放在 `references/file-templates.md`，是契约的逐字组成部分。填 repo-fact 正文前必须先读它。static 文件全文以 `scripts/fill.sh`（含其引用的 `assets/wireframes/`）为准，不在别处另存。
 
 ## 工作流
 
@@ -62,27 +65,32 @@ origin: own
    - 真实命令：安装/构建/测试/运行/lint，来自真实脚本与配置，而非猜测。
    - 模块：顶层源码目录或包边界。
    - 业务域：从代码组织（领域目录、服务、模型）归纳出真实业务域，作为 `openspec/specs/<domain>` 的 `<domain>`。
+   - 页面：检测前端框架/路由（Next.js `app/`·`pages/`、React Router、Vue Router、SvelteKit `src/routes`、多个顶层 `.html` 等）。检测到则从真实路由归纳页面名，作为 `--pages` 的入参。线框图静态骨架默认都会铺，**不在此判定 UI 与否、不跳过**；是否最终保留留给根 `AGENTS.md` 的规则在后续决定。
 
 2. **确认范围与边界**
-   - MUST 在执行任何文件写入前，向用户输出执行前小结：探测到的技术栈、模块、业务域和计划生成的文件清单。
+   - MUST 在执行任何文件写入前，向用户输出执行前小结：探测到的技术栈、模块、业务域、页面清单（若探测到路由），和计划生成的文件清单（含默认生成的 `docs/wireframes/`）。
    - 边界异常时降级处理：空仓库/非代码仓库 → 生成最小 `AGENTS.md` 并把无法填充处标注 `TODO`，必要时向用户要上下文；探测不到命令或模块 → 标注 `TODO: 需人工确认`，绝不编造。
    - 业务域过多：当探测到的业务域超过 8 个时，MUST 先向用户列出业务域清单并请其确认范围，再生成 `spec.md`，绝不静默批量写入。
+   - 页面过多：当探测到的路由/页面超过 12 个时，MUST 先列页面清单请用户确认范围，再生成页面文件，绝不静默批量写入（静态骨架照常默认铺）。
    - 若任何已存在文件会被触及，先读它并向用户说明，确认后再处理。
 
 3. **跑探针，拿路由表**
-   - `scripts/probe.sh <探测到的业务域...>`，得到每个目标的 `状态 × 类别`。后续按表分流，不再凭记忆判断哪些文件该建。
+   - `scripts/probe.sh <探测到的业务域...> [--pages <页面...>]`，得到每个目标的 `状态 × 类别`。`docs/wireframes/` 静态骨架默认就在路由表里；探测到路由就带 `--pages` 追加各页面文件，没探测到就只铺静态骨架。后续按表分流，不再凭记忆判断哪些文件该建。
 
 4. **按路由表分流填充**
    - `static + MISSING/EMPTY` → `scripts/fill.sh <path>` 直接写死，AI 不碰。
    - `repo-fact + MISSING/EMPTY` → `scripts/fill.sh <path>` 铺骨架（小节标题 + TODO），正文留到第 5 步。
    - `* + PRESENT` → 不动文件，登记进第 6 步的「需人工/AI 核对」清单（读现有 → 只补缺失小节 / 报差异 → 覆盖前确认）。
-   - 便捷：缺失/为空的目标可一次 `scripts/fill.sh --auto <业务域...>` 全部铺好（PRESENT 自动 SKIP，幂等安全）。
+   - 便捷：缺失/为空的目标可一次 `scripts/fill.sh --auto <业务域...> [--pages <页面...>]` 全部铺好（PRESENT 自动 SKIP，幂等安全）。
 
 5. **填 repo-fact 骨架的正文**
    - 先读 `references/file-templates.md` 的小节契约。
    - 根 `AGENTS.md`：把「项目概览/项目结构/常用命令/编码规范/禁止事项」的 `TODO` 替换成真实事实（修改前后检查两节脚本已写死，保留）。
    - `docs/architecture/module-map.md`：按真实模块复制扩展骨架那一节，逐个填职责边界/入口/上游/下游/禁止依赖。
    - `openspec/specs/<domain>/spec.md`：填域定位、可验证的业务规则、场景、可验证行为；探测不到的保留 `TODO: 需人工确认`，不硬造。
+   - `docs/wireframes/pages/<page>.md`（探测到路由时）：按真实路由填字符图——页首写比例尺+断点清单，每个断点框写真实 px 与显示列尺寸（**显示列数 = 真实px ÷ 比例尺，全角字符按 2 列、歧义/半角按 1 列；用 Python `east_asian_width` 校验，禁用 `awk length`、codepoint、`wc -L`**），区块/容器照 `legend.md` 与消歧义规则画并打编号，注释表逐条对应；版式推不出的标 `TODO`，不硬造。
+   - `docs/wireframes/flow.md`：按用户流程分节（登录流程、忘记密码流程…）填页面流转图，节点=真实页面（指向其 `page.md`）、同页态用虚线框、边打编号对应步骤表；流程推不出的标 `TODO`，不硬造。
+   - 根 `AGENTS.md` 的「线框图」一节是脚本写死的删除规则，保留不删——它指导后续在项目性质明确后决定是否删除 `docs/wireframes/`。
 
 6. **核对 PRESENT 文件 + 幂等校验 + 产出清单**
    - 对第 4 步登记的 PRESENT 文件：读现有内容，只补缺失小节或报差异，覆盖前经用户确认。
@@ -95,6 +103,9 @@ origin: own
 - 每个 `CLAUDE.md` 只含指向同目录 `AGENTS.md` 的一行。
 - 目录级说明文件都是 `AGENTS.md` + `CLAUDE.md`，无 README 充当目录指南。
 - 已存在文件未被破坏性覆盖；无法填充处显式标注 `TODO`，无编造命令/依赖。
+- `docs/wireframes/{AGENTS.md,CLAUDE.md,legend.md,_template/page.md,flow.md}` 默认就位（不分 UI 与否）；探测到路由时每个 `pages/<page>.md` 有页首比例尺+断点声明、每框尺寸条，且**每框实际显示列宽 = 真实px ÷ 比例尺**（桌面 120 / 平板 64 / 手机 31，全角按 2 列、歧义/半角按 1 列，用 Python `east_asian_width` 量，对不上即不合格）；容器均按消歧义规则标明身份；编号与注释表一一对应、无孤儿编号。
+- `flow.md` 按用户流程分节，节点为真实页面并指向其 `page.md`，每节图中编号与步骤表一一对应、无孤儿编号。
+- 根 `AGENTS.md` 含脚本写死的「线框图」一节（默认生成说明 + 无界面项目的删除规则），保留未删。
 
 ## 失败路径
 
@@ -102,16 +113,18 @@ origin: own
 - **命令或模块探测不到**：标注 `TODO: 需人工确认`，绝不编造。
 - **目标文件已存在**：默认跳过覆盖。读出现有内容，只补缺失小节或报告差异，覆盖前必须经用户确认。
 - **业务域不清晰**：建一个起步 `spec.md` 并标注 `TODO`，不硬造业务规则。
+- **路由探测不到 / 项目性质未明**：不传 `--pages`，只铺 `docs/wireframes/` 静态骨架（含 `_template/page.md`），`pages/` 留空，并依赖根 `AGENTS.md` 的「线框图」规则供后续决定保留还是删除——init 阶段不替用户判断、不删除。
+- **后续确认为无界面的工具/库类**：照根 `AGENTS.md` 的「线框图」规则删除整个 `docs/wireframes/` 并删除该节（这是后续编辑，不在 init 范围内）。
 
 <example>
 用户在一个 Node + TypeScript 仓库里说"初始化"。
 
 流程：
-1. 探测到 `package.json`（scripts: build/test/lint）、`src/` 下有 `auth/`、`orders/`、`payments/` 三个领域目录。
-2. 执行前小结："栈=Node+TS；模块=auth/orders/payments；将生成 AGENTS.md、CLAUDE.md、module-map.md、specs/{auth,orders,payments}/spec.md、changes/、adr/"。
-3. `scripts/probe.sh auth orders payments` → 全部 MISSING。
-4. `scripts/fill.sh --auto auth orders payments`：static 全部写死（各 CLAUDE.md、changes/adr 的 AGENTS.md、_template/、0000 ADR）；repo-fact 铺骨架（根 AGENTS.md、module-map.md、三个 spec.md）。
-5. 填 repo-fact 骨架正文：根 `AGENTS.md` 常用命令抄真实 scripts、禁止事项写入"payments 不得依赖 orders 的内部模块"；`module-map.md` 三个模块各填一节；三个 `spec.md` 据真实代码写业务规则与场景。
+1. 探测到 `package.json`（scripts: build/test/lint）、`src/` 下有 `auth/`、`orders/`、`payments/` 三个领域目录；同时探测到 `app/` 下有 `login/`、`dashboard/` 路由 → 页面 = login/dashboard（没探测到路由就只铺线框图静态骨架、不带 `--pages`）。
+2. 执行前小结："栈=Node+TS；模块=auth/orders/payments；页面=login/dashboard；将生成 AGENTS.md、CLAUDE.md、module-map.md、specs/{auth,orders,payments}/spec.md、changes/、adr/、docs/wireframes/（默认）"。
+3. `scripts/probe.sh auth orders payments --pages login dashboard` → 全部 MISSING。
+4. `scripts/fill.sh --auto auth orders payments --pages login dashboard`：static 全部写死（各 CLAUDE.md、changes/adr 的 AGENTS.md、_template/、0000 ADR、`docs/wireframes/` 静态骨架）；repo-fact 铺骨架（根 AGENTS.md、module-map.md、三个 spec.md、flow.md、两个 page.md）。
+5. 填 repo-fact 骨架正文：根 `AGENTS.md` 常用命令抄真实 scripts、禁止事项写入"payments 不得依赖 orders 的内部模块"、保留脚本写死的「线框图」删除规则；`module-map.md` 三个模块各填一节；三个 `spec.md` 据真实代码写业务规则与场景；两个 `page.md` 按真实路由填字符图；`flow.md` 按登录流程等用户流程画页面流转。
 6. 输出清单，标注 payments 的计费规则为 `TODO: 需人工确认`（代码未明确）。
 </example>
 
