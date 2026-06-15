@@ -16,7 +16,7 @@
 
 只按 validator 真实规则判断:
 
-- `SKILL.md` frontmatter 有 `name`, `description`, `version`, `author`, `updated_at`, `origin` 六项且非空.
+- `SKILL.md` frontmatter 必填字段按 path 分流: external-skills 只需 `name` / `description` / `origin` 三项非空; own-skills / meta-skills 再加 `version` / `author` / `updated_at` 共六项 (以 `scripts/validate-frontmatter.mjs` 为准).
 - `description <= 1024`.
 - 如果存在 `cases/`: 不写 legacy `cases/<author>.md`; 数字目录不能 leading zero; 每个数字目录必须有非空 `input/` 和 `input/PROMPT.md`; `cases/` 下不能有异常条目.
 - `.mjs/.js/.ts/.sh/.py` 里不能出现 `eval` / `Function`.
