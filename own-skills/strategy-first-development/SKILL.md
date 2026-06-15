@@ -2,9 +2,9 @@
 name: strategy-first-development
 description: >
   复杂开发前的战略/产品形态/技术选型门禁。Always trigger for: 多页面 web app、AI 产品、前后端系统、provider/deployment 选择、架构升级、复杂 MVP 或用户需求模糊但准备开发的任务。Also trigger for: 用户要求先定战略目标、项目形态、产品形态、预期体验/截图、GitHub 成熟项目、技术栈、模块、工作流程, 或要求避免重复造轮子。Do NOT trigger when: 创建/更新/审查 skill 的元任务、单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review、仅安装/部署已有项目且无需重选产品技术路线。
-version: 0.1.0
+version: 0.1.2
 author: griffithkk3-del
-updated_at: 2026-06-12
+updated_at: 2026-06-15
 origin: own
 ---
 
@@ -52,6 +52,8 @@ If the user explicitly asks to implement immediately, still do a compressed vers
 - MUST define verification before editing and report verification results before handoff.
 - NEVER claim completion from code edits alone.
 
+CREATE A TODO LIST FOR THE TASKS BELOW before running this workflow. Use `update_plan` when available; otherwise keep a visible checklist in the reply. Update the plan after each gate with `pending`, `in_progress`, `completed`, or `blocked`.
+
 ## Steps
 
 ### 1. Strategy Conversation Gate
@@ -86,10 +88,12 @@ Use any of these depending on context:
 
 - ask the user for reference screenshots, design links, examples, or competitor pages;
 - generate 2-3 textual UI options for the user to choose from;
-- if building frontend and no reference exists, create a lightweight expected page/mockup first and ask the user to choose direction;
+- if building frontend and no reference exists, produce a lightweight expected page sketch, textual wireframe, or explicitly non-production mockup artifact first and ask the user to choose direction;
 - for non-visual products, produce an expected CLI transcript, API contract, workflow diagram, or sample output.
 
 Do not treat a screenshot as decoration. Extract concrete requirements from it: layout density, navigation, controls, information hierarchy, states, data shape, and visual tone.
+
+CRITICAL: Experience artifacts created before the Implementation Gate MUST NOT modify production app code, install dependencies, scaffold a repo, or change deployment files. If a temporary file-based mockup is useful, mark it as non-production and keep it separate from the app runtime until the user accepts the direction.
 
 ### 4. Mature Project Search
 
@@ -194,7 +198,16 @@ The plan MUST be visible in `update_plan` or in a checklist before implementatio
 
 If the task is urgent, make this plan concise, but do not skip it.
 
-### 9. Verification And Handoff
+### 9. Failure Paths And Stop Conditions
+
+- If the request is trivial, already scoped, or only asks for skill creation/review, route away from this skill and say which workflow applies.
+- If the product idea is too blurry to choose a shape, stop before coding and ask one focused question or offer 2-3 concrete options.
+- If an existing repo cannot be read, stop before architecture claims and report the missing path or access problem.
+- If network is unavailable, mark mature-project search incomplete, use local evidence, and do not present the stack choice as fully validated.
+- If no mature candidate fits, state the searched terms/sources and define the smallest custom surface needed.
+- If the implementation crosses too many layers for one safe pass, split by user workflow and finish the current phase with verification.
+
+### 10. Verification And Handoff
 
 Do not call the work done after code edits alone.
 
@@ -223,7 +236,7 @@ Stop and reset if the agent is about to:
 - add provider/API integrations without reading current docs or local config;
 - mix unrelated refactors with product work;
 - ignore deployment/runtime requirements until the end;
-- claim completion without running checks.
+- claim completion without running checks;
 - treat "I know a stack" as a substitute for mature-project search;
 - let multiple agents independently choose incompatible stacks or edit overlapping surfaces.
 
@@ -313,7 +326,7 @@ Why bad: it skips target user/strategy, expected experience, admissions data sou
 - [write-spec](../write-spec/SKILL.md) — 生成 PRD/feature spec; **本 skill 区别**: 覆盖从战略对齐、参考体验、GitHub 成熟方案调研到技术栈和架构选择的开发前置流程。
 - [project-scoring](../project-scoring/SKILL.md) — 评估 AI workflow 是否值得投入; **本 skill 区别**: 项目已决定推进时，用来约束 agent 如何选形态、选框架、选实现路径。
 - architecture-hygiene — 审计和清理现有架构漂移; **本 skill 区别**: 在开发前防止方向和架构漂移，而不是事后清理。
-- skill-create-workflow / skill-domain-framing / skill-content-fit — 创建或框定 skill; **本 skill 区别**: 不处理 skill 元任务, 只处理复杂开发前的战略/产品/技术门禁。
+- [skill-create-workflow](../skill-create-workflow/SKILL.md) / [skill-domain-framing](../skill-domain-framing/SKILL.md) / [skill-content-fit](../skill-content-fit/SKILL.md) — 创建或框定 skill; **本 skill 区别**: 不处理 skill 元任务, 只处理复杂开发前的战略/产品/技术门禁。
 
 ### 外部世界
 - OpenSpec — 用规范变更管理复杂项目; **本 skill 区别**: 更偏产品/技术选型前置决策，可在进入 OpenSpec 前使用。
@@ -327,16 +340,16 @@ Why bad: it skips target user/strategy, expected experience, admissions data sou
 ## 使用技巧
 
 ### 材料方案
-- 最好给 1-3 张参考截图、竞品链接或期望页面描述。
-- 如果没有截图, 让 agent 先生成 2-3 个预期页面方向供选择。
-- 对工程项目, 同时给目标仓库、部署环境、预算和不可接受的依赖。
+- 带参考截图、竞品链接或页面描述。
+- 无截图时先产出 2-3 个页面方向。
+- 补目标仓库、部署、预算和依赖边界。
 
 ### 推荐用法
-- 第一次交流只要求 agent 给战略选项和产品形态, 不要马上写代码。
-- 技术栈选择前要求 agent 搜 GitHub 成熟项目和官方文档。
-- 进入实现前要求输出验证矩阵, 并把部署检查列进去。
+- 首轮只定战略选项和产品形态。
+- 定栈前先查 GitHub 与官方文档。
+- 实现前输出验证矩阵和部署检查。
 
 ### 已知限制
-- 不适合一行命令、小修文案、纯翻译等低风险任务。
-- GitHub 调研质量依赖网络和可访问仓库, 私有领域仍需用户补充资料。
-- 该 skill 不能替代用户的最终战略判断, 它负责把判断显性化。
+- 不适合一行命令、小文案、翻译。
+- 私有领域需用户补充资料。
+- 不替代用户最终战略判断。
