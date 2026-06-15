@@ -13,7 +13,15 @@
 #
 # repo-fact 类即便为空也只铺「小节标题 + TODO: 需人工确认」骨架；
 # 真实命令/模块/业务规则脚本造不出来，正文仍归 AI 填。
+#
+# 线框图（字符图）静态骨架默认随基线一起铺（与 adr/、changes/ 同级），不做 UI 判定。
+# 页面文件按真实路由用 --pages <页...> 追加。是否保留 docs/wireframes/ 由仓库根
+# AGENTS.md 的「线框图」规则决定——无界面的工具/库类项目后续按该规则删除。
+# 静态线框图内容存放在 ../assets/wireframes/，由本脚本 cat 过去（不内嵌 heredoc）。
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ASSETS_DIR="$SCRIPT_DIR/../assets/wireframes"
 
 # ---- 目标清单（唯一事实源）-------------------------------------------------
 
@@ -35,11 +43,34 @@ REPO_FACT_TARGETS=(
   "docs/architecture/module-map.md"
 )
 
+# 线框图静态资产（默认随基线一起铺，无门控）
+WIREFRAME_STATIC_TARGETS=(
+  "docs/wireframes/CLAUDE.md"
+  "docs/wireframes/AGENTS.md"
+  "docs/wireframes/legend.md"
+  "docs/wireframes/_template/page.md"
+)
+
+# 线框图 repo-fact（默认铺骨架，正文由 AI 填；flow.md 是项目级页面流转图）
+WIREFRAME_REPO_FACT_TARGETS=(
+  "docs/wireframes/flow.md"
+)
+
 do_list() {
-  local t d
+  local t d p arg mode=domains
+  local -a domains=() pages=()
+  for arg in "$@"; do
+    case "$arg" in
+      --pages) mode=pages ;;
+      *) if [ "$mode" = pages ]; then pages+=("$arg"); else domains+=("$arg"); fi ;;
+    esac
+  done
   for t in "${STATIC_TARGETS[@]}"; do printf '%s\t%s\n' "$t" static; done
+  for t in "${WIREFRAME_STATIC_TARGETS[@]}"; do printf '%s\t%s\n' "$t" static; done
   for t in "${REPO_FACT_TARGETS[@]}"; do printf '%s\t%s\n' "$t" repo-fact; done
-  for d in "$@"; do printf '%s\t%s\n' "openspec/specs/$d/spec.md" repo-fact; done
+  for t in "${WIREFRAME_REPO_FACT_TARGETS[@]}"; do printf '%s\t%s\n' "$t" repo-fact; done
+  for d in ${domains[@]+"${domains[@]}"}; do printf '%s\t%s\n' "openspec/specs/$d/spec.md" repo-fact; done
+  for p in ${pages[@]+"${pages[@]}"}; do printf '%s\t%s\n' "docs/wireframes/pages/$p.md" repo-fact; done
 }
 
 # ---- 状态判定（与 probe.sh 保持一致）--------------------------------------
@@ -218,6 +249,11 @@ TODO: 需人工确认
 
 ## 禁止事项
 TODO: 需人工确认
+
+## 线框图
+本项目默认生成 `docs/wireframes/`（字符图线框，用于对齐页面信息架构与版式）。是否保留按下面规则判断：
+- 若本项目确定为**无界面**的工具 / 库 / CLI / SDK 类（如纯 npm 工具包），删除整个 `docs/wireframes/` 目录，并删除本节。
+- 若有界面，按 `docs/wireframes/AGENTS.md` 的约定，为每个真实路由在 `docs/wireframes/pages/` 下补一页。
 EOF
       ;;
 
@@ -235,6 +271,35 @@ EOF
 - 下游：TODO: 需人工确认
 - 禁止依赖：TODO: 需人工确认
 EOF
+      ;;
+
+    "docs/wireframes/CLAUDE.md")
+      write_if_needed "$target" < "$ASSETS_DIR/CLAUDE.md"
+      ;;
+
+    "docs/wireframes/AGENTS.md")
+      write_if_needed "$target" < "$ASSETS_DIR/AGENTS.md"
+      ;;
+
+    "docs/wireframes/legend.md")
+      write_if_needed "$target" < "$ASSETS_DIR/legend.md"
+      ;;
+
+    "docs/wireframes/_template/page.md")
+      write_if_needed "$target" < "$ASSETS_DIR/_template/page.md"
+      ;;
+
+    "docs/wireframes/flow.md")
+      # repo-fact 骨架：流转图说明 + 一个流程示例 + TODO 步骤表，正文由 AI 按真实流程填。
+      write_if_needed "$target" < "$ASSETS_DIR/flow.md"
+      ;;
+
+    docs/wireframes/pages/*.md)
+      # repo-fact 骨架：复制页面模板，仅替换页面名占位符，正文/注释由 AI 填。
+      local page body
+      page="$(basename "$target" .md)"
+      body="$(cat "$ASSETS_DIR/_template/page.md")"
+      printf '%s\n' "${body//<页面名>/$page}" | write_if_needed "$target"
       ;;
 
     openspec/specs/*/spec.md)
