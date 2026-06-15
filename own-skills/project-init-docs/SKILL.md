@@ -12,9 +12,9 @@ description: >
   任何目录级"怎么在这工作"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。
   不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、
   只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。
-version: 0.1.0
+version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-06-12
+updated_at: 2026-06-15
 origin: own
 ---
 
@@ -39,13 +39,18 @@ origin: own
 - 编写业务代码或修 bug。
 - 对某个已存在文件做局部小修改——那是普通编辑，不是初始化。
 
-## 引用文件
+## 脚本与引用文件
 
-每个产物的小节契约、模板与幂等规则放在本技能目录的 `references/` 下，是契约的逐字组成部分：
+确定性骨架由脚本铺设，AI 只填真实仓库事实。脚本在仓库根运行：
 
-- `references/file-templates.md`：六类产物的文件契约（小节标题、来源约束）、目录级 AGENTS.md + CLAUDE.md 规则、openspec 变更工作流模板、ADR 模板、幂等与不覆盖规则。
+- `scripts/probe.sh [domain...]`：只读探针，扫描全部基线目标，输出路由表 `状态<TAB>路径<TAB>类别`（状态 = MISSING/EMPTY/PRESENT，类别 = static/repo-fact）。不写盘。
+- `scripts/fill.sh`：基线产物的唯一事实源。`--list` 列目标清单；`--auto [domain...]` 对所有缺失/为空目标自动填充；`<target>` 只填单个目标。已存在且非空的目标一律 SKIP，绝不覆盖。
 
-生成任何文件前必须先读 `references/file-templates.md`，按其中的小节契约填充真实内容。
+产物分两类：
+- **static（纯静态）**：所有 `CLAUDE.md` 指针、`openspec/changes/AGENTS.md` + `_template/`、`docs/adr/AGENTS.md` + `0000-record-architecture-decisions.md`。内容与仓库无关，缺失/为空时由 `fill.sh` 写死，AI 不手敲。
+- **repo-fact（真实事实）**：根 `AGENTS.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`。缺失/为空时 `fill.sh` 只铺「小节标题 + `TODO: 需人工确认`」骨架，真实命令/模块/业务规则仍由 AI 填正文。
+
+小节契约放在 `references/file-templates.md`，是契约的逐字组成部分。填 repo-fact 正文前必须先读它。static 文件全文以 `scripts/fill.sh` 为准，不在别处另存。
 
 ## 工作流
 
@@ -64,34 +69,29 @@ origin: own
    - 业务域过多：当探测到的业务域超过 8 个时，MUST 先向用户列出业务域清单并请其确认范围，再生成 `spec.md`，绝不静默批量写入。
    - 若任何已存在文件会被触及，先读它并向用户说明，确认后再处理。
 
-3. **生成根 AGENTS.md + CLAUDE.md**
-   - `AGENTS.md`：按 `references/file-templates.md` 的根操作手册小节契约，填入真实结构、命令、规范、修改前后检查项、禁止事项。
-   - `CLAUDE.md`：仅一行 `See [AGENTS.md](AGENTS.md) for project overview and contribution guidelines.`
+3. **跑探针，拿路由表**
+   - `scripts/probe.sh <探测到的业务域...>`，得到每个目标的 `状态 × 类别`。后续按表分流，不再凭记忆判断哪些文件该建。
 
-4. **生成 docs/architecture/module-map.md**
-   - 为每个真实模块写一节：职责边界、入口、上游、下游、禁止依赖。
+4. **按路由表分流填充**
+   - `static + MISSING/EMPTY` → `scripts/fill.sh <path>` 直接写死，AI 不碰。
+   - `repo-fact + MISSING/EMPTY` → `scripts/fill.sh <path>` 铺骨架（小节标题 + TODO），正文留到第 5 步。
+   - `* + PRESENT` → 不动文件，登记进第 6 步的「需人工/AI 核对」清单（读现有 → 只补缺失小节 / 报差异 → 覆盖前确认）。
+   - 便捷：缺失/为空的目标可一次 `scripts/fill.sh --auto <业务域...>` 全部铺好（PRESENT 自动 SKIP，幂等安全）。
 
-5. **生成 openspec/specs/**
-   - 为每个探测到的真实业务域建 `openspec/specs/<domain>/spec.md`：域定位、业务规则、场景、可验证行为。
-   - 探测不到清晰业务域时，建一个起步 `spec.md` 并把规则标注 `TODO: 需人工确认`，不硬造业务。
+5. **填 repo-fact 骨架的正文**
+   - 先读 `references/file-templates.md` 的小节契约。
+   - 根 `AGENTS.md`：把「项目概览/项目结构/常用命令/编码规范/禁止事项」的 `TODO` 替换成真实事实（修改前后检查两节脚本已写死，保留）。
+   - `docs/architecture/module-map.md`：按真实模块复制扩展骨架那一节，逐个填职责边界/入口/上游/下游/禁止依赖。
+   - `openspec/specs/<domain>/spec.md`：填域定位、可验证的业务规则、场景、可验证行为；探测不到的保留 `TODO: 需人工确认`，不硬造。
 
-6. **生成 openspec/changes/**
-   - `openspec/changes/AGENTS.md`：说明变更工作流（一次变更一个 `<change-id>/` 目录，含 proposal/design/tasks/spec delta，先设计再实现，最后把 delta 合并回 specs）。
-   - `openspec/changes/CLAUDE.md`：一行指针。
-   - `openspec/changes/_template/`：proposal.md / design.md / tasks.md / spec-delta/ 的空模板，供后续变更复制。
-
-7. **生成 docs/adr/**
-   - `docs/adr/AGENTS.md`：说明 ADR 规范（命名 `NNNN-title.md`，每条含背景/决策/状态/后果）。
-   - `docs/adr/CLAUDE.md`：一行指针。
-   - `docs/adr/0000-record-architecture-decisions.md`：首条 ADR / 模板。
-
-8. **幂等校验与产出清单**
-   - 核对验收标准，输出生成/跳过/标注 TODO 的文件清单。
+6. **核对 PRESENT 文件 + 幂等校验 + 产出清单**
+   - 对第 4 步登记的 PRESENT 文件：读现有内容，只补缺失小节或报差异，覆盖前经用户确认。
+   - 核对验收标准，输出 WROTE / SKIP / 待 AI 填正文 / 标注 TODO 的文件清单。
 
 ## 验收标准
 
 - `AGENTS.md`、`CLAUDE.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`、`openspec/changes/`、`docs/adr/` 全部就位。
-- 各文件的小节标题与 `references/file-templates.md` 的约定标题逐字一致；除标注 `TODO: 需人工确认` 处外，正文不含占位符（如 `<xxx>`、`npm run <command>`）。
+- 各文件的小节标题与 `references/file-templates.md` 的约定标题逐字一致；repo-fact 文件填完正文后，除标注 `TODO: 需人工确认` 处外不含占位符（如 `<xxx>`、`npm run <command>`）。static 模板（`_template/`、骨架里的 `<change-id>` / `<项目名>` 等）的占位符是设计如此，不在此限。
 - 每个 `CLAUDE.md` 只含指向同目录 `AGENTS.md` 的一行。
 - 目录级说明文件都是 `AGENTS.md` + `CLAUDE.md`，无 README 充当目录指南。
 - 已存在文件未被破坏性覆盖；无法填充处显式标注 `TODO`，无编造命令/依赖。
@@ -109,12 +109,10 @@ origin: own
 流程：
 1. 探测到 `package.json`（scripts: build/test/lint）、`src/` 下有 `auth/`、`orders/`、`payments/` 三个领域目录。
 2. 执行前小结："栈=Node+TS；模块=auth/orders/payments；将生成 AGENTS.md、CLAUDE.md、module-map.md、specs/{auth,orders,payments}/spec.md、changes/、adr/"。
-3. 根 `AGENTS.md` 的常用命令直接抄真实 scripts；禁止事项写入"payments 不得依赖 orders 的内部模块"等真实约束。
-4. `module-map.md` 为三个真实模块各写一节。
-5. `openspec/specs/auth/spec.md` 等据真实代码写业务规则与场景。
-6. `openspec/changes/AGENTS.md` + `CLAUDE.md` + `_template/`。
-7. `docs/adr/AGENTS.md` + `CLAUDE.md` + `0000-record-architecture-decisions.md`。
-8. 输出清单，标注 payments 的计费规则为 `TODO: 需人工确认`（代码未明确）。
+3. `scripts/probe.sh auth orders payments` → 全部 MISSING。
+4. `scripts/fill.sh --auto auth orders payments`：static 全部写死（各 CLAUDE.md、changes/adr 的 AGENTS.md、_template/、0000 ADR）；repo-fact 铺骨架（根 AGENTS.md、module-map.md、三个 spec.md）。
+5. 填 repo-fact 骨架正文：根 `AGENTS.md` 常用命令抄真实 scripts、禁止事项写入"payments 不得依赖 orders 的内部模块"；`module-map.md` 三个模块各填一节；三个 `spec.md` 据真实代码写业务规则与场景。
+6. 输出清单，标注 payments 的计费规则为 `TODO: 需人工确认`（代码未明确）。
 </example>
 
 <bad-example>
