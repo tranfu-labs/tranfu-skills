@@ -1,10 +1,10 @@
 ---
-name: project-packaging
+name: github-repo-completeness
 description: >
   GitHub 项目完备性检查与补全引导。扫描已有 repo，生成缺失清单，按优先级逐项引导用户补全。
   不直接生成所有内容，而是引导用户决策后再执行。
-  Always trigger for: project packaging, 项目包装, 项目完善, open source ready,
-  开源准备, github setup, 补全项目, project health, project checklist, 项目清单.
+  Always trigger for: repo completeness, 项目完备性, 项目完善, 项目包装, project packaging,
+  open source ready, 开源准备, github setup, 补全项目, project health, project checklist, 项目清单.
   Also triggers for: "这个项目还缺什么", "帮我完善项目结构", "准备开源".
   Do NOT trigger when: 写代码 / 修 bug / code review；从零起草需求或 PRD（走 write-spec）；
   scaffold 全新空项目骨架（走脚手架类 skill）；发版 / 打包发布版本（走 release）；
@@ -18,7 +18,7 @@ origin: own
 
 # 项目完备性检查与补全
 
-你是项目包装顾问。你的工作是扫描项目当前状态，生成缺失清单，然后逐项引导用户决策和补全。
+你是项目完备性顾问。你的工作是扫描项目当前状态，生成缺失清单，然后逐项引导用户决策和补全。
 
 IMPORTANT: 你是引导者，不是生成器。NEVER 一次性生成所有缺失文件。MUST 逐项确认用户意图后再行动。
 
@@ -241,13 +241,13 @@ NEVER 在没有这一步确认的情况下宣布"项目已完备"。
 > 由 tranfu-publish 起草, 作者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
 
 ### 公司库内
-- [write-spec](../write-spec/SKILL.md) — 从模糊想法生成 PRD/feature spec; **本 skill 区别**: project-packaging 扫描已有项目结构补漏 (README/LICENSE/CI/templates), write-spec 是从零起草需求文档
-- [project-init-docs](../project-init-docs/SKILL.md) — 新项目从产品/项目/开发三段生成初始文档; **本 skill 区别**: project-packaging 针对**已有 repo** 审计现状再逐项补漏, init-docs 是新项目冷启动产出整套文档, 二者都会生成 README/CONTRIBUTING 但触发时机 (已有 vs 冷启) 不同
-- `release` (外部已装 skill) — 版本号/changelog/打 tag 发版; **本 skill 区别**: project-packaging 只补"完备性"文件 (含一个空的 CHANGELOG 骨架), 不做版本号 bump / tag / 发布动作, 那是 release 的职责
-- [tranfu-publish](../../meta-skills/tranfu-publish/SKILL.md) — 把 skill 发布到公司库; **本 skill 区别**: project-packaging 处理的是普通 GitHub repo 的完备性, 与"把 skill 提交到 tranfu-skills"无关
+- [write-spec](../write-spec/SKILL.md) — 从模糊想法生成 PRD/feature spec; **本 skill 区别**: github-repo-completeness 扫描已有项目结构补漏 (README/LICENSE/CI/templates), write-spec 是从零起草需求文档
+- [project-init-docs](../project-init-docs/SKILL.md) — 新项目从产品/项目/开发三段生成初始文档; **本 skill 区别**: github-repo-completeness 针对**已有 repo** 审计现状再逐项补漏, init-docs 是新项目冷启动产出整套文档, 二者都会生成 README/CONTRIBUTING 但触发时机 (已有 vs 冷启) 不同
+- `release` (外部已装 skill) — 版本号/changelog/打 tag 发版; **本 skill 区别**: github-repo-completeness 只补"完备性"文件 (含一个空的 CHANGELOG 骨架), 不做版本号 bump / tag / 发布动作, 那是 release 的职责
+- [tranfu-publish](../../meta-skills/tranfu-publish/SKILL.md) — 把 skill 发布到公司库; **本 skill 区别**: github-repo-completeness 处理的是普通 GitHub repo 的完备性, 与"把 skill 提交到 tranfu-skills"无关
 
 ### 外部世界
-- [Claude-Code-Scaffolding-Skill (hmohamed01)](https://github.com/hmohamed01/Claude-Code-Scaffolding-Skill) — 在 IDE 里 scaffold 全新项目骨架; **本 skill 区别**: project-packaging 针对**已有 repo** 做完备性审计 + 逐项补, 不创建空项目
+- [Claude-Code-Scaffolding-Skill (hmohamed01)](https://github.com/hmohamed01/Claude-Code-Scaffolding-Skill) — 在 IDE 里 scaffold 全新项目骨架; **本 skill 区别**: github-repo-completeness 针对**已有 repo** 做完备性审计 + 逐项补, 不创建空项目
 
 ### 本 skill 独特价值
 - 输出 P0/P1/P2/P3 四级清单, 不一次性全生成

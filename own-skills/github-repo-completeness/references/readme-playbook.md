@@ -1,6 +1,6 @@
 # README playbook
 
-> project-packaging skill 在 README 状态为 **MISSING / WEAK** 时引用本文件作为写作 / 优化规范.
+> github-repo-completeness skill 在 README 状态为 **MISSING / WEAK** 时引用本文件作为写作 / 优化规范.
 > 沉淀来源: tranfu-skills PR #89 的措辞清理 + 首句重写实操.
 
 ---
