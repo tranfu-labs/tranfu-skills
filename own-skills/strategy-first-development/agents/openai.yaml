@@ -1,0 +1,6 @@
+interface:
+  display_name: "Strategy First Development"
+  short_description: "Gate builds through strategy, UX, search, and verification."
+  default_prompt: "Use $strategy-first-development before coding a complex product or engineering task: align strategy and product shape, define expected UX, search mature GitHub/framework options, choose the stack, plan architecture, and set verification."
+policy:
+  allow_implicit_invocation: true
