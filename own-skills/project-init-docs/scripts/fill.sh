@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-# fill.sh —— 基线产物的「唯一事实源」与确定性填充器。
+# fill.sh —— 基线产物的「目标清单」与确定性填充器。
 #
-# 它同时承担两件事：
+# 它承担两件事：
 #   1. 定义全部目标文件及其类别（static / repo-fact）—— probe.sh 复用这份清单。
-#   2. 对「缺失或为空」的目标确定性写入固定内容（static）或空骨架（repo-fact）。
+#   2. 对「缺失或为空」的目标，从 ../templates/ 里对应的模板文件拷贝内容写入。
 #      已存在且非空的目标一律跳过，绝不覆盖（守住幂等/不覆盖红线）。
+#
+# 内容的「唯一事实源」是 templates/ 目录：模板树与产物输出路径一一对应，
+# 因此 目标路径 → 模板路径 就是 templates/<target>，本脚本只负责拷贝，不内嵌正文。
+# 唯一例外是 openspec/specs/<domain>/spec.md：路径含动态域名，用占位模板
+# templates/openspec/specs/_domain_/spec.md（含 __DOMAIN__）按域名替换后写入。
 #
 # 用法（在仓库根运行）：
 #   fill.sh --list [domain...]     列出 目标<TAB>类别（不写盘）
@@ -15,7 +20,10 @@
 # 真实命令/模块/业务规则脚本造不出来，正文仍归 AI 填。
 set -euo pipefail
 
-# ---- 目标清单（唯一事实源）-------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TEMPLATE_DIR="$(cd "$SCRIPT_DIR/../templates" && pwd)"
+
+# ---- 目标清单（清单的唯一事实源）------------------------------------------
 
 STATIC_TARGETS=(
   "CLAUDE.md"
@@ -69,199 +77,32 @@ write_if_needed() {
   printf 'WROTE  %s (%s)\n' "$target" "$status"
 }
 
-# ---- 单目标填充 -----------------------------------------------------------
+# ---- 单目标填充：从 templates/ 拷贝对应模板 -------------------------------
 
 fill_one() {
   local target="$1"
   case "$target" in
 
-    "CLAUDE.md")
-      write_if_needed "$target" <<'EOF'
-See [AGENTS.md](AGENTS.md) for project overview and contribution guidelines.
-EOF
-      ;;
-
-    "docs/adr/CLAUDE.md" | "openspec/changes/CLAUDE.md")
-      write_if_needed "$target" <<'EOF'
-See [AGENTS.md](AGENTS.md) for guidelines in this directory.
-EOF
-      ;;
-
-    "docs/adr/AGENTS.md")
-      write_if_needed "$target" <<'EOF'
-# 架构决策记录（ADR）
-
-## ADR 规范
-- 文件命名 `NNNN-title.md`，序号从 0001 递增（0000 为本规范自身）。
-- 一条决策一个文件，不追溯改写已 accepted 的记录；被取代时新建一条并把旧条状态标 superseded。
-
-## 每条 ADR 含
-- 背景（context）：当时面对的问题与约束。
-- 决策（decision）：最终选择了什么。
-- 状态（status）：proposed / accepted / superseded。
-- 后果（consequences）：带来的好处与代价。
-
-## 何时写 ADR
-做出会影响隐含约束的重要技术/架构选择时（依赖方向、数据边界、技术选型等）。
-EOF
-      ;;
-
-    "docs/adr/0000-record-architecture-decisions.md")
-      write_if_needed "$target" <<'EOF'
-# 0000. 采用 ADR 记录架构决策
-
-## 状态
-accepted
-
-## 背景
-项目需要让后续协作者（含 AI）理解关键架构选择的来龙去脉，避免隐含约束在不知情下被破坏。
-
-## 决策
-采用架构决策记录（ADR）。每条决策一个 `docs/adr/NNNN-title.md` 文件，含状态/背景/决策/后果。本文件既是首条决策，也是后续 ADR 的格式样例。
-
-## 后果
-- 重要架构选择有可追溯的书面依据。
-- 新增决策需付出写一条 ADR 的成本，换来约束可见、可审。
-EOF
-      ;;
-
-    "openspec/changes/AGENTS.md")
-      write_if_needed "$target" <<'EOF'
-# 变更工作区（先设计再实现）
-
-## 变更工作流
-一次需求或业务变更，建一个 `openspec/changes/<change-id>/` 目录，先设计再写实现。
-
-## 目录内容
-- `proposal.md`：为什么改、改什么、影响面。
-- `design.md`：怎么实现、方案与权衡。
-- `tasks.md`：可勾选的任务清单。
-- `spec-delta/`：对 `openspec/specs/` 的增删改；先写 delta，实现完成后再合并回 specs。
-
-## 流程
-proposal → design → tasks → 实现 → 把 spec-delta 合并回 `openspec/specs/`。
-
-复制 `_template/` 作为新变更目录的起点。
-EOF
-      ;;
-
-    "openspec/changes/_template/proposal.md")
-      write_if_needed "$target" <<'EOF'
-# 提案：<change-id>
-
-## 背景
-<为什么需要这次变更，当前的问题或缺口>
-
-## 提案
-<打算改什么>
-
-## 影响
-<受影响的模块、业务域、对外行为>
-EOF
-      ;;
-
-    "openspec/changes/_template/design.md")
-      write_if_needed "$target" <<'EOF'
-# 设计：<change-id>
-
-## 方案
-<怎么实现>
-
-## 权衡
-<选这个方案放弃了什么，其他选项为何不选>
-
-## 风险
-<已知风险与回滚思路>
-EOF
-      ;;
-
-    "openspec/changes/_template/tasks.md")
-      write_if_needed "$target" <<'EOF'
-# 任务：<change-id>
-
-- [ ] <第一个可执行任务>
-EOF
-      ;;
-
-    "openspec/changes/_template/spec-delta/.gitkeep")
-      write_if_needed "$target" <<'EOF'
-# 此处放对 openspec/specs/ 的增删改（spec delta）；实现完成后合并回 specs。
-EOF
-      ;;
-
-    "AGENTS.md")
-      # repo-fact 骨架：修改前/后检查是固定步骤，直接写死；其余标 TODO。
-      write_if_needed "$target" <<'EOF'
-# <项目名> · AI 项目操作手册
-
-## 项目概览
-TODO: 需人工确认
-
-## 项目结构
-TODO: 需人工确认
-
-## 常用命令
-TODO: 需人工确认
-
-## 编码规范
-TODO: 需人工确认
-
-## 修改前检查
-- 读 `docs/architecture/module-map.md` 确认依赖边界。
-- 读相关 `openspec/specs/<domain>/spec.md`。
-- 确认禁止依赖未被破坏。
-
-## 修改后检查
-- 跑测试 / lint / 构建。
-- 更新受影响的 spec 与 ADR。
-- 必要时在 `openspec/changes/` 记录变更。
-
-## 禁止事项
-TODO: 需人工确认
-EOF
-      ;;
-
-    "docs/architecture/module-map.md")
-      write_if_needed "$target" <<'EOF'
-# 模块地图
-
-> 每个真实模块一节，标题用模块名。脚本只铺骨架，模块内容由分析真实源码后填写。
-> 探测到多个模块时，按下面这一节复制扩展。
-
-### <模块名>
-- 职责边界：TODO: 需人工确认
-- 入口：TODO: 需人工确认
-- 上游：TODO: 需人工确认
-- 下游：TODO: 需人工确认
-- 禁止依赖：TODO: 需人工确认
-EOF
-      ;;
-
     openspec/specs/*/spec.md)
-      local domain body
+      # 动态路径：域名替换后写入。
+      local domain src
       domain="$(basename "$(dirname "$target")")"
-      body="$(cat <<'EOF'
-# __DOMAIN__ 规格
-
-## 域定位
-TODO: 需人工确认
-
-## 业务规则
-- TODO: 需人工确认（每条须可验证，如 `MUST 拒绝金额为负的订单并返回 422`）
-
-## 场景
-TODO: 需人工确认
-
-## 可验证行为
-TODO: 需人工确认
-EOF
-)"
-      printf '%s\n' "${body//__DOMAIN__/$domain}" | write_if_needed "$target"
+      src="$TEMPLATE_DIR/openspec/specs/_domain_/spec.md"
+      if [ ! -f "$src" ]; then
+        printf 'missing template: %s\n' "$src" >&2
+        return 1
+      fi
+      sed "s/__DOMAIN__/$domain/g" "$src" | write_if_needed "$target"
       ;;
 
     *)
-      printf 'unknown target: %s\n' "$target" >&2
-      return 1
+      # 模板树镜像输出树，直接 templates/<target> 拷贝。
+      local src="$TEMPLATE_DIR/$target"
+      if [ ! -f "$src" ]; then
+        printf 'unknown target (no template at %s): %s\n' "$src" "$target" >&2
+        return 1
+      fi
+      write_if_needed "$target" < "$src"
       ;;
   esac
 }

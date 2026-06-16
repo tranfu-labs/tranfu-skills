@@ -1,11 +1,13 @@
-# 文件契约与模板
+# repo-fact 正文填写契约
 
-这些是逐字契约。小节标题固定不翻译；正文用用户语言（默认中文）填真实仓库事实。探测不到的内容标注 `TODO: 需人工确认`，绝不编造。
+本文件是 **repo-fact 类产物填正文时的契约手册**。`templates/` 只铺「小节标题 + `TODO: 需人工确认`」骨架，本文件规定每个小节该填什么真实仓库事实。填 repo-fact 正文前必须先读它。
+
+小节标题固定不翻译；正文用用户语言（默认中文）填真实仓库事实。探测不到的内容标注 `TODO: 需人工确认`，绝不编造。
 
 产物分两类，决定谁来填：
 
-- **static（纯静态）**：内容与仓库无关，全文以 `scripts/fill.sh` 为唯一事实源；缺失/为空时脚本写死，AI 不手敲、不在此另存第二份。下文标 **【static · fill.sh】**。
-- **repo-fact（真实事实）**：缺失/为空时脚本只铺「小节标题 + `TODO: 需人工确认`」骨架，正文由 AI 按本文件的小节契约填真实仓库事实。下文标 **【repo-fact · AI 填正文】**。
+- **static（纯静态）**：内容与仓库无关，全文以 `templates/<对应路径>` 为唯一事实源（模板树与产物输出路径一一对应）；缺失/为空时 `scripts/fill.sh` 把模板拷到位，AI 不手敲、不在此另存第二份。**本文件不重述其内容**，清单见末尾。
+- **repo-fact（真实事实）**：缺失/为空时 `scripts/fill.sh` 从 `templates/` 拷一份骨架，正文由 AI 按本文件下面的小节契约填真实仓库事实。
 
 填法路由由 `scripts/probe.sh` 的 `状态 × 类别` 决定（见 SKILL.md 工作流）。
 
@@ -16,16 +18,7 @@
 任何需要解释"怎么在这个目录工作"的地方，都生成两份文件，绝不用 README：
 
 - `AGENTS.md`：真实操作内容。
-- `CLAUDE.md`：仅一行，路径相对该目录：
-  ```
-  See [AGENTS.md](AGENTS.md) for guidelines in this directory.
-  ```
-
-根目录的 `CLAUDE.md` 用项目级措辞：
-
-```
-See [AGENTS.md](AGENTS.md) for project overview and contribution guidelines.
-```
+- `CLAUDE.md`：仅一行指针，路径相对该目录（全文见 `templates/`）。
 
 `module-map.md`、`spec.md`、ADR 文件是具名契约产物，保留专用名，不被 `AGENTS.md` 取代。
 
@@ -37,9 +30,9 @@ See [AGENTS.md](AGENTS.md) for project overview and contribution guidelines.
 
 ---
 
-## 1. 根 AGENTS.md 【repo-fact · AI 填正文】
+## 1. 根 AGENTS.md
 
-AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / `修改后检查` 两节脚本已写死真实步骤，保留），其余小节正文按契约填真实事实。小节契约：
+AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / `修改后检查` 两节模板已写死真实步骤，保留），其余小节正文按契约填真实事实。小节契约：
 
 - `## 项目概览`：一句话定位 + 技术栈（来自真实依赖/配置）。
 - `## 项目结构`：关键目录树，每个目录一行职责说明（来自真实目录）。
@@ -49,11 +42,7 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 - `## 修改后检查`：跑测试 / lint / 构建；更新受影响的 spec 与 ADR；必要时在 `openspec/changes/` 记录变更。
 - `## 禁止事项`：禁止依赖关系、禁止改动的目录、禁止提交的内容（密钥、生成物等），来自真实约束。
 
-## 2. CLAUDE.md（根 + 各目录）【static · fill.sh】
-
-见上"目录级说明"规则。仅一行指针，路径相对所在目录。全文以 `scripts/fill.sh` 为准。
-
-## 3. docs/architecture/module-map.md 【repo-fact · AI 填正文】
+## 2. docs/architecture/module-map.md
 
 系统模块地图。脚本铺好单节骨架，按真实模块复制扩展。模块来自真实顶层源码目录/包。每个模块一节，标题用模块名：
 
@@ -64,7 +53,7 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
   - `下游`：它依赖谁。
   - `禁止依赖`：明确不能依赖谁（防止隐含约束被破坏）。
 
-## 4. openspec/specs/<domain>/spec.md 【repo-fact · AI 填正文】
+## 3. openspec/specs/<domain>/spec.md
 
 某业务域的当前事实规格。脚本按传入的业务域铺骨架（标题替换为域名），正文由 AI 填。`<domain>` 来自真实业务域。小节契约：
 
@@ -80,47 +69,14 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 - 不可验证（绝不这样写）：`系统应该友好地处理用户输入`、`订单处理要尽量快`。
 - 可验证（应这样写）：`MUST 拒绝金额为负的订单并返回 422`、`MUST 在支付成功后 5 秒内将订单状态置为 paid`。
 
-## 5. openspec/changes/ 【static · fill.sh】
+---
 
-变更工作区——先设计再实现。本节全部文件全文以 `scripts/fill.sh` 为准；下方小节说明仅供理解结构。
+## static 文件清单（内容见 templates/，本文件不重述）
 
-### openspec/changes/AGENTS.md
+下列产物全文以 `templates/` 对应路径为唯一事实源，`scripts/fill.sh` 负责拷贝，AI 不手敲、不在此另存第二份：
 
-- `## 变更工作流`：一次需求/业务变更建一个 `openspec/changes/<change-id>/` 目录。
-- `## 目录内容`：
-  - `proposal.md`：为什么改、改什么、影响面。
-  - `design.md`：怎么实现、方案与权衡。
-  - `tasks.md`：可勾选的任务清单。
-  - `spec-delta/`：对 `openspec/specs/` 的增删改（先写 delta，实现后再合并回 specs）。
-- `## 流程`：proposal → design → tasks → 实现 → 把 spec-delta 合并回 `openspec/specs/`。
+- 各 `CLAUDE.md`（根 + `docs/adr/` + `openspec/changes/`）：一行指针，路径相对所在目录。
+- `openspec/changes/AGENTS.md` + `_template/`（`proposal.md` / `design.md` / `tasks.md` / `spec-delta/.gitkeep`）：变更工作区——先设计再实现。
+- `docs/adr/AGENTS.md` + `0000-record-architecture-decisions.md`：架构决策记录规范与首条 ADR 样例。
 
-### openspec/changes/CLAUDE.md
-
-一行指针（见通用规则）。
-
-### openspec/changes/_template/
-
-供后续变更复制的空模板：
-
-- `proposal.md`：含 `## 背景` / `## 提案` / `## 影响` 小节。
-- `design.md`：含 `## 方案` / `## 权衡` / `## 风险` 小节。
-- `tasks.md`：含一个 `- [ ]` 任务示例。
-- `spec-delta/.gitkeep`：占位，说明此处放对 specs 的增删改。
-
-## 6. docs/adr/ 【static · fill.sh】
-
-架构决策记录。本节全部文件全文以 `scripts/fill.sh` 为准；下方小节说明仅供理解结构。
-
-### docs/adr/AGENTS.md
-
-- `## ADR 规范`：命名 `NNNN-title.md`，序号递增。
-- `## 每条 ADR 含`：背景（context）、决策（decision）、状态（status：proposed/accepted/superseded）、后果（consequences）。
-- `## 何时写 ADR`：做出会影响隐含约束的重要技术/架构选择时。
-
-### docs/adr/CLAUDE.md
-
-一行指针（见通用规则）。
-
-### docs/adr/0000-record-architecture-decisions.md
-
-首条 ADR，记录"本项目采用 ADR 记录架构决策"这一决策本身，并作为后续 ADR 的格式样例。小节：`## 状态` / `## 背景` / `## 决策` / `## 后果`。
+要改这些 static 文件的内容，直接改 `templates/` 下对应文件，不要在本文件里复述结构（避免两处漂移）。

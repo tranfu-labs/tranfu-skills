@@ -12,9 +12,9 @@ description: >
   任何目录级"怎么在这工作"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。
   不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、
   只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。
-version: 0.2.0
+version: 0.3.0
 author: aquarius-wing
-updated_at: 2026-06-15
+updated_at: 2026-06-16
 origin: own
 ---
 
@@ -44,13 +44,14 @@ origin: own
 确定性骨架由脚本铺设，AI 只填真实仓库事实。脚本在仓库根运行：
 
 - `scripts/probe.sh [domain...]`：只读探针，扫描全部基线目标，输出路由表 `状态<TAB>路径<TAB>类别`（状态 = MISSING/EMPTY/PRESENT，类别 = static/repo-fact）。不写盘。
-- `scripts/fill.sh`：基线产物的唯一事实源。`--list` 列目标清单；`--auto [domain...]` 对所有缺失/为空目标自动填充；`<target>` 只填单个目标。已存在且非空的目标一律 SKIP，绝不覆盖。
+- `scripts/fill.sh`：目标清单的事实源 + 确定性填充器。内容本身放在 `templates/`（模板树与产物输出路径一一对应），脚本只负责把缺失/为空目标对应的模板拷到位。`--list` 列目标清单；`--auto [domain...]` 对所有缺失/为空目标自动填充；`<target>` 只填单个目标。已存在且非空的目标一律 SKIP，绝不覆盖。
+- `templates/`：全部基线产物的内容事实源。static 文件逐字拷贝；repo-fact 文件是「小节标题 + TODO」骨架；`openspec/specs/_domain_/spec.md` 是按业务域名替换 `__DOMAIN__` 的占位模板。
 
 产物分两类：
-- **static（纯静态）**：所有 `CLAUDE.md` 指针、`openspec/changes/AGENTS.md` + `_template/`、`docs/adr/AGENTS.md` + `0000-record-architecture-decisions.md`。内容与仓库无关，缺失/为空时由 `fill.sh` 写死，AI 不手敲。
+- **static（纯静态）**：所有 `CLAUDE.md` 指针、`openspec/changes/AGENTS.md` + `_template/`、`docs/adr/AGENTS.md` + `0000-record-architecture-decisions.md`。内容与仓库无关，缺失/为空时由 `fill.sh` 写死，AI 不手敲。其中 `_template/design.md` 默认带 `## 线框图` 节：每次复制 `_template/` 起新变更，方案自带线框图引导——涉及界面的变更先用字符图画页面/交互，纯后端/接口变更填 `N/A`，从源头保证方案不漏线框图。
 - **repo-fact（真实事实）**：根 `AGENTS.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`。缺失/为空时 `fill.sh` 只铺「小节标题 + `TODO: 需人工确认`」骨架，真实命令/模块/业务规则仍由 AI 填正文。
 
-小节契约放在 `references/file-templates.md`，是契约的逐字组成部分。填 repo-fact 正文前必须先读它。static 文件全文以 `scripts/fill.sh` 为准，不在别处另存。
+小节契约放在 `references/file-templates.md`，是契约的逐字组成部分。填 repo-fact 正文前必须先读它。static 文件全文以 `templates/` 对应文件为准（`fill.sh` 负责拷贝），不在别处另存。
 
 ## 工作流
 
@@ -93,6 +94,7 @@ origin: own
 - `AGENTS.md`、`CLAUDE.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`、`openspec/changes/`、`docs/adr/` 全部就位。
 - 各文件的小节标题与 `references/file-templates.md` 的约定标题逐字一致；repo-fact 文件填完正文后，除标注 `TODO: 需人工确认` 处外不含占位符（如 `<xxx>`、`npm run <command>`）。static 模板（`_template/`、骨架里的 `<change-id>` / `<项目名>` 等）的占位符是设计如此，不在此限。
 - 每个 `CLAUDE.md` 只含指向同目录 `AGENTS.md` 的一行。
+- `openspec/changes/_template/design.md` 含 `## 线框图` 节，`changes/AGENTS.md` 流程把"涉及界面的变更先画线框图"写进 design 阶段。
 - 目录级说明文件都是 `AGENTS.md` + `CLAUDE.md`，无 README 充当目录指南。
 - 已存在文件未被破坏性覆盖；无法填充处显式标注 `TODO`，无编造命令/依赖。
 
