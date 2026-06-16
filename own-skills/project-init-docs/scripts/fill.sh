@@ -123,8 +123,8 @@ EOF
 # 架构决策记录（ADR）
 
 ## ADR 规范
-- 文件命名 `NNNN-title.md`，序号从 0001 递增（0000 为本规范自身）。
-- 一条决策一个文件，不追溯改写已 accepted 的记录；被取代时新建一条并把旧条状态标 superseded。
+- ADR 文件 MUST 命名 `NNNN-title.md`，序号从 0001 递增（0000 为本规范自身）。
+- 一条决策一个文件。NEVER 追溯改写已 accepted 的记录；被取代时 MUST 新建一条、并把旧条状态标 superseded。
 
 ## 每条 ADR 含
 - 背景（context）：当时面对的问题与约束。
@@ -133,7 +133,7 @@ EOF
 - 后果（consequences）：带来的好处与代价。
 
 ## 何时写 ADR
-做出会影响隐含约束的重要技术/架构选择时（依赖方向、数据边界、技术选型等）。
+做出会影响隐含约束的重要技术/架构选择（依赖方向、数据边界、技术选型等）时 MUST 写一条 ADR。
 EOF
       ;;
 
@@ -161,7 +161,7 @@ EOF
 # 变更工作区（先设计再实现）
 
 ## 变更工作流
-一次需求或业务变更，建一个 `openspec/changes/<change-id>/` 目录，先设计再写实现。
+一次需求或业务变更，MUST 先建一个 `openspec/changes/<change-id>/` 目录、先设计再实现；NEVER 在没有 proposal/design 的情况下直接改实现代码。
 
 ## 目录内容
 - `proposal.md`：为什么改、改什么、影响面。
@@ -170,9 +170,9 @@ EOF
 - `spec-delta/`：对 `openspec/specs/` 的增删改；先写 delta，实现完成后再合并回 specs。
 
 ## 流程
-proposal → design → tasks → 实现 → 把 spec-delta 合并回 `openspec/specs/`。
+MUST 按 proposal → design → tasks → 实现 → 合并 spec-delta 的顺序推进；spec-delta MUST 在实现完成后才合并回 `openspec/specs/`，NEVER 提前合并。
 
-复制 `_template/` 作为新变更目录的起点。
+新建变更 MUST 复制 `_template/` 作为起点。
 EOF
       ;;
 
@@ -240,10 +240,10 @@ TODO: 需人工确认
 ## 修改前检查
 - 读 `docs/architecture/module-map.md` 确认依赖边界。
 - 读相关 `openspec/specs/<domain>/spec.md`。
-- 确认禁止依赖未被破坏。
+- MUST 确认改动 NEVER 引入 module-map 中被禁的依赖方向；若必须破坏，先写一条 ADR 记录再改。
 
 ## 修改后检查
-- 跑测试 / lint / 构建。
+- 跑测试 / lint / 构建，三者全绿（退出码 0）方可提交；任一失败 → 先修复，NEVER 带红提交。
 - 更新受影响的 spec 与 ADR。
 - 必要时在 `openspec/changes/` 记录变更。
 
