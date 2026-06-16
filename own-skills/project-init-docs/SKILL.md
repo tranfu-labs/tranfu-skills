@@ -12,7 +12,7 @@ description: >
   任何目录级"怎么在这工作"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。
   不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、
   只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。
-version: 0.3.0
+version: 0.3.1
 author: aquarius-wing
 updated_at: 2026-06-16
 origin: own
