@@ -1,6 +1,6 @@
 ---
 name: xiaohongshu-card-publish
-version: 0.1.0
+version: 0.1.1
 origin: own
 author: aquarius-wing
 updated_at: 2026-06-17
