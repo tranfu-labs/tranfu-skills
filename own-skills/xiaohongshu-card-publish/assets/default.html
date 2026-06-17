@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE_PLAIN}}</title>
+<!--
+  ============================================================
+  小红书卡片模板 · default.html
+  真实渲染尺寸固定 1080×1440 px（3:4），截 .card 即成品。
+  填充时把下面所有 {{变量}} 替换掉，不要留下任何 {{...}}。
+  ============================================================
+
+  【单值变量】直接替换文本：
+    {{TITLE_PLAIN}}      浏览器标签标题（纯文本，无 HTML），一般同标题文案
+    {{BRAND}}            顶栏品牌名，大写英文，如 CLAUDE CODE
+    {{KICKER}}           顶栏品牌后缀，如 速查手记
+    {{PAGE_NO}}          当前页码，两位数字字符串，如 01
+    {{PAGE_TOTAL}}       系列总页数，两位数字字符串，如 09
+    {{INDEX}}            左侧大序号，两位数字字符串，一般同 PAGE_NO
+    {{ACCOUNT}}          页脚账号名
+    {{ACCOUNT_TAGLINE}}  页脚账号副标
+    {{NEXT}}             页脚右下引导文案，如 下一篇 · /compact →
+
+  【允许内联 HTML 的变量】
+    {{TITLE}}            主标题，可用 <em>文字</em> 高亮成强调色、<br> 手动换行。
+                         控制在 2 行内，单行别超过 6~7 个汉字，否则会顶出右边界。
+
+  【块变量】整段替换为重复结构，格式见示例：
+    {{TERMINAL_LINES}}   终端块内容，每行一个 .line。建议 3~4 行，命令对齐：
+        <div class="line"><span class="p">&gt;</span> <span class="cmd">/命令</span>   <span class="c"># 注释</span></div>
+        （行内用空格手动对齐注释起点；整行不换行，过长会被裁切，注意控制长度）
+
+    {{SECTIONS}}         正文小节，每节一个 .sec。建议 2 节，每节正文 2~3 行：
+        <div class="sec">
+          <div class="label">原理</div>
+          <div class="text">正文，可用 <span class="k">加粗关键词</span> 与 <span class="m">/命令</span> 强调。</div>
+        </div>
+-->
+<style>
+  :root {
+    /* 小红书配图真实尺寸：3:4 竖版 */
+    --card-w: 1080px;
+    --card-h: 1440px;
+
+    /* —— 克制的单强调色系，无渐变 —— */
+    --paper:  #f4efe6;   /* 纸张底 */
+    --paper-2:#ede6d8;   /* 纸张暗纹 */
+    --ink:    #1a1714;   /* 墨黑 */
+    --ink-2:  #4a443c;   /* 次级文字 */
+    --ink-3:  #8a8175;   /* 弱化文字 */
+    --accent: #ff2741;   /* 唯一强调色：小红书红，当墨水用 */
+    --rule:   #d8cfbe;   /* 发丝线 */
+    --term-bg:#1a1714;   /* 终端块（功能性深色，非装饰渐变）*/
+    --term-ink:#f4efe6;
+    --term-dim:#9b9486;  /* 终端注释灰 */
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #e3ded4;
+    font-family: "PingFang SC", "Hiragino Sans GB", -apple-system, "Microsoft YaHei", sans-serif;
+    display: grid;
+    place-items: center;
+    min-width: var(--card-w);
+    min-height: var(--card-h);
+    min-height: max(100vh, var(--card-h));
+  }
+
+  /* 真实渲染卡片：固定 1080×1440，截图即成品 */
+  .card {
+    width: var(--card-w);
+    height: var(--card-h);
+    background:
+      radial-gradient(120% 80% at 100% 0%, var(--paper-2) 0%, transparent 55%),
+      var(--paper);
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 96px 88px 80px;
+  }
+
+  /* ====== 顶部信息行 ====== */
+  .topbar {
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-size: 28px; letter-spacing: .18em; color: var(--ink-3);
+    text-transform: uppercase; font-weight: 700;
+  }
+  .topbar .brand { color: var(--ink); }
+  .topbar .brand b { color: var(--accent); }
+
+  /* ====== 标题区：序号与标题同一行 ====== */
+  .head { margin-top: 36px; display: flex; align-items: center; gap: 34px; }
+  .index {
+    font-family: "SF Mono","JetBrains Mono",Consolas,monospace;
+    font-size: 150px; font-weight: 800; line-height: .9;
+    color: transparent;
+    -webkit-text-stroke: 4px var(--accent);
+    letter-spacing: 0; flex-shrink: 0;
+  }
+  .title {
+    font-size: 68px; font-weight: 800; line-height: 1.15;
+    letter-spacing: 0;
+  }
+  .title em { font-style: normal; color: var(--accent); }
+  .lead {
+    margin-top: 24px; font-size: 32px; color: var(--ink-2);
+    line-height: 1.5; font-weight: 500; max-width: 820px;
+  }
+
+  /* ====== 终端块：命令的功能性呈现 ====== */
+  .terminal {
+    margin-top: 40px;
+    background: var(--term-bg);
+    border-radius: 20px;
+    padding: 30px 38px 34px;
+    box-shadow: 0 24px 50px rgba(26,23,20,.22);
+    overflow: hidden;          /* 防止内容溢出圆角边界 */
+  }
+  .terminal .bar { display: flex; gap: 14px; margin-bottom: 24px; }
+  .terminal .dot { width: 18px; height: 18px; border-radius: 50%; background: #4a443c; }
+  .terminal .dot.r { background: var(--accent); }
+  .terminal .line {
+    font-family: "SF Mono","JetBrains Mono",Consolas,monospace;
+    font-size: 28px; line-height: 1.75; color: var(--term-ink);
+    white-space: nowrap;
+  }
+  .terminal .p  { color: var(--accent); }                 /* 提示符 */
+  .terminal .cmd{ color: #ffd9a8; }                       /* 命令名 */
+  .terminal .c  { color: var(--term-dim); }               /* 注释 */
+
+  /* ====== 正文小节 ====== */
+  .body { margin-top: 44px; display: flex; flex-direction: column; gap: 36px; }
+  .sec { padding-left: 32px; border-left: 6px solid var(--accent); }
+  .sec .label {
+    font-size: 27px; font-weight: 800; letter-spacing: .22em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 14px;
+  }
+  .sec .text { font-size: 31px; line-height: 1.62; color: var(--ink-2); }
+  .sec .text .k { color: var(--ink); font-weight: 700; }
+  .sec .text .m {
+    font-family: "SF Mono","JetBrains Mono",Consolas,monospace;
+    font-size: 28px; color: var(--accent); font-weight: 600;
+  }
+
+  /* ====== 页脚 ====== */
+  .foot {
+    margin-top: auto; padding-top: 36px;
+    border-top: 2px solid var(--rule);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .foot .who { display: flex; align-items: center; gap: 20px; }
+  .foot .mark {
+    width: 64px; height: 64px; border-radius: 16px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .foot .mark svg { width: 60%; height: 60%; display: block; }   /* TranFu 品牌 symbol（白色，1:1）*/
+  .foot .name { font-size: 32px; font-weight: 800; color: var(--ink); }
+  .foot .name small { display: block; font-size: 26px; font-weight: 500; color: var(--ink-3); margin-top: 4px; }
+  .foot .next { font-size: 30px; color: var(--ink-3); font-weight: 600; letter-spacing: .05em; }
+
+</style>
+</head>
+<body>
+
+  <div class="card">
+
+      <!-- 顶部信息行 -->
+      <div class="topbar">
+        <span class="brand"><b>{{BRAND}}</b> · {{KICKER}}</span>
+        <span>{{PAGE_NO}} / {{PAGE_TOTAL}}</span>
+      </div>
+
+      <!-- 标题区：序号与标题同一行 -->
+      <div class="head">
+        <div class="index">{{INDEX}}</div>
+        <h1 class="title">{{TITLE}}</h1>
+      </div>
+      <!-- 终端块 -->
+      <div class="terminal">
+        <div class="bar"><span class="dot r"></span><span class="dot"></span><span class="dot"></span></div>
+        {{TERMINAL_LINES}}
+      </div>
+
+      <!-- 正文 -->
+      <div class="body">
+        {{SECTIONS}}
+      </div>
+
+      <!-- 页脚 -->
+      <div class="foot">
+        <div class="who">
+          <div class="mark"><svg viewBox="0 0 904 909" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TranFu"><g fill="#fff" transform="translate(-190 -181)"><path d="M 294,181 L 279,185 L 262,195 L 256,201 L 249,211 L 218,268 L 191,314 L 190,322 L 192,325 L 195,326 L 433,326 L 436,325 L 437,326 L 445,326 L 449,328 L 454,335 L 454,340 L 448,352 L 442,368 L 412,434 L 395,475 L 390,484 L 368,536 L 356,561 L 354,568 L 338,602 L 336,609 L 320,643 L 318,650 L 290,711 L 284,727 L 284,748 L 286,753 L 308,790 L 308,792 L 316,804 L 316,806 L 334,836 L 334,838 L 344,854 L 351,868 L 358,873 L 364,873 L 368,871 L 373,865 L 375,858 L 385,838 L 387,831 L 403,797 L 409,781 L 437,720 L 443,704 L 445,702 L 445,700 L 453,684 L 456,675 L 461,666 L 467,650 L 471,643 L 471,641 L 475,634 L 475,632 L 479,625 L 505,564 L 511,553 L 517,537 L 521,530 L 561,438 L 566,429 L 570,418 L 575,409 L 603,345 L 612,335 L 621,329 L 631,326 L 755,326 L 756,325 L 760,326 L 985,326 L 1000,323 L 1016,315 L 1031,300 L 1047,270 L 1093,190 L 1092,184 L 1088,181 Z"/><path d="M 711,441 L 697,445 L 688,450 L 675,463 L 640,531 L 623,561 L 620,569 L 621,572 L 624,575 L 964,575 L 965,574 L 970,574 L 979,571 L 991,564 L 1002,552 L 1042,480 L 1058,454 L 1059,446 L 1054,441 Z"/><path d="M 592,690 L 582,693 L 570,700 L 560,712 L 523,797 L 518,806 L 516,813 L 496,856 L 494,863 L 488,874 L 482,890 L 472,910 L 470,917 L 442,978 L 440,985 L 438,987 L 438,989 L 398,1077 L 397,1085 L 402,1089 L 537,1089 L 543,1086 L 548,1081 L 567,1037 L 573,1026 L 597,970 L 602,961 L 623,912 L 658,836 L 667,828 L 677,824 L 807,824 L 808,823 L 814,823 L 829,817 L 836,812 L 846,800 L 868,760 L 904,700 L 904,694 L 900,690 Z"/></g></svg></div>
+          <div class="name">{{ACCOUNT}}<small>{{ACCOUNT_TAGLINE}}</small></div>
+        </div>
+        <div class="next">{{NEXT}}</div>
+      </div>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书系列预览</title>
+<style>
+  :root {
+    --card-w: 1080px;
+    --card-h: 1440px;
+    --phone-w: 1188px;
+    --phone-h: 1592px;
+    --bg: #e8e2d8;
+    --panel: #fffaf0;
+    --ink: #191612;
+    --muted: #756d61;
+    --line: #d8cdbc;
+    --accent: #ff2741;
+    --shadow: 0 24px 80px rgba(25, 22, 18, .18);
+    --viewer-scale: .45;
+  }
+
+  * { box-sizing: border-box; }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "PingFang SC", "Hiragino Sans GB", -apple-system, "Microsoft YaHei", sans-serif;
+    overflow: hidden;
+  }
+
+  button,
+  select {
+    font: inherit;
+  }
+
+  .app {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(25, 22, 18, .12);
+    background: rgba(255, 250, 240, .92);
+    backdrop-filter: blur(18px);
+  }
+
+  .series-block {
+    min-width: 0;
+  }
+
+  .series {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .page-title {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 42vw;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .icon-button,
+  .text-button,
+  .select {
+    height: 36px;
+    border: 1px solid rgba(25, 22, 18, .16);
+    background: rgba(255, 255, 255, .72);
+    color: var(--ink);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .72) inset;
+  }
+
+  .icon-button,
+  .text-button {
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .icon-button {
+    width: 38px;
+    display: inline-grid;
+    place-items: center;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .text-button {
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .text-button.primary {
+    border-color: transparent;
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .text-button[aria-pressed="true"] {
+    border-color: rgba(255, 39, 65, .42);
+    background: rgba(255, 39, 65, .12);
+    color: #c4172d;
+  }
+
+  .icon-button:disabled,
+  .text-button:disabled,
+  .select:disabled {
+    cursor: not-allowed;
+    opacity: .44;
+  }
+
+  .select {
+    min-width: 190px;
+    max-width: 260px;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .counter {
+    min-width: 54px;
+    color: var(--muted);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .workspace {
+    min-height: 0;
+    display: grid;
+  }
+
+  .viewport {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 24px;
+  }
+
+  .preview-unit {
+    position: relative;
+    width: var(--card-w);
+    height: var(--card-h);
+    transition: width .18s ease, height .18s ease;
+  }
+
+  .phone-shell {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--card-w);
+    height: var(--card-h);
+    transform: scale(var(--viewer-scale));
+    transform-origin: top left;
+    transition: transform .18s ease;
+  }
+
+  body.device-on .phone-shell {
+    width: var(--phone-w);
+    height: var(--phone-h);
+    padding: 76px 54px;
+    border: 10px solid #0b0b0b;
+    border-radius: 96px;
+    background: linear-gradient(145deg, #262626, #0d0d0d 46%, #2c2c2c);
+    box-shadow: var(--shadow);
+  }
+
+  body.device-on .phone-shell::before {
+    content: "";
+    position: absolute;
+    top: 28px;
+    left: 50%;
+    width: 188px;
+    height: 42px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: #050505;
+    z-index: 2;
+  }
+
+  .phone-screen {
+    position: relative;
+    width: var(--card-w);
+    height: var(--card-h);
+    overflow: hidden;
+    background: #111;
+  }
+
+  body.device-on .phone-screen {
+    border-radius: 54px;
+  }
+
+  .page-frame {
+    position: absolute;
+    inset: 0;
+    width: var(--card-w);
+    height: var(--card-h);
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+    background: #fff;
+  }
+
+  .page-frame.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .status {
+    min-height: 34px;
+    padding: 8px 20px 10px;
+    border-top: 1px solid rgba(25, 22, 18, .12);
+    background: rgba(255, 250, 240, .88);
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .status.error {
+    color: #b9152a;
+  }
+
+  @media (max-width: 760px) {
+    .toolbar {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .page-title {
+      max-width: calc(100vw - 28px);
+    }
+
+    .controls {
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .select {
+      flex: 1 1 180px;
+      min-width: 0;
+    }
+
+    .viewport {
+      padding: 12px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="toolbar">
+      <div class="series-block">
+        <div class="series" id="seriesName">小红书系列预览</div>
+        <div class="page-title" id="pageTitle">pages.json</div>
+      </div>
+      <div class="controls">
+        <button class="icon-button" id="prevPage" type="button" aria-label="上一张">‹</button>
+        <select class="select" id="pageSelect" aria-label="选择页面"></select>
+        <span class="counter" id="counter">0 / 0</span>
+        <button class="icon-button" id="nextPage" type="button" aria-label="下一张">›</button>
+        <button class="text-button" id="deviceToggle" type="button" aria-pressed="false">iPhone 17</button>
+        <button class="text-button primary" id="exportAll" type="button">导出全部</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="viewport" id="viewport">
+        <div class="preview-unit" id="previewUnit">
+          <div class="phone-shell">
+            <div class="phone-screen" id="screen"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="status" id="status">读取 pages.json</div>
+  </div>
+
+<script>
+(() => {
+  const CARD = { width: 1080, height: 1440 };
+  const DEVICE = { width: 1188, height: 1592 };
+  const EXPORT_QUALITY = 0.96;
+  const els = {
+    seriesName: document.getElementById('seriesName'),
+    pageTitle: document.getElementById('pageTitle'),
+    prevPage: document.getElementById('prevPage'),
+    nextPage: document.getElementById('nextPage'),
+    pageSelect: document.getElementById('pageSelect'),
+    counter: document.getElementById('counter'),
+    deviceToggle: document.getElementById('deviceToggle'),
+    exportAll: document.getElementById('exportAll'),
+    viewport: document.getElementById('viewport'),
+    previewUnit: document.getElementById('previewUnit'),
+    screen: document.getElementById('screen'),
+    status: document.getElementById('status')
+  };
+
+  const state = {
+    config: null,
+    pages: [],
+    frames: [],
+    current: 0,
+    exporting: false,
+    readyPromise: null
+  };
+
+  function setStatus(message, isError = false) {
+    els.status.textContent = message;
+    els.status.classList.toggle('error', isError);
+  }
+
+  function padPage(index) {
+    return String(index + 1).padStart(2, '0');
+  }
+
+  function normalizeConfig(config) {
+    if (!config || typeof config !== 'object') {
+      throw new Error('pages.json 必须是对象');
+    }
+    if (!Array.isArray(config.pages) || config.pages.length === 0) {
+      throw new Error('pages.json 需要 pages 数组');
+    }
+    const pages = config.pages.map((page, index) => {
+      if (!page || typeof page.src !== 'string' || page.src.trim() === '') {
+        throw new Error(`第 ${index + 1} 页缺少 src`);
+      }
+      return {
+        src: page.src.trim(),
+        title: typeof page.title === 'string' && page.title.trim()
+          ? page.title.trim()
+          : `${padPage(index)}`
+      };
+    });
+    return {
+      series: typeof config.series === 'string' && config.series.trim()
+        ? config.series.trim()
+        : '未命名系列',
+      pages
+    };
+  }
+
+  async function loadConfig() {
+    const response = await fetch('./pages.json', { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`读取 pages.json 失败：HTTP ${response.status}`);
+    }
+    return normalizeConfig(await response.json());
+  }
+
+  function buildFrames(config) {
+    els.seriesName.textContent = config.series;
+    els.pageSelect.innerHTML = '';
+    els.screen.innerHTML = '';
+    state.pages = config.pages;
+    state.frames = config.pages.map((page, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = page.title;
+      els.pageSelect.appendChild(option);
+
+      const frame = document.createElement('iframe');
+      frame.className = 'page-frame';
+      frame.title = page.title;
+      frame.src = page.src;
+      frame.dataset.index = String(index);
+      frame.dataset.loaded = '0';
+      frame.addEventListener('load', () => {
+        frame.dataset.loaded = '1';
+      }, { once: true });
+      els.screen.appendChild(frame);
+      return frame;
+    });
+  }
+
+  function activate(index) {
+    const max = state.pages.length - 1;
+    state.current = Math.max(0, Math.min(index, max));
+    state.frames.forEach((frame, frameIndex) => {
+      frame.classList.toggle('is-active', frameIndex === state.current);
+    });
+    els.pageSelect.value = String(state.current);
+    els.pageTitle.textContent = state.pages[state.current]?.title || '';
+    els.counter.textContent = `${state.current + 1} / ${state.pages.length}`;
+    els.prevPage.disabled = state.current === 0 || state.exporting;
+    els.nextPage.disabled = state.current === max || state.exporting;
+  }
+
+  function fitPreview() {
+    const bounds = els.viewport.getBoundingClientRect();
+    const styles = getComputedStyle(els.viewport);
+    const availableWidth = bounds.width - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);
+    const availableHeight = bounds.height - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom);
+    const natural = document.body.classList.contains('device-on') ? DEVICE : CARD;
+    const scale = Math.min(availableWidth / natural.width, availableHeight / natural.height, 1);
+    const clampedScale = Math.max(scale, .08);
+    els.previewUnit.style.setProperty('--viewer-scale', clampedScale.toFixed(4));
+    els.previewUnit.style.width = `${Math.round(natural.width * clampedScale)}px`;
+    els.previewUnit.style.height = `${Math.round(natural.height * clampedScale)}px`;
+  }
+
+  function waitForFrame(frame) {
+    if (frame.dataset.loaded === '1') return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        reject(new Error(`加载卡片超时：${frame.getAttribute('src')}`));
+      }, 12000);
+      frame.addEventListener('load', () => {
+        window.clearTimeout(timeout);
+        frame.dataset.loaded = '1';
+        resolve();
+      }, { once: true });
+    });
+  }
+
+  async function waitForAllFrames() {
+    await Promise.all(state.frames.map(waitForFrame));
+  }
+
+  function collectStyleText(doc) {
+    return Array.from(doc.styleSheets).map((sheet) => {
+      try {
+        return Array.from(sheet.cssRules).map((rule) => rule.cssText).join('\n');
+      } catch (error) {
+        return '';
+      }
+    }).filter(Boolean).join('\n');
+  }
+
+  function cdata(text) {
+    return text.replaceAll(']]>', ']]]]><![CDATA[>');
+  }
+
+  async function renderCardBlob(index) {
+    const frame = state.frames[index];
+    if (!frame) throw new Error(`找不到第 ${index + 1} 页`);
+    await waitForFrame(frame);
+
+    const doc = frame.contentDocument;
+    if (!doc) throw new Error('无法读取卡片 iframe，请确认通过本地静态服务器同源打开');
+    if (doc.fonts && doc.fonts.ready) await doc.fonts.ready;
+
+    const card = doc.querySelector('.card');
+    if (!card) throw new Error(`第 ${index + 1} 页没有 .card`);
+
+    const clone = card.cloneNode(true);
+    clone.style.transform = 'none';
+    clone.style.transformOrigin = 'top left';
+    const cardMarkup = new XMLSerializer().serializeToString(clone);
+    const styles = collectStyleText(doc);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD.width}" height="${CARD.height}" viewBox="0 0 ${CARD.width} ${CARD.height}">
+  <foreignObject width="${CARD.width}" height="${CARD.height}">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <meta charset="UTF-8" />
+        <style><![CDATA[
+${cdata(styles)}
+html, body {
+  width: ${CARD.width}px;
+  height: ${CARD.height}px;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+body {
+  display: block;
+  min-width: ${CARD.width}px;
+  min-height: ${CARD.height}px;
+}
+.card {
+  transform: none !important;
+  transform-origin: top left !important;
+}
+        ]]></style>
+      </head>
+      <body>${cardMarkup}</body>
+    </html>
+  </foreignObject>
+</svg>`;
+
+    const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    const image = await loadImage(svgUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = CARD.width;
+    canvas.height = CARD.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, CARD.width, CARD.height);
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('浏览器未能生成 webp'));
+      }, 'image/webp', EXPORT_QUALITY);
+    });
+  }
+
+  function loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('卡片 SVG 渲染失败'));
+      image.src = url;
+    });
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
+  async function exportAll() {
+    if (state.exporting) return;
+    state.exporting = true;
+    els.exportAll.disabled = true;
+    els.deviceToggle.disabled = true;
+    activate(state.current);
+    try {
+      await waitForAllFrames();
+      for (let index = 0; index < state.frames.length; index += 1) {
+        setStatus(`导出 ${index + 1} / ${state.frames.length}`);
+        const blob = await renderCardBlob(index);
+        downloadBlob(blob, `${padPage(index)}.webp`);
+        await new Promise((resolve) => window.setTimeout(resolve, 140));
+      }
+      setStatus(`已导出 ${state.frames.length} 张 webp`);
+    } catch (error) {
+      setStatus(error.message, true);
+    } finally {
+      state.exporting = false;
+      els.exportAll.disabled = false;
+      els.deviceToggle.disabled = false;
+      activate(state.current);
+    }
+  }
+
+  async function probeExport(index = 0) {
+    await state.readyPromise;
+    const blob = await renderCardBlob(index);
+    const bitmap = await createImageBitmap(blob);
+    const result = {
+      type: blob.type,
+      size: blob.size,
+      width: bitmap.width,
+      height: bitmap.height
+    };
+    bitmap.close();
+    return result;
+  }
+
+  function bindEvents() {
+    els.prevPage.addEventListener('click', () => activate(state.current - 1));
+    els.nextPage.addEventListener('click', () => activate(state.current + 1));
+    els.pageSelect.addEventListener('change', () => activate(Number(els.pageSelect.value)));
+    els.deviceToggle.addEventListener('click', () => {
+      const enabled = !document.body.classList.contains('device-on');
+      document.body.classList.toggle('device-on', enabled);
+      els.deviceToggle.setAttribute('aria-pressed', String(enabled));
+      fitPreview();
+    });
+    els.exportAll.addEventListener('click', exportAll);
+    window.addEventListener('resize', fitPreview);
+    window.addEventListener('keydown', (event) => {
+      if (event.target instanceof HTMLSelectElement || state.exporting) return;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        activate(state.current - 1);
+      }
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        activate(state.current + 1);
+      }
+      if (event.key === 'Home') {
+        event.preventDefault();
+        activate(0);
+      }
+      if (event.key === 'End') {
+        event.preventDefault();
+        activate(state.pages.length - 1);
+      }
+    });
+  }
+
+  async function init() {
+    bindEvents();
+    state.config = await loadConfig();
+    buildFrames(state.config);
+    activate(0);
+    fitPreview();
+    await waitForAllFrames();
+    setStatus(location.protocol === 'file:'
+      ? '已加载；导出建议通过本地静态服务器打开'
+      : `已加载 ${state.pages.length} 张卡片`);
+  }
+
+  state.readyPromise = init().catch((error) => {
+    setStatus(error.message, true);
+    throw error;
+  });
+
+  window.xhsApp = {
+    getState: () => ({
+      series: state.config?.series || null,
+      pageCount: state.pages.length,
+      current: state.current,
+      deviceOn: document.body.classList.contains('device-on')
+    }),
+    probeExport,
+    exportAll
+  };
+})();
+</script>
+</body>
+</html>
