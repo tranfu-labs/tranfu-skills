@@ -1,9 +1,9 @@
 ---
 name: tranfu-publish
 description: 当用户说"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例"时, 按 templates/ 起草全部内容 (frontmatter / README §同类对比 / README §使用技巧 / case-file / PR title+body) 后自动切分支 / commit / push / gh pr create —— 触发即视为发布意图, 不再等用户二次确认。不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill)。
-version: 0.3.0
+version: 0.4.0
 author: aquarius-wing
-updated_at: 2026-06-15
+updated_at: 2026-06-17
 origin: meta
 type: meta
 ---
@@ -26,7 +26,7 @@ type: meta
 
 | variant | SKILL.md | README.md | cases/ |
 |---|---|---|---|
-| own | 必须 | **必须** (缺 = 报错中止, 不自动起草) | 可选 (源里有就一起带, 没有不强求) |
+| own | 必须 | 可选 (源里有就一起带, 没有不强求) | 可选 (源里有就一起带, 没有不强求) |
 | external | 必须 (薄指针) | 必须 (AI 起草) | 不需要 |
 | case | 不动 | 不动 | 必须 (新建或 append) |
 
@@ -40,8 +40,8 @@ type: meta
 |---|---|---|
 | `templates/pr-body.md` | PR body 骨架, 含 own/external/case 三段 | 三路径 |
 | `templates/case-file.md` | case 文件骨架, frontmatter + 4 段 body | case |
-| `templates/section-同类对比.md` | **README.md** `## 同类 Skill 对比` 段 | own · external |
-| `templates/section-使用技巧.md` | **README.md** `## 使用技巧` 段 | own · external |
+| `templates/section-同类对比.md` | **README.md** `## 同类 Skill 对比` 段 | external |
+| `templates/section-使用技巧.md` | **README.md** `## 使用技巧` 段 | external |
 
 README 的 `## 同类 Skill 对比` / `## 使用技巧` 段名照 templates/ 保持一致 (catalog + 人读的约定, 别换成 `## Summary` 之类)。PR body 怎么写无所谓 —— CI / 飞书通知都只把 body 原样转发, 不解析段名。
 
@@ -79,14 +79,6 @@ README 的 `## 同类 Skill 对比` / `## 使用技巧` 段名照 templates/ 保
 请先用 own / external 路径把它发布进库, 再回来补案例。
 ```
 
-**own 预检 (HARD)**: $SRC 没 `README.md` → 立即报错中止:
-```
-own 路径要求 $SRC/README.md 存在 (含 §同类 Skill 对比 + §使用技巧)。
-当前 $SRC=<path> 没有 README.md, 请先在本地写一份再回来。
-AI 不自动起草 README —— 它是给人看的入口, 必须作者亲自定调。
-```
-有 README 但缺这两段 → 不中止, AI 在 §3 起草 append。external / case 不卡此检。
-
 ### 2. 识别 path (AI 自判, 兜不住才问 form)
 
 按顺序匹配, 第一条命中即定:
@@ -111,8 +103,7 @@ AI 不自动起草 README —— 它是给人看的入口, 必须作者亲自定
 - external (`external-skills/<name>/SKILL.md`): `name` / `description` 同上 / `origin: external` / `source_url` **必填** (HTTP 200) / `author`(上游) / `version`·`updated_at`(上游有则填); body = 薄指针, 含 "完整内容见 source_url"
 - case: 不动 SKILL.md
 
-**README.md §同类对比 + §使用技巧** (own · external 必跑, case 跳过, 按模板渲染落 **README.md** 不落 SKILL.md):
-- own: 已有这两段 → AI 评是否合模板, 不合 → 在本轮对话向用户提示改进点 (不改作者 README、不塞进 PR body, body 固定 1:1 无此位); 缺段 → AI 起草 append 到 README 末尾
+**README.md §同类对比 + §使用技巧** (仅 external 跑, own/case 跳过, 按模板渲染落 **README.md** 不落 SKILL.md):
 - external: 整份 README 由 AI 起草 (§推荐场景 + §同类对比 + §使用技巧)
 - §同类对比: 内部候选 ≤3 (`tfs list --json` 选最近) + 外部候选 ≤3 (web search + `WebFetch` 验活) + 独特价值 ≤3 句每句 ≤30 字, NEVER "更快/更好/更优雅"
 - §使用技巧 3 子段: 材料方案 / 推荐用法(场景+prompt) / 已知限制; 每子段 ≤3 bullet, 全段 ≤9 bullet ≤500 字
@@ -160,7 +151,6 @@ AI 不自动起草 README —— 它是给人看的入口, 必须作者亲自定
 
 - ❌ 跳 §0 版本预检 = 违规 —— 必须强检 + 强升 + 升后中止让用户重 trigger, NEVER 边升边跑
 - ❌ 不直推 main —— 一定走 `skill/<name>` 或 `skill/batch-<timestamp>` 分支
-- ❌ own 路径 $SRC 没 README.md 不自动起草 —— 报错让用户先写
 - ❌ §同类对比 / §使用技巧 落 SKILL.md = 违规 —— 必须落 README.md
 - ❌ own / external 路径补写 case = 违规 —— 只有 case path 才起草 case (own 源自带的 cases/ 原样 cp, 不强要不补写)
 - ❌ README §同类对比 / §使用技巧 段名换成 `## Summary` 之类 = 违规 (catalog + 人读约定)
