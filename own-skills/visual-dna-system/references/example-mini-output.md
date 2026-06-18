@@ -4,6 +4,11 @@ Use this as a compact filled reference for output shape. Do not copy the sample 
 
 ## 1. Visual DNA Design System
 
+### Evidence And Confidence
+- evidence_sources: screenshot of SaaS landing page, visible hero and feature sections
+- confidence_level: medium-high
+- missing_evidence: responsive states, full pricing page, product UI details
+
 ### Design Essence
 Calm premium editorial SaaS. Quiet confidence, medium-low density, generous reading rhythm, and restrained contrast.
 
@@ -22,6 +27,11 @@ Calm premium editorial SaaS. Quiet confidence, medium-low density, generous read
 ```json
 {
   "visual_dna_system": {
+    "evidence_and_confidence": {
+      "evidence_sources": ["landing page screenshot", "visible hero section", "visible feature section"],
+      "confidence_level": "medium-high",
+      "missing_evidence": ["responsive states", "pricing page", "product UI details"]
+    },
     "design_essence": {
       "mood": ["calm", "premium", "editorial"],
       "energy": "restrained",
@@ -39,6 +49,7 @@ Calm premium editorial SaaS. Quiet confidence, medium-low density, generous read
       "state_color_strategy": "subtle and non-neon",
       "palette_hints": ["warm off-white", "deep ink", "muted blue accent"]
     },
+    "transferability_notes": ["Transfer hierarchy rhythm, spacing logic, and surface treatment; replace identity, copy, imagery, and claims."],
     "transferable": ["editorial pacing", "restrained accent role", "thin-divider structure"],
     "non_transferable": ["source logo", "exact hero layout", "source copy"],
     "originality_rules": ["change composition", "replace identity layer", "use new copy"],

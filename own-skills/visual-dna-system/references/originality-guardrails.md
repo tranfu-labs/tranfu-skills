@@ -20,10 +20,10 @@ Transfer abstract design principles:
 
 MUST NOT transfer:
 
-- Logos, wordmarks, mascots, slogans, or brand names.
-- Exact layouts that are distinctive to the source.
-- Proprietary navigation, command structures, or signature UI patterns.
-- Exact text, product names, data, screenshots, or marketing claims.
+- logos, wordmarks, mascots, slogans, or brand names.
+- exact layouts that are distinctive to the source.
+- proprietary components, navigation, command structures, or signature UI patterns.
+- exact copy, product names, data, screenshots, or marketing claims.
 - Source-specific icon sets, illustrations, photos, or brand assets.
 - Protected visual identity markers that make the output look like the source owner.
 

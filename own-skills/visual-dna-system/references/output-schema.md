@@ -2,10 +2,37 @@
 
 Use this reference when writing the required output for `visual-dna-system`.
 
+## Required Five-Pack Artifacts
+
+The final response MUST contain these five top-level named artifacts. Use the names exactly:
+
+### Visual DNA Design System
+
+Markdown design-system artifact. It MUST include an `Evidence And Confidence` section and the visual DNA sections below.
+
+### visual_dna_system
+
+JSON/tokens artifact. It MUST include the `visual_dna_system` JSON field and the nested evidence fields below.
+
+### Downstream Production Prompt
+
+Copyable prompt artifact for `visual-design-producer`.
+
+### Transferability Notes
+
+Named artifact explaining what can transfer, what cannot transfer, and what evidence is missing or lower-confidence.
+
+### Originality Guardrails
+
+Named artifact listing source-identity risks and required de-branding constraints.
+
 ## Markdown Artifact
 
 ```text
 # Visual DNA Design System
+
+## Evidence And Confidence
+Evidence sources used, confidence level, missing evidence, and any lower-confidence inferences.
 
 ## 1. Design Essence
 Core mood, visual temperament, energy level, density, trust signal, emotional tone, and design intent.
@@ -52,6 +79,11 @@ A copyable prompt block that instructs `visual-design-producer` how to use this 
 ```json
 {
   "visual_dna_system": {
+    "evidence_and_confidence": {
+      "evidence_sources": [],
+      "confidence_level": "",
+      "missing_evidence": []
+    },
     "design_essence": {
       "mood": [],
       "energy": "",
@@ -114,6 +146,7 @@ A copyable prompt block that instructs `visual-design-producer` how to use this 
       "transition_style": "",
       "interaction_feedback": ""
     },
+    "transferability_notes": [],
     "transferable": [],
     "non_transferable": [],
     "originality_rules": [],
