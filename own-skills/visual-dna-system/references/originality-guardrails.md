@@ -18,7 +18,7 @@ Transfer abstract design principles:
 
 ## Non-Transferable
 
-Do not transfer:
+MUST NOT transfer:
 
 - Logos, wordmarks, mascots, slogans, or brand names.
 - Exact layouts that are distinctive to the source.
@@ -47,5 +47,7 @@ Before delivery, ask:
 
 - Could a viewer mistake the output for the source brand?
 - Did any source-specific layout, asset, copy, or component survive unchanged?
-- Can the downstream producer use this without seeing the original sample?
+- Does the downstream producer still need to see the original sample to use this system?
 - Are the non-transferable items explicit enough to prevent accidental copying?
+
+If any answer is not a clear "No", revise the transferable/non-transferable split before delivery.

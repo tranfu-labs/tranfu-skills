@@ -1,6 +1,6 @@
 ---
 name: visual-dna-system
-description: Extract a reusable, de-branded Visual DNA Design System from visual samples such as websites, screenshots, Figma references, images, decks, posters, app UIs, or HTML/CSS. Use when the user asks to analyze visual style, distill design DNA, create transferable visual tokens, or make a downstream prompt without copying the source. Do NOT use for producing final websites, dashboards, decks, posters, prototypes, direct brand recreation, prompt review, or code review.
+description: Extract a reusable, de-branded Visual DNA Design System from visual samples such as websites, screenshots, Figma references, images, decks, posters, app UIs, or HTML/CSS. Use when the user asks to analyze visual style, distill design DNA, create transferable visual tokens, or make a downstream prompt without copying the source. Also trigger for Chinese requests like "提取这个网站的视觉风格", "把这个 UI 抽成可复用设计系统", "分析这套海报的视觉 DNA", "生成可迁移视觉 tokens". Do NOT use for producing final websites, dashboards, decks, posters, prototypes, direct brand recreation, prompt review, or code review.
 version: 0.1.0
 author: BruceL017
 updated_at: 2026-06-18
@@ -31,23 +31,29 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 2. Classify the evidence: URL, screenshot, Figma, image, HTML/CSS, deck, poster, UI, or mixed source.
 3. Extract visible design signals across essence, color, typography, layout, components, material, imagery, iconography, motion, and composition.
 4. Separate transferable principles from non-transferable identity markers.
-5. Remove source brand assets, logos, exact layouts, proprietary components, exact copy, and unique identity markers.
-6. Write the Markdown `Visual DNA Design System` using the schema in `references/output-schema.md`.
-7. Write the JSON/tokens representation using the schema in `references/output-schema.md`.
-8. Write a copyable downstream production prompt for `visual-design-producer`.
-9. Apply the originality guardrails in `references/originality-guardrails.md`.
+5. MUST remove source brand assets, logos, exact layouts, proprietary components, exact copy, and unique identity markers.
+6. Compose the Markdown `Visual DNA Design System` using the schema in `references/output-schema.md`.
+7. Emit the JSON/tokens representation using the schema in `references/output-schema.md`.
+8. Compose a copyable downstream production prompt for `visual-design-producer`.
+9. Apply the originality guardrails in `references/originality-guardrails.md`. If any Self-Check answer is not a clear "No", return to steps 4-5 and rewrite the transferable/non-transferable split. Retry at most 2 times; if the gate still fails, report `guardrails-cannot-converge` and ask the user to decide.
 10. Deliver the named artifacts and end.
 
 Failure paths:
 
-- If evidence is partial, continue with lower confidence and list missing evidence.
-- If the user asks for direct copying or source brand recreation, refuse that part and extract only abstract transferable principles.
-- If the user asks for final production, route to `visual-design-producer`.
-- If visual details are too vague to infer, ask one focused clarification question or request a better visual sample.
+- If no usable sample exists, report `missing-visual-sample`, ask for a URL, screenshot, file, or visual description, and stop.
+- If evidence is partial, report `partial-evidence`, continue with lower confidence, and list missing evidence.
+- If a URL is unreachable because of login, anti-bot protection, 404, or network failure, report `source-unreachable`, ask for screenshots or HTML/CSS snippets, and stop.
+- If the sample is non-design content such as a natural photo, video frame, or random screenshot with no design intent, report `insufficient-design-signal`, request a sample with clear design intent, and stop.
+- If multiple samples have conflicting styles, report `conflicting-style-samples`, list the differences, and ask whether to synthesize one main DNA, output separate DNA systems, or choose one primary sample. If the user does not answer, output separate DNA systems and continue.
+- If the user asks for direct copying or source brand recreation, report `source-copy-request`, NEVER produce that copied part, and MUST extract only abstract transferable principles.
+- If the user asks for final production, report `production-requested`, route to `visual-design-producer`, and stop this skill unless the user also requested extraction.
+- If visual details are too vague to infer, report `insufficient-visual-detail`, ask one focused clarification question or request a better visual sample, and stop.
 
 ## Required Output
 
-Always output these named artifacts:
+Ownership: rewrite inline by default. Return the five-pack directly in the conversation as named Markdown and code blocks. Only create files when the user explicitly requests a path, for example `docs/visual-dna/{name}.md`.
+
+MUST always output these 5 named artifacts:
 
 1. `Visual DNA Design System` in Markdown.
 2. `visual_dna_system` JSON/tokens block.
@@ -82,6 +88,8 @@ User: "Make this screenshot into a reusable visual system for future product pag
 Action: Distill the visual temperament, color roles, type hierarchy, spacing rhythm, component language, material behavior, and composition grammar. Do not produce a final page.
 </example>
 
+See `references/example-mini-output.md` for a filled minimal five-pack reference.
+
 <bad-example>
 WRONG: "Use the same logo, same hero layout, same navigation, same color palette, and same copy."
 
@@ -103,4 +111,4 @@ The task is complete when:
 - Downstream prompt is present.
 - Transferable and non-transferable elements are separated.
 - Originality guardrails are explicit.
-- No final website, dashboard, deck, poster, app UI, or prototype is produced by this skill.
+- NEVER produce final website, dashboard, deck, poster, app UI, or prototype in this skill. Route final production to `visual-design-producer`.
