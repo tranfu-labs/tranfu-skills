@@ -38,7 +38,7 @@ target brand -> identity layer
 new brief -> content and purpose
 ```
 
-Blend them into an original artifact. Do not import source-sample brand identity into the target brand.
+Blend them into an original artifact. Do not import source sample brand identity into the target brand.
 
 ## Accepted Brand Inputs
 
@@ -56,7 +56,7 @@ Brand context may include:
 
 ## Safety Rules
 
-- Never copy source-sample logos, names, proprietary layouts, or distinctive brand identity.
+- Never copy source sample logos, names, proprietary layouts, or distinctive brand identity.
 - Use target-brand assets only when the user provides or authorizes them.
 - If target-brand and visual DNA conflict, prioritize target-brand identity for brand marks, palette, typography, and tone, while preserving DNA as mood, rhythm, composition, and interaction feel.
 - If brand evidence is incomplete, state assumptions briefly and continue only when the missing detail is not essential.

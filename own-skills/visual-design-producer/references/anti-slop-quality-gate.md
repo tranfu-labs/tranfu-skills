@@ -6,10 +6,10 @@ Run this gate before delivering output from `visual-design-producer`.
 
 The output must:
 
-- Follow the production source priority: `Producer Handoff`, then Visual DNA, then standalone brief.
+- Follow the production input priority: `Producer Handoff`, then Visual DNA, then standalone brief.
 - Use any provided real target context before inventing structure, copy, data, or product details.
-- Use visual DNA abstractly when present rather than copying the source.
-- Avoid source logos, source brand assets, proprietary components, protected layouts, and exact copy.
+- Use visual DNA abstractly when present rather than copying the source sample.
+- Avoid source sample logos, source sample brand assets, proprietary components, protected layouts, and exact copy.
 - Include target brand elements only when `brand-on` is active.
 - Run in `brandless` mode when no brand context exists.
 - Avoid filler content, fake data, unnecessary icons, and decorative clutter.
@@ -37,7 +37,7 @@ The output must:
 
 Before delivery, verify internally:
 
-- Which production source was used: `Producer Handoff`, Visual DNA, or standalone brief.
+- Which production input was used: `Producer Handoff`, Visual DNA, or standalone brief.
 - Whether provided product code, screenshots, URLs, assets, copy, data, or brand material were read and reflected.
 - Whether brand mode is resolved without requiring a missing brand path.
 - Whether the HTML follows `references/html-engineering-spec.md`.
@@ -47,9 +47,9 @@ Before delivery, verify internally:
 
 Before delivery, answer internally:
 
-- Could a viewer mistake this for the source sample or source brand?
-- Did any exact source layout, asset, copy, or proprietary component survive?
-- Does the output solve the new brief rather than display the old reference?
-- Does the artifact still work if no brand context exists?
+- Could a viewer mistake this for the source sample or source sample brand?
+- Did any exact source sample layout, asset, copy, or proprietary component survive?
+- Does the output display the old reference instead of solving the new brief?
+- Does the artifact require brand context when no brand context exists?
 
-If any answer exposes a risk, revise before delivering.
+If any answer is `Yes`, revise before delivering.
