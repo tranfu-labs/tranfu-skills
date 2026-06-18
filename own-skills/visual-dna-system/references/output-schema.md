@@ -16,7 +16,7 @@ JSON/tokens artifact. It MUST include the `visual_dna_system` JSON field and the
 
 ### Downstream Production Prompt
 
-Copyable prompt artifact for `visual-design-producer`.
+Copyable prompt artifact for any available downstream HTML/design producer.
 
 ### Transferability Notes
 
@@ -71,7 +71,7 @@ Source brand assets, logos, proprietary components, distinctive protected layout
 How to preserve the underlying visual temperament while producing a visually original result.
 
 ## 13. Downstream Production Prompt
-A copyable prompt block that instructs `visual-design-producer` how to use this visual system.
+A copyable prompt block that instructs an available downstream HTML/design producer how to use this visual system.
 ```
 
 ## JSON/Tokens Artifact
@@ -157,7 +157,7 @@ A copyable prompt block that instructs `visual-design-producer` how to use this 
 
 ## Downstream Prompt Requirements
 
-The downstream prompt must tell `visual-design-producer`:
+The downstream prompt must tell an available downstream HTML/design producer:
 
 - If a structured `Producer Handoff` block is present, use it as the primary production brief.
 - If no `Producer Handoff` is present but Visual DNA is present, infer production direction from Visual DNA.

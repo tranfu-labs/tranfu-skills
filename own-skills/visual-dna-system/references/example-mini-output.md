@@ -60,7 +60,7 @@ Calm premium editorial SaaS. Quiet confidence, medium-low density, generous read
 
 ## 3. Downstream Production Prompt
 
-Use `visual-design-producer` to create an original brandless SaaS landing page from this Visual DNA. Preserve calm premium editorial pacing, warm neutral surfaces, thin dividers, and restrained accent behavior. Do not reuse source identity, exact layout, assets, claims, screenshots, or copy.
+Use this prompt with an available downstream HTML/design producer to create an original brandless SaaS landing page from this Visual DNA. Preserve calm premium editorial pacing, warm neutral surfaces, thin dividers, and restrained accent behavior. Do not reuse source identity, exact layout, assets, claims, screenshots, or copy.
 
 ## 4. Transferability Notes
 

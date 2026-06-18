@@ -30,7 +30,7 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 1. Confirm required references are readable: `references/output-schema.md` and `references/originality-guardrails.md`. If either file is missing or unreadable, report `BLOCKER reference-unavailable: <path>` and stop.
 2. Read the visual sample and user notes. If no usable sample exists, report `missing-visual-sample`, ask for a URL, screenshot, file, or visual description, and stop.
 3. Apply input guards before extraction:
-   - If the user asks only for final production, report `production-requested`, route to `visual-design-producer`, and stop.
+   - If the user asks only for final production, report `production-requested`, return a short copyable handoff prompt for any available downstream HTML/design producer, and stop.
    - If visual details are too vague to infer, report `insufficient-visual-detail`, ask one focused clarification question or request a better visual sample, and stop.
    - If the user asks for direct copying or source brand recreation, report `source-copy-request`, NEVER produce that copied part, and continue with abstract extraction only.
    - If evidence is partial, report `partial-evidence`, continue with lower confidence, and fill `Evidence And Confidence` / `missing_evidence`.
@@ -43,8 +43,8 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 10. MUST remove source brand assets, logos, brand names, exact layouts, proprietary components, exact copy, and unique identity markers.
 11. Compose the Markdown `Visual DNA Design System` using the schema in `references/output-schema.md`.
 12. Emit the JSON/tokens representation using the schema in `references/output-schema.md`.
-13. Compose a copyable downstream production prompt for `visual-design-producer`.
-14. Apply the originality guardrails in `references/originality-guardrails.md`. If any Self-Check answer is not a clear "No", return to steps 9-10 and rewrite the transferable/non-transferable split. Retry at most 2 times; if the gate still fails, report `guardrails-cannot-converge` and ask the user to decide.
+13. Compose a copyable downstream production prompt for any available downstream HTML/design producer.
+14. Apply the originality guardrails in `references/originality-guardrails.md`. If any Self-Check answer is not a clear "No", return to steps 9-10 and rewrite the transferable/non-transferable split. Retry at most 2 times; if the gate still fails, report `guardrails-cannot-converge`, omit disputed transfer items, keep only high-confidence abstract principles, list omitted items in `Originality Guardrails`, and continue to step 15.
 15. Deliver the named artifacts and end.
 
 Failure paths:
@@ -56,7 +56,7 @@ Failure paths:
 - If the sample is non-design content such as a natural photo, video frame, or random screenshot with no design intent, report `insufficient-design-signal`, request a sample with clear design intent, and stop.
 - If multiple samples have conflicting styles, report `conflicting-style-samples`, list the differences, and ask whether to synthesize one main DNA, output separate DNA systems, or choose one primary sample. If the user does not answer, output separate DNA systems and continue.
 - If the user asks for direct copying or source brand recreation, report `source-copy-request`, NEVER produce that copied part, and MUST extract only abstract transferable principles.
-- If the user asks for final production, report `production-requested`, route to `visual-design-producer`, and stop this skill unless the user also requested extraction.
+- If the user asks for final production, report `production-requested`, return a short copyable handoff prompt for any available downstream HTML/design producer, and stop this skill unless the user also requested extraction.
 - If visual details are too vague to infer, report `insufficient-visual-detail`, ask one focused clarification question or request a better visual sample, and stop.
 
 ## Required Output
@@ -112,7 +112,7 @@ Reason: This copies source identity. Extract abstract principles instead, such a
 <bad-example>
 WRONG: "Here is a beautiful landing page based on the reference."
 
-Reason: This skill extracts a design system. Final HTML production belongs to `visual-design-producer`.
+Reason: This skill extracts a design system. Final HTML production belongs in a downstream production tool or skill.
 </bad-example>
 
 ## Acceptance Criteria
@@ -124,4 +124,4 @@ The task is complete when:
 - Downstream prompt is present.
 - Transferable and non-transferable elements are separated.
 - Originality guardrails are explicit.
-- NEVER produce final website, dashboard, deck, poster, app UI, or prototype in this skill. Route final production to `visual-design-producer`.
+- NEVER produce final website, dashboard, deck, poster, app UI, or prototype in this skill. Return a downstream handoff prompt instead of binding to a specific producer that may not exist in the current repository.
