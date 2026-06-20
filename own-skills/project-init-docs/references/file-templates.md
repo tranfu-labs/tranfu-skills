@@ -89,10 +89,12 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 - `## 变更工作流`：一次需求/业务变更建一个 `openspec/changes/<change-id>/` 目录。
 - `## 目录内容`：
   - `proposal.md`：为什么改、改什么、影响面。
-  - `design.md`：怎么实现、方案与权衡。
+  - `design.md`：怎么实现、方案与权衡（**不含字符图**）。
   - `tasks.md`：可勾选的任务清单。
   - `spec-delta/`：对 `openspec/specs/` 的增删改（先写 delta，实现后再合并回 specs）。
-- `## 流程`：proposal → design → tasks → 实现 → 把 spec-delta 合并回 `openspec/specs/`。
+  - `wireframes.md`（可选，本项目扩展）：仅当本次 change 涉及前端路由 / 页面 / 版式变化时新建；基线 MUST 引用 `docs/wireframes/pages/<page>.md`；多页用 `## pages/<page>.md` 小节区分。`_template/` 不含它，按需新建。
+- `## 推进顺序`：proposal → design（+ 必要时 wireframes.md）→ tasks → 实现 → 归档；spec-delta 与 wireframes.md 都在归档时才合并回事实源。
+- `## 归档（change 完成后必做）`：三步等价并列——① `changes/<id>/` 移到 `changes/archive/<YYYY-MM-DD>-<id>/`；② spec-delta 合并回 `openspec/specs/<domain>/spec.md`；③ 若有 `wireframes.md`，字符图回流到 `docs/wireframes/pages/<page>.md` 与 `flow.md`。归档动作 MUST 写在本文件，NEVER 写进每个 change 的 `tasks.md`。
 
 ### openspec/changes/CLAUDE.md
 
@@ -128,6 +130,8 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 ## 7. docs/wireframes/ —— 字符图线框（默认生成）
 
 随基线**默认生成**，不做 UI 判定。用等宽字符快速对齐每个页面"有哪些信息块、整体框架、谁在什么位置"，**只表达信息架构与版式，不表达视觉样式/控件状态变体**。
+
+**定位**：`docs/wireframes/` 是项目的**版式事实源**，与 `openspec/specs/`（行为事实源）并列。靠 `openspec/changes/` 流转更新——改页面的 change 在 `changes/<id>/wireframes.md` 画字符图，归档时回流。归档约定写在 `openspec/changes/AGENTS.md`（init 阶段由 `fill.sh` 生成），**不在每个 change 的 `tasks.md` 重复**。
 
 是否保留由仓库根 `AGENTS.md` 的「线框图」一节决定：无界面的工具/库类项目后续按该规则删除整个目录。init 阶段只负责铺好、不替用户判断。
 
