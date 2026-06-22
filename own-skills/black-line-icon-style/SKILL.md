@@ -4,9 +4,9 @@ description: >
   Use when the user wants a minimalist black-and-white line icon, symbol, UI entry icon, logo-like auxiliary mark, empty-state symbol, or abstract technology/workflow icon.
   Also trigger for Chinese phrasing such as 做个黑白图标, 线性 icon, AI 工作流 icon, 极简符号, UI 入口图标, 空状态图标.
   Do NOT trigger when the user wants a colorful illustration, realistic image, 3D render, complex poster, article cover, infographic with text, or formal brand logo; route article covers to article-cover-image, infographics to a dedicated infographic workflow, and formal logos to a logo design workflow or human design.
-version: 0.2.0
+version: 0.2.1
 author: aquarius-wing
-updated_at: 2026-06-18
+updated_at: 2026-06-22
 origin: own
 ---
 
@@ -78,7 +78,7 @@ ownership：
 完成标准：
 
 ```text
-done = 产出一张图标图像，且 §5 的 7 项生成前自检全部通过。
+done = 产出一张图标图像，且 §5.1 生成前 Prompt 自检与 §5.2 生成后成品验证全部通过。
 若用户只要 Prompt，done = 输出 §6 中文 Prompt 或 §7 英文 Prompt + §8 负面 Prompt，且不调用图像生成。
 ```
 
@@ -93,8 +93,10 @@ CREATE A TODO LIST FOR THE TASKS BELOW（内部执行，不向用户展示）：
 4. 提取核心概念。若主题包含多个对象 → 选择一个最能覆盖整体语义的单一符号；否则使用主题关键词。
 5. 选择图形隐喻：目标 / 节点 / 连接线 / 循环箭头 / 文档卡片 / 勾选 / 星标 / 抽象 AI 核心 / 系统结构线。
 6. 拼接 Prompt：使用 §6 或 §7，并附加 §8 负面 Prompt。
-7. 跑 §5 自检。若任一项不通过 → 简化构图、删除文字和装饰后回到第 5 步；若同一失败连续 2 次出现 → 改为更简单的单主体几何符号后再试一次；仍失败 → 简短说明失败原因并结束，不宣称 done。
-8. 调用图像生成能力产出图标，简短回复结果，并结束。
+7. 跑 §5.1 生成前 Prompt 自检。若任一项不通过 → 补全或收紧 Prompt 后回到第 6 步；若仍无法得到合格 Prompt → 简短说明失败原因并结束，不宣称 done。
+8. 调用图像生成能力产出图标。
+8.1 跑 §5.2 生成后成品验证。若任一项不通过 → 按 §10 纠偏后回到第 6 步；若同一失败连续 2 次出现 → 改为更简单的单主体几何符号后再试一次；仍失败 → 简短说明失败原因并结束，不宣称 done。
+9. 成品验证通过后，简短回复结果并结束。
 ```
 
 ---
@@ -162,9 +164,30 @@ UI 功能入口
 
 ---
 
-## 5. 生成前自检与完成标准
+## 5. 自检与完成标准
 
-生成图片前 MUST 完成以下检查：
+### 5.1 生成前 Prompt 自检
+
+生成图片前 MUST 只检查 Prompt 文本，不判定尚未生成的成品图：
+
+```text
+1. Prompt 是否明确要求黑白配色，并禁止彩色？
+2. Prompt 是否明确要求透明背景，或在不支持透明时使用纯白背景？
+3. Prompt 是否明确要求粗黑色圆角线条？
+4. Prompt 是否明确要求单主体、主体居中、留白充足？
+5. Prompt 是否明确禁止文字、字母、数字，除非用户显式授权？
+6. Prompt 是否明确要求简洁高识别度，并在 24-48px 缩小时仍可识别？
+7. Prompt 是否已附加 §8 负面 Prompt，覆盖阴影、渐变、3D、纹理、写实、复杂背景和多主体等禁项？
+```
+
+```text
+§5.1 done = 上述 7 项全部能从 Prompt 文本中直接读到。
+如果任一项为“否”，不能调用图像生成；必须补全或收紧 Prompt。
+```
+
+### 5.2 生成后成品验证
+
+生成图片后 MUST 检查成品图：
 
 ```text
 1. 是否完全无彩色？
@@ -177,8 +200,8 @@ UI 功能入口
 ```
 
 ```text
-done = 上述 7 项全部通过，并且最终产物是一张黑白线性图标。
-如果任一项为“否”，不能宣称完成；必须简化构图并重新生成。
+§5.2 done = 上述 7 项全部通过，并且最终产物是一张黑白线性图标。
+如果任一项为“否”，不能宣称完成；必须按 §10 纠偏并重新生成。
 ```
 
 ---
@@ -259,5 +282,5 @@ colorful, realistic, photorealistic, 3D, c4d, shadow, gradient, texture, complex
 ## 11. 快捷版 Skill
 
 ```text
-极简黑白线性图标风：透明或白色背景，粗黑色圆角线条，流畅几何曲线，主体居中，构图简洁，抽象科技符号感，适合 UI icon。禁止彩色、阴影、渐变、3D、纹理、复杂背景、文字、字母、数字和过多细节。done = §5 自检 7 项全部通过。
+极简黑白线性图标风：透明或白色背景，粗黑色圆角线条，流畅几何曲线，主体居中，构图简洁，抽象科技符号感，适合 UI icon。禁止彩色、阴影、渐变、3D、纹理、复杂背景、文字、字母、数字和过多细节。done = §5.1 生成前 Prompt 自检与 §5.2 生成后成品验证全部通过。
 ```
