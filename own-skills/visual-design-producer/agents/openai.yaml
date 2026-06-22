@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Design Producer"
+  short_description: "Produce original HTML visuals from handoff, Visual DNA, or brief"
+  default_prompt: "Use $visual-design-producer to produce an original HTML visual artifact from this Producer Handoff, Visual DNA, or brief."

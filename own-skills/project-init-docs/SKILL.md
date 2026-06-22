@@ -13,9 +13,9 @@ description: >
   任何目录级"怎么在这工作"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。
   不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、
   只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。
-version: 0.3.1
+version: 0.4.0
 author: aquarius-wing
-updated_at: 2026-06-16
+updated_at: 2026-06-20
 origin: own
 ---
 
@@ -23,7 +23,9 @@ origin: own
 
 使用这个技能：当用户在代码仓库里说"初始化"时，分析真实仓库，并搭建一套让 AI 能安全协作、先设计再实现的知识与规格基线。
 
-任务不是拷贝空白模板，而是把真实仓库的事实——语言、命令、目录、模块、业务域——写进一套固定的目录契约。基线建立后，任何 AI 拿到 `AGENTS.md` 就知道结构/命令/禁区，拿到 `module-map.md` 就知道依赖边界，拿到 `openspec/` 和 `docs/adr/` 就知道"先设计再实现"的契约与既有决策。
+任务不是拷贝空白模板，而是把真实仓库的事实——语言、命令、目录、模块、业务域——写进一套固定的目录契约。基线建立后，任何 AI 拿到 `AGENTS.md` 就知道结构/命令/禁区，拿到 `module-map.md` 就知道依赖边界，拿到 `openspec/` 和 `docs/adr/` 就知道"先设计再实现"的契约与既有决策，拿到 `docs/wireframes/` 就知道每个页面当前的版式事实。
+
+**两套事实源并列**：`openspec/specs/<domain>/spec.md` 是行为事实源，`docs/wireframes/` 是版式事实源。两者都靠 `openspec/changes/` 流转更新——改业务逻辑的 change 写 `spec-delta/`，改页面版式的 change 写 `wireframes.md`（本项目扩展，按需新建），归档时分别回流到 `specs/` 和 `docs/wireframes/`。归档动作由 `openspec/changes/AGENTS.md` 统一定义（由本 skill 生成），不在每个 change 的 `tasks.md` 重复。
 
 ## 核心原则
 
@@ -90,7 +92,7 @@ origin: own
    - `openspec/specs/<domain>/spec.md`：填域定位、可验证的业务规则、场景、可验证行为；探测不到的保留 `TODO: 需人工确认`，不硬造。
    - `docs/wireframes/pages/<page>.md`（探测到路由时）：按真实路由填字符图——页首写比例尺+断点清单，每个断点框写真实 px 与显示列尺寸（**显示列数 = 真实px ÷ 比例尺，全角字符按 2 列、歧义/半角按 1 列；用 Python `east_asian_width` 校验，禁用 `awk length`、codepoint、`wc -L`**），区块/容器照 `legend.md` 与消歧义规则画并打编号，注释表逐条对应；版式推不出的标 `TODO`，不硬造。
    - `docs/wireframes/flow.md`：按用户流程分节（登录流程、忘记密码流程…）填页面流转图，节点=真实页面（指向其 `page.md`）、同页态用虚线框、边打编号对应步骤表；流程推不出的标 `TODO`，不硬造。
-   - 根 `AGENTS.md` 的「线框图」一节是脚本写死的删除规则，保留不删——它指导后续在项目性质明确后决定是否删除 `docs/wireframes/`。
+   - 根 `AGENTS.md` 的「线框图」一节是脚本写死的双重契约（版式事实源定位 + 无界面项目的删除规则），保留不删——它既告诉后续 AI「`docs/wireframes/` 与 `specs/` 并列、靠 change 流转更新」，又指导项目性质明确后决定是否删除 `docs/wireframes/`。
 
 6. **核对 PRESENT 文件 + 幂等校验 + 产出清单**
    - 对第 4 步登记的 PRESENT 文件：读现有内容，只补缺失小节或报差异，覆盖前经用户确认。
@@ -105,7 +107,8 @@ origin: own
 - 已存在文件未被破坏性覆盖；无法填充处显式标注 `TODO`，无编造命令/依赖。
 - `docs/wireframes/{AGENTS.md,CLAUDE.md,legend.md,_template/page.md,flow.md}` 默认就位（不分 UI 与否）；探测到路由时每个 `pages/<page>.md` 有页首比例尺+断点声明、每框尺寸条，且**每框实际显示列宽 = 真实px ÷ 比例尺**（桌面 120 / 平板 64 / 手机 31，全角按 2 列、歧义/半角按 1 列，用 Python `east_asian_width` 量，对不上即不合格）；容器均按消歧义规则标明身份；编号与注释表一一对应、无孤儿编号。
 - `flow.md` 按用户流程分节，节点为真实页面并指向其 `page.md`，每节图中编号与步骤表一一对应、无孤儿编号。
-- 根 `AGENTS.md` 含脚本写死的「线框图」一节（默认生成说明 + 无界面项目的删除规则），保留未删。
+- 根 `AGENTS.md` 含脚本写死的「线框图」一节（版式事实源定位 + 默认生成说明 + 无界面项目的删除规则），保留未删。
+- `openspec/changes/AGENTS.md` 含脚本写死的四个小节——`## 变更工作流`、`## 目录内容`（含 `wireframes.md` 可选项）、`## 推进顺序`、`## 归档`；「归档」节三步并列：移动 change 目录、合并 spec-delta、若有 `wireframes.md` 则回流到 `docs/wireframes/`——其中第 3 步只针对有 `wireframes.md` 的 change，归档动作 NEVER 写进单个 change 的 `tasks.md`。
 
 ## 失败路径
 
