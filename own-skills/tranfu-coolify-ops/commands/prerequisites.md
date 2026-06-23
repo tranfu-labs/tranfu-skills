@@ -12,10 +12,12 @@ coolify context list
 读 `default` 列里有星号或被标记为 active 的那一项，向用户报：
 
 > 当前 default context 是 `<context-name>`（生产 / 测试 / 其它）。如果你想在另一个实例上跑，
-> 在每条命令前加 `--context=<name>`，或者先 `coolify context use <name>` 永久切。
+> 告诉我目标 context 名，我后续所有命令都带 `--context=<name>` 跑；
+> 或者你自己先 `coolify context use <name>` 永久切。
 
-用户未确认或表达"切到别的"之前，**不要进行任何写操作**。读类命令（list / get）可以先跑，
-但带 `--context=<name>` 显式声明在哪。
+用户确认后把目标 context 名记为 `${context}`（如果用户接受 default，就用 default 列里的那个名字）。
+未确认或用户拒答之前，**不要进行任何写操作**，连读类命令（list / get）也都先停下来。
+确认后**每一条后续命令都带 `--context="${context}"`**——见 SKILL.md「全局守则」第二条。
 
 如果 `coolify context list` 返回空或报错，说明用户机器上 CLI 没装 / 没初始化 / context 未配置。
 按下面文案返回：
@@ -29,25 +31,26 @@ coolify context list
 明确指定走哪台，不能让 skill 默默选第一个。
 
 ```bash
-coolify server list --format json
+coolify server list --context="${context}" --format json
 ```
 
 按返回数组长度分支：
 
 ```bash
-SERVER_COUNT=$(coolify server list --format json | jq 'length')
+SERVER_COUNT=$(coolify server list --context="${context}" --format json | jq 'length')
 ```
 
 - `SERVER_COUNT == 1`：
-  - 拿 server uuid：`SERVER_UUID=$(coolify server list --format json | jq -r '.[0].uuid')`
+  - 拿 server uuid：`SERVER_UUID=$(coolify server list --context="${context}" --format json | jq -r '.[0].uuid')`
   - 拿到 `${server-uuid}`，传给后续场景脚本使用。
 - `SERVER_COUNT == 0`：终止。返回文案：
-  > 当前 context 上没有任何 server。先用 `coolify server add <name> <ip> <private-key-uuid>` 加一台，
-  > `coolify server validate <uuid>` 验证通过后再跑这个流程。
+  > 当前 context (`${context}`) 上没有任何 server。先用
+  > `coolify server add --context="${context}" <name> <ip> <private-key-uuid>` 加一台，
+  > `coolify server validate --context="${context}" <uuid>` 验证通过后再跑这个流程。
 - `SERVER_COUNT > 1`：终止。返回文案：
-  > 当前 context 上有 `${SERVER_COUNT}` 台 server，本 skill 默认 tranfu 团队只用单 server。
+  > 当前 context (`${context}`) 上有 `${SERVER_COUNT}` 台 server，本 skill 默认 tranfu 团队只用单 server。
   > 列出来让我决定：
-  > （列出 `coolify server list` 的 name + uuid + ip）
+  > （列出 `coolify server list --context="${context}"` 的 name + uuid + ip）
   > 如果确实需要在多 server 环境上跑，告诉我目标 server-uuid，再跑这个流程；
   > 同时考虑扩展本 skill 让它支持多 server。
 
@@ -55,7 +58,8 @@ SERVER_COUNT=$(coolify server list --format json | jq 'length')
 
 跑完 Step A + Step B，对场景脚本提供：
 
-- `${context}`：当前在哪个实例（display 用，传 `--context` 时用）。
+- `${context}`：用户已确认的目标 context 名。**场景脚本里的每条 CLI 命令都必须显式带
+  `--context="${context}"`**（见 SKILL.md「全局守则」），不要依赖 default。
 - `${server-uuid}`：唯一一台 server 的 UUID。
 
 ## 失败语义

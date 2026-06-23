@@ -4,7 +4,8 @@
 未来扩展时再追加。
 
 参数表按原文 1:1。全局 flag（`--context` / `--token` / `--format` / `--show-sensitive` / `--debug`）
-不再重复，见 [conventions.md](conventions.md)。
+不再重复，见 [conventions.md](conventions.md)。所有命令在 onboard 场景里都必须显式带
+`--context="${context}"`（见 SKILL.md「全局守则」），下面的示例都已带上。
 
 本文件覆盖的命令：
 
@@ -26,9 +27,9 @@
 onboard 场景用法（在 [prerequisites.md](prerequisites.md) Step B 断言只有一台 server）：
 
 ```bash
-SERVER_COUNT=$(coolify server list --format json | jq 'length')
+SERVER_COUNT=$(coolify server list --context="${context}" --format json | jq 'length')
 # 必须 == 1
-SERVER_UUID=$(coolify server list --format json | jq -r '.[0].uuid')
+SERVER_UUID=$(coolify server list --context="${context}" --format json | jq -r '.[0].uuid')
 ```
 
 ---
@@ -49,8 +50,9 @@ SERVER_UUID=$(coolify server list --format json | jq -r '.[0].uuid')
 
 终止文案模板（在 Step 0 server 数量 == 0 时用）：
 
-> 当前 context 上没有任何 server。先用 `coolify server add <name> <ip> <private-key-uuid>` 加一台，
-> `coolify server validate <uuid>` 验证通过后再跑这个流程。
+> 当前 context (`${context}`) 上没有任何 server。先用
+> `coolify server add --context="${context}" <name> <ip> <private-key-uuid>` 加一台，
+> `coolify server validate --context="${context}" <uuid>` 验证通过后再跑这个流程。
 
 ---
 

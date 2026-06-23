@@ -6,7 +6,8 @@
 
 参数表统一按原文 1:1 抄录：`参数`、`类型`、`必填`、`默认值`、`说明`。
 每条命令都会带 `--context` / `--token` / `--format` / `--show-sensitive` / `--debug`
-这些全局 flag（见 [conventions.md](conventions.md)），下表不再重复。
+这些全局 flag（见 [conventions.md](conventions.md)），下表不再重复。所有命令在 onboard 场景里
+都必须显式带 `--context="${context}"`（见 SKILL.md「全局守则」），下面的示例都已带上。
 
 本文件覆盖的命令：
 
@@ -58,6 +59,7 @@
 
 ```bash
 coolify app create github \
+  --context="${context}" \
   --name "${repo}" \
   --project-uuid "${PROJECT_UUID}" \
   --server-uuid "${SERVER_UUID}" \
@@ -92,10 +94,11 @@ onboard 场景用法（在 Step 2 检查同名 + Step 7 拿新 app UUID）：
 
 ```bash
 # Step 2 检查同名
-coolify app list --format json | jq -e --arg name "${repo}" '.[] | select(.name == $name)'
+coolify app list --context="${context}" --format json \
+  | jq -e --arg name "${repo}" '.[] | select(.name == $name)'
 
 # Step 7 拿 UUID
-APP_UUID=$(coolify app list --format json \
+APP_UUID=$(coolify app list --context="${context}" --format json \
   | jq -r --arg name "${repo}" '.[] | select(.name == $name) | .uuid')
 ```
 
@@ -112,7 +115,7 @@ APP_UUID=$(coolify app list --format json \
 onboard 场景用法（在 Step 2 终止文案里指引用户查看现状）：
 
 ```bash
-coolify app get <uuid>
+coolify app get --context="${context}" <uuid>
 ```
 
 ---
@@ -142,12 +145,14 @@ coolify app get <uuid>
 onboard 场景用法（在 Step 7 拿首次部署的 UUID）：
 
 ```bash
-DEPLOYMENT_UUID=$(coolify app deployments list "${APP_UUID}" --format json \
-  | jq -r '.[0].uuid')
+DEPLOYMENT_UUID=$(coolify app deployments list --context="${context}" "${APP_UUID}" --format json \
+  | jq -r 'sort_by(.created_at // .id) | last | .uuid')
 ```
 
-假设：CLI 返回的列表按时间倒序（最新在前）。本 skill 依赖这个假设；若日后发现实际为正序，
-统一把 `.[0]` 换成 `sort_by(.created_at) | last`。
+**不要用 `.[0]` 取首条**：CLI 返回顺序未在所有版本上验证，依赖默认顺序在某些 Coolify 版本里
+会拿到最旧的部署（onboard 后正好是 queued 中的首部署，看起来"对"，但本质是依赖未验证假设）。
+统一用 `sort_by(.created_at // .id) | last` 显式按时间或 id 排，拿最新一条；`// .id` 是兜底
+（如果 CLI 这个版本不返回 `created_at` 字段，回退用 `id` 排）。
 
 ---
 
@@ -166,11 +171,11 @@ DEPLOYMENT_UUID=$(coolify app deployments list "${APP_UUID}" --format json \
 onboard 场景用法（在 Step 7 流式跟首次部署）：
 
 ```bash
-coolify app deployments logs "${APP_UUID}" "${DEPLOYMENT_UUID}" --follow
+coolify app deployments logs --context="${context}" "${APP_UUID}" "${DEPLOYMENT_UUID}" --follow
 ```
 
 排查 build 卡住、网络异常时加 `--debuglogs`：
 
 ```bash
-coolify app deployments logs "${APP_UUID}" "${DEPLOYMENT_UUID}" --follow --debuglogs
+coolify app deployments logs --context="${context}" "${APP_UUID}" "${DEPLOYMENT_UUID}" --follow --debuglogs
 ```
