@@ -1,24 +1,28 @@
 ---
 name: tranfu-coolify-ops
-version: 0.1.1
+version: 0.2.0
 author: aquarius-wing
 origin: own
 updated_at: 2026-06-23
 description: >
   用 coolify CLI 在 tranfu 团队的 Coolify 实例上完成运维操作。
-  首期只支持 onboard 新 app 这一个场景，把 tranfu-labs 组织下、烤肉串命名且以 -app 结尾的
-  GitHub 仓库通过 GitHub App 路径接入 Coolify 并触发首次部署。其它场景
-  （部署故障排查、查看运行状态、改配置、停启删除、数据库 / 服务 / 网格 / 防火墙等）会陆续扩展。
+  当前支持两个场景：
+  (1) onboard 新 app —— 把 tranfu-labs 组织下、烤肉串命名且以 -app 结尾的
+  GitHub 仓库通过 GitHub App 路径接入 Coolify 并触发首次部署；
+  (2) app 日常运维 —— 对已存在的 app 做 set-env / set-domain / redeploy / stop / start
+  五个动作，入口走自然语言指代项目（app 名 / GitHub URL / UUID / 模糊描述），由场景定位到唯一 app。
+  其它场景（部署故障排查、查看运行状态、删除应用、数据库 / 服务 / 网格 / 防火墙等）会陆续扩展。
   触发短语：把 tranfu-labs/<x>-app 部署到 coolify、上 coolify 新应用、
   在 coolify 建个新 app 用 GitHub App 部署、给这个 tranfu 仓库做 coolify onboard、
-  把这个新仓库挂到 coolify 上线；也覆盖口语说法，例如
-  「这个仓库怎么挂到 coolify」「帮我把这个 app 跑到 coolify 上」，
-  即使用户没有直接说 onboard。
+  把这个新仓库挂到 coolify 上线；改 X 的 env / 加域名 / 重新部署 X / 重启 X / 停掉 X /
+  启动 X / redeploy / restart；也覆盖口语说法，例如
+  「这个仓库怎么挂到 coolify」「帮我把这个 app 跑到 coolify 上」「把那个订单服务停掉」
+  「给 user-app 加个域名」，即使用户没有直接说 onboard / set-env / set-domain。
   不要用于：非 tranfu-labs 仓库；命名不匹配 ^[a-z][a-z0-9-]*-app$；
   用 public 仓库 / deploy-key / Dockerfile / docker image 方式部署；
-  改已有 app 的配置或重新部署已有 app；写 compose.yml 或 Dockerfile 本身
-  （那是 coolify-deploy skill 的职责）；Coolify 网页 UI 操作；数据库备份、env 同步、
-  服务管理、mesh 初装、防火墙等场景（占位中，未实现）。
+  写 compose.yml 或 Dockerfile 本身（那是 coolify-deploy skill 的职责）；
+  Coolify 网页 UI 操作；删 app / 删 project；改 build pack / git repository / docker image 路径；
+  数据库备份、服务管理、mesh 初装、防火墙等场景（占位中，未实现）。
 ---
 
 # tranfu Coolify 运维
@@ -36,7 +40,7 @@ coolify CLI 目前不暴露 `project delete`——代价不小）。
 
 - 在 tranfu 团队约定下，用 coolify CLI 跑覆盖 Coolify 实例的运维场景。
 - 所有场景共用前置（context 确认、唯一 server 断言）与共用命名约束（tranfu-labs 组织、烤肉串 + -app 后缀、project 名 == 仓库名）。
-- 首期只支持 onboard 新 app，其它场景留好扩展位。
+- 当前支持两个场景：onboard 新 app（`scenarios/onboard-new-app.md`）+ app 日常运维（`scenarios/app-ops.md`，覆盖 set-env / set-domain / redeploy / stop / start）。其它场景留好扩展位。
 
 ## 这个 skill 不做什么
 
@@ -44,7 +48,7 @@ coolify CLI 目前不暴露 `project delete`——代价不小）。
 - 不写 Dockerfile / compose.yml / Traefik 标签本身。仓库可部署性的前置工作交给 coolify-deploy。
 - 不在网页 UI 里点。所有动作走 CLI。
 - 不替用户安装 coolify CLI 或 jq。检测到缺失就提示安装命令并停下来。
-- 不在 onboard 场景里处理"已有 app 的重新部署 / 改配置"。那属于其它场景的范围（未来扩展）。
+- 不在 onboard 场景里处理"已有 app 的重新部署 / 改 env / 改域名 / 启停"——那是 `scenarios/app-ops.md` 的范围；改 build pack / 改 git repository / 改 docker image 路径等结构性配置是 `scenarios/change-config.md`（待实现）。
 
 ## 通用工作流
 
@@ -60,13 +64,14 @@ coolify CLI 目前不暴露 `project delete`——代价不小）。
 | 用户意图（关键词） | 场景脚本 |
 |---|---|
 | 把 tranfu-labs/`<x>`-app 部署到 coolify / 新仓库上线 / 用 GitHub App 部署新 app / onboard | `scenarios/onboard-new-app.md` |
+| 改 X 的 env / 加（改）域名 / redeploy / 重新部署 / 重启 / 停掉 / 启动某个**已存在**的 app | `scenarios/app-ops.md` |
 
 未实现场景（占位，未来扩展时往 `scenarios/` 加一个文件并在本表添加一行）：
 
 - 排查部署失败 / 应用跑不起来：`scenarios/troubleshoot-deploy.md`（待实现）
-- 查看运行状态 / 看日志：`scenarios/inspect-app.md`（待实现）
-- 改配置 / 改 env / 改端口：`scenarios/change-config.md`（待实现）
-- 停启 / 重启 / 删除应用：`scenarios/lifecycle.md`（待实现）
+- 查看运行状态 / 看日志 / 拿 app 详细信息：`scenarios/inspect-app.md`（待实现）
+- 改 build pack / 改 git repository / 改 docker image 路径等**结构性**配置：`scenarios/change-config.md`（待实现，跟 `app-ops` 的 set-env / set-domain 区分：那两个是"日常运维"，这里是改 app 的本质属性）
+- 删除应用 / 删 project：`scenarios/lifecycle-delete.md`（待实现，破坏性单独成场景）
 - 其它（数据库备份、服务管理、mesh 初装、防火墙、私钥）按相同模式追加。
 
 ## 全局守则
@@ -96,20 +101,27 @@ coolify CLI 目前不暴露 `project delete`——代价不小）。
 
 命令参数手册（按 topic 切，原文 1:1 抄录参数表，便于查参）：
 
-- `commands/app.md`：`app create github` / `app list` / `app get` / `app delete` /
+- `commands/app.md`：**读类** —— `app create github` / `app list` / `app get` / `app delete` /
   `app deployments list` / `app deployments logs`。
+- `commands/app-mutating.md`：**写类** —— `app env list` / `env create` / `env update` / `env delete` /
+  `env sync` / `app update`（含 `--domains`） / `app start`（≡ `app deploy`） / `app stop` / `app restart`。
+  app-ops 场景五个动作的命令底稿。
 - `commands/project.md`：`project list` / `project create` / `project get`。
 - `commands/github.md`：`github list` / `github repos` / `github create` / `github get`。
 - `commands/server.md`：`server list` / `server add` / `server validate` / `server get`。
 - `commands/context.md`：`context list` / `context add` / `context use` / `context verify`。
 
-未来扩展场景（troubleshoot / inspect / config-change / lifecycle / database / firewall / mesh）
-所需的 topic（`app env` / `app storage` / `database` / `service` / `firewall` / `init` /
-`teams` / `private-key` / `deploy` 等）按相同模式追加。
+未来扩展场景（troubleshoot / inspect / change-config / lifecycle-delete / database / firewall / mesh）
+所需的 topic（`app storage` / `database` / `service` / `firewall` / `init` /
+`teams` / `private-key` 等）按相同模式追加。
 
 场景脚本：
 
-- `scenarios/onboard-new-app.md`：首期唯一场景的 7 步流程，覆盖从 URL 到首次部署 logs 的全过程。
+- `scenarios/onboard-new-app.md`：把 tranfu-labs 仓库通过 GitHub App 接入 Coolify 的 7 步流程，
+  覆盖从 URL 到首次部署 logs 的全过程。
+- `scenarios/app-ops.md`：对**已存在**的 app 做 set-env / set-domain / redeploy / stop / start 五个动作，
+  入口由自然语言定位到唯一 app（精确名 / GitHub URL / UUID / 模糊匹配 + 多命中让用户选），
+  每个动作独立标安全等级、独立打 banner，破坏性动作（stop）必须拿到强信号词才推进。
 
 <example>
 用户：把 https://github.com/tranfu-labs/foo-app 部署到 coolify
