@@ -81,12 +81,30 @@ description: >
 
 ## 引用文件
 
+横切约定与共用前置：
+
 - `commands/conventions.md`：全局 flag、输出格式、jq 解析模式、UUID 与 ID 的区别、别名表、状态枚举、
   几个常踩坑的命令默认行为。所有场景都假设读者了解这一份。
 - `commands/prerequisites.md`：共用前置 —— context 确认 + 单 server 断言，拿 `${server-uuid}`。
   任一场景的 Step 0 都跳到这里。
 - `commands/tranfu-naming.md`：tranfu 团队的硬命名约束 —— GitHub URL 解析、组织校验、
   仓库正则、project 命名规则、报错文案。涉及仓库的场景都跳到这里。
+
+命令参数手册（按 topic 切，原文 1:1 抄录参数表，便于查参）：
+
+- `commands/app.md`：`app create github` / `app list` / `app get` / `app delete` /
+  `app deployments list` / `app deployments logs`。
+- `commands/project.md`：`project list` / `project create` / `project get`。
+- `commands/github.md`：`github list` / `github repos` / `github create` / `github get`。
+- `commands/server.md`：`server list` / `server add` / `server validate` / `server get`。
+- `commands/context.md`：`context list` / `context add` / `context use` / `context verify`。
+
+未来扩展场景（troubleshoot / inspect / config-change / lifecycle / database / firewall / mesh）
+所需的 topic（`app env` / `app storage` / `database` / `service` / `firewall` / `init` /
+`teams` / `private-key` / `deploy` 等）按相同模式追加。
+
+场景脚本：
+
 - `scenarios/onboard-new-app.md`：首期唯一场景的 7 步流程，覆盖从 URL 到首次部署 logs 的全过程。
 
 <example>
