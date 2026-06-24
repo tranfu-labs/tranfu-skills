@@ -40,8 +40,8 @@ coolify context list
 
 ## `coolify context add <context-name> <url> <token>`
 
-加一个新 context。**本 skill 不直接调**——只在 Step 0 终止文案里指引用户用此命令配上。
-context 涉及实例 URL 与 API token，需要用户从 Coolify 网页 `/security/api-tokens` 拿 token。
+加一个新 context。**本 skill MUST NEVER 直接调此命令**——只在 Step 0 终止文案里指引用户用此命令配上。
+context 涉及实例 URL 与 API token，MUST 由用户从 Coolify 网页 `/security/api-tokens` 拿 token。
 
 | 参数 | 类型 | 必填 | 默认 | 说明 |
 |---|---|---|---|---|
@@ -66,8 +66,8 @@ context 涉及实例 URL 与 API token，需要用户从 Coolify 网页 `/securi
 |---|---|---|---|---|
 | `<context-name>` | string | **是** | — | 要切到的 context 名（位置参数） |
 
-本 skill **不替用户调** `context use`——切 default context 是有副作用的全局行为，应该让用户
-自己跑或者用 `--context=<name>` 单条覆盖。Step 0 终止文案里把 `--context=<name>` 和
+本 skill **MUST NEVER 替用户调** `context use`——切 default context 是有副作用的全局行为，MUST 让用户
+自己跑或者用 `--context=<name>` 单条覆盖。Step 0 终止文案里 MUST 把 `--context=<name>` 和
 `coolify context use <name>` 两种切换方式都告诉用户，让他自己挑。
 
 ---

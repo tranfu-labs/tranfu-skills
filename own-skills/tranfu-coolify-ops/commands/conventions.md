@@ -8,7 +8,7 @@
 每条 `coolify` 命令都可以带这些通用 flag：
 
 - `--context <name>`：临时切实例，单次有效，不会改 default context。多实例环境里慎用 default，
-  涉及到生产 / 测试切换时建议显式带 `--context=<name>` 而不是先 `coolify context use`。
+  涉及到生产 / 测试切换时 MUST 显式带 `--context=<name>`，NEVER 先 `coolify context use` 改 default 再跑命令。
 - `--token <token>`：用一个外部 token 跑这条命令，覆盖当前 context 里存的 token。
 - `--format <fmt>`：输出格式，可选 `table`（默认） / `json` / `pretty`。
 - `--show-sensitive` 或 `-s`：显示被默认遮蔽的敏感字段（token、密码、IP、邮箱等）。
