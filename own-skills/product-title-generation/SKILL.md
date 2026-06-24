@@ -1,7 +1,7 @@
 ---
 name: product-title-generation
 description: Generate concise Chinese product, feature, module, entry, or brand-short titles. Use when the user asks for 产品标题、模块命名、功能入口名、品牌化短标题、中文命名、name this feature, or product title, especially 4-6 character product-like titles from product names, feature descriptions, technical capabilities, learning services, launch platforms, observability, or mixed Chinese-English concepts. Do NOT trigger for slogans or long marketing copy -> use copywriting; SEO headlines -> use SEO/content; trademark/legal availability -> use legal review; code identifiers or variable names -> use code naming/refactor; full brand strategy -> use brand strategy.
-version: "0.1.1"
+version: "0.1.4"
 author: tranfu
 updated_at: "2026-06-24"
 origin: own
@@ -29,28 +29,34 @@ Route adjacent requests before generating titles:
 
 ## Execution
 
-CREATE A TODO LIST FOR THE TASKS BELOW when the request is complex, contains multiple products, or requires comparing several title directions. Keep the list internal unless the user asks to see process.
+CREATE A TODO LIST FOR THE TASKS BELOW. Keep the list internal unless the user asks to see process.
 
 1. Read the user's input. If no product, feature, concept, or direction is provided, ask one concise question for the missing target and stop.
-2. Normalize the input into four fields: product object, core capability, use scenario, and desired tone. If a field is missing, infer it from the provided text without inventing unrelated positioning.
-3. If the input contains multiple unrelated products, generate one "Multi-Product Output Format" block per product when each product is clear; otherwise ask the user to choose the target and stop.
-4. Route the title style:
+2. If the input matches any "Do Not Use" case, state that this skill only generates short product titles, route using that mapping, and stop.
+3. If the user's title or naming request is ambiguous between a short product title, SEO headline, slogan, campaign copy, full product name, or brand strategy, ask one concise clarification question and stop.
+4. Normalize the input into four fields: product object, core capability, use scenario, and desired tone. If a field is missing, infer it from the provided text without inventing unrelated positioning.
+5. If the input contains multiple unrelated products, generate one "Multi-Product Output Format" block per product when each product is clear; otherwise ask the user to choose the target and stop.
+6. Route the title style. If product object, source brand, scenario, and core capability imply different routes, prioritize core capability first, then use scenario and desired tone to refine wording:
    - Learning products -> companionship, sprint, rescue, training, improvement.
    - Technical platforms -> base, platform, hub, engine, cockpit, infrastructure.
    - Data or observability products -> observation, insight, monitoring, tracing, visibility.
    - Launch or incubation products -> launch, incubation, startup, publishing, product desk.
    - Code or development products -> repository, code, understanding, navigation, insight.
    - Otherwise -> use a neutral product-entry style.
-5. Generate at least eight candidate titles before choosing. Each candidate MUST preserve the core object or core capability.
-6. Filter candidates with the title rules below. Remove titles that are too long, too generic, too marketing-heavy, awkwardly translated, or semantically off-target.
-7. Select the recommendation using this priority order: semantic fit, product-entry feel, compactness, distinctiveness, and natural Chinese phrasing.
-8. Output the exact format in "Output Format" or "Multi-Product Output Format" and end.
+7. Generate at least eight candidate titles before choosing. Each candidate MUST preserve the core object or core capability.
+8. Filter candidates with the title rules below. Remove titles that are too long, too generic, too marketing-heavy, awkwardly translated, or semantically off-target.
+9. Select the recommendation using this priority order: semantic fit, product-entry feel, compactness, distinctiveness, and natural Chinese phrasing.
+10. Output the exact format in "Output Format" or "Multi-Product Output Format" and end, unless the user explicitly asks for analysis, more options, fewer options, or a different format.
 
-Failure exits:
+Failure exits and overrides:
 
-- Empty or missing target -> ask for the product, feature, or concept and stop.
-- Trademark, legal, SEO, slogan, or full-copy request -> state that this skill only generates short product titles and route it using the "Do Not Use" mapping.
-- Conflict between user-requested length and this skill's 4-6 unit rule -> follow the user's explicit length requirement and mention it in the reason.
+| Condition | Handling | Output shape |
+| --- | --- | --- |
+| Empty or missing target | Ask for the product, feature, module, or concept and stop. | `请告诉我需要命名的产品、功能、模块或概念。` |
+| Any request matching "Do Not Use" | State that this skill only generates short product titles, route using the mapping, and stop. | `这个 skill 只生成短产品标题。这个请求属于 <case>，请使用 <workflow>。` |
+| Ambiguous title or naming intent | Ask the user to choose the intended output type and stop. | `你想要的是产品入口短标题、SEO 标题、slogan/营销文案，还是品牌命名？` |
+| Multiple unrelated products but not each product is clear | Ask the user to choose the target product or split the request and stop. | `我看到了多个可能的命名对象，请先指定要命名哪一个产品、功能或模块。` |
+| Conflict between user-requested length and this skill's 4-6 unit rule | Follow the user's explicit length requirement and mention it in the reason. | Use the normal output format, with the length override mentioned in the recommendation reason. |
 
 ## Title Rules
 
@@ -58,7 +64,7 @@ Failure exits:
 - Count `AI`, `Agent`, `GitHub`, `Lab`, and meaningful numbers as one display unit each when they are necessary to preserve the source meaning.
 - Prefer Chinese titles. Keep English tokens only when they are the product object, established industry wording, or explicitly requested by the user.
 - The recommendation MUST NOT appear again in the alternatives.
-- The alternatives list MUST contain exactly six titles.
+- The alternatives list MUST contain exactly six titles unless the user explicitly requests a different number of alternatives.
 - All titles MUST feel like real product, module, or navigation-entry names, not explanatory phrases.
 - All titles MUST keep the source direction. Do not make a title sound better by changing the product category or core capability.
 
@@ -110,14 +116,14 @@ GOOD: `观测中枢`, `异构观测`
 一句话说明为什么推荐该标题，重点解释它如何贴合产品定位、核心能力或使用场景。
 ```
 
-Output only this block unless the user explicitly asks for analysis, more options, or a different format.
+Output only this block unless the user explicitly asks for analysis, more options, fewer options, or a different format.
 
 ## Multi-Product Output Format
 
-When the input contains multiple clear products, output one repeated block per product using this exact format:
+When the input contains multiple clear source concepts, output one repeated block per source concept using this exact format:
 
 ```markdown
-## <product object>
+## <source concept>
 
 推荐标题：XXXX
 
@@ -130,10 +136,10 @@ When the input contains multiple clear products, output one repeated block per p
 6. XXXX
 
 推荐理由：
-一句话说明为什么推荐该标题，重点解释它如何贴合该产品的定位、核心能力或使用场景。
+一句话说明为什么推荐该标题，重点解释它如何贴合该输入概念的定位、核心能力或使用场景。
 ```
 
-Output only these repeated blocks unless the user explicitly asks for analysis, more options, or a different format.
+Output only these repeated blocks unless the user explicitly asks for analysis, more options, fewer options, or a different format.
 
 ## Examples
 
@@ -248,6 +254,88 @@ Input:
 Output:
 
 ```markdown
+推荐标题：智能观测层
+
+备选标题：
+1. Agent观测台
+2. 团队观测台
+3. 异构观测层
+4. 协同观测
+5. 智能监控台
+6. 观测中枢
+
+推荐理由：
+智能观测层保留了可观测性的技术含义，同时具备更自然的产品化表达。
+```
+
+### Example 6
+
+Input:
+
+```text
+给“团队异构 Agent 的可观测性层”起一个 8 个字的产品标题
+```
+
+Output:
+
+```markdown
+推荐标题：团队智能观测中枢
+
+备选标题：
+1. 异构智能观测平台
+2. 团队智能监控平台
+3. 多元智能观测中枢
+4. 异构团队观测平台
+5. 智能协同观测中枢
+6. 多源智能观测平台
+
+推荐理由：
+团队智能观测中枢保留了团队、异构 Agent 与可观测性的核心方向；本次按用户明确要求采用 8 个字标题。
+```
+
+### Example 7
+
+Input:
+
+```text
+帮我给这个变量起名：userAuthTokenCache
+```
+
+Output:
+
+```text
+这个 skill 只生成短产品标题。这个请求属于代码标识符命名，请使用 code naming/refactor workflow。
+```
+
+### Example 8
+
+Input:
+
+```text
+GitHub Learning Lab · 代码库理解驾驶舱
+团队异构 Agent 的可观测性层
+```
+
+Output:
+
+```markdown
+## GitHub Learning Lab · 代码库理解驾驶舱
+
+推荐标题：代码驾驶舱
+
+备选标题：
+1. 仓库洞察
+2. 读懂仓库
+3. 代码领航台
+4. 项目透视
+5. 仓库导航
+6. 代码洞察
+
+推荐理由：
+代码驾驶舱最贴合代码库理解与全局掌控的产品定位，既有开发场景感，也有平台化入口感。
+
+## 团队异构 Agent 的可观测性层
+
 推荐标题：智能观测层
 
 备选标题：
