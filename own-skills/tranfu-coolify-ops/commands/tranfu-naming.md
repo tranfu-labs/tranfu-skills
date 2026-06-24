@@ -23,7 +23,7 @@
 | `https://github.com/tranfu-labs/foo-app.git` | `tranfu-labs` | `foo-app` |
 | `git@github.com:tranfu-labs/foo-app.git` | `tranfu-labs` | `foo-app` |
 
-如果输入既不是上面四种之一，也不能用简单正则提取出 org / repo，终止。返回文案：
+如果输入既不是上面四种之一，也不能用简单正则提取出 org / repo，MUST 立即终止。返回文案：
 
 > 看不懂这个 GitHub 链接：`<输入原文>`。本流程支持
 > `https://github.com/<org>/<repo>(.git)?` 和 `git@github.com:<org>/<repo>(.git)?` 两类写法。
@@ -34,7 +34,7 @@
 org == "tranfu-labs"
 ```
 
-不匹配则终止。返回文案：
+不匹配则 MUST 立即终止，NEVER 尝试代替用户切换组织或猜测目标组织。返回文案：
 
 > 这个仓库属于 `<org>`，本流程只接 `tranfu-labs` 组织的仓库。
 > 如果是其它组织的仓库要上 Coolify，请走通用 coolify CLI 流程或者扩展本 skill。
@@ -55,7 +55,7 @@ repo 匹配正则：^[a-z][a-z0-9-]*-app$
 - 第一位必须是字母（不能数字或短横线开头）。
 - 末尾必须是 `-app`。
 
-不匹配则终止。返回文案：
+不匹配则 MUST 立即终止，NEVER 自动改名、补后缀或转小写。返回文案：
 
 > 仓库名 `<repo>` 不合规。tranfu 仓库名约定：全小写、烤肉串（kebab-case）、必须以 `-app` 结尾，
 > 例如 `foo-app`、`order-mgmt-app`、`a1-app`。请先在 GitHub 改名，再跑这个流程。
@@ -91,4 +91,4 @@ echo "$REPO" | grep -Eq '^[a-z][a-z0-9-]*-app$' || abort "命名不合规"
 PROJECT_NAME="$REPO"   # 直接 1:1
 ```
 
-任一步失败直接终止，不要试图修正大小写、自动补 `-app` 后缀或猜测用户意图。
+任一步失败 MUST 直接终止，NEVER 试图修正大小写、自动补 `-app` 后缀或猜测用户意图。
