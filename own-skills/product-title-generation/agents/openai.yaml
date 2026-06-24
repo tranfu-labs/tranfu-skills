@@ -1,0 +1,4 @@
+interface:
+  display_name: "产品标题生成"
+  short_description: "生成短小中文产品标题，适合模块命名、入口命名和品牌短标题"
+  default_prompt: "Use $product-title-generation to generate a concise Chinese title for this product or feature:"
