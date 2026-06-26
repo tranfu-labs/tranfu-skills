@@ -1,9 +1,9 @@
 ---
 name: reversible-ops
-version: 0.2.0
+version: 0.3.1
 author: aquarius-wing
 origin: own
-updated_at: 2026-06-25
+updated_at: 2026-06-26
 description: >
   运维场景的可恢复性硬约束 —— review-only，AI 不替执行任何写命令；命中写操作时改写成
   可恢复的等价命令让用户复制执行，命中不可恢复时给四段拒绝输出。范围：本地 bash / Docker / Coolify。
@@ -29,7 +29,8 @@ description: >
 
 ## 工作模式：review-only, never execute writes
 
-你不替用户执行任何写操作。即使用户授权也不替跑：
+你**默认**不替用户执行任何写操作（仅下方「写操作例外」明列的两类除外）。
+其它情况即使用户授权也不替跑：
 
 - 命中写 / 外发 / 删除 / 改配置 → 按铁律 2 改写成可恢复命令让用户复制执行
 - 命中不可恢复 → 按铁律 3 给四段拒绝输出
@@ -38,6 +39,22 @@ description: >
 `ls` / `cat`（非敏感文件）/ `docker ps` / `docker inspect` / 一次性 `docker logs` /
 `coolify list` / `coolify <type> get` / `coolify status`。
 
+### 写操作例外（AI 可直接执行，限定条件下）
+
+只有下面两类允许 AI 直接执行；其余一律「用户复制执行」。
+
+1. **CI/CD 重跑**：`gh run rerun <run-id>` / `gh workflow run <workflow>` 直接放行。
+   即使 workflow 内部含写操作，按「workflow 已由仓库自身审查」假设。
+   修改 workflow 文件本身仍走铁律 4。
+
+2. **Coolify 单 app 新增 env**：`coolify app env set <app_uuid> <KEY> <VALUE>`，
+   仅当 KEY 不存在时放行。
+   - `<app_uuid>` 必须是会话里点名过的具体 UUID（占位符 / 模糊指代拒）
+   - 流程：`coolify app env list <uuid>` 确认 KEY 不存在 → 直接 set → 回执给 `unset` 恢复模板
+   - **覆盖已存在 KEY → 铁律 3 拒**（旧值不留底就回不去；不让 AI 调 env get 避免明文进上下文）
+   - 不包含 `env delete`（走档 B）、`database env` / `service env`（走原流程）、`--force` 类标志
+   - 不主动 `coolify app restart`
+
 NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / `--skip-confirmation` /
 `--delete-volumes` / `--delete-configurations` / `--delete-connected-networks` / `--delete-s3`。
 
@@ -45,11 +62,15 @@ NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / 
 
 接到用户消息，按下面顺序审：
 
-1. 判定是否命中写操作 / 外发 / 敏感读。如果只是狭义只读 → 按铁律 1 放行直接答。
-2. 命中写 / 外发 → 按铁律 2 找可恢复替代命令；找不到等价回滚命令 → 按铁律 3 拒。
-3. 命中敏感读（凭据 / 密钥 / 敏感文件）→ 直接铁律 3 拒，让用户手动 cat，不要贴回会话。
-4. 命中脚本 / npm run / Dockerfile RUN / coolify hook 等不透明载体 → 按铁律 4 先审后跑。
-5. 写操作执行（由用户复制执行）后，主动输出"原位置 → 新位置"回执对照表 → 本轮判定结束，等待用户下一条消息。
+1. 判定是否命中「写操作例外」节列出的两类命令、且全部边界条件满足
+   → 按例外节直接执行 → 按「回执格式」段输出回执 → 本轮判定结束。
+   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、含 `--force` 类标志）
+   → 按铁律 3 拒，不降级为"用户复制执行"。
+2. 判定是否命中写操作 / 外发 / 敏感读。如果只是狭义只读 → 按铁律 1 放行直接答。
+3. 命中写 / 外发 → 按铁律 2 找可恢复替代命令；找不到等价回滚命令 → 按铁律 3 拒。
+4. 命中敏感读（凭据 / 密钥 / 敏感文件）→ 直接铁律 3 拒，让用户手动 cat，不要贴回会话。
+5. 命中脚本 / npm run / Dockerfile RUN / coolify hook 等不透明载体 → 按铁律 4 先审后跑。
+6. 写操作执行（由用户复制执行）后，主动输出"原位置 → 新位置"回执对照表 → 本轮判定结束，等待用户下一条消息。
 
 ## 失败路径
 
@@ -195,6 +216,8 @@ DELETE /api/v1/destinations/<id>    →  同上
 4. 档 C 的最终删除必须由用户在 UI 上二次确认完成，AI 不替执行
 
 ### Coolify 改环境变量 / 重启（非删除类）
+
+> 单 app 新增 env 例外见上文「写操作例外」；下面是覆盖已有 / database / service 的默认流程。
 
 ```
 改环境变量    →  先 coolify <type> env list 只看 key 名
