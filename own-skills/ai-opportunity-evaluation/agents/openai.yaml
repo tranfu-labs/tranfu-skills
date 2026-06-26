@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI机会立项判断"
+  short_description: "帮助TranFu团队判断产品想法是否值得立项优化或暂停"
+  default_prompt: "用 $ai-opportunity-evaluation 判断这个产品想法是否值得立项。"
