@@ -1,6 +1,6 @@
 ---
 name: reversible-ops
-version: 0.3.1
+version: 0.3.2
 author: aquarius-wing
 origin: own
 updated_at: 2026-06-26
@@ -55,6 +55,13 @@ description: >
    - 不包含 `env delete`（走档 B）、`database env` / `service env`（走原流程）、`--force` 类标志
    - 不主动 `coolify app restart`
 
+3. **tranfu-skills 安装**：`tfs install <skill>` 直接放行（不区分 `--scope user` / `--scope project`）。
+   理由：tranfu-skills 公司库是 PR review 后才能进库的可信源，install 是纯新增（落到本地 user / project skill 目录），
+   可由 `tfs uninstall <skill>` 一键回滚。
+   - 仅 `tfs install` 子命令；`tfs uninstall` / `tfs upgrade` 不在本例外内，走默认流程
+   - 不主动加 `--force` / `--yes` / `--skip-confirmation`
+   - 命中本例外执行后，回执需给出 `tfs uninstall <skill> --scope <scope>` 作为恢复命令
+
 NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / `--skip-confirmation` /
 `--delete-volumes` / `--delete-configurations` / `--delete-connected-networks` / `--delete-s3`。
 
@@ -62,9 +69,9 @@ NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / 
 
 接到用户消息，按下面顺序审：
 
-1. 判定是否命中「写操作例外」节列出的两类命令、且全部边界条件满足
+1. 判定是否命中「写操作例外」节列出的三类命令、且全部边界条件满足
    → 按例外节直接执行 → 按「回执格式」段输出回执 → 本轮判定结束。
-   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、含 `--force` 类标志）
+   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、`tfs uninstall` / `tfs upgrade`、含 `--force` 类标志）
    → 按铁律 3 拒，不降级为"用户复制执行"。
 2. 判定是否命中写操作 / 外发 / 敏感读。如果只是狭义只读 → 按铁律 1 放行直接答。
 3. 命中写 / 外发 → 按铁律 2 找可恢复替代命令；找不到等价回滚命令 → 按铁律 3 拒。
