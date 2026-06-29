@@ -1,9 +1,9 @@
 ---
 name: reversible-ops
-version: 0.3.2
+version: 0.4.0
 author: aquarius-wing
 origin: own
-updated_at: 2026-06-26
+updated_at: 2026-06-29
 description: >
   运维场景的可恢复性硬约束 —— review-only，AI 不替执行任何写命令；命中写操作时改写成
   可恢复的等价命令让用户复制执行，命中不可恢复时给四段拒绝输出。范围：本地 bash / Docker / Coolify。
@@ -55,12 +55,25 @@ description: >
    - 不包含 `env delete`（走档 B）、`database env` / `service env`（走原流程）、`--force` 类标志
    - 不主动 `coolify app restart`
 
-3. **tranfu-skills 安装**：`tfs install <skill>` 直接放行（不区分 `--scope user` / `--scope project`）。
-   理由：tranfu-skills 公司库是 PR review 后才能进库的可信源，install 是纯新增（落到本地 user / project skill 目录），
-   可由 `tfs uninstall <skill>` 一键回滚。
-   - 仅 `tfs install` 子命令；`tfs uninstall` / `tfs upgrade` 不在本例外内，走默认流程
+3. **tranfu-skills 维护**（`tfs install` / `tfs uninstall` / `tfs update` 三个写子命令）：默认放行。
+   理由：tranfu-skills 公司库是 PR review 后才能进库的可信源，三个动作都有等价回滚命令。
+
+   分项细则：
+
+   - `tfs install <skill>` — 回执给 `tfs uninstall <skill> --scope <scope>` 作为恢复命令
+   - `tfs uninstall <skill> --scope <scope>` — 回执给 `tfs install <skill> --scope <scope>` 作为恢复命令
+     - **唯一反例：`tfs uninstall reversible-ops` 按铁律 3 拒**。卸掉本 skill 等同卸掉安全底座，后续命令不再受四条铁律审查，审查能力本身不可恢复；让用户在终端手动复制执行，AI 不替跑。
+   - `tfs update [--self] [--skills-only] [--check-only] [--ack-deletions]` — 默认升 CLI 自身 + 已装 skill。
+     - `--check-only` 是只读，直接放行，不需要留快照、不需要回执
+     - 其余形态执行前先 `tfs installed --json > /tmp/tfs-installed-<ts>.json` 留版本快照
+     - 回执需列出被升 skill 清单，并给「重装当前 catalog 最新」模板 `tfs install <skill>` 作为恢复命令；`tfs install` 暂不支持 `@<version>` 精确回滚，如需精确回到旧版需走 catalog 仓库 git revert
+     - 升了 CLI 自身（默认 / `--self`）则回执额外提示 `npm install -g @tranfu/tfs@<旧版本>` 作为降级路径
+     - `--ack-deletions` 会写 `ack.json` 永久静默 deleted-upstream 告警；执行前先 `cp <ack.json 路径> <ack.json 路径>.bak.<ts>`，回执给 `mv <bak> <原路径>` 作为恢复命令
+
+   通用约束：
+
    - 不主动加 `--force` / `--yes` / `--skip-confirmation`
-   - 命中本例外执行后，回执需给出 `tfs uninstall <skill> --scope <scope>` 作为恢复命令
+   - 命中本例外执行后必须输出回执对照表（原状态 → 当前操作 → 恢复命令）
 
 NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / `--skip-confirmation` /
 `--delete-volumes` / `--delete-configurations` / `--delete-connected-networks` / `--delete-s3`。
@@ -71,7 +84,7 @@ NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / 
 
 1. 判定是否命中「写操作例外」节列出的三类命令、且全部边界条件满足
    → 按例外节直接执行 → 按「回执格式」段输出回执 → 本轮判定结束。
-   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、`tfs uninstall` / `tfs upgrade`、含 `--force` 类标志）
+   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、`tfs uninstall reversible-ops`、含 `--force` 类标志）
    → 按铁律 3 拒，不降级为"用户复制执行"。
 2. 判定是否命中写操作 / 外发 / 敏感读。如果只是狭义只读 → 按铁律 1 放行直接答。
 3. 命中写 / 外发 → 按铁律 2 找可恢复替代命令；找不到等价回滚命令 → 按铁律 3 拒。
