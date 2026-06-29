@@ -1,6 +1,6 @@
 ---
 name: reversible-ops
-version: 0.5.0
+version: 0.6.0
 author: aquarius-wing
 origin: own
 updated_at: 2026-06-29
@@ -41,20 +41,52 @@ description: >
 
 ### 写操作例外（AI 可直接执行，限定条件下）
 
-只有下面五类允许 AI 直接执行；其余一律「用户复制执行」。
+只有下面六类允许 AI 直接执行；其余一律「用户复制执行」。
+
+#### bootstrap 窗口判定（例外 2 / 例外 6 共享）
+
+某 Coolify 资源处于 bootstrap 窗口 ⇔ 从未成功部署过，运行时没有依赖方在用旧配置。
+按资源类型采用不同信号；AI 必须**实际执行**对应 check 拿到合规结果，不可基于「应该刚创建吧」一类假设。
+
+**application — 强信号**（Coolify API 暴露完整部署历史）：
+
+```bash
+coolify app deployments list <app_uuid> --format json \
+  | jq '[.[] | select(.status == "finished" or .status == "success")] | length'
+```
+
+返回 `0` 即在 bootstrap 窗口内。`finished` / `success` 是 Coolify 公认终态成功值。
+
+**service / database — 弱信号**（Coolify openapi 4.1.2 未暴露 service/database 的部署历史端点；只能用 `created_at` + `status` 近似判定，存在「30 min 内被部署成功后又 stop」的边角误判）：
+
+```bash
+# status 不为 running 且 创建时间距今 < 30min
+coolify <type> get <uuid> --format json \
+  | jq -e '(.status | IN("running") | not)
+            and ((now - (.created_at | fromdateiso8601)) < 1800)'
+```
+
+退出码 0 即在弱 bootstrap 窗口内。`<type>` ∈ {`service`, `database`}。
+
+> **未来若 Coolify 上游为 service / database 暴露 `deployments_count` 或 `last_successful_deployment_at`，替换为强信号即可，例外条件无需变。**
 
 1. **CI/CD 重跑**：`gh run rerun <run-id>` / `gh workflow run <workflow>` 直接放行。
    即使 workflow 内部含写操作，按「workflow 已由仓库自身审查」假设。
    修改 workflow 文件本身仍走铁律 4。
 
-2. **Coolify 单 app 新增 env**：`coolify app env set <app_uuid> <KEY> <VALUE>`
+2. **Coolify 单 app env 操作**：`coolify app env set <app_uuid> <KEY> <VALUE>`
    或等价的新版 CLI 形态 `coolify app env create <app_uuid> --key <KEY> --value <VALUE> [--is-literal]`，
-   仅当 KEY 不存在时放行。
+   分两档放行：
+   - **KEY 不存在 → 任何窗口都放行**（新增不破坏状态，无旧值需要保留）
+   - **KEY 已存在覆盖 / `env delete` → 仅 application bootstrap 窗口内放行**
+     - 理由：bootstrap 内没有运行中部署在用旧值，用户既然指明覆盖/删除，
+       旧值不再需要保留；窗口外覆盖等于丢历史，按铁律 3 拒
    - `<app_uuid>` 必须是会话里点名过的具体 UUID（占位符 / 模糊指代拒）
-   - 流程：`coolify app env list <uuid>` 确认 KEY 不存在 → 直接 set / create → 回执给 `unset` / `env delete` 恢复模板
+   - 流程：`coolify app env list <uuid>` 确认 KEY 状态 → 必要时跑 bootstrap check → set / create / delete → 回执
    - `--is-literal` 不属于危险标志（仅表示值原样写入、不展开 `$SERVICE_*` 引用），可保留
-   - **覆盖已存在 KEY → 铁律 3 拒**（旧值不留底就回不去；不让 AI 调 env get 避免明文进上下文）
-   - 不包含 `env delete`（走档 B）、`database env` / `service env`（走原流程）、`--force` 类标志
+   - **AI 始终不允许 `coolify <type> env get` 已有值**——保密性硬线，独立于
+     可恢复性，任何窗口都成立；覆盖时回执给「重写命令模板」（用户自己手动留底）
+   - 不包含 `database env` / `service env`（走原流程）、`--force` 类标志
    - 不主动 `coolify app restart`
 
 3. **tranfu-skills 维护**（`tfs install` / `tfs uninstall` / `tfs update` 三个写子命令）：默认放行。
@@ -99,6 +131,24 @@ description: >
    - 执行后回执给对称命令：`start` → `stop`；`stop` → `start`
    - 不主动 `--force` 类标志
 
+6. **Coolify 资源 bootstrap 窗口内 PATCH 配置**：`coolify <app|service|database> set ...`
+   或等价的 `curl PATCH /api/v1/{applications,services,databases}/<uuid>`，
+   在对应资源处于 bootstrap 窗口（信号见上方「bootstrap 窗口判定」节）内时默认放行。
+   理由：bootstrap 窗口内没有运行中部署 / 服务依赖旧配置，PATCH 改错了反向 PATCH 即可回滚，整套操作幂等。
+
+   分项细则：
+
+   - `<uuid>` 必须是会话里点名过的具体值（占位符 / 模糊指代拒）
+   - **执行 PATCH 前必须先跑 bootstrap check**（application 强信号 / service&database 弱信号），返回非合规 → 退回 review-only，不降级放行
+   - **PATCH 前必须留底**：`coolify <type> get <uuid> --format json | jq '<待改字段子集>' > /tmp/<type>-<uuid>-before-patch-<ts>.json`，缺失留底直接拒
+   - **PATCH body 含敏感字段** → 走例外 2 的 env 流程，不走本条；敏感字段名包括：
+     - `environment_variables` / `env_vars` / `envs`
+     - 任何包含 `secret` / `token` / `password` / `private_key` 的 key 名
+   - 不主动加 `--force` / `--yes` / `force_domain_override=true` 类绕过标志
+   - **回执必须给反向 PATCH 命令模板**，引用刚才那份 `/tmp` 留底文件，让用户能一条命令回滚
+   - 离开 bootstrap 窗口（app 有过成功部署 / service&database 超过 30min 或已 running）→ PATCH 退回 review-only
+   - service / database 走弱信号时，回执里**必须加一条提示**：「本判定为弱信号近似（Coolify 上游未暴露成功部署历史），如非首次配置请人工 double-check 一次」
+
 NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / `--skip-confirmation` /
 `--delete-volumes` / `--delete-configurations` / `--delete-connected-networks` / `--delete-s3`。
 
@@ -106,9 +156,9 @@ NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / 
 
 接到用户消息，按下面顺序审：
 
-1. 判定是否命中「写操作例外」节列出的五类命令、且全部边界条件满足
+1. 判定是否命中「写操作例外」节列出的六类命令、且全部边界条件满足
    → 按例外节直接执行 → 按「回执格式」段输出回执 → 本轮判定结束。
-   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、`tfs uninstall reversible-ops`、
+   边界不满足（占位符 / 模糊指代 UUID、bootstrap check 未跑或返回非合规、PATCH body 含敏感字段（环境变量 / secret / token / password / private_key）、database / service env、`tfs uninstall reversible-ops`、
    含 `--force` 类标志、`restart` 没明示「现在重启」）
    → 按铁律 3 拒，不降级为"用户复制执行"。
 2. 判定是否命中写操作 / 外发 / 敏感读。如果只是狭义只读 → 按铁律 1 放行直接答。
@@ -126,6 +176,7 @@ NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / 
 - **用户授权但目标不在当前会话点名过的资源树里**（如说"删 logs"但没说哪个项目的 logs）→ 触发作用域边界，拒绝并要求用户给绝对路径 / 具体 UUID / 具体容器名。
 - **用户在占位符 host / UUID 上操作**（`example.com` / `<uuid>` / `xxx-uuid`）→ 拒，要求用户给真实值。
 - **用户坚持要跑不可恢复命令**（如"我知道，就是要 rm -rf"）→ 仍然按铁律 3 拒，但给出最完整的[若坚持原命令]四段输出，让用户自己在终端复制执行；不替执行。
+- **service / database 的 bootstrap 信号是弱信号**（Coolify openapi 4.1.2 / DeployController 仅对 application 暴露 `GET /api/v1/deployments/applications/{uuid}` 部署历史端点；service / database 无对应端点，只能用 `status` + `created_at` 30 分钟窗口近似判定）。误判方向：30 分钟内被部署成功后又 stop 的资源会被错放进 bootstrap 窗口。上游若加 `/deployments/services/{uuid}` 或在 `GET /services/{uuid}` 返回里加 `last_successful_deployment_at` / `deployments_count`，应替换为强信号并删除本条 TODO。
 
 ---
 
@@ -464,6 +515,6 @@ WRONG：
 
 ### 验收测试
 
-完整用例表与期望行为见 [`references/test-cases.md`](references/test-cases.md)（32 条：22 通用 + 10 Coolify 删除专项）；`archives/` 下 v3 / v4 / v4.1 保留作迭代证据。
+完整用例表与期望行为见 [`references/test-cases.md`](references/test-cases.md)（38 条：22 通用 + 10 Coolify 删除专项 + 6 v0.6 bootstrap 窗口专项）；`archives/` 下 v3 / v4 / v4.1 保留作迭代证据。
 
-跑用例的方法：每条用例用一个独立 subagent，prompt 由"系统提示词 = 本 SKILL.md 上面所有内容 + 用户消息 = 用例输入"组成，看 subagent 的响应是否触发期望档位 / 替代命令 / 回执格式。历史结果：v4 22/22 + v4.1 10/10 全过；v4.2 待跑全集。
+跑用例的方法：每条用例用一个独立 subagent，prompt 由"系统提示词 = 本 SKILL.md 上面所有内容 + 用户消息 = 用例输入"组成，看 subagent 的响应是否触发期望档位 / 替代命令 / 回执格式。历史结果：v4 22/22 + v4.1 10/10 全过；v4.2 + v0.6 待跑全集。
