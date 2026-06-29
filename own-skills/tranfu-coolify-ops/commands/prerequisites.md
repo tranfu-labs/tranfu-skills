@@ -1,130 +1,116 @@
-# Step 0：环境前置（reconcile flow 启动前）
+# Step 0：preflight 索引（人话说明）
 
-reconcile flow 启动前的最少环境断言。**只读**，不动 Coolify 和不写仓库。任一失败 → 终止 + 给用户人话提示，不进 reconcile Step 1。
+reconcile flow 的 Step 0 只做一件事：跑 [`../assets/preflight.sh`](../assets/preflight.sh)。本文档是脚本的「人话伴侣」——脚本里每条 check 的语义、失败的修复路径、为什么这样设计。脚本本身是 single source of truth，本文档落后于脚本时**以脚本为准**。
 
 ## 工作单元契约
 
-- **输入**：当前 shell 环境 + 当前 git 仓库
-- **输出**（命名产物，传给 reconcile flow）：
-  - `${repo-org}` / `${repo-name}`：解析 git remote 拿
-  - `${svc-name}`：用 tranfu 命名约束推导（通常 = `${repo-name}`）
-  - 公司常量直接硬编码：`$BASE = http://120.77.223.183:8000`，`$SERVER_UUID = oz7r53ilv7aeaubx7ewuqw0m`
-- **完成判据**（可观测）：下面 5 个 check 全过
-- **Ownership**：read-only。任一 check 失败 → 输出原文 + 退出码 1。**MUST NEVER**：自动装工具、自动建 repo、自动跳过断言
+- **输入**：当前 shell 环境（`$COOLIFY_API_TOKEN` + `gh` token）+ 当前 git 仓库 + 当前 cwd
+- **输出**：退出码 0 / 1 / 2 + stdout 上的逐条 ✓ / ✗ / ⚠ + 5 个公共变量（agent 解析输出拿）：
 
-## 5 个 check
+  ```
+  $BASE        = http://120.77.223.183:8000
+  $SERVER_UUID = oz7r53ilv7aeaubx7ewuqw0m
+  $REPO_ORG    = tranfu-labs
+  $REPO_NAME   = <user-repo>
+  $SVC_NAME    = $REPO_NAME
+  ```
 
-跑 TODO list：
+- **完成判据**：脚本退出码 0
+- **Ownership**：read-only。脚本任一硬 check 失败 → 输出原文 + 退出码 1。**MUST NEVER**：自动装工具、自动建 repo、自动跳过断言
 
-1. **`gh` CLI 已装 + 已认证**（Step 7 要 `gh secret set` / `gh variable set`）
-2. **`jq` 已装**（curl 输出全程靠它）
-3. **`curl` 已装**（应该都有，alpine docker 内可能没）
-4. **当前在 git 仓库根**（agent 要改 Dockerfile / compose / deploy.yml）
-5. **`$COOLIFY_API_TOKEN` 已设置**（暂不验活，验活留给 Step 1）
-
-每条对应命令：
-
-### Check 1: `gh` CLI
+## 怎么跑
 
 ```bash
-command -v gh >/dev/null 2>&1 || {
-  echo "✗ gh CLI 未安装。装：brew install gh，或 https://cli.github.com"
-  exit 1
-}
-gh auth status >/dev/null 2>&1 || {
-  echo "✗ gh CLI 未认证。跑：gh auth login"
-  exit 1
-}
+# 在目标项目根目录跑
+bash <SKILL_ROOT>/assets/preflight.sh
+
+# 或显式指定 base url
+bash <SKILL_ROOT>/assets/preflight.sh http://120.77.223.183:8000
 ```
 
-### Check 2 + 3: jq / curl
+`<SKILL_ROOT>` = 本 skill 安装路径，通常是 `~/.claude/skills/own-skills/tranfu-coolify-ops/` 或 worktree 里的 `.claude/worktrees/.../own-skills/tranfu-coolify-ops/`。
 
-```bash
-command -v jq >/dev/null 2>&1 || {
-  echo "✗ jq 未安装。装：brew install jq"
-  exit 1
-}
-command -v curl >/dev/null 2>&1 || {
-  echo "✗ curl 未安装（少见）"
-  exit 1
-}
-```
+## 退出码
 
-### Check 4: git 仓库 + 解析 org/name
+| 退出码 | 含义 | 下一步 |
+|---|---|---|
+| `0` | 全 ✓ | 进 reconcile Step 2 |
+| `1` | 任一硬 check ✗ | 终止，按脚本输出的 `✗ <reason>` 修完再跑 |
+| `2` | 仅 ⚠（如 GHCR credential 未 ack）| 去 Coolify UI 配 ghcr.io credential，回来 ack 重跑 |
 
-```bash
-git rev-parse --show-toplevel >/dev/null 2>&1 || {
-  echo "✗ 当前目录不是 git 仓库。在仓库根目录跑这个 skill"
-  exit 1
-}
+## check 清单 + 失败修复路径
 
-# 解析 remote origin URL（支持 https / ssh / 带 .git 后缀）
-ORIGIN=$(git remote get-url origin 2>/dev/null) || {
-  echo "✗ 当前仓库没有 origin remote。先 git remote add origin <url>"
-  exit 1
-}
+按脚本输出顺序：
 
-# 沿用 tranfu-naming.md 规则
-REPO_PATH=$(echo "$ORIGIN" | sed -E 's#(.*github\.com[:/])([^/]+)/([^/]+?)(\.git)?/?$#\2/\3#')
-REPO_ORG=$(echo "$REPO_PATH" | cut -d/ -f1)
-REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
-```
+### ▸ 工具
 
-### Check 5: token 存在
+| ✗ 原因 | 修 |
+|---|---|
+| `gh / jq / curl / git / base64` 任一缺 | `brew install <tool>` (macOS) 或对应平台包管理器 |
 
-```bash
-[ -n "${COOLIFY_API_TOKEN:-}" ] || {
-  echo "✗ COOLIFY_API_TOKEN 未设置。在 shell 里 export COOLIFY_API_TOKEN=<token> 后重试"
-  exit 1
-}
-```
+### ▸ Git 仓库状态
 
-**注意纪律**：不打印 token 任何字节（长度 / 前缀都不打）。`$COOLIFY_API_TOKEN` 只在 shell 内展开，永不在 agent 给 Bash tool 的命令字符串里以原文出现。
+| ✗ 原因 | 修 |
+|---|---|
+| 当前 cwd 不在 git 仓库 | `cd` 到项目根目录 |
+| 无 origin remote | `git remote add origin <url>` |
+| `org ≠ tranfu-labs` | **不修**——本 skill 只服务 tranfu-labs 仓库；如确需扩展先讨论再改 skill |
+| 命名不合规（不是 烤肉串-app 全小写）| 改 repo 名（GitHub UI → Settings → General → rename），同步本地 `git remote set-url origin ...` |
+| working tree dirty | `git stash` 或 `git commit` 当前改动 |
 
-## 命名约束断言（沿用 [tranfu-naming.md](tranfu-naming.md)）
+### ▸ GitHub 凭据
 
-Check 4 拿到 `REPO_ORG` / `REPO_NAME` 后断言：
+| ✗ 原因 | 修 |
+|---|---|
+| `gh` 未 auth | `gh auth login` |
+| token scope 缺 `'repo'` | `gh auth refresh -s repo` |
+| 用户对 repo 无 admin permission | 让 repo owner 把你加为 admin collaborator（Settings → Collaborators） |
+| repo 不存在 / 网络问题 | 检查 origin URL 拼写 / VPN |
 
-- `REPO_ORG == "tranfu-labs"`（除非用户在触发语里明说覆盖）
-- `REPO_NAME` 烤肉串 + 全小写 + 以 `-app` 结尾
-- 不含大写 / 空格 / 下划线 / 中文
+### ▸ Coolify 凭据
 
-不合规 → 终止：
+| ✗ 原因 | 修 |
+|---|---|
+| `$COOLIFY_API_TOKEN` 未设置 | 去 Coolify UI → Keys & Tokens → 生成 Read & Write 权限 token，`export COOLIFY_API_TOKEN=<token>` |
+| 拨 `/api/v1/version` → 401/403 | token 错或过期，重新生成 |
+| 拨 `/api/v1/version` → 000（拨不通）| 检查公司内网 / VPN |
+| PATCH dummy uuid → 401/403 | token 只读，回 Coolify 重新生成一个含 Write 权限的 |
 
-```
-✗ 仓库命名不合规
-  origin:  $ORIGIN
-  org:     $REPO_ORG  (期望 tranfu-labs)
-  name:    $REPO_NAME (期望 烤肉串-app 形式，全小写)
-本 skill 只服务 tranfu-labs/* 的 -app 仓库。
-如确需在其它仓库跑，先讨论是否扩展本 skill，再回头来跑。
-```
+### ▸ Coolify · GHCR Registry Credential
 
-## 公司常量（写死，不动）
+| ⚠ 原因 | 修 |
+|---|---|
+| 未 ack | Coolify UI → Sources / Container Registries → Add Registry：URL `ghcr.io` / Username = GitHub 用户名 / Password = 一个 scope 含 `read:packages` 的 GitHub PAT。挂上后回来重跑 preflight，ack 通过 |
+| 非交互环境自动 ⚠ | 设环境变量 / 用 manual flag，或直接在 interactive shell 重跑 |
 
-```bash
-BASE="http://120.77.223.183:8000"
-SERVER_UUID="oz7r53ilv7aeaubx7ewuqw0m"   # 公司唯一 server，4.1.2 实例上 GET /api/v1/servers 拿到
-```
+## 安全纪律
 
-reconcile flow 任一 Step 用这两个常量直接引用，不重新探测。如果某天换 server / 换实例，**改本文件**（这是 single source of truth）。
+preflight.sh 设计上**永不打印 `$COOLIFY_API_TOKEN` 任何字节**：
+- 长度 / 前缀 / 哈希都不打
+- 失败原因只描述"哪一层挂了"，不暴露 token
+- token 仅用 `-H "Authorization: Bearer $COOLIFY_API_TOKEN"` 形式传给 curl，shell 展开发生在执行时
 
-## 不在这里做的事（避免越界）
+agent 解析脚本输出时**也不要在对话里 echo token 任何字节**。
 
-- ✗ 验活 token（留给 reconcile Step 1）
-- ✗ 探测 project_uuid（留给 reconcile Step 3，要么从 service 反查，要么让用户选）
-- ✗ 自动建 project（人工 UI）
-- ✗ 自动挂 GHCR registry credential（人工 UI）
+## 公司常量来源
+
+`$BASE` / `$SERVER_UUID` 硬编码在 preflight.sh 顶部和 [reconcile-deployment.md](../scenarios/reconcile-deployment.md)。如果公司换 Coolify 实例 / 换 server：
+
+1. 改 `assets/preflight.sh` 顶部默认 BASE
+2. 改 `scenarios/reconcile-deployment.md` 里所有 BASE / SERVER_UUID 引用
+3. 在 PR 描述里标 "更新公司 Coolify 实例 / server"
+
+不要靠环境变量改 BASE——硬编码是 single source of truth，让 git history 能 audit 实例迁移历史。
+
+## 不在 preflight 里做的事
+
+明确**不做**（避免越界）：
+
+- ✗ 探测 project_uuid（留给 reconcile Step 3，要么从已有 service 反查，要么让用户从 GET /api/v1/projects 选）
+- ✗ 自动建 Coolify project / 挂 registry credential / 建 GitHub environment（人工 UI）
 - ✗ 修任何文件（reconcile Step 2 才碰）
+- ✗ 验证 `is_static` / `is_spa` / build 命令等**项目类型**信息（reconcile Step 2 + file-generation-rules.md 才碰）
 
 ## 输出（传给 reconcile flow）
 
-```
-${BASE}        = http://120.77.223.183:8000
-${SERVER_UUID} = oz7r53ilv7aeaubx7ewuqw0m
-${REPO_ORG}    = tranfu-labs
-${REPO_NAME}   = <user-repo>
-${SVC_NAME}    = ${REPO_NAME}   # 1:1 映射，命名规则保证 OK
-```
-
-5 个 check 全过 → 进入 reconcile flow Step 1。
+preflight 退出码 0 → 进 reconcile Step 2，公共变量已就位。

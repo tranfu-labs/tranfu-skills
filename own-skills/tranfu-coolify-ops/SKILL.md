@@ -25,9 +25,9 @@ description: >
 
 `$COOLIFY_API_TOKEN` 是高敏感凭据。**全 skill 范围**遵守：
 
-1. **校验脚本只输出 ✓ / ✗**——长度、前缀都不打（见 [assets/check-token.sh](assets/check-token.sh)）
+1. **校验脚本只输出 ✓ / ✗**——长度、前缀都不打（见 [assets/preflight.sh](assets/preflight.sh)）
 2. **agent 给 Bash tool 的命令字符串里永远只引用 `$COOLIFY_API_TOKEN` 变量名**——token 原文只在 shell 内展开，不进对话转录
-3. **禁止 `echo $COOLIFY_API_TOKEN`** 来"看一眼对不对"——校验只能通过 check-token.sh
+3. **禁止 `echo $COOLIFY_API_TOKEN`** 来"看一眼对不对"——校验只能通过 preflight.sh
 4. **gh secret 用 `--body "$COOLIFY_API_TOKEN"`**，不写明文
 5. **curl 用 `-H "Authorization: Bearer $COOLIFY_API_TOKEN"`**，不写明文
 6. **Coolify 返回的 env value 是明文**——agent 拿来做 diff，**不展示**，hash 比较代替明文显示
@@ -52,8 +52,8 @@ description: >
 
 | # | Step | 主要参考 |
 |---|---|---|
-| 0 | 环境前置（gh / jq / git 仓库 / 命名 / token 存在） | [commands/prerequisites.md](commands/prerequisites.md) |
-| 1 | Token 活性（拨 `/api/v1/version`）| [assets/check-token.sh](assets/check-token.sh) |
+| 0 | **preflight 独立脚本**（工具 / git / 命名 / GitHub 凭据+权限 / Coolify 凭据+活性+写权限 / GHCR ack）| [assets/preflight.sh](assets/preflight.sh) + [commands/prerequisites.md](commands/prerequisites.md) |
+| 1 | (已并入 Step 0) | — |
 | 2 | 仓库代码侧四件套 | [references/file-generation-rules.md](references/file-generation-rules.md) + [assets/deploy.yml.template](assets/deploy.yml.template) |
 | 3 | Coolify Service 资源存在 | [commands/service-crud.md](commands/service-crud.md) |
 | 4 | Compose 内容一致 | [commands/service-crud.md](commands/service-crud.md) §"更新 compose" |
@@ -83,12 +83,12 @@ description: >
 own-skills/tranfu-coolify-ops/
 ├── SKILL.md                              ← 本文件
 ├── assets/
-│   ├── check-token.sh                    ← Step 1 token 活性
+│   ├── preflight.sh                      ← Step 0 一次性全部前置 (独立脚本)
 │   └── deploy.yml.template               ← Step 2 GHA workflow 模板
 ├── scenarios/
 │   └── reconcile-deployment.md           ← 唯一流程文档，9 步幂等
 ├── commands/                             ← 实际操作速查（curl 命令片段 + CLI ad-hoc）
-│   ├── prerequisites.md                  ← Step 0 (reconcile 主链路)
+│   ├── prerequisites.md                  ← Step 0 索引 (preflight.sh 的人话说明)
 │   ├── service-crud.md                   ← Step 3-4 (HTTP API)
 │   ├── service-env.md                    ← Step 6 (HTTP API)
 │   ├── domain.md                         ← Step 5 (HTTP API)
@@ -131,9 +131,8 @@ reconcile 跑完后：
 
 正确做法：
 1. 进 reconcile，create 9 项 TODO
-2. Step 0: 校验 origin = tranfu-labs/markdown-kits-app ✓，gh/jq/curl ✓，$COOLIFY_API_TOKEN ✓
-3. Step 1: 跑 check-token.sh → ✓
-4. Step 2: 仓库根 Dockerfile / compose.yml / .dockerignore / .github/workflows/deploy.yml 都没有 → 按 file-generation-rules.md 生成四件套，给用户预览，确认后写入
+2. Step 0: 跑 preflight.sh → 全部 ✓（工具 / git / 命名 / GitHub 凭据+权限 / Coolify token+活性+写权限 / GHCR ack）
+3. Step 2: 仓库根 Dockerfile / compose.yml / .dockerignore / .github/workflows/deploy.yml 都没有 → 按 file-generation-rules.md 生成四件套，给用户预览，确认后写入
 5. Step 3: GET /api/v1/services 没找到同名 → 让用户选 project → POST /api/v1/services 带 compose + urls + project/server/env → 拿 $SERVICE_UUID
 6. Step 4: GET 拿到 docker_compose_raw = 刚 POST 的内容 → ✓ skip（自动同步）
 7. Step 5: GET applications[0].fqdn = "https://markdown-kits-app.tranfu.com:8787" → ✓ skip（POST 时一并设了）
@@ -149,7 +148,7 @@ reconcile 跑完后：
 
 正确做法：
 1. 进 reconcile，create 9 项 TODO
-2. Step 0-1 都 ✓ skip（环境没变）
+2. Step 0: preflight ✓ skip（环境没变）
 3. Step 2: 四件套都在且合规 → ✓ skip
 4. Step 3: Service 已存在，拿 $SERVICE_UUID → ✓ skip
 5. Step 4: compose 一致 → ✓ skip
