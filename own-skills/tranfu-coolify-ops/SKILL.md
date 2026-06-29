@@ -87,13 +87,18 @@ own-skills/tranfu-coolify-ops/
 │   └── deploy.yml.template               ← Step 2 GHA workflow 模板
 ├── scenarios/
 │   └── reconcile-deployment.md           ← 唯一流程文档，9 步幂等
-├── commands/                             ← 实际操作速查（curl 命令片段）
-│   ├── prerequisites.md                  ← Step 0
-│   ├── service-crud.md                   ← Step 3-4
-│   ├── service-env.md                    ← Step 6
-│   ├── domain.md                         ← Step 5
-│   ├── deploy-trigger.md                 ← Step 7-9
-│   └── tranfu-naming.md                  ← Step 0 命名约束
+├── commands/                             ← 实际操作速查（curl 命令片段 + CLI ad-hoc）
+│   ├── prerequisites.md                  ← Step 0 (reconcile 主链路)
+│   ├── service-crud.md                   ← Step 3-4 (HTTP API)
+│   ├── service-env.md                    ← Step 6 (HTTP API)
+│   ├── domain.md                         ← Step 5 (HTTP API)
+│   ├── deploy-trigger.md                 ← Step 7-9 (HTTP API + GHA)
+│   ├── tranfu-naming.md                  ← Step 0 命名约束
+│   ├── app.md                            ← CLI ad-hoc 速查 (排障 / 临时操作)
+│   ├── context.md                        ← CLI ad-hoc 速查
+│   ├── conventions.md                    ← CLI ad-hoc 全局 flag 约定
+│   ├── project.md                        ← CLI ad-hoc 速查
+│   └── server.md                         ← CLI ad-hoc 速查
 └── references/                           ← 心智模型 / 字段语义 / 排障
     ├── service-vs-application.md         ← Service 不是 Application
     ├── service-fqdn-trap.md              ← SERVICE_FQDN_* 是 output 不是 input
@@ -101,10 +106,12 @@ own-skills/tranfu-coolify-ops/
     ├── coolify-api-fields.md             ← openapi 字段速查
     ├── file-generation-rules.md          ← 四件套生成 / 校验规范
     ├── archived-coolify-deploy.md        ← 旧 coolify-deploy skill 归档说明
-    ├── coolify-compose-deploy-failure-triage.md  ← Step 8 排障
-    ├── coolify-docker-inspection.md      ← Step 9 容器证据采集
-    ├── coolify-clear-deployments-and-redeploy.md ← 清部署历史 + 重 deploy
-    └── coolify-disk-capacity-and-prune.md← 服务器磁盘运维
+    ├── coolify-compose-deploy-failure-triage.md  ← Step 8 排障 (DEPRECATED-CLI)
+    ├── coolify-docker-inspection.md      ← Step 9 容器证据采集 (DEPRECATED-CLI)
+    ├── coolify-clear-deployments-and-redeploy.md ← 清部署历史 + 重 deploy (DEPRECATED-CLI)
+    ├── coolify-disk-capacity-and-prune.md← 服务器磁盘运维 (DEPRECATED-CLI)
+    ├── coolify-cli-1.6.2-onboard-quirks.md ← CLI 1.6.2 onboard 怪癖 (ad-hoc)
+    └── coolify-env-redeploy.md           ← CLI 改 env + redeploy (ad-hoc)
 ```
 
 ## 完成判据（可观测）
