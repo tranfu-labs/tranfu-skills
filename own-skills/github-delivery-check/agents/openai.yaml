@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub交付规范"
+  short_description: "把产品整理成可部署可追踪的GitHub交付状态流程"
+  default_prompt: "用 $github-delivery-check 检查并推送这个产品项目到 GitHub。"
