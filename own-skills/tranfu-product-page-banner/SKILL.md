@@ -3,7 +3,7 @@ name: tranfu-product-page-banner
 description: >
   Use when Codex needs to create or refine image-generation prompts for TranFu
   product-page hero banners, product-module banners, or feature-page visuals in a
-  futuristic red-and-white 3D glassmorphism style. Trigger on requests such as
+  red-white 3D glassmorphism style with a right-side platform and left copy area. Trigger on requests such as
   "生成 TranFu 产品页 banner", "产品页首屏视觉图", "红白玻璃风 hero 图", or "TranFu 官网功能页视觉".
   Do NOT trigger when the user asks to implement webpage layout/code, redesign the
   TranFu logo, create non-TranFu visuals, audit an existing UI, or generate realistic
@@ -15,14 +15,14 @@ updated_at: 2026-06-29
 origin: own
 ---
 
-# Skill: TranFu 产品页未来感 3D 红白玻璃风 Banner
+# Skill: TranFu 产品页 3D 红白玻璃风 Banner
 
 ## 1. Skill 目标
 
 用于生成 TranFu 官网产品页顶部 Hero Banner、产品模块 Banner、功能介绍页视觉图。  
-视觉方向为 **未来感科技风、高级 3D 渲染、红白玻璃拟态、轻盈留白、适合叠加产品文案**。
+视觉约束为 **3:1 横向画布、左侧 45% 到 55% 无主体留白、右侧 3D 透明玻璃平台、红白配色、红色强调面积不超过 15%、无可读文字 / 人物 / 水印**。
 
-该 Skill 适合以下 TranFu 产品页主题：
+该 Skill 覆盖以下 TranFu 产品页主题：
 
 - AI 产品能力页
 - 品牌资源库
@@ -38,29 +38,26 @@ origin: own
 
 ## 2. 核心视觉风格
 
-生成一张横向官网 Hero Banner，整体风格必须体现：
+生成一张横向官网 Hero Banner，画面必须包含以下可见元素：
 
-- premium futuristic technology style
-- polished 3D rendering
+- 3D circular platform with visible depth, bevels, shadows, and highlights
 - red and white color palette
-- translucent glassmorphism
-- soft lighting
-- soft reflections
-- subtle red glow
-- rounded edges
-- glossy material
-- high-key lighting
-- clean futuristic UI illustration
-- spacious negative space
-- refined SaaS product website feeling
+- translucent glassmorphism material with visible background blur or refraction
+- diffused lighting with no harsh black shadows
+- visible reflections on rings, cards, or platform surfaces
+- thin red rim light on rings, icon cards, or platform edges
+- rounded corners on icon cards and circular rings on the platform
+- white to pale pink background covering at least 70% of the canvas
+- left 45% to 55% copy area with no subject, text, logo, or watermark
+- simple UI-like glyph icons, not real UI screenshots
 
-画面应保持 **干净、轻盈、精致、有呼吸感**，避免复杂、杂乱、拥挤。
+画面必须满足：主体与图标群只占右侧区域，周围浮动图标数量为 `4` 到 `8` 个，任意两个图标之间不得重叠，左侧留白区不得被装饰元素遮挡。
 
 ---
 
 ## 3. 画布与构图
 
-### 推荐比例
+### 画布比例
 
 - `3:1`
 - `1920 x 640`
@@ -71,48 +68,48 @@ origin: own
 - 左侧 45% 到 55% 保持浅色留白，用于叠加标题、卖点、CTA。
 - 右侧放置主要 3D 视觉装置。
 - 主体位于右侧偏中位置，不要居中铺满。
-- 底部可以有淡淡流光、轨迹线、透明圆环延伸到左侧。
-- 整体保持高级感和呼吸感，不要填满画面。
+- 底部装饰仅限细流光、细轨迹线或透明圆环；若延伸到左侧，透明度必须低到不影响叠加文字。
+- 主体、图标和装饰元素的总覆盖面积不得超过整张图的 55%。
 
 ---
 
 ## 4. 背景规范
 
-背景应为：
+背景必须满足：
 
 - 白色到极浅粉色渐变
-- 轻微粉红光晕
-- 左侧更亮、更干净
-- 右侧可略带红色氛围光
+- 粉红光晕覆盖面积不超过画面 20%
+- 左侧 45% 到 55% 区域无主体、无图标、无文字、无水印
+- 右侧红色光晕覆盖面积不超过画面 20%
 - 无深色背景
 - 无强烈纹理
 - 无明显噪点
 
-推荐关键词：
+背景 Prompt 片段：
 
 ```text
-soft white to pale pink gradient background, clean spacious negative space, subtle red glow, faint motion streaks, glossy reflections
+white to pale pink gradient background, empty left 45 to 55 percent copy area, thin red rim light on the right side, thin low-opacity motion streaks, visible reflected highlight lines
 ```
 
 ---
 
 ## 5. 主体装置规范
 
-右侧主体为一个未来感 3D 圆形平台，包含：
+右侧主体为一个 3D 圆形平台，包含：
 
 - 多层透明圆盘
 - 半透明玻璃材质
-- 红色高光边缘
+- 红色边缘光
 - 环形轨道
 - 发光细节
 - 中心浮起一个主图标
-- 柔和反射
-- 精致悬浮感
+- 低对比反射高光
+- 主图标与平台之间有可见间距和投影
 
-推荐关键词：
+主体 Prompt 片段：
 
 ```text
-a glossy translucent circular platform with concentric rings, red glowing accents, soft reflections, futuristic glass material
+a translucent circular platform with concentric rings, thin red rim lights, visible low-contrast reflections, glass material
 ```
 
 ---
@@ -124,19 +121,19 @@ a glossy translucent circular platform with concentric rings, red glowing accent
 ### 图标卡片特征
 
 - 圆角方形卡片
-- 玻璃 / 亚克力质感
+- 半透明玻璃 / 亚克力材质，有可见边缘高光
 - 白色半透明底
 - 红色图形符号
 - 小型底座或透明圆台
-- 轻微漂浮感
+- 卡片与平台之间有可见间距和投影
 - 与中心平台形成环绕关系
-- 不使用真实文字或复杂 UI 截图
+- 不使用可读文字、真实 UI 截图或由多列数据表组成的界面截图
 
 ### 产品页默认图标主题
 
-当主题为「产品页」时，推荐使用以下元素：
+当主题为「产品页」时，使用以下元素：
 
-- 中心：TranFu 产品能力核心图标，可表现为 AI 芯片、智能中枢、文件夹星标、品牌资产库或产品控制台。
+- 中心：TranFu 产品能力核心图标，从 AI 芯片、智能中枢、文件夹星标、品牌资产库或产品控制台中选一个语义。
 - 周围：品牌资源库图标
 - 周围：内容素材图标
 - 周围：AI 智能创作图标
@@ -165,7 +162,7 @@ a glossy translucent circular platform with concentric rings, red glowing accent
 - 透明玻璃：20%
 - 红色强调：10%
 
-### 避免
+### 禁止
 
 - 大面积黑色
 - 蓝紫科技风
@@ -179,11 +176,11 @@ a glossy translucent circular platform with concentric rings, red glowing accent
 ## 8. 通用正向 Prompt 模板
 
 ```text
-Create a wide website hero banner in a premium futuristic 3D glassmorphism style.
+Create a wide 3:1 website hero banner with a right-side translucent 3D glass platform and a red-white color system.
 
-Use a soft white to very pale pink gradient background with lots of clean negative space on the left side for website copy. The left 45% to 55% of the canvas should remain bright, minimal, and uncluttered.
+Use a white to very pale pink gradient background. Keep the left 45% to 55% of the canvas empty for website copy, with no subject, icon card, readable text, logo text, or watermark in that area.
 
-Place the main visual composition on the right side: a glossy translucent circular platform with concentric rings, red glowing accents, soft reflections, elegant motion streaks, and futuristic glass material.
+Place the main visual composition on the right side: a translucent circular platform with concentric rings, visible highlights, low-opacity shadows, thin red rim lights, thin low-opacity motion streaks, and glass material with visible reflection or refraction.
 
 The theme is: {{主题名称}}.
 
@@ -191,11 +188,11 @@ At the center of the platform, create a large floating rounded square glass icon
 
 Around it, arrange several smaller translucent floating cards and icons representing {{周边元素1}}, {{周边元素2}}, {{周边元素3}}, {{周边元素4}}, {{周边元素5}}, and {{周边元素6}}.
 
-Each card should have a semi-transparent white glass base, red icon details, rounded corners, soft glow, tiny transparent pedestal, and a polished 3D look.
+Each card should have a semi-transparent white glass base, red icon details, rounded corners, thin red rim light, a small transparent pedestal, visible bevels, and a low-opacity shadow.
 
-Keep the overall composition clean, spacious, high-end, lightweight, and suitable for a modern SaaS product website banner. Use a red-and-white color palette, soft lighting, glossy reflections, subtle depth, and no clutter.
+Keep red accents below 15% of the canvas. Use 4 to 8 floating icon cards, keep every card inside the right-side visual group, and preserve the empty left copy area.
 
-No people, no dark background, no heavy text, no busy details.
+No people, no dark background, no readable text, no watermark, no overlapping icon cards, no more than 8 icon cards.
 Aspect ratio 3:1.
 ```
 
@@ -204,11 +201,11 @@ Aspect ratio 3:1.
 ## 9. TranFu 产品页默认 Prompt
 
 ```text
-Create a wide website hero banner for the TranFu product page in a premium futuristic 3D glassmorphism style.
+Create a wide 3:1 website hero banner for the TranFu product page with a right-side translucent 3D glass platform and a red-white color system.
 
-Use a soft white to very pale pink gradient background with lots of clean negative space on the left side for website copy. The left 45% to 55% of the canvas should remain bright, minimal, and uncluttered.
+Use a white to very pale pink gradient background. Keep the left 45% to 55% of the canvas empty for website copy, with no subject, icon card, readable text, logo text, or watermark in that area.
 
-Place the main visual composition on the right side: a glossy translucent circular platform with multiple concentric glass rings, red glowing accents, soft reflections, elegant motion streaks, and futuristic transparent material.
+Place the main visual composition on the right side: a translucent circular platform with multiple concentric glass rings, visible highlights, low-opacity shadows, thin red rim lights, thin low-opacity motion streaks, and glass material with visible reflection or refraction.
 
 The theme is: TranFu intelligent enterprise content and brand asset platform.
 
@@ -216,13 +213,13 @@ At the center of the platform, create a large floating rounded square glass icon
 
 Around it, arrange several smaller translucent floating cards and icons representing brand asset library, image materials, AI writing and creation, data analytics dashboard, template and component library, multi-channel distribution, and enterprise collaboration permissions.
 
-Each card should have a semi-transparent white glass base, red icon details, rounded corners, soft glow, tiny transparent pedestal, and a polished 3D look.
+Each card should have a semi-transparent white glass base, red icon details, rounded corners, thin red rim light, a small transparent pedestal, visible bevels, and a low-opacity shadow.
 
-Add subtle red light trails, faint circular orbit lines, and glossy reflections near the bottom, gently extending toward the left side without disturbing the empty copy area.
+Add thin red light trails, thin low-opacity circular orbit lines, and visible reflected highlight lines near the bottom. If these lines extend toward the left side, keep them behind the copy area and low-contrast enough that two lines of title text and one CTA would remain readable.
 
-Keep the overall composition clean, spacious, high-end, lightweight, and suitable for a modern SaaS product website banner. Use a red-and-white color palette, high-key lighting, glossy reflections, subtle depth, rounded edges, and refined glassmorphism.
+Keep red accents below 15% of the canvas. Use 4 to 8 floating icon cards, keep every card inside the right-side visual group, and preserve the empty left copy area.
 
-No people, no dark background, no heavy text, no readable words, no messy UI screenshots, no busy details.
+No people, no dark background, no readable words, no watermark, no overlapping icon cards, no real UI screenshots, no more than 8 icon cards.
 Aspect ratio 3:1.
 ```
 
@@ -231,12 +228,12 @@ Aspect ratio 3:1.
 ## 10. 反向 Prompt / Negative Prompt
 
 ```text
-dark background, black background, cyberpunk city, blue purple neon, heavy metal, messy details, crowded composition, too many icons, low quality, noisy texture, strong grain, harsh shadows, realistic people, human face, character, hands, readable text, typography, watermark, logo text, distorted letters, cluttered dashboard, complex interface screenshot, over saturated colors, industrial machinery, sharp aggressive edges, flat 2D illustration, cartoon style
+dark background, black background, cyberpunk city, blue purple neon, heavy metal, more than 8 icons, overlapping icons, full-canvas object coverage, pixelated artifacts, noisy texture, strong grain, harsh shadows, realistic people, human face, character, hands, readable text, typography, watermark, logo text, distorted letters, data-table dashboard, multi-panel interface screenshot, over saturated colors, industrial machinery, sharp aggressive edges, flat 2D illustration, cartoon style
 ```
 
 ---
 
-## 11. 变量填写建议
+## 11. 变量填写表
 
 | 变量 | 说明 | 示例 |
 |---|---|---|
@@ -251,7 +248,7 @@ dark background, black background, cyberpunk city, blue purple neon, heavy metal
 
 ---
 
-## 12. 产品页推荐变量
+## 12. 产品页默认变量
 
 ```yaml
 主题名称: TranFu 产品页
@@ -273,15 +270,15 @@ dark background, black background, cyberpunk city, blue purple neon, heavy metal
 
 ### 13.1 硬性通过条件
 
-- 画布比例：宽高比必须为 `3:1`，允许误差为 `3 ± 0.05`；推荐尺寸命中 `1920 x 640`、`2560 x 853` 或 `3840 x 1280`。
+- 画布比例：宽高比必须为 `3:1`，允许误差为 `3 ± 0.05`；尺寸命中 `1920 x 640`、`2560 x 853` 或 `3840 x 1280`。
 - 左侧留白：画面左侧 `45%` 到 `55%` 宽度范围内不得出现主体装置、图标卡片、可读文字或水印；该区域必须能放下两行标题和一个 CTA。
-- 主视觉位置：主 3D 平台和图标群的视觉重心必须位于画面右半区，建议落在水平位置 `55%` 到 `85%` 之间，不得居中铺满。
+- 主视觉位置：主 3D 平台和图标群的视觉重心必须位于画面右半区，水平位置必须落在 `55%` 到 `85%` 之间，不得居中铺满。
 - 背景明度：背景必须是白色到极浅粉色；黑色、深灰、蓝紫霓虹或暗黑赛博区域不得覆盖超过画面 `10%`。
 - 色彩比例：画面必须包含白色 / 极浅粉背景和 TranFu 红色强调；红色强调面积不得超过画面 `15%`。
 - 文字检测：OCR 可识别文字数量必须为 `0`；若无 OCR 工具，人工确认画面中无可读文字、logo 文字、乱码字母或水印。
 - 人物检测：人脸、人物身体、手部或角色数量必须为 `0`；若无检测工具，人工确认无人像元素。
 - 图标数量：周围浮动图标卡片数量必须在 `4` 到 `8` 之间，且不得遮挡左侧留白区。
-- 3D 玻璃质感：至少命中以下 `3` 项视觉证据：半透明玻璃材质、环形平台或同心圆、柔和反射 / 高光、红色发光边缘、可见投影或景深。
+- 3D 玻璃材料：至少命中以下 `3` 项视觉证据：半透明玻璃材质、环形平台或同心圆、低对比反射线 / 高光点、红色发光边缘、可见投影或景深。
 
 ### 13.2 合格判定
 
@@ -294,7 +291,7 @@ dark background, black background, cyberpunk city, blue purple neon, heavy metal
 ## 14. 适用输出说明
 
 该 Skill 生成的是 **Banner 视觉图**，不直接生成网页排版文字。  
-最终图片应为官网产品页的视觉底图，可在左侧叠加：
+最终图片用作官网产品页的视觉底图，左侧留白区必须能叠加：
 
 - 产品标题
 - 产品副标题
@@ -302,7 +299,7 @@ dark background, black background, cyberpunk city, blue purple neon, heavy metal
 - CTA 按钮
 - 客户或场景标签
 
-推荐导出尺寸：
+导出尺寸：
 
 - `1920 x 640`
 - `2560 x 853`
