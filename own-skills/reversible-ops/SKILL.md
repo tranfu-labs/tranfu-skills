@@ -1,6 +1,6 @@
 ---
 name: reversible-ops
-version: 0.4.0
+version: 0.5.0
 author: aquarius-wing
 origin: own
 updated_at: 2026-06-29
@@ -29,7 +29,7 @@ description: >
 
 ## 工作模式：review-only, never execute writes
 
-你**默认**不替用户执行任何写操作（仅下方「写操作例外」明列的两类除外）。
+你**默认**不替用户执行任何写操作（仅下方「写操作例外」明列的五类除外）。
 其它情况即使用户授权也不替跑：
 
 - 命中写 / 外发 / 删除 / 改配置 → 按铁律 2 改写成可恢复命令让用户复制执行
@@ -41,16 +41,18 @@ description: >
 
 ### 写操作例外（AI 可直接执行，限定条件下）
 
-只有下面两类允许 AI 直接执行；其余一律「用户复制执行」。
+只有下面五类允许 AI 直接执行；其余一律「用户复制执行」。
 
 1. **CI/CD 重跑**：`gh run rerun <run-id>` / `gh workflow run <workflow>` 直接放行。
    即使 workflow 内部含写操作，按「workflow 已由仓库自身审查」假设。
    修改 workflow 文件本身仍走铁律 4。
 
-2. **Coolify 单 app 新增 env**：`coolify app env set <app_uuid> <KEY> <VALUE>`，
+2. **Coolify 单 app 新增 env**：`coolify app env set <app_uuid> <KEY> <VALUE>`
+   或等价的新版 CLI 形态 `coolify app env create <app_uuid> --key <KEY> --value <VALUE> [--is-literal]`，
    仅当 KEY 不存在时放行。
    - `<app_uuid>` 必须是会话里点名过的具体 UUID（占位符 / 模糊指代拒）
-   - 流程：`coolify app env list <uuid>` 确认 KEY 不存在 → 直接 set → 回执给 `unset` 恢复模板
+   - 流程：`coolify app env list <uuid>` 确认 KEY 不存在 → 直接 set / create → 回执给 `unset` / `env delete` 恢复模板
+   - `--is-literal` 不属于危险标志（仅表示值原样写入、不展开 `$SERVICE_*` 引用），可保留
    - **覆盖已存在 KEY → 铁律 3 拒**（旧值不留底就回不去；不让 AI 调 env get 避免明文进上下文）
    - 不包含 `env delete`（走档 B）、`database env` / `service env`（走原流程）、`--force` 类标志
    - 不主动 `coolify app restart`
@@ -75,6 +77,28 @@ description: >
    - 不主动加 `--force` / `--yes` / `--skip-confirmation`
    - 命中本例外执行后必须输出回执对照表（原状态 → 当前操作 → 恢复命令）
 
+4. **Coolify 资源新建类**：`coolify project create` / `coolify app create <build-pack>` /
+   `coolify database create` / `coolify service create`，默认放行。
+   理由：新建资源不影响任何现有状态、无破坏面；清理路径已由档 C 删除 + UI 二次确认守住。
+
+   分项细则：
+
+   - 资源名 / `--project-uuid` / `--server-uuid` / `--github-app-uuid` 必须是会话里点名过的真实值
+     （占位符 `<uuid>` / `xxx-uuid` / `example.com` 拒）
+   - 不带任何危险标志（`--force` 等）
+   - 执行后回执必须列出：新资源 UUID + 「清理方式：走档 C 删除流程（UI 二次确认）」提示
+   - 不替用户决定 `--build-pack` / `--ports-exposes` 默认值——这些得用户显式给
+
+5. **Coolify 对称启停**：`coolify <app|database|service> start | stop`，默认放行。
+   理由：start / stop 互为回滚，无数据损失。
+
+   分项细则：
+
+   - UUID 必须是会话里点名过的具体值（占位符拒）
+   - `restart` **不在本例外**——含短暂 downtime，需用户明示「现在重启」才执行（走「Coolify 改环境变量 / 重启」段「重启线上服务」流程）
+   - 执行后回执给对称命令：`start` → `stop`；`stop` → `start`
+   - 不主动 `--force` 类标志
+
 NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / `--skip-confirmation` /
 `--delete-volumes` / `--delete-configurations` / `--delete-connected-networks` / `--delete-s3`。
 
@@ -82,9 +106,10 @@ NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / 
 
 接到用户消息，按下面顺序审：
 
-1. 判定是否命中「写操作例外」节列出的三类命令、且全部边界条件满足
+1. 判定是否命中「写操作例外」节列出的五类命令、且全部边界条件满足
    → 按例外节直接执行 → 按「回执格式」段输出回执 → 本轮判定结束。
-   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、`tfs uninstall reversible-ops`、含 `--force` 类标志）
+   边界不满足（占位符 / 模糊指代 UUID、KEY 已存在、database / service env、`tfs uninstall reversible-ops`、
+   含 `--force` 类标志、`restart` 没明示「现在重启」）
    → 按铁律 3 拒，不降级为"用户复制执行"。
 2. 判定是否命中写操作 / 外发 / 敏感读。如果只是狭义只读 → 按铁律 1 放行直接答。
 3. 命中写 / 外发 → 按铁律 2 找可恢复替代命令；找不到等价回滚命令 → 按铁律 3 拒。
@@ -370,7 +395,7 @@ os.environ["SECRET"]                  →  允许脚本内部使用；禁止 pri
 
 ## 边界澄清
 
-- 新建类操作（`mkdir` / `touch` / `cp` 到新路径 / `git branch` / `docker pull` / `docker tag` 新标签 / `coolify <type> create`）默认放行；但新路径仍受**作用域边界**约束
+- 新建类操作（`mkdir` / `touch` / `cp` 到新路径 / `git branch` / `docker pull` / `docker tag` 新标签）默认放行；但新路径仍受**作用域边界**约束。`coolify <type> create` 走「写操作例外」第 4 项
 - 在 `/tmp` 下的 `rm` 视为可恢复（系统会回收，且明确临时）
 - 命令链（`A && B`、`A | B`、`$(A)`）按链中"最高危的一环"判定
 - 不确定时按更保守方向判定，并解释为什么不确定
