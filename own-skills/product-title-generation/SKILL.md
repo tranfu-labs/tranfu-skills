@@ -1,9 +1,9 @@
 ---
 name: product-title-generation
-description: Generate concise Chinese product, feature, module, entry, or brand-short titles. Use when the user asks for 产品标题、模块命名、功能入口名、品牌化短标题、中文命名、name this feature, or product title, especially 4-6 character product-like titles from product names, feature descriptions, technical capabilities, learning services, launch platforms, observability, or mixed Chinese-English concepts. Do NOT trigger for slogans or long marketing copy -> use copywriting; SEO headlines -> use SEO/content; trademark/legal availability -> use legal review; code identifiers or variable names -> use code naming/refactor; full brand strategy -> use brand strategy.
-version: "0.1.4"
+description: Generate concise Chinese product, feature, module, entry, activity-theme, or brand-short titles. Use when the user asks for 产品标题、模块命名、功能入口名、品牌化短标题、中文命名、起名、取名、叫什么、入口标题、产品名、name this feature, or product title, especially 4-6 character product-like titles from product names, feature descriptions, technical capabilities, learning services, launch platforms, observability, or mixed Chinese-English concepts. Do NOT trigger for slogans or long marketing copy -> use copywriting; SEO headlines -> use SEO/content; trademark/legal availability -> use legal review; code identifiers or variable names -> use code naming/refactor; full brand strategy -> use brand strategy.
+version: "0.1.5"
 author: tranfu
-updated_at: "2026-06-24"
+updated_at: "2026-06-29"
 origin: own
 ---
 
@@ -34,19 +34,20 @@ CREATE A TODO LIST FOR THE TASKS BELOW. Keep the list internal unless the user a
 1. Read the user's input. If no product, feature, concept, or direction is provided, ask one concise question for the missing target and stop.
 2. If the input matches any "Do Not Use" case, state that this skill only generates short product titles, route using that mapping, and stop.
 3. If the user's title or naming request is ambiguous between a short product title, SEO headline, slogan, campaign copy, full product name, or brand strategy, ask one concise clarification question and stop.
-4. Normalize the input into four fields: product object, core capability, use scenario, and desired tone. If a field is missing, infer it from the provided text without inventing unrelated positioning.
-5. If the input contains multiple unrelated products, generate one "Multi-Product Output Format" block per product when each product is clear; otherwise ask the user to choose the target and stop.
-6. Route the title style. If product object, source brand, scenario, and core capability imply different routes, prioritize core capability first, then use scenario and desired tone to refine wording:
+4. If the input contains multiple unrelated products, split them into separate targets and use one "Multi-Product Output Format" block per clear target; if any target is unclear, ask the user to choose the target and stop.
+5. For each clear target, normalize the input into four fields: product object, core capability, use scenario, and desired tone. If a field is missing, infer it from the provided text without inventing unrelated positioning.
+6. If the product object exists but core capability and use scenario cannot be inferred from the input without inventing unrelated positioning, ask one concise question for the missing capability or scenario and stop.
+7. Route the title style for each target. If product object, source brand, scenario, and core capability imply different routes, prioritize core capability first, then use scenario and desired tone to refine wording:
    - Learning products -> companionship, sprint, rescue, training, improvement.
    - Technical platforms -> base, platform, hub, engine, cockpit, infrastructure.
    - Data or observability products -> observation, insight, monitoring, tracing, visibility.
    - Launch or incubation products -> launch, incubation, startup, publishing, product desk.
    - Code or development products -> repository, code, understanding, navigation, insight.
    - Otherwise -> use a neutral product-entry style.
-7. Generate at least eight candidate titles before choosing. Each candidate MUST preserve the core object or core capability.
-8. Filter candidates with the title rules below. Remove titles that are too long, too generic, too marketing-heavy, awkwardly translated, or semantically off-target.
-9. Select the recommendation using this priority order: semantic fit, product-entry feel, compactness, distinctiveness, and natural Chinese phrasing.
-10. Output the exact format in "Output Format" or "Multi-Product Output Format" and end, unless the user explicitly asks for analysis, more options, fewer options, or a different format.
+8. Generate and refine candidates until the final visible set contains exactly one recommendation and six unique alternatives, unless the user explicitly requests a different count. Each candidate MUST preserve the core object or core capability.
+9. Filter candidates with the title rules below. Remove titles that are too long, too generic, too marketing-heavy, awkwardly translated, or semantically off-target. If too few valid titles remain for one recommendation plus the required number of alternatives, generate more candidates and repeat filtering until the output can be filled. If the user's explicit constraints make the required count impossible, ask one concise clarification question or state the conflict and stop.
+10. Select the recommendation using this priority order: semantic fit, product-entry feel, compactness, distinctiveness, and natural Chinese phrasing.
+11. Output the exact format in "Output Format" or "Multi-Product Output Format" and end, unless the user explicitly asks for analysis, more options, fewer options, or a different format.
 
 Failure exits and overrides:
 
@@ -60,13 +61,18 @@ Failure exits and overrides:
 
 ## Title Rules
 
-- Each title MUST be compact: 4-6 Chinese characters or 4-6 display units.
-- Count `AI`, `Agent`, `GitHub`, `Lab`, and meaningful numbers as one display unit each when they are necessary to preserve the source meaning.
+- Unless the user explicitly requests another length, each title MUST be compact: 4-6 Chinese characters or 4-6 display units.
+- Count display units this way: each Chinese character counts as one unit; each contiguous English word, acronym, brand token, or meaningful number counts as one unit; spaces, hyphens, and punctuation do not count.
+- Count `AI`, `Agent`, `GitHub`, `Lab`, and meaningful numbers as one display unit each when they are necessary to preserve the source meaning. For example, `AI观测台`, `Agent观测台`, and `GitHub洞察台` are each four units.
 - Prefer Chinese titles. Keep English tokens only when they are the product object, established industry wording, or explicitly requested by the user.
 - The recommendation MUST NOT appear again in the alternatives.
 - The alternatives list MUST contain exactly six titles unless the user explicitly requests a different number of alternatives.
 - All titles MUST feel like real product, module, or navigation-entry names, not explanatory phrases.
 - All titles MUST keep the source direction. Do not make a title sound better by changing the product category or core capability.
+- A title is too generic when it does not preserve the source product object, product category, or core capability.
+- A title is too marketing-heavy when it depends on hype words such as `神器`, `王者`, `爆款`, `超级`, or `未来` instead of the product object or capability.
+- A title is awkwardly translated when it follows source-language word order in a way a native Chinese UI title would not use.
+- A title is semantically off-target when it changes the product category, drops the core capability, or replaces the requested scenario with a different one.
 
 ## Style Patterns
 
