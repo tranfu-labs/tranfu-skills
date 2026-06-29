@@ -1,3 +1,5 @@
+> ⚠️ **DEPRECATED-CLI**: 本文件原文里的 `coolify <cmd>` CLI 命令是 v0.3.x 时期遗留，未迁移到 v0.4.0 的 HTTP API 路径。读时按下表自行 translate，或先看 [coolify-api-fields.md](coolify-api-fields.md)：`coolify app list` → `GET /api/v1/services` + jq；`coolify app get $u` → `GET /api/v1/services/$u`；`coolify app logs $u` → `GET /api/v1/services/$u/logs`。心智模型不变，只是入口换。
+
 # Coolify docker-compose deployment failure triage
 
 Use this reference when a tranfu Coolify app deploys via `build_pack=dockercompose` and the user asks why deployment failed. It complements `coolify-docker-inspection.md`: that file is best when containers are still running; this one is for failed deployments where app logs may be unavailable and Coolify may have already cleaned up the attempted containers.

@@ -1,106 +1,130 @@
-# 共用前置
+# Step 0：环境前置（reconcile flow 启动前）
 
-任一场景脚本的 Step 0 都是跑这一份。目的：在做任何写操作之前，先确认"在哪个实例上"和
-"server 唯一性"，把后续命令需要的 `${server-uuid}` 准备好。
+reconcile flow 启动前的最少环境断言。**只读**，不动 Coolify 和不写仓库。任一失败 → 终止 + 给用户人话提示，不进 reconcile Step 1。
 
 ## 工作单元契约
 
-- **输入**：当前会话上下文中可选的触发语覆盖项 `<other-context>`（用户在触发语里明说「用 `<other-context>` 部署 xxx」时出现，否则为空）。
-- **输出**（命名产物）：
-  - `${context}`：目标 Coolify context 名。
-  - `${server-uuid}`：唯一一台 server 的 UUID。
-- **完成判据**（可观测）：上述两个变量均为非空字符串，且 `coolify server list --context="${context}" --format json | jq 'length'` 返回 `1`。
-- **Ownership**：本前置脚本只跑只读 CLI（`coolify context list` / `coolify server list`），MUST NEVER 调用任何写操作命令（add / create / deploy / restart 等），MUST NEVER 编辑用户文件。失败时只按下方"返回文案"原文回话，不替用户做任何修复。
+- **输入**：当前 shell 环境 + 当前 git 仓库
+- **输出**（命名产物，传给 reconcile flow）：
+  - `${repo-org}` / `${repo-name}`：解析 git remote 拿
+  - `${svc-name}`：用 tranfu 命名约束推导（通常 = `${repo-name}`）
+  - 公司常量直接硬编码：`$BASE = http://120.77.223.183:8000`，`$SERVER_UUID = oz7r53ilv7aeaubx7ewuqw0m`
+- **完成判据**（可观测）：下面 5 个 check 全过
+- **Ownership**：read-only。任一 check 失败 → 输出原文 + 退出码 1。**MUST NEVER**：自动装工具、自动建 repo、自动跳过断言
 
-## 执行流程
+## 5 个 check
 
-CREATE A TODO LIST FOR THE TASKS BELOW（每步一个 TODO）：
+跑 TODO list：
 
-1. 跑 Step A 锁定 `${context}`。若拿不到 → 按对应返回文案输出并退出。      # 卫语句·用前必校
-2. 跑 Step B 锁定 `${server-uuid}`。若 server 数 ≠ 1 → 按对应返回文案输出并退出。  # 卫语句·失败有出口
-3. 产出 `${context}` 与 `${server-uuid}`，交给后续场景脚本，结束。          # 显式终止
+1. **`gh` CLI 已装 + 已认证**（Step 7 要 `gh secret set` / `gh variable set`）
+2. **`jq` 已装**（curl 输出全程靠它）
+3. **`curl` 已装**（应该都有，alpine docker 内可能没）
+4. **当前在 git 仓库根**（agent 要改 Dockerfile / compose / deploy.yml）
+5. **`$COOLIFY_API_TOKEN` 已设置**（暂不验活，验活留给 Step 1）
 
-失败出口：Step A / Step B 任一返回文案触发即终止整条前置流程，MUST NEVER 继续往下跑 Step B 或交付变量。
+每条对应命令：
 
-## Step A：确认当前在哪个 Coolify 实例
-
-```bash
-coolify context list --format json
-```
-
-**MUST 直接读 default / active 的那一项，记为 `${context}`，MUST NEVER 向用户确认。** 后续所有命令都显式带
-`--context="${context}"`（见 SKILL.md「全局守则」）。
+### Check 1: `gh` CLI
 
 ```bash
-CONTEXT=$(coolify context list --format json | jq -r '
-  ( .[] | select(.is_default == true or .active == true or .default == true) | .name )
-  // (.[0].name)
-')
-[ -n "$CONTEXT" ] && [ "$CONTEXT" != "null" ] || { echo "STOP: 拿不到 default context"; exit 1; }
+command -v gh >/dev/null 2>&1 || {
+  echo "✗ gh CLI 未安装。装：brew install gh，或 https://cli.github.com"
+  exit 1
+}
+gh auth status >/dev/null 2>&1 || {
+  echo "✗ gh CLI 未认证。跑：gh auth login"
+  exit 1
+}
 ```
 
-为什么不问用户：tranfu 团队日常都用同一个 default context，每次反问都是噪音。需要换实例的入口
-**由用户主动声明**——用户在触发语里明说「用 `<other-context>` 部署 xxx」，agent 解析出来覆盖
-`${context}` 即可，MUST NEVER 主动征求确认。
-
-只在下面两种情况停下来：
-
-- `coolify context list` 返回空或报错 → context 未配置 / CLI 未装。MUST 按下面文案原文返回并退出：
-
-  > 没有可用 context。先按 https://github.com/coollabsio/coolify-cli 安装 CLI，再用
-  > `coolify context add <name> <url> <token>` 添加一个，然后回头再跑这个流程。
-
-- `context list` 有多项但**没有任何一项是 default / active**（用户从来没 `coolify context use` 过）→
-  无法静默决定，MUST 按下面文案原文返回并退出：
-
-  > 你机器上有多个 Coolify context 但没有标记 default 的。先用
-  > `coolify context use <name>` 选定一个作为 default，再跑这个流程；
-  > 或者直接在触发语里说「用 `<name>` context 部署 xxx」让我临时覆盖。
-
-## Step B：断言 server 数量恰好为 1
-
-本 skill 当前默认 tranfu 团队只用一台 server。一旦多 server 出现，说明组织结构变了，MUST 让用户
-明确指定走哪台，MUST NEVER 让 skill 默默选第一个。
+### Check 2 + 3: jq / curl
 
 ```bash
-coolify server list --context="${context}" --format json
+command -v jq >/dev/null 2>&1 || {
+  echo "✗ jq 未安装。装：brew install jq"
+  exit 1
+}
+command -v curl >/dev/null 2>&1 || {
+  echo "✗ curl 未安装（少见）"
+  exit 1
+}
 ```
 
-按返回数组长度分支（穷尽，三选一）：
+### Check 4: git 仓库 + 解析 org/name
 
 ```bash
-SERVER_COUNT=$(coolify server list --context="${context}" --format json | jq 'length')
+git rev-parse --show-toplevel >/dev/null 2>&1 || {
+  echo "✗ 当前目录不是 git 仓库。在仓库根目录跑这个 skill"
+  exit 1
+}
+
+# 解析 remote origin URL（支持 https / ssh / 带 .git 后缀）
+ORIGIN=$(git remote get-url origin 2>/dev/null) || {
+  echo "✗ 当前仓库没有 origin remote。先 git remote add origin <url>"
+  exit 1
+}
+
+# 沿用 tranfu-naming.md 规则
+REPO_PATH=$(echo "$ORIGIN" | sed -E 's#(.*github\.com[:/])([^/]+)/([^/]+?)(\.git)?/?$#\2/\3#')
+REPO_ORG=$(echo "$REPO_PATH" | cut -d/ -f1)
+REPO_NAME=$(echo "$REPO_PATH" | cut -d/ -f2)
 ```
 
-- `SERVER_COUNT == 1`：
-  - 拿 server uuid：`SERVER_UUID=$(coolify server list --context="${context}" --format json | jq -r '.[0].uuid')`
-  - 拿到 `${server-uuid}`，传给后续场景脚本使用。
-- `SERVER_COUNT == 0`：终止。MUST 按下面文案原文返回并退出：
-  > 当前 context (`${context}`) 上没有任何 server。先用
-  > `coolify server add --context="${context}" <name> <ip> <private-key-uuid>` 加一台，
-  > `coolify server validate --context="${context}" <uuid>` 验证通过后再跑这个流程。
-- `SERVER_COUNT > 1`：终止。MUST 按下面文案原文返回并退出：
-  > 当前 context (`${context}`) 上有 `${SERVER_COUNT}` 台 server，本 skill 默认 tranfu 团队只用单 server。
-  > 列出来让我决定：
-  > （列出 `coolify server list --context="${context}"` 的 name + uuid + ip）
-  > 如果确实需要在多 server 环境上跑，告诉我目标 server-uuid，再跑这个流程；
-  > 同时考虑扩展本 skill 让它支持多 server。
-- 其它（jq 解析失败 / 命令报错 / SERVER_COUNT 非数字）：终止。返回文案：
-  > 拿不到 `${context}` 上的 server 列表（命令报错或解析失败）。检查 `coolify server list --context="${context}" --format json` 输出，修好再跑这个流程。
+### Check 5: token 存在
 
-## 输出
+```bash
+[ -n "${COOLIFY_API_TOKEN:-}" ] || {
+  echo "✗ COOLIFY_API_TOKEN 未设置。在 shell 里 export COOLIFY_API_TOKEN=<token> 后重试"
+  exit 1
+}
+```
 
-跑完 Step A + Step B，对场景脚本提供：
+**注意纪律**：不打印 token 任何字节（长度 / 前缀都不打）。`$COOLIFY_API_TOKEN` 只在 shell 内展开，永不在 agent 给 Bash tool 的命令字符串里以原文出现。
 
-- `${context}`：用户已确认的目标 context 名。**场景脚本里的每条 CLI 命令都 MUST 显式带
-  `--context="${context}"`**（见 SKILL.md「全局守则」），MUST NEVER 依赖 default。
-- `${server-uuid}`：唯一一台 server 的 UUID。
+## 命名约束断言（沿用 [tranfu-naming.md](tranfu-naming.md)）
 
-产出上述两个变量后，本前置流程结束。
+Check 4 拿到 `REPO_ORG` / `REPO_NAME` 后断言：
 
-## 失败语义
+- `REPO_ORG == "tranfu-labs"`（除非用户在触发语里明说覆盖）
+- `REPO_NAME` 烤肉串 + 全小写 + 以 `-app` 结尾
+- 不含大写 / 空格 / 下划线 / 中文
 
-任一步失败一律按上面对应的"返回文案"原文返回给用户。**MUST NEVER 替用户自动建 server、
-MUST NEVER 替用户跳过断言、MUST NEVER 在 context 既没 default 又没用户声明时硬挑一个**。
-Step A 允许"直接采用 default context 而不问用户"——这是 reduce friction，不是跳过断言；
-真正的写操作仍由后续场景脚本里的命名 / 同名 / GH App / 仓库可见性等断言保护。
+不合规 → 终止：
+
+```
+✗ 仓库命名不合规
+  origin:  $ORIGIN
+  org:     $REPO_ORG  (期望 tranfu-labs)
+  name:    $REPO_NAME (期望 烤肉串-app 形式，全小写)
+本 skill 只服务 tranfu-labs/* 的 -app 仓库。
+如确需在其它仓库跑，先讨论是否扩展本 skill，再回头来跑。
+```
+
+## 公司常量（写死，不动）
+
+```bash
+BASE="http://120.77.223.183:8000"
+SERVER_UUID="oz7r53ilv7aeaubx7ewuqw0m"   # 公司唯一 server，4.1.2 实例上 GET /api/v1/servers 拿到
+```
+
+reconcile flow 任一 Step 用这两个常量直接引用，不重新探测。如果某天换 server / 换实例，**改本文件**（这是 single source of truth）。
+
+## 不在这里做的事（避免越界）
+
+- ✗ 验活 token（留给 reconcile Step 1）
+- ✗ 探测 project_uuid（留给 reconcile Step 3，要么从 service 反查，要么让用户选）
+- ✗ 自动建 project（人工 UI）
+- ✗ 自动挂 GHCR registry credential（人工 UI）
+- ✗ 修任何文件（reconcile Step 2 才碰）
+
+## 输出（传给 reconcile flow）
+
+```
+${BASE}        = http://120.77.223.183:8000
+${SERVER_UUID} = oz7r53ilv7aeaubx7ewuqw0m
+${REPO_ORG}    = tranfu-labs
+${REPO_NAME}   = <user-repo>
+${SVC_NAME}    = ${REPO_NAME}   # 1:1 映射，命名规则保证 OK
+```
+
+5 个 check 全过 → 进入 reconcile flow Step 1。

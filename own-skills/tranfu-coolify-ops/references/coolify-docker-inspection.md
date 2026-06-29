@@ -1,3 +1,5 @@
+> ⚠️ **DEPRECATED-CLI**: 本文件原文里的 `coolify <cmd>` CLI 命令是 v0.3.x 时期遗留，未迁移到 v0.4.0 的 HTTP API 路径。读时按下表自行 translate，或先看 [coolify-api-fields.md](coolify-api-fields.md)：`coolify app list` → `GET /api/v1/services` + jq；`coolify app get $u` → `GET /api/v1/services/$u`；`coolify app logs $u` → `GET /api/v1/services/$u/logs`。心智模型不变，只是入口换。
+
 # Coolify Docker app inspection and high-CPU evidence capture
 
 Use this reference when一个 tranfu Coolify 应用已部署，用户要拿容器日志、top/CPU/内存占用、或要给 source-owning/local AI 的证据包。本文在完整 `scenarios/inspect-app.md` 落地前作为补位流程。
