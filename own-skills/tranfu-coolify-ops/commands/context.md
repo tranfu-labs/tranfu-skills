@@ -1,3 +1,5 @@
+> ⚠️ **ad-hoc 速查**: 本文件是 CLI ad-hoc 速查（排障 / 临时操作用），reconcile flow 主链路不依赖；命令需要时手动跑。reconcile 主链路全走 HTTP API，见 [../scenarios/reconcile-deployment.md](../scenarios/reconcile-deployment.md) 和 [../references/coolify-api-fields.md](../references/coolify-api-fields.md)。
+
 # context 命令参考
 
 context 是 coolify CLI 的"多实例切换"概念：每个 context 对应一个 Coolify 实例（URL + token），

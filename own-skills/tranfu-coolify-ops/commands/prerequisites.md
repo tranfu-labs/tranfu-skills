@@ -1,106 +1,116 @@
-# 共用前置
+# Step 0：preflight 索引（人话说明）
 
-任一场景脚本的 Step 0 都是跑这一份。目的：在做任何写操作之前，先确认"在哪个实例上"和
-"server 唯一性"，把后续命令需要的 `${server-uuid}` 准备好。
+reconcile flow 的 Step 0 只做一件事：跑 [`../assets/preflight.sh`](../assets/preflight.sh)。本文档是脚本的「人话伴侣」——脚本里每条 check 的语义、失败的修复路径、为什么这样设计。脚本本身是 single source of truth，本文档落后于脚本时**以脚本为准**。
 
 ## 工作单元契约
 
-- **输入**：当前会话上下文中可选的触发语覆盖项 `<other-context>`（用户在触发语里明说「用 `<other-context>` 部署 xxx」时出现，否则为空）。
-- **输出**（命名产物）：
-  - `${context}`：目标 Coolify context 名。
-  - `${server-uuid}`：唯一一台 server 的 UUID。
-- **完成判据**（可观测）：上述两个变量均为非空字符串，且 `coolify server list --context="${context}" --format json | jq 'length'` 返回 `1`。
-- **Ownership**：本前置脚本只跑只读 CLI（`coolify context list` / `coolify server list`），MUST NEVER 调用任何写操作命令（add / create / deploy / restart 等），MUST NEVER 编辑用户文件。失败时只按下方"返回文案"原文回话，不替用户做任何修复。
+- **输入**：当前 shell 环境（`$COOLIFY_API_TOKEN` + `gh` token）+ 当前 git 仓库 + 当前 cwd
+- **输出**：退出码 0 / 1 / 2 + stdout 上的逐条 ✓ / ✗ / ⚠ + 5 个公共变量（agent 解析输出拿）：
 
-## 执行流程
+  ```
+  $BASE        = http://120.77.223.183:8000
+  $SERVER_UUID = oz7r53ilv7aeaubx7ewuqw0m
+  $REPO_ORG    = tranfu-labs
+  $REPO_NAME   = <user-repo>
+  $SVC_NAME    = $REPO_NAME
+  ```
 
-CREATE A TODO LIST FOR THE TASKS BELOW（每步一个 TODO）：
+- **完成判据**：脚本退出码 0
+- **Ownership**：read-only。脚本任一硬 check 失败 → 输出原文 + 退出码 1。**MUST NEVER**：自动装工具、自动建 repo、自动跳过断言
 
-1. 跑 Step A 锁定 `${context}`。若拿不到 → 按对应返回文案输出并退出。      # 卫语句·用前必校
-2. 跑 Step B 锁定 `${server-uuid}`。若 server 数 ≠ 1 → 按对应返回文案输出并退出。  # 卫语句·失败有出口
-3. 产出 `${context}` 与 `${server-uuid}`，交给后续场景脚本，结束。          # 显式终止
-
-失败出口：Step A / Step B 任一返回文案触发即终止整条前置流程，MUST NEVER 继续往下跑 Step B 或交付变量。
-
-## Step A：确认当前在哪个 Coolify 实例
+## 怎么跑
 
 ```bash
-coolify context list --format json
+# 在目标项目根目录跑
+bash <SKILL_ROOT>/assets/preflight.sh
+
+# 或显式指定 base url
+bash <SKILL_ROOT>/assets/preflight.sh http://120.77.223.183:8000
 ```
 
-**MUST 直接读 default / active 的那一项，记为 `${context}`，MUST NEVER 向用户确认。** 后续所有命令都显式带
-`--context="${context}"`（见 SKILL.md「全局守则」）。
+`<SKILL_ROOT>` = 本 skill 安装路径，通常是 `~/.claude/skills/own-skills/tranfu-coolify-ops/` 或 worktree 里的 `.claude/worktrees/.../own-skills/tranfu-coolify-ops/`。
 
-```bash
-CONTEXT=$(coolify context list --format json | jq -r '
-  ( .[] | select(.is_default == true or .active == true or .default == true) | .name )
-  // (.[0].name)
-')
-[ -n "$CONTEXT" ] && [ "$CONTEXT" != "null" ] || { echo "STOP: 拿不到 default context"; exit 1; }
-```
+## 退出码
 
-为什么不问用户：tranfu 团队日常都用同一个 default context，每次反问都是噪音。需要换实例的入口
-**由用户主动声明**——用户在触发语里明说「用 `<other-context>` 部署 xxx」，agent 解析出来覆盖
-`${context}` 即可，MUST NEVER 主动征求确认。
+| 退出码 | 含义 | 下一步 |
+|---|---|---|
+| `0` | 全 ✓ | 进 reconcile Step 2 |
+| `1` | 任一硬 check ✗ | 终止，按脚本输出的 `✗ <reason>` 修完再跑 |
+| `2` | 仅 ⚠（如 GHCR credential 未 ack）| 去 Coolify UI 配 ghcr.io credential，回来 ack 重跑 |
 
-只在下面两种情况停下来：
+## check 清单 + 失败修复路径
 
-- `coolify context list` 返回空或报错 → context 未配置 / CLI 未装。MUST 按下面文案原文返回并退出：
+按脚本输出顺序：
 
-  > 没有可用 context。先按 https://github.com/coollabsio/coolify-cli 安装 CLI，再用
-  > `coolify context add <name> <url> <token>` 添加一个，然后回头再跑这个流程。
+### ▸ 工具
 
-- `context list` 有多项但**没有任何一项是 default / active**（用户从来没 `coolify context use` 过）→
-  无法静默决定，MUST 按下面文案原文返回并退出：
+| ✗ 原因 | 修 |
+|---|---|
+| `gh / jq / curl / git / base64` 任一缺 | `brew install <tool>` (macOS) 或对应平台包管理器 |
 
-  > 你机器上有多个 Coolify context 但没有标记 default 的。先用
-  > `coolify context use <name>` 选定一个作为 default，再跑这个流程；
-  > 或者直接在触发语里说「用 `<name>` context 部署 xxx」让我临时覆盖。
+### ▸ Git 仓库状态
 
-## Step B：断言 server 数量恰好为 1
+| ✗ 原因 | 修 |
+|---|---|
+| 当前 cwd 不在 git 仓库 | `cd` 到项目根目录 |
+| 无 origin remote | `git remote add origin <url>` |
+| `org ≠ tranfu-labs` | **不修**——本 skill 只服务 tranfu-labs 仓库；如确需扩展先讨论再改 skill |
+| 命名不合规（不是 烤肉串-app 全小写）| 改 repo 名（GitHub UI → Settings → General → rename），同步本地 `git remote set-url origin ...` |
+| working tree dirty | `git stash` 或 `git commit` 当前改动 |
 
-本 skill 当前默认 tranfu 团队只用一台 server。一旦多 server 出现，说明组织结构变了，MUST 让用户
-明确指定走哪台，MUST NEVER 让 skill 默默选第一个。
+### ▸ GitHub 凭据
 
-```bash
-coolify server list --context="${context}" --format json
-```
+| ✗ 原因 | 修 |
+|---|---|
+| `gh` 未 auth | `gh auth login` |
+| token scope 缺 `'repo'` | `gh auth refresh -s repo` |
+| 用户对 repo 无 admin permission | 让 repo owner 把你加为 admin collaborator（Settings → Collaborators） |
+| repo 不存在 / 网络问题 | 检查 origin URL 拼写 / VPN |
 
-按返回数组长度分支（穷尽，三选一）：
+### ▸ Coolify 凭据
 
-```bash
-SERVER_COUNT=$(coolify server list --context="${context}" --format json | jq 'length')
-```
+| ✗ 原因 | 修 |
+|---|---|
+| `$COOLIFY_API_TOKEN` 未设置 | 去 Coolify UI → Keys & Tokens → 生成 Read & Write 权限 token，`export COOLIFY_API_TOKEN=<token>` |
+| 拨 `/api/v1/version` → 401/403 | token 错或过期，重新生成 |
+| 拨 `/api/v1/version` → 000（拨不通）| 检查公司内网 / VPN |
+| PATCH dummy uuid → 401/403 | token 只读，回 Coolify 重新生成一个含 Write 权限的 |
 
-- `SERVER_COUNT == 1`：
-  - 拿 server uuid：`SERVER_UUID=$(coolify server list --context="${context}" --format json | jq -r '.[0].uuid')`
-  - 拿到 `${server-uuid}`，传给后续场景脚本使用。
-- `SERVER_COUNT == 0`：终止。MUST 按下面文案原文返回并退出：
-  > 当前 context (`${context}`) 上没有任何 server。先用
-  > `coolify server add --context="${context}" <name> <ip> <private-key-uuid>` 加一台，
-  > `coolify server validate --context="${context}" <uuid>` 验证通过后再跑这个流程。
-- `SERVER_COUNT > 1`：终止。MUST 按下面文案原文返回并退出：
-  > 当前 context (`${context}`) 上有 `${SERVER_COUNT}` 台 server，本 skill 默认 tranfu 团队只用单 server。
-  > 列出来让我决定：
-  > （列出 `coolify server list --context="${context}"` 的 name + uuid + ip）
-  > 如果确实需要在多 server 环境上跑，告诉我目标 server-uuid，再跑这个流程；
-  > 同时考虑扩展本 skill 让它支持多 server。
-- 其它（jq 解析失败 / 命令报错 / SERVER_COUNT 非数字）：终止。返回文案：
-  > 拿不到 `${context}` 上的 server 列表（命令报错或解析失败）。检查 `coolify server list --context="${context}" --format json` 输出，修好再跑这个流程。
+### ▸ Coolify · GHCR Registry Credential
 
-## 输出
+| ⚠ 原因 | 修 |
+|---|---|
+| 未 ack | Coolify UI → Sources / Container Registries → Add Registry：URL `ghcr.io` / Username = GitHub 用户名 / Password = 一个 scope 含 `read:packages` 的 GitHub PAT。挂上后回来重跑 preflight，ack 通过 |
+| 非交互环境自动 ⚠ | 设环境变量 / 用 manual flag，或直接在 interactive shell 重跑 |
 
-跑完 Step A + Step B，对场景脚本提供：
+## 安全纪律
 
-- `${context}`：用户已确认的目标 context 名。**场景脚本里的每条 CLI 命令都 MUST 显式带
-  `--context="${context}"`**（见 SKILL.md「全局守则」），MUST NEVER 依赖 default。
-- `${server-uuid}`：唯一一台 server 的 UUID。
+preflight.sh 设计上**永不打印 `$COOLIFY_API_TOKEN` 任何字节**：
+- 长度 / 前缀 / 哈希都不打
+- 失败原因只描述"哪一层挂了"，不暴露 token
+- token 仅用 `-H "Authorization: Bearer $COOLIFY_API_TOKEN"` 形式传给 curl，shell 展开发生在执行时
 
-产出上述两个变量后，本前置流程结束。
+agent 解析脚本输出时**也不要在对话里 echo token 任何字节**。
 
-## 失败语义
+## 公司常量来源
 
-任一步失败一律按上面对应的"返回文案"原文返回给用户。**MUST NEVER 替用户自动建 server、
-MUST NEVER 替用户跳过断言、MUST NEVER 在 context 既没 default 又没用户声明时硬挑一个**。
-Step A 允许"直接采用 default context 而不问用户"——这是 reduce friction，不是跳过断言；
-真正的写操作仍由后续场景脚本里的命名 / 同名 / GH App / 仓库可见性等断言保护。
+`$BASE` / `$SERVER_UUID` 硬编码在 preflight.sh 顶部和 [reconcile-deployment.md](../scenarios/reconcile-deployment.md)。如果公司换 Coolify 实例 / 换 server：
+
+1. 改 `assets/preflight.sh` 顶部默认 BASE
+2. 改 `scenarios/reconcile-deployment.md` 里所有 BASE / SERVER_UUID 引用
+3. 在 PR 描述里标 "更新公司 Coolify 实例 / server"
+
+不要靠环境变量改 BASE——硬编码是 single source of truth，让 git history 能 audit 实例迁移历史。
+
+## 不在 preflight 里做的事
+
+明确**不做**（避免越界）：
+
+- ✗ 探测 project_uuid（留给 reconcile Step 3，要么从已有 service 反查，要么让用户从 GET /api/v1/projects 选）
+- ✗ 自动建 Coolify project / 挂 registry credential / 建 GitHub environment（人工 UI）
+- ✗ 修任何文件（reconcile Step 2 才碰）
+- ✗ 验证 `is_static` / `is_spa` / build 命令等**项目类型**信息（reconcile Step 2 + file-generation-rules.md 才碰）
+
+## 输出（传给 reconcile flow）
+
+preflight 退出码 0 → 进 reconcile Step 2，公共变量已就位。

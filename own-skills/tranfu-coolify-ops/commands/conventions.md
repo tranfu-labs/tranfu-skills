@@ -1,3 +1,5 @@
+> ⚠️ **ad-hoc 速查**: 本文件是 CLI ad-hoc 速查（排障 / 临时操作用），reconcile flow 主链路不依赖；命令需要时手动跑。reconcile 主链路全走 HTTP API，见 [../scenarios/reconcile-deployment.md](../scenarios/reconcile-deployment.md) 和 [../references/coolify-api-fields.md](../references/coolify-api-fields.md)。
+
 # 通用约定
 
 这一份是所有场景共用的横切约定。跑任何场景前先把这里读懂，再去看 `prerequisites.md` 和具体的
