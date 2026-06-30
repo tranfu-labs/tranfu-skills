@@ -7,7 +7,7 @@
 - **作用域硬约束**：只处理当前 GitHub repo 对应的那一个 project / service，**不扫描、不列举、不操作 Coolify 实例上其他资源**
 - **每个 Step 三段**：Check 当前状态 → Diff 期望状态 → Diff 空 skip / 非空 Act
 - **整套幂等**：第二次跑、第三次跑都收敛到同一终态
-- **Act 前一律先把 diff 摆出来等用户确认**——动 Coolify 上活资源前的硬纪律
+- **全程 autonomous, 中途零停顿**：user 给出 GitHub URL 等初始指令 = 全链路隐式 ack, agent 一路跑到 Step 10 收尾, **不在中途等用户回应**。act 前 GET 当前状态用于事后告知 diff, 不是用于等 ack。**唯一例外**: Step 1 入口后用户意图模糊 (如更新分支只说"看下 X") → 询问意图后继续 autonomous
 - **任一 Step act 失败 → 中止**，不静默推进
 - **同名硬约束**：`REPO_NAME == PROJECT_NAME == SVC_NAME`，从 GitHub URL 唯一派生
 
@@ -316,20 +316,23 @@ gh variable set IMAGE_TAG_SHA_PREFIX --env "$DEFAULT_BRANCH" --body ""
 
 ```bash
 git add .
-git status  # 给用户看一眼要 commit 的文件清单
-git diff --cached --stat  # 给用户看 diff stat
-```
-
-**Act 前**：把上面两段输出贴给用户，告知"即将 commit + push"，等用户 ack 后执行：
-
-```bash
 git commit -m "chore: coolify onboard (tranfu-coolify-ops skill)"
 git push -u origin "$DEFAULT_BRANCH"
 ```
 
+**Act 后告知** (autonomous, 不等 ack)：把 `git diff --cached --stat`（commit 前抓）+ `git rev-parse HEAD` + push 的 stdout 一并报给用户:
+
+```
+✓ 已 commit + push:
+  commit: <sha> "chore: coolify onboard ..."
+  branch: $DEFAULT_BRANCH
+  改了: <文件列表 + 行数>
+  GitHub: https://github.com/$REPO_ORG/$REPO_NAME/commit/<sha>
+```
+
 **Act 失败**：
 
-- push rejected (non-fast-forward) → 终止，让用户先 `git pull --rebase`
+- push rejected (non-fast-forward) → 终止，给用户 "需 `git pull --rebase` 后重跑"
 - auth 失败 → `gh auth refresh` / 检查 origin URL
 
 > 跳到共用收尾 [Step 8](#step-8-等-gha-跑完--验-ci-无错)。
@@ -357,10 +360,10 @@ agent 从用户原话提炼意图, 按下表执行对应 act：
 
 **纪律 (act 共用)**：
 
-- 每个 act 前 GET 当前状态, 给用户摆 diff (当前 vs 期望), ack 后才动
-- act 后 GET 校验真生效
+- act 前 GET 当前状态记录 diff (用于事后告知, 不等 ack)
+- 直接 act, 完成后 GET 校验真生效, 把 diff + 校验结果一并告知用户
 - 多 act 串行执行, 不批量 PATCH (易踩 422 / 难定位错)
-- D 路径 push 前同 Step 7I, 摆 diff stat + 文件清单等用户 ack
+- D 路径 push 同 Step 7I — autonomous, 推完告知
 
 **示例 act 组合**：
 
@@ -511,7 +514,7 @@ exit 1
 - **更新分支 Step 2U 意图模糊不要乱猜**：用户说"看下 markdown-kits-app", 不要默认跑 redeploy; 询问"你想 redeploy / 改域名 / 改 env 还是别的?"
 - **不要 reconcile 自己改源码**：Step 3I / 更新分支 D 路径不合规必须 spawn subagent 按 file-generation-rules.md 修；agent 只组装 prompt + 转发结果，明确告知用户改了什么
 - **不要 Step 3I 改完直接 commit/push**：初始化分支所有改动累积到 Step 7I 一次性 push
-- **不要 push 前不给用户看 diff**：即便 D1（agent autonomous），push 前必须摆 diff stat + 文件清单
+- **不要 push 前停下等 ack**：autonomous 的意思是直接 push, 推完把 commit sha / diff stat / GitHub link 一并告知。user 已经在初始指令里 ack 了整条链路, 中途再问是浪费 user 注意力 (user 给完指令往往离线了, 回不来卡死流程)
 - **不要 Step 9 看不到部署就重新 git push**：fallback 是 `POST /api/v1/deploy` 主动触发，不是再 push 一次
 - **不要 Step 10 改成无限轮询**：5min 硬上限，到点就报排障入口
 - **不要让用户去 settings 手工建 environment**：Step 5I 用 `gh api -X PUT repos/.../environments/<name>` 自动建, REST API 是支持的, gh CLI 只是没暴露子命令
