@@ -1,8 +1,12 @@
 # Coolify HTTP API 字段速查（verified on 4.1.2）
 
+> 术语见 SKILL.md ## 心智模型 (Coolify Service Resource / sub-application / compose service / Coolify Application Resource)。
+
 本 skill 只用到 `/services` 命名空间下的少数 endpoint。下面只列实际用到的字段——完整 schema 看 [openapi.yaml](https://raw.githubusercontent.com/coollabsio/coolify/main/openapi.yaml)。
 
-每条标注「实测于 Coolify server 4.1.2 + 一台公司实例」，server 升级时跑一次冒烟（reconcile 跑一遍）再更新本文件。
+每条标注「实测于 Coolify server 4.1.2 + 一台公司实例」。
+
+**MUST**: Coolify server 升级后，在更新本文件前先跑一次 reconcile 冒烟（命令: `bash <SKILL_ROOT>/assets/preflight.sh` && 在已部署仓库跑 `reconcile dry-run`），通过（退出码 0）后把 server 版本号写到顶部 `verified on x.y.z`。
 
 ## 公共
 
@@ -20,7 +24,12 @@
 
 关键可选：
 - `name` — 服务名（agent 用 tranfu 命名约束推导）
-- `docker_compose_raw` — **base64-encoded** compose YAML（**必须 `| tr -d '\n'` 去掉折行换行符**，否则 JSON parse 失败）
+- `docker_compose_raw` — base64-encoded compose YAML。
+  **CRITICAL**: base64 输出 MUST 去折行（`base64 | tr -d '\n'`），否则 Coolify JSON parse 失败 → 422。
+  示例:
+  ```bash
+  encoded=$(base64 < compose.yml | tr -d '\n')
+  ```
 - `urls` — `[{name, url}]` 数组，name=compose service 名，url=comma-separated（见 [urls-vs-docker-compose-domains.md](urls-vs-docker-compose-domains.md)）
 - `instant_deploy` — bool，建议 `false`，首次部署留给 push 触发的 GHA
 - `is_container_label_escape_enabled` — bool，默认 true，保持

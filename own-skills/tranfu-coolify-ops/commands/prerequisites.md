@@ -1,6 +1,10 @@
 # Step 0：preflight 索引（人话说明）
 
-reconcile flow 的 Step 0 只做一件事：跑 [`../assets/preflight.sh`](../assets/preflight.sh)。本文档是脚本的「人话伴侣」——脚本里每条 check 的语义、失败的修复路径、为什么这样设计。脚本本身是 single source of truth，本文档落后于脚本时**以脚本为准**。
+<!-- Step 编号说明：保留 Step 0, 2-9（Step 1 已并入 Step 0, 编号保留与历史 commit 对齐） -->
+
+术语见 SKILL.md ## 心智模型。
+
+reconcile flow 的 Step 0 只做一件事：跑 [`../assets/preflight.sh`](../assets/preflight.sh)。本文档是脚本的「人话伴侣」——脚本里每条 check 的语义、失败的修复路径、为什么这样设计。脚本本身是 single source of truth。**MUST**：本文档与 `assets/preflight.sh` 冲突时一律以脚本为准，**NEVER** 用本文档替代脚本作为唯一执行依据。
 
 ## 工作单元契约
 
@@ -8,15 +12,26 @@ reconcile flow 的 Step 0 只做一件事：跑 [`../assets/preflight.sh`](../as
 - **输出**：退出码 0 / 1 / 2 + stdout 上的逐条 ✓ / ✗ / ⚠ + 5 个公共变量（agent 解析输出拿）：
 
   ```
-  $BASE        = http://120.77.223.183:8000
-  $SERVER_UUID = oz7r53ilv7aeaubx7ewuqw0m
-  $REPO_ORG    = tranfu-labs
-  $REPO_NAME   = <user-repo>
-  $SVC_NAME    = $REPO_NAME
+  $COOLIFY_BASE_URL = http://120.77.223.183:8000
+  $SERVER_UUID      = oz7r53ilv7aeaubx7ewuqw0m
+  $REPO_ORG         = tranfu-labs
+  $REPO_NAME        = <user-repo>
+  $SVC_NAME         = $REPO_NAME
   ```
 
-- **完成判据**：脚本退出码 0
+- **完成判据**：退出码 0 且 stdout 末尾包含 5 行 KEY=VALUE 格式：`COOLIFY_BASE_URL=...` / `SERVER_UUID=...` / `REPO_ORG=...` / `REPO_NAME=...` / `SVC_NAME=...`；下游可用 `grep -E '^(COOLIFY_BASE_URL|SERVER_UUID|REPO_ORG|REPO_NAME|SVC_NAME)=' ` 解析
 - **Ownership**：read-only。脚本任一硬 check 失败 → 输出原文 + 退出码 1。**MUST NEVER**：自动装工具、自动建 repo、自动跳过断言
+
+## 执行流程
+
+1. 校验 SKILL_ROOT 可达（`assets/preflight.sh` 存在）；否则 → 报 BLOCKER「SKILL_ROOT 未正确解析」并退出。
+2. 跑 `bash assets/preflight.sh`。
+3. 按退出码分派：
+   - `0` → 解析 5 公共变量（`COOLIFY_BASE_URL` / `SERVER_UUID` / `REPO_ORG` / `REPO_NAME` / `SVC_NAME`），进 reconcile Step 2（Step 1 已并入 Step 0）。
+   - `1` → 按脚本 stdout 修人为可修条件 → 重跑（回 2）。
+   - `2` → 去 Coolify UI 配 `ghcr.io` credential → 重跑（ack = 重跑后退出码 0）。
+   - 其他 → 报 BLOCKER，附 stderr，退出。
+4. 产出：5 公共变量已 export，下一步 = reconcile Step 2。结束。
 
 ## 怎么跑
 
@@ -90,17 +105,17 @@ preflight.sh 设计上**永不打印 `$COOLIFY_API_TOKEN` 任何字节**：
 - 失败原因只描述"哪一层挂了"，不暴露 token
 - token 仅用 `-H "Authorization: Bearer $COOLIFY_API_TOKEN"` 形式传给 curl，shell 展开发生在执行时
 
-agent 解析脚本输出时**也不要在对话里 echo token 任何字节**。
+**MUST NEVER** 在对话 / 日志 / 文件中输出 `$COOLIFY_API_TOKEN` 任何字节（含长度、前缀、哈希）。
 
 ## 公司常量来源
 
-`$BASE` / `$SERVER_UUID` 硬编码在 preflight.sh 顶部和 [reconcile-deployment.md](../scenarios/reconcile-deployment.md)。如果公司换 Coolify 实例 / 换 server：
+`$COOLIFY_BASE_URL` / `$SERVER_UUID` 硬编码在 preflight.sh 顶部和 [reconcile-deployment.md](../scenarios/reconcile-deployment.md)。如果公司换 Coolify 实例 / 换 server：
 
-1. 改 `assets/preflight.sh` 顶部默认 BASE
-2. 改 `scenarios/reconcile-deployment.md` 里所有 BASE / SERVER_UUID 引用
+1. 改 `assets/preflight.sh` 顶部默认 `COOLIFY_BASE_URL`
+2. 改 `scenarios/reconcile-deployment.md` 里所有 `COOLIFY_BASE_URL` / `SERVER_UUID` 引用
 3. 在 PR 描述里标 "更新公司 Coolify 实例 / server"
 
-不要靠环境变量改 BASE——硬编码是 single source of truth，让 git history 能 audit 实例迁移历史。
+不要靠环境变量改 `COOLIFY_BASE_URL`——硬编码是 single source of truth，让 git history 能 audit 实例迁移历史。
 
 ## 不在 preflight 里做的事
 

@@ -1,5 +1,13 @@
 # Domain (urls) 操作速查
 
+术语见 SKILL.md ## 心智模型 (Coolify Service Resource / sub-application / compose service)。
+
+## 输入 / 输出 / 完成标准
+
+输入: $COOLIFY_BASE_URL (不带末尾斜杠) / $COOLIFY_API_TOKEN (write 权限) / $COOLIFY_APP_UUID / $EXPECTED_NAME / $EXPECTED_URL
+输出: 已校验同步的 sub-application.fqdn
+完成 = PATCH 返 200 且 GET /services/$COOLIFY_APP_UUID 复核 .applications[].fqdn == $EXPECTED_URL
+
 reconcile Step 5 用。心智模型见 [../references/urls-vs-docker-compose-domains.md](../references/urls-vs-docker-compose-domains.md) 和 [../references/service-fqdn-trap.md](../references/service-fqdn-trap.md)。
 
 ## tranfu 域名规范
@@ -16,7 +24,7 @@ EXPECTED_NAME="<sub-app-name>"
 EXPECTED_URL="https://${EXPECTED_NAME}.tranfu.com:<port>"
 
 curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID" \
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID" \
   | jq --arg name "$EXPECTED_NAME" --arg url "$EXPECTED_URL" '
     .applications[] | select(.name == $name) |
     if .fqdn == $url then "✓ 已是期望域名"
@@ -25,7 +33,7 @@ curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
     end'
 ```
 
-输出 `✓` → check 通过，跳过 act。`✗` → 进 act。
+`jq` 输出首字符 `==` ✓ → check 通过, 跳过 act; 否则非零退出并打印当前 fqdn, 进 act。
 
 ## Act：写域名（单 sub-application）
 
@@ -40,15 +48,17 @@ curl -sS -X PATCH \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d "$JSON_BODY" \
-  "$BASE/api/v1/services/$SERVICE_UUID"
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID"
 ```
 
 返回 200 + `{uuid, domains}`。**立刻** GET 一次校验 sub-application.fqdn 真变了：
 
 ```bash
-curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" "$BASE/api/v1/services/$SERVICE_UUID" \
+curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID" \
   | jq '.applications[] | {name, fqdn}'
 ```
+
+`HTTP=200` 且 GET 复核 `.applications[].fqdn == $EXPECTED_URL` → DONE。
 
 ## Act：多 sub-application 一次写（reconcile Step 5 多服务场景）
 
@@ -65,10 +75,12 @@ curl -sS -X PATCH \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d "$JSON_BODY" \
-  "$BASE/api/v1/services/$SERVICE_UUID"
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID"
 ```
 
-**注意**：`urls` 数组是**全量替换**而非 merge。如果你只发一条，其它 sub-application 的域名不会被清，但**也不会被同步更新**（保持原值）。所以 reconcile Step 5 act 时应该**把全部期望域名一起发**，避免半更新。
+**注意**：`urls` 数组是**全量替换**而非 merge。如果你只发一条，其它 sub-application 的域名不会被清，但**也不会被同步更新**（保持原值）。
+
+**MUST** 在 reconcile Step 5 act 中一次发齐全部期望 urls; **NEVER** 只 PATCH 单条 urls 用于多 sub-app 场景, 否则会造成静默半更新。
 
 ## 常见 422 错误
 
@@ -90,7 +102,7 @@ curl -sS -X PATCH \
 }
 ```
 
-**不要**直接 `force_domain_override=true`。先 GET 占用者，确认是要替换还是另起一个域名。如果确认替换，body 加 `"force_domain_override": true`。
+**NEVER** set `force_domain_override=true` before GET-verifying the conflicting owner; **MUST** 先 GET 冲突资源确认归属, 再决定替换或换名, unless GET 已确认且用户授权强制覆盖。如果确认替换，body 加 `"force_domain_override": true`。
 
 ## 不要做的事
 
