@@ -24,11 +24,20 @@ curl -sS \
 
 ## 对比仓库 .env 与 Coolify 现状（reconcile Step 6 check）
 
-```bash
-REMOTE_KEYS=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs" | jq -r '.[].key' | sort)
+**必须 grep 过滤 Coolify 魔法变量前缀** (详见本文末尾"关于 Coolify 魔法变量"段), 否则每次都误诊 "Coolify 多了一堆 key"：
 
-LOCAL_KEYS=$(grep -v '^\s*#' .env | grep '=' | cut -d= -f1 | sort)
+```bash
+MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
+
+REMOTE_KEYS=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+  "$BASE/api/v1/services/$SERVICE_UUID/envs" \
+  | jq -r '.[].key' \
+  | grep -vE "$MAGIC_PREFIXES" \
+  | sort)
+
+LOCAL_KEYS=$(grep -v '^\s*#' .env | grep '=' | cut -d= -f1 \
+  | grep -vE "$MAGIC_PREFIXES" \
+  | sort)
 
 echo "缺的 (本地有，Coolify 没):"
 comm -23 <(echo "$LOCAL_KEYS") <(echo "$REMOTE_KEYS")
@@ -94,12 +103,27 @@ curl -sS -X DELETE \
 
 **reconcile flow 不主动删 Coolify 上多出来的 env**——只补缺、不删多余。多余 env 一般是用户在 UI 上手动加的（debug / 临时关），自动删会扯到用户的临时状态。Step 6 检测到多余 env 时只**告知用户**，由用户决定。
 
-## 关于 `SERVICE_PASSWORD_*` / `SERVICE_FQDN_*` 这类 Coolify 魔法变量
+## 关于 Coolify 魔法变量
 
-- **不要往 envs endpoint 写 `SERVICE_PASSWORD_*` 或 `SERVICE_FQDN_*`**——它们是 Coolify 自动生成 / 注入容器的"特殊键"，写进 envs 表反而会被忽略或冲突。
-- `SERVICE_PASSWORD_*` 在 compose 里 `${SERVICE_PASSWORD_FOO}` 引用即可，Coolify 自己生成、自己持久化。
-- `SERVICE_FQDN_*` 见 [../references/service-fqdn-trap.md](../references/service-fqdn-trap.md)，是 output 不是 input。
-- reconcile Step 6 检查时**自动 skip 这些前缀**，不参与 diff。
+**核心规则**: 魔法变量在 compose.yml 里声明 (例如 `SERVICE_PASSWORD_REDIS: ''`), Coolify 部署时自动生成 + 注入容器 env + 自动塞一份到 service envs 表 (UI 可见但不可改)。**reconcile 绝不再往 envs endpoint 重复 POST** — 要么被忽略要么冲突, 还会污染 .env diff。
+
+reconcile Step 6I + 更新分支 C 路径自动 skip 的前缀:
+
+| 前缀 | 用途 | 常见变体 |
+|---|---|---|
+| `SERVICE_PASSWORD_` | 普通随机密码, 无特殊符号 (数据库 / Redis 密码用) | `_64_` |
+| `SERVICE_PASSWORDWITHSYMBOLS_` | 含特殊符号随机密码 (应用层强密码 / OAuth client secret) | `_64_` |
+| `SERVICE_REALBASE64_` | Base64 编码随机串 (JWT / session key) | `_64_` |
+| `SERVICE_HEX_` | 十六进制随机串 (API token / encryption key) | `_32_` / `_64_` / `_128_` |
+| `SERVICE_FQDN_` | output 方向: Coolify → 容器, 注入 service 自己的对外 fqdn | 见 [../references/service-fqdn-trap.md](../references/service-fqdn-trap.md) |
+
+完整 grep regex (上面 5 类前缀完全覆盖, `_32_` / `_64_` / `_128_` 都被前缀包含):
+
+```bash
+MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
+```
+
+同一 `<ID>` 跨 service 引用拿到的是同一个值 (Coolify 按 ID 持久化, 不按 service), 应用栈内不会出现"应用持的密码和数据库持的密码对不上"。
 
 ## 安全纪律
 
