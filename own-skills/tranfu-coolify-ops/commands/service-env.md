@@ -24,7 +24,7 @@ curl -sS \
 
 ## 对比仓库 .env 与 Coolify 现状（reconcile Step 6 check）
 
-**必须 grep 过滤 Coolify 魔法变量前缀**, 否则每次都误诊 "Coolify 多了一堆 key"（详见 [../references/coolify-magic-vars.md](../references/coolify-magic-vars.md)）：
+**必须 grep 过滤 Coolify 魔法变量前缀** (详见本文末尾"关于 Coolify 魔法变量"段), 否则每次都误诊 "Coolify 多了一堆 key"：
 
 ```bash
 MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
@@ -103,21 +103,27 @@ curl -sS -X DELETE \
 
 **reconcile flow 不主动删 Coolify 上多出来的 env**——只补缺、不删多余。多余 env 一般是用户在 UI 上手动加的（debug / 临时关），自动删会扯到用户的临时状态。Step 6 检测到多余 env 时只**告知用户**，由用户决定。
 
-## 关于 Coolify 魔法变量（完整清单见 [../references/coolify-magic-vars.md](../references/coolify-magic-vars.md)）
+## 关于 Coolify 魔法变量
 
-**核心规则**: 魔法变量在 compose.yml 里声明 = Coolify 自动注入容器, **绝不在 service envs endpoint 重复 POST 一遍** — 重复写要么被忽略要么冲突, 还会污染 .env diff。
+**核心规则**: 魔法变量在 compose.yml 里声明 (例如 `SERVICE_PASSWORD_REDIS: ''`), Coolify 部署时自动生成 + 注入容器 env + 自动塞一份到 service envs 表 (UI 可见但不可改)。**reconcile 绝不再往 envs endpoint 重复 POST** — 要么被忽略要么冲突, 还会污染 .env diff。
 
-reconcile Step 6 + 更新分支 C 路径自动 skip 的前缀:
+reconcile Step 6I + 更新分支 C 路径自动 skip 的前缀:
 
-| 前缀 | 用途 |
-|---|---|
-| `SERVICE_PASSWORD_` | 普通随机密码 (含 `_64_` 变体) |
-| `SERVICE_PASSWORDWITHSYMBOLS_` | 含特殊符号随机密码 (含 `_64_` 变体) |
-| `SERVICE_REALBASE64_` | Base64 编码随机串 (含 `_64_` 变体) |
-| `SERVICE_HEX_` | 十六进制随机串 (`_32_` / `_64_` / `_128_` 变体) |
-| `SERVICE_FQDN_` | output 方向, 见 [../references/service-fqdn-trap.md](../references/service-fqdn-trap.md) |
+| 前缀 | 用途 | 常见变体 |
+|---|---|---|
+| `SERVICE_PASSWORD_` | 普通随机密码, 无特殊符号 (数据库 / Redis 密码用) | `_64_` |
+| `SERVICE_PASSWORDWITHSYMBOLS_` | 含特殊符号随机密码 (应用层强密码 / OAuth client secret) | `_64_` |
+| `SERVICE_REALBASE64_` | Base64 编码随机串 (JWT / session key) | `_64_` |
+| `SERVICE_HEX_` | 十六进制随机串 (API token / encryption key) | `_32_` / `_64_` / `_128_` |
+| `SERVICE_FQDN_` | output 方向: Coolify → 容器, 注入 service 自己的对外 fqdn | 见 [../references/service-fqdn-trap.md](../references/service-fqdn-trap.md) |
 
-Coolify UI 上能看到这些 key (供观测), 但**不可改 / 不必改**。本 skill 跑 reconcile 时一律绕开它们。
+完整 grep regex (上面 5 类前缀完全覆盖, `_32_` / `_64_` / `_128_` 都被前缀包含):
+
+```bash
+MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
+```
+
+同一 `<ID>` 跨 service 引用拿到的是同一个值 (Coolify 按 ID 持久化, 不按 service), 应用栈内不会出现"应用持的密码和数据库持的密码对不上"。
 
 ## 安全纪律
 
