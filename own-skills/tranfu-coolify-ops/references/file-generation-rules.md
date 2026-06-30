@@ -85,7 +85,7 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 | C6 | volumes 显式写 `name:`（避免 Coolify 自动套 UUID 前缀难找难删） | 加 `name:` |
 | C7 | `environment.PORT` 与监听端口一致 | 修正 |
 | C8 | 数据库连接串用 compose service name（不用 localhost / 宿主机 IP） | 改 |
-| C9 | 密码 / secret / token 一律走 Coolify 魔法变量, compose 里 `SERVICE_<TYPE>_<ID>: ''` 声明 + `APP_KEY: ${SERVICE_<TYPE>_<ID>}` 引用 (按强度选: 数据库密码用 `PASSWORD` 无符号; JWT/session 用 `REALBASE64_64` 或 `HEX_64`; OAuth client secret 用 `PASSWORDWITHSYMBOLS`; encryption key 用 `HEX_64` / `HEX_128`); 5 类前缀 (`PASSWORD_` / `PASSWORDWITHSYMBOLS_` / `REALBASE64_` / `HEX_32_/_64_/_128_` / `FQDN_`) 不在 service envs 重复 POST, 见 [../commands/service-env.md](../commands/service-env.md) | 改 |
+| C9 | 密码 / secret / token 一律走 Coolify 魔法变量, compose 里 `SERVICE_<TYPE>_<ID>: ''` 声明 + `APP_KEY: ${SERVICE_<TYPE>_<ID>}` 引用 (按强度选: 数据库密码用 `PASSWORD` 无符号; JWT/session 用 `REALBASE64_64` 或 `HEX_64`; OAuth client secret 用 `PASSWORDWITHSYMBOLS`; encryption key 用 `HEX_64` / `HEX_128`); 5 类前缀 (`PASSWORD_` / `PASSWORDWITHSYMBOLS_` / `REALBASE64_` / `HEX_32_/_64_/_128_` / `FQDN_`) 不在 service envs 重复 POST, 见 [../commands/application-env.md](../commands/application-env.md) | 改 |
 | C10 | 镜像段只写 `image:`，**禁止 `build:`** | 删 `build:`，改 `image: ghcr.io/<org>/<repo>:<tag>` |
 | C11 | healthcheck 防代理（wget 系清环境变量；python urllib 走 NO_PROXY=127.0.0.1） | 修写法 |
 
@@ -97,7 +97,7 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 ### 域名 / 端口的归位
 
 - compose 里**不写真域名**——`SERVICE_FQDN_*` 给 `''`
-- 真域名走 `PATCH /api/v1/services/{uuid}` 的 `urls` 字段（reconcile Step 5）
+- 真域名走 `PATCH /api/v1/applications/{uuid}` 的 `docker_compose_domains` 字段（reconcile Step 4I 创建时一起带 / 更新分支 B 单改）
 - 域名形式 `https://<svc>.tranfu.com:<container-port>` —— `:port` 是容器内部端口，公网仍走 443
 
 ---
@@ -180,7 +180,7 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 
 - **端口六处必须一致**：见上。
 
-- **魔法变量密码为何一致**：Coolify 首次部署自动生成并永久持久化（按 `<ID>` 而不是按 service）, 之后重部署值不变；栈内多 service 引用同一 `<ID>` 必同值，杜绝"应用和数据库密码对不上"。reconcile 不重复 POST 到 service envs 的规则见 [../commands/service-env.md](../commands/service-env.md)。
+- **魔法变量密码为何一致**：Coolify 首次部署自动生成并永久持久化（按 `<ID>` 而不是按 service）, 之后重部署值不变；栈内多 service 引用同一 `<ID>` 必同值，杜绝"应用和数据库密码对不上"。reconcile 不重复 POST 到 application envs 的规则见 [../commands/application-env.md](../commands/application-env.md)。
 
 - **PostgreSQL 密码只在首次初始化生效**：官方镜像只在数据目录为空时采用 `POSTGRES_PASSWORD`，之后改环境变量不改库内真实密码。密码必须首次部署前定下来、生命周期与数据卷绑定；MySQL/MariaDB 的 root 密码同理。
 

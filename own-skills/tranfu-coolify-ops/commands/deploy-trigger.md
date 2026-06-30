@@ -7,12 +7,12 @@ reconcile Step 7 / Step 8 用。
 ```
 git push -> GitHub Actions deploy.yml -> docker build -> push GHCR
                                               ↓
-                                     curl POST $BASE/api/v1/deploy?uuid=<service-uuid>
+                                     curl POST $BASE/api/v1/deploy?uuid=<application-uuid>
                                               ↓
-                              Coolify 收到 -> pull 新镜像 -> restart container
+                              Coolify (Application + dockercompose) 收到 -> docker compose pull -> up
 ```
 
-Coolify 端**关掉 "Auto Deploy on Push / Webhook"**——触发权归 workflow。
+Coolify Application 创建时 `is_auto_deploy_enabled=false`——GitHub push 不触发 Coolify 自动部署, 触发权完全归 GHA workflow。即便 Coolify GitHub App integration 会订阅 GitHub push webhook, 因为 auto_deploy 关了, Coolify 收到 push 也不动。
 
 ## GitHub 端配置（reconcile Step 5I）
 
@@ -51,7 +51,7 @@ gh api -X PUT "repos/$REPO_ORG/$REPO_NAME/environments/$DEFAULT_BRANCH" >/dev/nu
 默认分支（如 `main`）：
 
 ```bash
-gh variable set COOLIFY_APP_UUID       --env main --body "<service-uuid>"
+gh variable set COOLIFY_APP_UUID       --env main --body "<application-uuid>"
 gh variable set IMAGE_TAG_ROLLING      --env main --body "latest"
 gh variable set IMAGE_TAG_SHA_PREFIX   --env main --body ""
 ```
@@ -60,7 +60,7 @@ gh variable set IMAGE_TAG_SHA_PREFIX   --env main --body ""
 
 ```bash
 gh api -X PUT "repos/$REPO_ORG/$REPO_NAME/environments/dev" >/dev/null
-gh variable set COOLIFY_APP_UUID       --env dev --body "<dev-service-uuid>"
+gh variable set COOLIFY_APP_UUID       --env dev --body "<dev-application-uuid>"
 gh variable set IMAGE_TAG_ROLLING      --env dev --body "dev"
 gh variable set IMAGE_TAG_SHA_PREFIX   --env dev --body "dev-"
 ```
@@ -82,7 +82,7 @@ gh workflow run deploy.yml --ref main
 # 2. 直接 ping Coolify deploy API（绕过 GHA，用 Coolify 上已有的镜像 tag 重新部署）
 curl -sSL --fail-with-body -X POST \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/deploy?uuid=$SERVICE_UUID&force=false"
+  "$BASE/api/v1/deploy?uuid=$APP_UUID&force=false"
 ```
 
 `force=false` 是常态。`force=true` 会强制重启——副作用大，少用（用法：镜像 tag 没变但要强制重 pull）。
@@ -90,11 +90,11 @@ curl -sSL --fail-with-body -X POST \
 ## webhook URL 构造
 
 ```
-${BASE}/api/v1/deploy?uuid=${SERVICE_UUID}&force=false
+${BASE}/api/v1/deploy?uuid=${APP_UUID}&force=false
 ```
 
 - `BASE`: `http://120.77.223.183:8000`
-- `SERVICE_UUID`: reconcile Step 3 拿到的 service uuid
+- `APP_UUID`: reconcile Step 4I 拿到的 Application uuid (写入 GH environment vars 的 `COOLIFY_APP_UUID`)
 - Auth: `Authorization: Bearer $COOLIFY_API_TOKEN` 必须
 
 写进 deploy.yml.template 的方式：环境变量里读 `COOLIFY_BASE_URL` + `COOLIFY_APP_UUID`，模板里拼字符串。
@@ -146,7 +146,7 @@ DEPLOYED=0
 
 while [ "$(date +%s)" -lt "$DEADLINE" ]; do
   STATUS=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-    "$BASE/api/v1/services/$SERVICE_UUID" | jq -r .status)
+    "$BASE/api/v1/applications/$APP_UUID" | jq -r .status)
 
   case "$STATUS" in
     deploying|starting|running)
@@ -161,7 +161,7 @@ if [ "$DEPLOYED" = "0" ]; then
   echo "⚠ 30s 内 Coolify 没启动部署 — fallback 主动 POST /api/v1/deploy"
   curl -sSL --fail-with-body -X POST \
     -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-    "$BASE/api/v1/deploy?uuid=$SERVICE_UUID&force=false"
+    "$BASE/api/v1/deploy?uuid=$APP_UUID&force=false"
 fi
 ```
 
@@ -171,7 +171,7 @@ fi
 
 ```bash
 FQDN=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID" \
+  "$BASE/api/v1/applications/$APP_UUID" \
   | jq -r '.applications[0].fqdn')
 PUBLIC_URL=$(echo "$FQDN" | sed -E 's#:[0-9]+/?$##')
 
@@ -196,6 +196,6 @@ exit 1
 - 2xx / 3xx → ✓ 部署到家
 - 5xx (非 502) → 应用起来了但内部错；看 [../references/coolify-compose-deploy-failure-triage.md](../references/coolify-compose-deploy-failure-triage.md)
 - 502 → traefik 转发但 upstream 没响应；八成 healthcheck 没过或端口对不上
-- 404 → traefik 没收到这个域名；urls 没正确同步, 重跑更新分支 Step 3U
+- 404 → traefik 没收到这个域名；`docker_compose_domains` 没正确同步, 重跑更新分支 B 路径
 - DNS 解析失败 → 域名 A 记录还没指过来, 让用户去 DNS 服务商配
 - Connection refused → traefik 没在 443 上；通常 Coolify 实例本身有问题, 去 UI 看

@@ -26,7 +26,7 @@ PATCH compose 后 GET service，**域名根本不是 `https://myapp.tranfu.com:8
 
 ## 真正改域名的入口
 
-走 [urls-vs-docker-compose-domains.md](urls-vs-docker-compose-domains.md)：`PATCH /api/v1/services/{uuid}` 带 `urls: [{name, url}]`。
+走 [urls-vs-docker-compose-domains.md](urls-vs-docker-compose-domains.md)：`PATCH /api/v1/applications/{uuid}` 带 `docker_compose_domains: [{name, domain}]` (0.8 Application 形态; 旧 0.7 Service 形态走 `urls: [{name, url}]`)。
 
 ## 已知 bug：portless 写法会卡在原域名
 
@@ -59,8 +59,8 @@ services:
 ```bash
 # 看 sub-application.fqdn 是不是真域名（不是 sslip.io 或 <wildcard>.tranfu.com）
 curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  http://120.77.223.183:8000/api/v1/services/<uuid> \
+  http://120.77.223.183:8000/api/v1/applications/<uuid> \
   | jq '.applications[].fqdn'
 ```
 
-如果出现 `sslip.io` 子串 → 域名没设；走 `urls` PATCH 修。
+如果出现 `sslip.io` 子串 → 域名没设；走 `docker_compose_domains` PATCH 修 (Application 形态; 旧 Service 形态用 `urls`)。

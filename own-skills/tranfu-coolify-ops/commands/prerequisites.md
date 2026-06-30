@@ -5,14 +5,15 @@ reconcile flow 的 Step 0 只做一件事：跑 [`../assets/preflight.sh`](../as
 ## 工作单元契约
 
 - **输入**：当前 shell 环境（`$COOLIFY_API_TOKEN` + `gh` token）+ 当前 git 仓库 + 当前 cwd
-- **输出**：退出码 0 / 1 / 2 + stdout 上的逐条 ✓ / ✗ / ⚠ + 5 个公共变量（agent 解析输出拿）：
+- **输出**：退出码 0 / 1 / 2 + stdout 上的逐条 ✓ / ✗ / ⚠ + 6 个公共变量（agent 解析输出拿）：
 
   ```
-  $BASE        = http://120.77.223.183:8000
-  $SERVER_UUID = oz7r53ilv7aeaubx7ewuqw0m
-  $REPO_ORG    = tranfu-labs
-  $REPO_NAME   = <user-repo>
-  $SVC_NAME    = $REPO_NAME
+  $BASE             = http://120.77.223.183:8000
+  $SERVER_UUID      = oz7r53ilv7aeaubx7ewuqw0m
+  $GITHUB_APP_UUID  = <preflight 从 /api/v1/github-apps 拿>
+  $REPO_ORG         = tranfu-labs
+  $REPO_NAME        = <user-repo>
+  $APP_NAME         = $REPO_NAME
   ```
 
 - **完成判据**：脚本退出码 0
@@ -76,6 +77,13 @@ bash <SKILL_ROOT>/assets/preflight.sh http://120.77.223.183:8000
 | 拨 `/api/v1/version` → 000（拨不通）| 检查公司内网 / VPN |
 | PATCH dummy uuid → 401/403 | token 只读，回 Coolify 重新生成一个含 Write 权限的 |
 
+### ▸ Coolify · GitHub App integration
+
+| ✗ 原因 | 修 |
+|---|---|
+| `organization=tranfu-labs` 的 GitHub App integration 不存在 | 去 `${BASE}/source` → Sources → GitHub App → New, 需要: GitHub App ID / Installation ID / Client ID/Secret / Private Key (在 github.com 那边先注册 GitHub App 并 install 到 tranfu-labs org)。这是 Coolify 实例级一次性配置, 装完所有 tranfu-labs 项目复用同一个。skill 不接管创建 — 装好后重跑 preflight, `$GITHUB_APP_UUID` 会被自动 export |
+| `/github-apps` endpoint 401/403 | token 无 read GitHub App 权限, 重新生成 |
+
 ### ▸ Coolify · GHCR Registry Credential
 
 | ⚠ 原因 | 修 |
@@ -106,10 +114,10 @@ agent 解析脚本输出时**也不要在对话里 echo token 任何字节**。
 
 明确**不做**（避免越界）：
 
-- ✗ 探测 project_uuid（留给 reconcile Step 3，要么从已有 service 反查，要么让用户从 GET /api/v1/projects 选）
-- ✗ 自动建 Coolify project / 挂 registry credential / 建 GitHub environment（人工 UI）
-- ✗ 修任何文件（reconcile Step 2 才碰）
-- ✗ 验证 `is_static` / `is_spa` / build 命令等**项目类型**信息（reconcile Step 2 + file-generation-rules.md 才碰）
+- ✗ 探测 project_uuid（留给 reconcile Step 1，按同名 project filter）
+- ✗ 自动建 Coolify project / Application / 挂 registry credential / 建 GitHub environment（reconcile 其他 Step 才碰; GitHub App integration 是 ops 角色一次性手工配置, skill 永不接管创建）
+- ✗ 修任何文件（reconcile Step 2I 才碰）
+- ✗ 验证 `is_static` / `is_spa` / build 命令等**项目类型**信息（reconcile Step 3I + file-generation-rules.md 才碰）
 
 ## 输出（传给 reconcile flow）
 
