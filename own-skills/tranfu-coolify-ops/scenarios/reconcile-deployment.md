@@ -28,45 +28,55 @@ Step 0: preflight (工具 / 凭据 / Coolify 活性)
    ↓
 Step 1: 同名 project 探测
    ↓
-┌──── project 不存在 ────────┐   ┌──── project 已存在 ────────┐
-│ 初始化部署分支             │   │ 更新部署分支               │
-│ Step 2I:  git clone 临时   │   │ Step 2U:  复用 cwd          │
-│ Step 3I:  compose 合规     │   │ Step 3U:  四件套 + service  │
-│           (subagent 修)    │   │           compose / env     │
-│ Step 4I:  POST project +   │   │           PATCH 收敛        │
-│           service          │   │ Step 4U:  GH secrets/vars   │
-│ Step 5I:  GH secrets/vars  │   │           核对              │
-│ Step 6I:  service env      │   │ Step 5U:  service env 核对  │
-│ Step 7I:  git push         │   │ Step 6U:  git push (若有新  │
-│                            │   │           commit)           │
-└─────────────┬──────────────┘   └─────────────┬──────────────┘
+┌──── project 不存在 ────────┐   ┌──── project 已存在 ────────────────┐
+│ 初始化部署分支 (固定流程)  │   │ 更新部署分支 (按意图条件触发)       │
+│ Step 2I:  mktemp + clone   │   │ Step 2U: 按用户意图 act (可组合):   │
+│ Step 3I:  compose 合规     │   │   A. redeploy → POST /deploy        │
+│           (subagent 修)    │   │   B. 改域名 → PATCH urls            │
+│ Step 4I:  POST project +   │   │   C. 改 env → POST envs + A         │
+│           service          │   │   D. 改源码/compose →                │
+│ Step 5I:  GH secrets +     │   │      mktemp clone + subagent +      │
+│           auto env + vars  │   │      push + PATCH compose           │
+│ Step 6I:  service env      │   │   E. 改 GH 配置 → gh secret/var set │
+│ Step 7I:  autonomous push  │   │ (agent autonomous, 不依赖 user cwd) │
+└─────────────┬──────────────┘   └─────────────┬───────────────────────┘
               ↓                                ↓
-              └────────── 共用收尾 ─────────────┘
-                  Step 8: 等 GHA + 验 CI 无错
-                  Step 9: 30s 内验 Coolify 启动部署
-                         (没启动 → POST /deploy fallback)
-                  Step 10: 5min 轮询公网域名
+              └─────── 共用收尾 (按条件 skip / act) ──────┘
+                  Step 8: 等 GHA + 验 CI 无错 (仅 push 路径跑)
+                  Step 9: 30s 验 Coolify 启动部署 (仅触发部署的 act 跑)
+                  Step 10: 5min 轮询公网域名 (总跑)
 ```
 
 ## TODO list 模板
 
-agent 启动时 create：
+agent 启动时 create — 初始化分支跑全套, 更新分支只 create 涉及到的 act：
+
+**初始化分支 TODO**（project 不存在）：
 
 ```
 [ ] Step 0:  preflight
-[ ] Step 1:  入口分流 (探同名 project)
-[ ] Step 2:  clone / 复用 cwd
-[ ] Step 3:  compose 合规 (subagent 修源码)
-[ ] Step 4:  Coolify project + service
-[ ] Step 5:  GH secrets/vars
-[ ] Step 6:  service env
-[ ] Step 7:  git push (autonomous)
+[ ] Step 1:  入口分流 → 初始化
+[ ] Step 2I: mktemp 临时目录 + git clone
+[ ] Step 3I: compose 合规 (不合规 spawn subagent)
+[ ] Step 4I: 建 project + service, 告知用户 $SERVICE_UUID
+[ ] Step 5I: GH secrets + 自动建 environment + vars
+[ ] Step 6I: service env (POST /envs)
+[ ] Step 7I: autonomous git push
 [ ] Step 8:  等 GHA + 验 CI
-[ ] Step 9:  30s 内验 Coolify 启动部署
+[ ] Step 9:  30s 验 Coolify 启动部署
 [ ] Step 10: 5min 轮询公网域名
 ```
 
-Step 2-7 在初始化分支按 `2I/3I/...` 跑；在更新分支按 `2U/3U/...` 跑（语义见各 Step 内 §I / §U 小节）。
+**更新分支 TODO**（project 已存在, agent autonomous, 不依赖 user cwd）— 按用户意图条件创建：
+
+```
+[ ] Step 0:  preflight
+[ ] Step 1:  入口分流 → 更新
+[ ] Step 2U: 按意图 act (从 A/B/C/D/E 里挑)
+[ ] Step 8:  仅 D 路径跑
+[ ] Step 9:  仅 A/C/D 跑
+[ ] Step 10: 总跑
+```
 
 ---
 
@@ -269,23 +279,29 @@ SERVICE_UUID=$(curl -sS -X POST \
 ### Step 5I: GitHub repo secrets + environment vars
 
 ```bash
-# repo-level
+# repo-level secrets (strip 尾斜杠防 //api 404)
 gh secret set COOLIFY_API_TOKEN --body "$COOLIFY_API_TOKEN"
-gh secret set COOLIFY_BASE_URL  --body "$BASE"
+gh secret set COOLIFY_BASE_URL  --body "${BASE%/}"
 
-# environment-level (default branch)
 DEFAULT_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@^origin/@@')
 
+# 5I.1 自动建 environment (gh CLI 子命令不支持, gh api 直通 REST API)
+gh api -X PUT "repos/$REPO_ORG/$REPO_NAME/environments/$DEFAULT_BRANCH" >/dev/null
+echo "✓ environment '$DEFAULT_BRANCH' ready"
+
+# 5I.2 environment-level vars
 gh variable set COOLIFY_APP_UUID     --env "$DEFAULT_BRANCH" --body "$SERVICE_UUID"
 gh variable set IMAGE_TAG_ROLLING    --env "$DEFAULT_BRANCH" --body "latest"
 gh variable set IMAGE_TAG_SHA_PREFIX --env "$DEFAULT_BRANCH" --body ""
 ```
 
+> environment 自动建走 [`gh api -X PUT repos/{owner}/{repo}/environments/{name}`](https://docs.github.com/en/rest/deployments/environments#create-or-update-an-environment) — REST API 是支持的, 只是 `gh` 没暴露子命令。空 body PUT 即创建 (或 idempotent 更新)。
+
 **Act 纪律**：永远写 `--body "$COOLIFY_API_TOKEN"`，shell 展开，命令字符串本身不含 token 原文。
 
 **Act 失败**：
 
-- environment 不存在 → 输出 `https://github.com/$REPO_ORG/$REPO_NAME/settings/environments` 让用户手工建后回来重跑（`gh` CLI 不支持建 environment）
+- `gh api PUT environments/...` 403 → token scope 缺 `repo` 或对该 repo 没 admin (preflight Step 0 已 check, 走到这一步报错说明 token 中途换过)
 - gh auth 失效 → `gh auth refresh`
 
 ### Step 6I: service env 变量
@@ -320,47 +336,61 @@ git push -u origin "$DEFAULT_BRANCH"
 
 ---
 
-## 更新部署分支（Step 2U → Step 6U，project 已存在）
+## 更新部署分支（Step 2U，project 已存在）
 
-### Step 2U: 复用 cwd
+**乐观假设**：project 已存在 = 已部署好。agent **不主动核对源码 / 不主动改文件 / 不主动 push** — 只按用户原话提炼的意图执行最小 act, 共用收尾自动验。
 
-要求用户已经 cd 到目标 repo（preflight Step 0 软警告里若 cwd 不匹配 `$REPO_NAME` 会提示）。cwd 不对 → 终止，让用户 cd 过去再重跑（不替用户切目录，避免覆盖未保存改动）。
+**agent autonomous, 不依赖 user cwd**：跟初始化分支一样, 任何需要源码的 act 都自己 `mktemp -d` clone, **永远不要求 user "先 cd 到 repo"**。
 
-### Step 3U: 核对四件套 + service compose + urls
+### Step 2U: 按用户意图条件触发 act（可组合, 可全 skip）
 
-按 [../references/file-generation-rules.md](../references/file-generation-rules.md) 跑四件套合规 check，按 [../commands/service-crud.md](../commands/service-crud.md) §"对比" 比 service `docker_compose_raw` 与本地 compose，按 [../commands/domain.md](../commands/domain.md) 比 sub-application.fqdn 与期望域名。
+agent 从用户原话提炼意图, 按下表执行对应 act：
 
-任一不一致 → diff 给用户 ack → PATCH → GET 校验。
+| 用户意图关键词 | act 编号 | 做什么 | 主要参考 |
+|---|---|---|---|
+| `redeploy` / 重新部署 / 重启 / 重新拉镜像 | **A** | POST `/api/v1/deploy?uuid=$SERVICE_UUID&force=false` | [../commands/deploy-trigger.md](../commands/deploy-trigger.md) §"手工触发部署" |
+| 改 / 加 / 删域名 | **B** | PATCH `/api/v1/services/$SERVICE_UUID` 改 `urls` 字段 | [../commands/domain.md](../commands/domain.md) |
+| 改 / 加 / 删 env 变量 | **C** | POST/PATCH `/api/v1/services/$SERVICE_UUID/envs` → 后接 A (env 改了必须 redeploy 才生效) | [../commands/service-env.md](../commands/service-env.md) |
+| 改 compose / Dockerfile / 改源码 / 改 deploy.yml | **D** | `mktemp -d` clone → spawn subagent 按 [../references/file-generation-rules.md](../references/file-generation-rules.md) 改 → autonomous push → PATCH `docker_compose_raw` (若 compose 变了) | [../commands/service-crud.md](../commands/service-crud.md) §"更新 compose" |
+| 改 GH secrets / vars | **E** | `gh secret set` / `gh variable set` (按需) | [../commands/deploy-trigger.md](../commands/deploy-trigger.md) §"GitHub 端配置" |
+| 用户意图模糊或不在上表 | — | **询问用户具体要做什么**, 不要乱猜更不要默认全跑 |
 
-### Step 4U: GH secrets + environment vars 核对
+**纪律 (act 共用)**：
 
-跑 Step 5I 的 check 段（`gh secret list` / `gh variable list --env "$DEFAULT_BRANCH"`），缺什么 set 什么。`$SERVICE_UUID` 由 Step 1 + 双 filter 查到。
+- 每个 act 前 GET 当前状态, 给用户摆 diff (当前 vs 期望), ack 后才动
+- act 后 GET 校验真生效
+- 多 act 串行执行, 不批量 PATCH (易踩 422 / 难定位错)
+- D 路径 push 前同 Step 7I, 摆 diff stat + 文件清单等用户 ack
 
-### Step 5U: service env 变量核对
+**示例 act 组合**：
 
-跑 [../commands/service-env.md §"对比仓库 .env 与 Coolify 现状"](../commands/service-env.md)，缺补、值不同改、多余只告知。
-
-### Step 6U: git push（仅当有未推 commit）
-
-```bash
-DEFAULT_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@^origin/@@')
-LOCAL=$(git rev-parse HEAD)
-REMOTE=$(git rev-parse "origin/$DEFAULT_BRANCH" 2>/dev/null || echo "")
-
-if [ "$LOCAL" != "$REMOTE" ]; then
-  # 把 diff stat 给用户看, ack 后 push
-  git diff "origin/$DEFAULT_BRANCH..HEAD" --stat
-  git push
-else
-  echo "✓ 无新 commit, skip push"
-fi
+```
+"markdown-kits-app 改下域名到 foo.tranfu.com"      → B
+"markdown-kits-app 加个 env DATABASE_URL=..."     → C (含隐式 A)
+"markdown-kits-app 重新部署一下"                   → A
+"markdown-kits-app 的 compose 加个 redis"          → D
+"markdown-kits-app 改完域名再重启一下"             → B + A
 ```
 
-> 跳到共用收尾 [Step 8](#step-8-等-gha-跑完--验-ci-无错)。
+**不在 Step 2U 做**：
+
+- 不主动核对四件套合规 (project 已存在 = 假设当时合规, 不重审)
+- 不主动核对 service compose vs Coolify (假设当时已对齐, 后续若不一致由 D 路径用户主动触发)
+- 不主动核对 envs / urls / secrets (除非用户明说要改)
+
+> 任一 act 完跳到共用收尾 [Step 8](#step-8-等-gha-跑完--验-ci-无错)（Step 8/9/10 内部自判断要不要 act, 无需上层 tracking）。
 
 ---
 
 ## 共用收尾（两条分支汇合，Step 8 → Step 10）
+
+**执行条件矩阵**：每个 Step 看上游 act 是否需要它, 不需要就 skip — 不靠 path tracking, 看 act 自然产物即可。
+
+| Step | 必跑场景 | 跳过场景 |
+|---|---|---|
+| 8 | 初始化分支 (Step 7I 必 push) / 更新分支 D 路径 (改源码 push) | 更新分支 A/B/C/E 单跑 (没 push) |
+| 9 | 初始化分支 / 更新分支 A/C/D (触发了部署) | 更新分支单跑 B (改域名, traefik 即时生效) / 单跑 E (改 GH 配置, 不影响 Coolify) |
+| 10 | **总跑** (验公网是真验收) | — |
 
 ### Step 8: 等 GHA 跑完 + 验 CI 无错
 
@@ -475,14 +505,17 @@ exit 1
 
 ## 反例
 
-- **不要忽略 Step 1 入口分流**：project 已存在还跑 Step 2I clone 会把临时目录搞乱 + 跟用户 cwd 不一致
-- **不要在用户 cwd 直接 clone**：Step 2I 必须 `mktemp -d`，用完即弃
-- **不要 reconcile 自己改源码**：Step 3I 不合规必须 spawn subagent 按 file-generation-rules.md 修；agent 只组装 prompt + 转发 subagent 结果，明确告知用户改了什么
-- **不要 Step 3I 改完直接 commit/push**：所有改动累积到 Step 7I 一次性 push
-- **不要 Step 7I push 前不给用户看 diff**：即便 D1（agent autonomous），push 前必须摆 diff stat + 文件清单
+- **不要忽略 Step 1 入口分流**：project 已存在还跑 Step 2I clone 是浪费 + 跟用户预期不一致
+- **不要在用户 cwd 直接 clone**：Step 2I / 更新分支 D 路径必须 `mktemp -d`，用完即弃 — **永远不要求 user "先 cd 到 repo"**
+- **更新分支不要主动核对源码 / 不要主动 push**：project 已存在 = 乐观假设已部署好, 只处理用户指派的任务; 主动 PR 一堆"我顺手改了你的 Dockerfile"是事故
+- **更新分支 Step 2U 意图模糊不要乱猜**：用户说"看下 markdown-kits-app", 不要默认跑 redeploy; 询问"你想 redeploy / 改域名 / 改 env 还是别的?"
+- **不要 reconcile 自己改源码**：Step 3I / 更新分支 D 路径不合规必须 spawn subagent 按 file-generation-rules.md 修；agent 只组装 prompt + 转发结果，明确告知用户改了什么
+- **不要 Step 3I 改完直接 commit/push**：初始化分支所有改动累积到 Step 7I 一次性 push
+- **不要 push 前不给用户看 diff**：即便 D1（agent autonomous），push 前必须摆 diff stat + 文件清单
 - **不要 Step 9 看不到部署就重新 git push**：fallback 是 `POST /api/v1/deploy` 主动触发，不是再 push 一次
 - **不要 Step 10 改成无限轮询**：5min 硬上限，到点就报排障入口
-- **Step 5I environment 不存在不要自动建**：`gh` CLI 不支持，必须让用户去 settings 手工建
+- **不要让用户去 settings 手工建 environment**：Step 5I 用 `gh api -X PUT repos/.../environments/<name>` 自动建, REST API 是支持的, gh CLI 只是没暴露子命令
 - **Step 1 不要列 project 让用户挑**：同名约束消除歧义，没找到就由 Step 4I 自动建
 - **Step 1 不要只按 name filter service**（如果走更新分支）：必须 `name + project_uuid` 双重 filter
+- **COOLIFY_BASE_URL 末尾不要带 `/`**：会拼出 `//api/v1/deploy` → Coolify 404; preflight + gh secret set + deploy.yml template 三层都 strip
 - **Token 安全**：永不 `echo $COOLIFY_API_TOKEN`、永不在命令字符串里写 token 原文、永不打印 `.env` 内容

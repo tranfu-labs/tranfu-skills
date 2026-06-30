@@ -14,13 +14,14 @@ git push -> GitHub Actions deploy.yml -> docker build -> push GHCR
 
 Coolify 端**关掉 "Auto Deploy on Push / Webhook"**——触发权归 workflow。
 
-## GitHub 端配置（reconcile Step 7）
+## GitHub 端配置（reconcile Step 5I）
 
 ### Repo-level secrets
 
 ```bash
+# strip 尾斜杠防 //api 404
 gh secret set COOLIFY_API_TOKEN --body "$COOLIFY_API_TOKEN"
-gh secret set COOLIFY_BASE_URL  --body "http://120.77.223.183:8000"
+gh secret set COOLIFY_BASE_URL  --body "${BASE%/}"
 ```
 
 **注意命令字符串里只能引用 `$COOLIFY_API_TOKEN`，不能把 token 原文写进去**——shell 展开发生在执行时，命令字符串本身（agent 写给 Bash tool 的字符串）必须保持 `$VAR` 不变。
@@ -31,9 +32,23 @@ gh secret set COOLIFY_BASE_URL  --body "http://120.77.223.183:8000"
 gh secret list | grep -E '^COOLIFY_API_TOKEN|^COOLIFY_BASE_URL'
 ```
 
+### 自动建 environment（gh api 直通 REST API）
+
+`gh` CLI 子命令没有 `create environment`，但 REST API 支持。reconcile Step 5I 用：
+
+```bash
+gh api -X PUT "repos/$REPO_ORG/$REPO_NAME/environments/$DEFAULT_BRANCH" >/dev/null
+```
+
+- 是 PUT 不是 POST — idempotent，已存在不报错
+- 空 body 即可（不需要配 reviewers / wait_timer 之类）
+- 需要 token 有 `repo` scope + admin permission（preflight Step 0 check 过）
+
+[GitHub REST API 文档](https://docs.github.com/en/rest/deployments/environments#create-or-update-an-environment)。
+
 ### Environment-level vars（每个部署分支一个同名 environment）
 
-例如 `main` environment：
+默认分支（如 `main`）：
 
 ```bash
 gh variable set COOLIFY_APP_UUID       --env main --body "<service-uuid>"
@@ -41,17 +56,14 @@ gh variable set IMAGE_TAG_ROLLING      --env main --body "latest"
 gh variable set IMAGE_TAG_SHA_PREFIX   --env main --body ""
 ```
 
-多环境（dev）：
+多环境（dev）— 也先 `gh api PUT` 建 environment 再 set vars：
 
 ```bash
+gh api -X PUT "repos/$REPO_ORG/$REPO_NAME/environments/dev" >/dev/null
 gh variable set COOLIFY_APP_UUID       --env dev --body "<dev-service-uuid>"
 gh variable set IMAGE_TAG_ROLLING      --env dev --body "dev"
 gh variable set IMAGE_TAG_SHA_PREFIX   --env dev --body "dev-"
 ```
-
-### 探测 environment 是否存在
-
-`gh` CLI 当前没有"create environment"命令——必须用户去 [Settings → Environments](https://github.com/${{ github.repository }}/settings/environments) 手工建。reconcile Step 7 act 时若 environment 不存在，**输出该 URL 让用户手工建**。
 
 校验某分支的 vars 是否齐：
 

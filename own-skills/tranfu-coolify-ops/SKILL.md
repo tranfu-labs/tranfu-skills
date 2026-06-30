@@ -1,22 +1,22 @@
 ---
 name: tranfu-coolify-ops
-version: 0.5.0
+version: 0.6.0
 author: aquarius-wing
 origin: own
 updated_at: 2026-06-30
 description: >
-  把 tranfu-labs 下的 -app 仓库从源码部署到公司 Coolify 实例 (http://120.77.223.183:8000)，
-  端到端走通：clone 仓库 / 四件套合规改造 (Dockerfile / .dockerignore / compose.yml / deploy.yml) /
-  创建 Coolify project + service / GH secrets/vars / agent autonomous git push / GHA 链路 /
-  fallback 触发部署 / 5min 轮询公网域名。流程文档 scenarios/reconcile-deployment.md, Step 1 入口分流
-  自动选「初始化部署分支 (project 不存在)」或「更新部署分支 (project 已存在)」, 共用收尾验 CI + 部署 + 公网。
-  作用域硬约束: 只处理用户给的 GitHub URL 对应的那一个 project / service, 不扫描 Coolify 上其他资源。
-  触发短语：把 tranfu-labs/<x>-app 上 coolify、把这个项目部署到 coolify、给这个仓库做 coolify onboard、
-  改下这个项目的域名 / env / compose、部署挂了 / 部署没成功、coolify 上访问不了、redeploy / 重新部署、
-  服务器运维机器人请帮忙部署项目 https://github.com/tranfu-labs/<x>-app。
-  口语：「这个项目怎么挂到 coolify」「帮我把这个 app 跑到 coolify 上」「coolify 一下」。
+  把 tranfu-labs 下的 -app 仓库从源码部署到公司 Coolify 实例 (默认 http://120.77.223.183:8000, 可覆盖)。
+  Step 1 入口分流: project 不存在 = 初始化分支 (固定流程: mktemp clone / 四件套合规改造(spawn subagent) /
+  创建 project+service / GH secrets+自动建 environment / autonomous push); project 已存在 = 更新分支
+  (按用户意图条件触发: A redeploy / B 改域名 / C 改 env / D 改 compose 或源码 / E 改 GH 配置)。
+  agent 全程 autonomous, 永远不依赖 user cwd; 共用收尾验 CI + 30s deploy-start 窗口 + 5min 公网轮询。
+  作用域硬约束: 只处理用户给的 GitHub URL 对应的那一个 project / service, 同名硬约束
+  (REPO_NAME == PROJECT_NAME == SVC_NAME), 不扫描 Coolify 上其他资源。
+  触发短语：服务器运维机器人请帮忙部署 / 确认并部署 https://github.com/tranfu-labs/<x>-app、
+  把 tranfu-labs/<x>-app 上 coolify、coolify 一下、改下这个项目的域名 / env / compose、
+  redeploy / 重新部署 / 重启、部署挂了 / 部署没成功、coolify 上访问不了。
   不要用于：非 tranfu-labs 仓库（命名不合规直接终止）；非公司 Coolify 实例；纯网页 UI 操作
-  （如手工建 GH environment / 挂 GHCR credential）；与部署无关的代码改造。
+  （如挂 GHCR credential）；与部署无关的代码改造。
 ---
 
 # tranfu Coolify 部署运维
@@ -51,51 +51,74 @@ description: >
 
 [`scenarios/reconcile-deployment.md`](scenarios/reconcile-deployment.md)。所有触发都走它。
 
-**Step 0 + Step 1 必跑**, 由 Step 1 入口分流到「初始化部署分支」或「更新部署分支」, 最后两条分支汇合到共用收尾。
+**Step 0 + Step 1 必跑**, 由 Step 1 入口分流到「初始化部署分支」(固定流程) 或「更新部署分支」(按意图条件触发), 最后两条分支汇合到共用收尾。
 
-| # | Step | 分支 | 主要参考 |
+### 初始化分支 (project 不存在, 固定流程)
+
+| # | Step | 主要参考 |
+|---|---|---|
+| 0 | preflight (工具 / 凭据 / Coolify 活性 / 命名 / GHCR ack) | [assets/preflight.sh](assets/preflight.sh) |
+| 1 | 同名 project 探测 (入口分流) | [commands/service-crud.md](commands/service-crud.md) |
+| 2I | `mktemp -d` 临时目录 + git clone (永远不污染 user cwd) | — |
+| 3I | compose 合规 check → 不合规 **spawn subagent** 按规则修源码 | [references/file-generation-rules.md](references/file-generation-rules.md) |
+| 4I | 创建 project + service (POST 一次带 compose + urls), 拿 `$SERVICE_UUID` **并明确告知用户** | [commands/service-crud.md](commands/service-crud.md) + [references/coolify-api-fields.md](references/coolify-api-fields.md) |
+| 5I | GH secrets + **自动建 environment** (`gh api PUT`) + env vars | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"GitHub 端配置" |
+| 6I | service env (POST /envs) | [commands/service-env.md](commands/service-env.md) |
+| 7I | agent autonomous `git add + commit + git push` (push 前给用户看 diff stat) | — |
+
+### 更新分支 (project 已存在, agent autonomous, 不依赖 user cwd, 按意图条件触发)
+
+**乐观假设**: project 已部署好。**不主动核对源码 / 不主动改文件 / 不主动 push**, 只按用户意图执行最小 act。
+
+| act | 用户意图关键词 | 做什么 | 主要参考 |
 |---|---|---|---|
-| 0 | preflight (工具 / 凭据 / Coolify 活性 / 命名 / GHCR ack) | 共用 | [assets/preflight.sh](assets/preflight.sh) |
-| 1 | 同名 project 探测 (入口分流) | 共用 | [commands/service-crud.md](commands/service-crud.md) |
-| 2I | git clone 到临时目录 (`mktemp -d`) | **初始化** | — |
-| 3I | compose 合规 check → 不合规 **spawn subagent** 按规则修源码 | **初始化** | [references/file-generation-rules.md](references/file-generation-rules.md) |
-| 4I | 创建 project + service (POST 一次带 compose + urls), 拿 `$SERVICE_UUID` 并明确告知 | **初始化** | [commands/service-crud.md](commands/service-crud.md) + [references/coolify-api-fields.md](references/coolify-api-fields.md) |
-| 5I | GH secrets + environment vars | **初始化** | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"GitHub 端配置" |
-| 6I | service env (POST /envs) | **初始化** | [commands/service-env.md](commands/service-env.md) |
-| 7I | agent autonomous `git add + commit + git push` (push 前给用户看 diff stat) | **初始化** | — |
-| 2U | 复用 cwd (要求用户在 repo 内) | **更新** | — |
-| 3U | 四件套 + service compose / urls 核对收敛 | **更新** | [references/file-generation-rules.md](references/file-generation-rules.md) + [commands/domain.md](commands/domain.md) |
-| 4U | GH secrets / vars 核对收敛 | **更新** | [commands/deploy-trigger.md](commands/deploy-trigger.md) |
-| 5U | service env 核对收敛 | **更新** | [commands/service-env.md](commands/service-env.md) |
-| 6U | git push (若有未推 commit) | **更新** | — |
-| 8 | 等 GHA + 验 CI 无错 + 无"缺变量"类 silent fail | 共用 | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"reconcile Step 8" |
-| 9 | 30s 内验 Coolify 启动部署, 未启动 → POST `/api/v1/deploy` fallback | 共用 | [commands/deploy-trigger.md](commands/deploy-trigger.md) |
-| 10 | 5min 轮询公网域名 2xx/3xx, 超时报排障入口 | 共用 | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"reconcile Step 9" |
+| **A** | redeploy / 重新部署 / 重启 | POST `/api/v1/deploy?uuid=$SERVICE_UUID` | [commands/deploy-trigger.md](commands/deploy-trigger.md) |
+| **B** | 改 / 加 / 删域名 | PATCH `urls` | [commands/domain.md](commands/domain.md) |
+| **C** | 改 / 加 / 删 env | POST/PATCH `/envs` + 隐式 A | [commands/service-env.md](commands/service-env.md) |
+| **D** | 改 compose / Dockerfile / 改源码 | `mktemp -d` clone + subagent 改 + push + PATCH `docker_compose_raw` | [references/file-generation-rules.md](references/file-generation-rules.md) + [commands/service-crud.md](commands/service-crud.md) |
+| **E** | 改 GH secrets/vars | `gh secret set` / `gh variable set` | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"GitHub 端配置" |
+
+意图模糊 → **询问用户**, 不要乱猜或默认 redeploy。
+
+### 共用收尾 (按条件 skip / act)
+
+| # | Step | 必跑 | 跳过 |
+|---|---|---|---|
+| 8 | 等 GHA + 验 CI 无错 + 无 "缺变量" 类 silent fail | 初始化 / 更新 D 路径 | 更新分支 A/B/C/E 单跑 |
+| 9 | 30s 验 Coolify 启动部署, 未启动 → POST `/deploy` fallback | 初始化 / 更新 A/C/D | 更新分支单跑 B (域名 traefik 即时生效) / E |
+| 10 | 5min 轮询公网域名 2xx/3xx, 超时报排障入口 | **总跑** | — |
 
 **关键变化（vs 0.4.x）**：
 
-- **agent 主动 git clone + 主动 git push**（旧设计是让用户做，新设计为 D1 autonomous + push 前给用户看 diff）
-- **Step 3I 不合规调 subagent 修源码**（旧设计是 reconcile 自己改; subagent 改完明确告知用户改了什么）
-- **入口先判"初始化 vs 更新"**, 不再无脑跑全 9 步——project 不存在跑初始化全套, 已存在跑收敛+共用收尾
-- **Step 9/10 有窗口与超时**（30s deploy-start 窗口 + 5min 域名轮询）, 不再单次 curl
-- **Step 4I 创建 service 后必须明确把 `$SERVICE_UUID` 告知用户**——这是 GH workflow 配置的关键值
+- **agent 主动 git clone + 主动 git push**, 永远不依赖 user cwd (旧设计让 user 自己 cd / push)
+- **Step 3I / 更新 D 路径不合规调 subagent 修源码** (旧设计是 reconcile 自己改; subagent 改完明确告知用户改了什么)
+- **入口先判"初始化 vs 更新"**, 不再无脑跑全 9 步
+- **更新分支按意图条件触发**, 项目已存在 = 乐观假设已部署好, 只做用户指派的事; 不主动核对源码
+- **Step 5I 自动建 environment** (`gh api PUT`), 不再让用户去 settings 手工建
+- **COOLIFY_BASE_URL 三层 strip 尾斜杠** (preflight / gh secret set / deploy.yml.template 防 `//api` 404)
+- **Step 9/10 有窗口与超时** (30s deploy-start + 5min 域名轮询), 不再单次 curl
+- **Step 4I 创建 service 后必须明确把 `$SERVICE_UUID` 告知用户** — 这是 GH workflow 配置的关键值
 
-**Act 前一律先把 diff 摆给用户确认**——动 Coolify 上活资源 / agent autonomous push 前的硬纪律。
+**Act 前一律先把 diff 摆给用户确认** — 动 Coolify 上活资源 / agent autonomous push 前的硬纪律。
 
 ## 不做什么
 
 - ✗ 非 tranfu-labs 仓库 / 非公司 Coolify 实例（硬编码假设，扩展前不要套用）
 - ✗ 替用户安装 gh / jq / curl
 - ✗ **建任意名字的 Coolify project**——只在"同名 project 不存在"时自动建 `$REPO_NAME` 那一个；不让用户挑、不接受其他名字
-- ✗ 挂 GHCR registry credential / 建 GitHub environment——这些是 UI / 人工一次性配置，agent 不替做
+- ✗ 挂 GHCR registry credential——这是 UI 一次性配置，agent 不替做（per-Coolify 实例只配一次）
+- ✗ **要求 user "先 cd 到 repo"**——任何需要源码的 act 都 agent 自己 `mktemp -d` clone
 - ✗ 在用户 cwd 直接 clone——必须 `mktemp -d` 临时目录，用完即弃
-- ✗ Step 3I agent 自己改源码——必须 spawn subagent 按 file-generation-rules.md 修, agent 只组装 prompt + 转发结果
-- ✗ Step 7I push 前不给用户看 diff——即便 agent autonomous push，diff stat + 文件清单必须先摆出来
+- ✗ agent 自己改源码——必须 spawn subagent 按 file-generation-rules.md 修, agent 只组装 prompt + 转发结果
+- ✗ 更新分支主动核对源码 / 主动 push——project 已存在 = 乐观假设已部署好, 只做用户指派的事
+- ✗ 更新分支意图模糊就乱猜或默认 redeploy——询问用户
+- ✗ push 前不给用户看 diff——即便 agent autonomous push，diff stat + 文件清单必须先摆出来
 - ✗ Coolify UI 上的点击（agent 全走 API）
 - ✗ DELETE service / 清空 volume / 删 project（破坏性操作，专门 reference 处理）
 - ✗ 多 Coolify 实例 / 多 server 调度（公司目前单实例单 server，硬编码进 [commands/prerequisites.md](commands/prerequisites.md)）
 - ✗ **扫描 / 列举 / 操作除当前 repo 对应的那一个 project / service 之外的任何资源**——全程围绕单一锚点
 - ✗ Step 10 无限轮询——5min 硬上限，到点就给排障入口
+- ✗ `COOLIFY_BASE_URL` 末尾带 `/`——会拼出 `//api/v1/deploy` → Coolify 404; preflight / gh secret set / deploy.yml.template 三层都 strip
 
 ## 文件树
 
@@ -165,44 +188,93 @@ own-skills/tranfu-coolify-ops/
 </example>
 
 <example>
-用户："markdown-kits-app 改一下域名"
+用户："markdown-kits-app 改下域名到 board.tranfu.com"
 
-正确做法 (更新部署分支)：
-1. create 11 项 TODO
-2. Step 0: preflight ✓
-3. Step 1: GET /api/v1/projects 找到同名 → 走更新部署分支
-4. Step 2U: 验 cwd 在 markdown-kits-app repo → ✓
-5. Step 3U: 四件套核对 ✓; service compose 一致 ✓; sub-application fqdn 是旧域名 → PATCH urls 改新域名 → GET 校验 ✓
-6. Step 4U: GH secrets/vars 齐 → ✓
-7. Step 5U: service env 齐 → ✓
-8. Step 6U: 无新 commit → skip push
-9. Step 8: 上一次 GHA 已经 success → skip 等待 (因为没 push)
-10. Step 9: Coolify status=running, 没新部署也合理 (只是改域名, 不需要重新部署容器) → ✓
-11. Step 10: curl -I 新域名 → 200 → ✓
+正确做法 (更新分支, B 路径)：
+1. Step 0: preflight ✓ (无需 user cwd)
+2. Step 1: GET /api/v1/projects 找 name=markdown-kits-app 同名存在 → 走更新分支
+3. Step 2U: 意图 = 改域名 → 选 act B
+   - GET /api/v1/services/$SERVICE_UUID 拿当前 urls
+   - 摆 diff 给用户: "当前 https://markdown-kits-app.tranfu.com:8787 → 期望 https://board.tranfu.com:8787"
+   - 用户 ack → PATCH urls → GET 校验 ✓
+4. Step 8: 无 push, skip
+5. Step 9: 改域名是 traefik 即时生效, 不需要重启容器, skip
+6. Step 10: curl -I https://board.tranfu.com → 200 → ✓ 收尾
+</example>
+
+<example>
+用户："markdown-kits-app 重新部署一下"
+
+正确做法 (更新分支, A 路径)：
+1. Step 0/1 → 走更新分支
+2. Step 2U: 意图 = redeploy → 选 act A
+   - 摆给用户 "将 POST /api/v1/deploy?uuid=$SERVICE_UUID, ack?"
+   - ack → POST → 拿 deployment id
+3. Step 8: 无 push, skip
+4. Step 9: 5s 后看到 status=deploying → ✓ (不需要 fallback POST, 因为 A 就是手工 POST)
+5. Step 10: 轮询公网 → 1min 后 200 → ✓
+</example>
+
+<example>
+用户："markdown-kits-app 加个 env DATABASE_URL=postgres://..."
+
+正确做法 (更新分支, C 路径 = 改 env + 隐式 A redeploy)：
+1. Step 0/1 → 走更新分支
+2. Step 2U: 意图 = 改 env → 选 act C
+   - GET /envs 拿当前列表 (不打印 value, 只 key)
+   - 摆 diff: "新增 key=DATABASE_URL (value 隐藏)"
+   - 用户 ack → POST /envs → GET 校验 key 在 ✓
+   - 隐式 A: POST /api/v1/deploy (env 改了必须 redeploy)
+3. Step 8 skip; Step 9 ✓ (看到 deploying); Step 10 ✓
 </example>
 
 <example>
 用户："markdown-kits-app 部署挂了，帮我看下"
 
-正确做法 (更新分支 + Step 8 失败终止)：
-1. Step 0 ✓; Step 1 走更新分支; Step 2U-6U 全 ✓ skip
-2. Step 8: gh run list → 上一次 failed → gh run view --log-failed → 发现 GHCR 401
-3. 终止: "卡在 Step 8, 原因 GHCR auth, 让用户去 Coolify UI 检查 ghcr.io credential"
+正确做法 (意图模糊 → 询问用户, 不要乱猜)：
+1. Step 0/1 → 走更新分支
+2. Step 2U: 意图模糊 — "挂了" 可能是任何原因
+   - 不要默认 redeploy, 也不要主动核对源码
+   - 询问用户: "你要 (a) 看最近一次 GHA / Coolify status 诊断 (b) 直接 redeploy 一下试试 (c) 改某个具体配置 (env / 域名 / compose)?"
+3. 若用户选 (a): 跑诊断 (GET service.status / gh run view --log-failed / Coolify service logs), 给报告, 终止
+4. 若用户选 (b): 走 A 路径
+5. 若用户选 (c): 按具体走 B/C/D
+</example>
+
+<example>
+用户："markdown-kits-app 的 compose 加个 redis service"
+
+正确做法 (更新分支, D 路径)：
+1. Step 0/1 → 走更新分支
+2. Step 2U: 意图 = 改 compose → 选 act D
+   - mktemp 临时目录 + git clone markdown-kits-app
+   - spawn subagent 按 file-generation-rules.md 加 redis service (含 SERVICE_PASSWORD_REDIS 魔法变量, 不写 ports)
+   - subagent 返回改了 compose.yml, agent 明确告知改了什么
+   - autonomous git add + commit + push (push 前给用户看 diff stat)
+   - PATCH /api/v1/services/$SERVICE_UUID 的 docker_compose_raw
+3. Step 8: 等 GHA build redis 镜像 (其实 ghcr.io 上 image 不变, 但 deploy.yml 会跑) → success
+4. Step 9: 30s 内看到 deploying → ✓
+5. Step 10: 轮询公网 → 200 → ✓
 </example>
 
 <bad-example>
 错误：
 (a) 用户给 GitHub URL, agent 没跑 Step 1 入口分流就开始 git clone — 已有 project 时 clone 是浪费, 应该走更新分支
-(b) Step 2I 在用户 cwd 直接 `git clone` — 污染工作区, 必须 `mktemp -d` 临时目录
-(c) Step 3I agent 自己 Write 四件套文件 — 必须 spawn subagent, agent 不直接改源码
-(d) Step 3I subagent 改完没明确告知用户改了哪些文件 — 必须输出清单 "新建/修改 + 主要改了什么"
-(e) Step 4I 创建 service 后只把 $SERVICE_UUID 存到变量, 没告诉用户 — 必须明确报 "Service: $REPO_NAME ($SERVICE_UUID), Coolify URL: ..."
-(f) Step 7I `git push` 前没给用户看 diff stat — 即便 D1 autonomous, push 前 ack 是硬纪律
-(g) Step 7I 让用户 `gh secret set COOLIFY_API_TOKEN --body "$COOLIFY_API_TOKEN"`, agent 把 token 原文嵌进命令字符串 — 必须保持 `$VAR`, 让 shell 展开
-(h) Step 9 30s 内没看到部署启动, agent 重新 `git push` 想再触发一次 — fallback 是 `POST /api/v1/deploy`, 不是再 push
-(i) Step 10 改成无限轮询 — 5min 硬上限, 到点就报排障入口
-(j) Coolify service 已存在但 compose 不对, agent 直接 DELETE 重建 — 应该走更新分支 Step 3U PATCH
-(k) 用户的 .env 内容 echo 到对话里 — 永不
-(l) Step 1 同名 project 没找到, agent 把所有 project 列出来让用户挑 — 同名约束消除歧义, 没找到走初始化分支 Step 4I 自动建
-(m) Step 1 / Step 3U 找 service 只按 name filter 不带 project_uuid — 跨 project 同名会误命中
+(b) Step 2I / 更新 D 路径在用户 cwd 直接 `git clone` — 污染工作区, 必须 `mktemp -d` 临时目录
+(c) 要求 user "先 cd 到 markdown-kits-app repo 再来" — agent autonomous, 永远不依赖 user cwd
+(d) Step 3I / 更新 D 路径 agent 自己 Write 四件套文件 — 必须 spawn subagent, agent 不直接改源码
+(e) subagent 改完没明确告知用户改了哪些文件 — 必须输出清单 "新建/修改 + 主要改了什么"
+(f) Step 4I 创建 service 后只把 $SERVICE_UUID 存到变量, 没告诉用户 — 必须明确报 "Service: $REPO_NAME ($SERVICE_UUID), Coolify URL: ..."
+(g) `git push` 前没给用户看 diff stat — 即便 autonomous, push 前 ack 是硬纪律
+(h) `gh secret set COOLIFY_API_TOKEN --body "<原文>"` — 必须保持 `$VAR`, 让 shell 展开
+(i) Step 9 30s 内没看到部署启动, agent 重新 `git push` 想再触发一次 — fallback 是 `POST /api/v1/deploy`, 不是再 push
+(j) Step 10 改成无限轮询 — 5min 硬上限, 到点就报排障入口
+(k) Coolify service 已存在但 compose 不对, agent 直接 DELETE 重建 — 应该走更新分支 D 路径 PATCH
+(l) 用户的 .env 内容 echo 到对话里 — 永不
+(m) Step 1 同名 project 没找到, agent 把所有 project 列出来让用户挑 — 同名约束消除歧义, 没找到走初始化分支自动建
+(n) Step 1 找 service 只按 name filter 不带 project_uuid — 跨 project 同名会误命中
+(o) 更新分支 agent 主动跑四件套合规核对, 发现 compose 不"完美" 就 spawn subagent 改, push 一堆用户没要求的改动 — project 已存在 = 乐观假设已部署好, **只做用户指派的事**
+(p) 更新分支用户说"看下 markdown-kits-app", agent 默认跑 redeploy — 意图模糊必须询问, 不要乱猜
+(q) Step 5I 报 "environment '$DEFAULT_BRANCH' 不存在, 请去 settings 手工建" — 用 `gh api -X PUT repos/.../environments/<name>` 自动建, REST API 支持
+(r) `gh secret set COOLIFY_BASE_URL --body "http://120.77.223.183:8000/"` — 末尾斜杠会拼出 `//api` Coolify 404, 必须 `${BASE%/}` strip
 </bad-example>

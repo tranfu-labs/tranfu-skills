@@ -23,15 +23,24 @@
 
 set -u
 
+# 公司默认 Coolify 实例 (改这里 = 改全 skill 默认指向; 个别项目想换实例用位置参数 / ENV 覆盖)
+DEFAULT_BASE="http://120.77.223.183:8000"
+
 # 参数解析: 第一个参数含 github.com 当 GITHUB_URL, 否则当 BASE
 GITHUB_URL=""
 BASE=""
 case "${1:-}" in
-  *github.com*) GITHUB_URL="$1"; BASE="${2:-http://120.77.223.183:8000}" ;;
-  "")           BASE="http://120.77.223.183:8000" ;;
+  *github.com*) GITHUB_URL="$1"; BASE="${2:-$DEFAULT_BASE}" ;;
+  "")           BASE="$DEFAULT_BASE" ;;
   *)            BASE="$1" ;;
 esac
-BASE="${BASE:-http://120.77.223.183:8000}"
+BASE="${BASE:-$DEFAULT_BASE}"
+
+# 末尾斜杠校验: 末尾带 / 会让 GHA 部署 step 拼出 //api/v1/deploy → Coolify 404
+# 这里只在 user 覆盖时校验, 公司默认值本身保证不带尾斜杠
+case "$BASE" in
+  */) echo "✗ COOLIFY_BASE_URL 末尾带 / (会拼出 //api 路径): $BASE"; echo "   去掉尾斜杠再重跑"; exit 1 ;;
+esac
 
 # 从 GITHUB_URL 解析期望的 org/name (若给了)
 EXPECTED_ORG=""
