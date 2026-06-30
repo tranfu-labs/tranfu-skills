@@ -1,6 +1,6 @@
 ---
 name: github-delivery-check
-description: 'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like "推到 GitHub", "创建 GitHub 仓库", "首次提交", "整理成可部署项目", or "用 GitHub交付规范 Skill". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning.'
+description: 'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like "推到 GitHub", "创建 GitHub 仓库", "首次提交", "整理成可部署项目", or "用 GitHub交付规范 Skill". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.'
 version: 0.1.1
 author: 06666666
 updated_at: 2026-06-29
@@ -31,7 +31,12 @@ Also match Chinese requests:
 - "整理成可部署项目"
 - "用 GitHub交付规范 Skill"
 
-Do NOT use this skill when the user only wants code changes, code review, or production deployment without GitHub delivery. If the user explicitly says they only want to discuss the plan, do not push.
+Do NOT use this skill when:
+
+- The user only wants ordinary code changes -> use the normal coding workflow.
+- The user asks for code review -> use the review workflow.
+- The user asks to deploy to production without GitHub delivery -> use the deploy workflow.
+- The user explicitly says discussion-only or planning-only -> stay in normal conversation and do not push.
 
 ## Ownership
 
@@ -47,14 +52,19 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 
 1. Inspect project and Git state.
 2. Complete first-push product metadata when needed.
-3. Check secrets, README, env examples, and deployability.
-4. Run local verification.
-5. Push to GitHub main branch.
-6. Produce the final delivery card.
+3. Verify GitHub authorization.
+4. Run pre-push checks.
+5. Complete README deployment instructions.
+6. Run local verification.
+7. Push to GitHub main branch.
+8. Produce the final delivery card.
 
 Done means:
 
 - Project type and GitHub state are classified.
+- First-push product metadata is resolved when the project has no GitHub remote.
+- GitHub authorization is confirmed or the final card blocks on authorization.
+- Pre-push checks have no unresolved blockers.
 - README.md contains deployment instructions.
 - Real secrets are not being committed.
 - Install, build, test, and local start checks have been run when available.
@@ -96,6 +106,13 @@ Input: Project inspection result, user-provided facts, existing README, existing
 
 Output: Product metadata for README, GitHub repository, and final delivery card.
 
+Dispatch by Git state from Step 1:
+
+- Existing Git remote -> skip first-push metadata collection and continue to Step 3.
+- Git repository without remote -> continue this step.
+- Not a Git repository -> continue this step.
+- Otherwise -> report BLOCKER `unknown Git state` and stop this run.
+
 For first GitHub push, MUST resolve:
 
 - Chinese product name.
@@ -109,6 +126,14 @@ Repository naming rules:
 - Use lowercase English letters, digits, and hyphens.
 - Default suffix is `-app`, for example `tranfu-app`.
 - NEVER use spaces, underscores, Chinese characters, or uppercase letters.
+
+```text
+WRONG:
+  TranFu_App
+Reason: Uses uppercase and underscore, so it is not a deployable repo-name default.
+GOOD:
+  tranfu-app
+```
 
 Production URL rule:
 
@@ -163,18 +188,19 @@ Input: Project files, Git staged/unstaged files, README, env files, local config
 
 Output: Passed checks, fixed-and-passed checks, or a precise blocking reason.
 
-MUST check:
+Pre-push guards:
 
-- Real or suspected secrets: API keys, passwords, tokens, private keys, cookies, bearer tokens.
-- `.env`, local config, deployment config, database files, dependency folders, and build caches are not being committed by mistake.
-- `.env.example` or equivalent example config exists when env vars are needed.
-- README.md exists.
-- README.md includes deployment instructions.
-- Dependencies can be installed or are already available.
-- Build command can run when provided.
-- Tests or lint can run when provided.
-- Local service can start when the project provides a start command.
-- Ports, commands, env vars, and deployment notes are consistent.
+- If real or suspected secrets are present -> follow Secret handling below before continuing.
+- If `.env`, local config, deployment config, database files, dependency folders, or build caches are staged -> unstage/remove them, update ignore rules when needed, and re-run this step.
+- If env vars are needed and `.env.example` or equivalent example config is missing -> create placeholder-only example config and re-run this step.
+- If README.md is missing -> run Step 5 to create it, then return to Step 4.
+- If README.md exists but lacks deployment instructions -> run Step 5 to complete it, then return to Step 4.
+- If dependencies cannot be installed or are missing -> mark a Step 6 verification target and continue to Step 6 for the actual command run.
+- If a build command exists -> mark it as a Step 6 verification target.
+- If tests or lint exist -> mark them as Step 6 verification targets.
+- If a local service start command exists -> mark it as a Step 6 verification target.
+- If ports, commands, env vars, or deployment notes conflict -> fix README/config consistency and re-run this step.
+- If all guards pass -> continue to Step 5.
 
 Secret handling:
 
@@ -217,6 +243,14 @@ API_BASE_URL=https://api.example.com
 ACCESS_TOKEN=Bearer <provided-by-owner>
 ```
 
+```text
+WRONG:
+  ACCESS_TOKEN=ghp_real_token_value_in_readme
+Reason: A real token in README becomes a GitHub secret leak.
+GOOD:
+  ACCESS_TOKEN=Bearer <provided-by-owner>
+```
+
 ## Step 6: Run Local Verification
 
 Task: Run real commands to verify the project before pushing.
@@ -244,6 +278,13 @@ Task: Push the verified project to GitHub.
 Input: Git state, GitHub authorization, target owner/repo, commit message, default branch.
 
 Output: GitHub repository URL, main branch, push status.
+
+Dispatch by Git state from Step 1:
+
+- Existing Git remote -> run Existing repository procedure.
+- Git repository without remote -> run First push procedure.
+- Not a Git repository -> run First push procedure.
+- Otherwise -> report BLOCKER `unknown Git state` and stop this run.
 
 Default branch behavior:
 
@@ -321,6 +362,14 @@ GitHub 状态：已推送到主分支
 
 下一步：
 技术按部署配置补环境变量后部署。
+```
+
+```text
+WRONG:
+  交付结论：基本完成了
+Reason: Free-form conclusion breaks the required four-state delivery card.
+GOOD:
+  交付结论：已推送完成
 ```
 
 If no additional engineer config is needed, write `部署配置：无额外配置`.
