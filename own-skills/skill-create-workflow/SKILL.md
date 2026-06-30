@@ -23,7 +23,7 @@ description: >-
 
   Do NOT trigger when: 用户只要 install / list / upgrade / uninstall skills, 创建 plugin,
   改普通项目代码, 写非 skill 文档, 或管理自动化任务。
-version: 0.2.0
+version: 0.3.0
 author: aquarius-wing
 updated_at: 2026-06-30
 origin: own
@@ -126,21 +126,45 @@ Passing means the `skill-content-fit` output contains all six fields with non-em
 
 Run `skill-domain-framing` after content fit passes.
 
-MUST preserve these outputs for the final authoring prompt:
+MUST 机械读取 framing 输出的以下字段 (字段名严格匹配):
 
-- recommended skill container/name
-- why not narrower
-- why not implementation-oriented
-- why not broader
-- at least four candidate containers
-- placement of the source experience
-- normal path / verification path / troubleshooting path
-- trigger conditions
-- acceptance criteria
+- 候选评分表 (含 `结果对齐 / 边界清晰 / 路径分层` 三维分 + `总分` + `一句话评语`)
+- `Top1`: 排名第 1 的候选名
+- `Top1-Top2 分差`: 整数 Δ
+- `用户指定候选`: 候选名或 "无"
+- `范围边界` (含 `包含 / 排除 / 放置`)
+- `路径分层` (含 `正常路径 / 验证路径 / 排障路径`)
+- `核心防错机制`
+- `建议的 skill 触发条件`
+- `建议的验收标准`
 
-If `skill-domain-framing` reports multiple viable containers or uncertain scope, ask the user to choose before writing files. In Codex Plan mode, use `request_user_input` when available. Outside Plan mode or when the tool is unavailable, ask one concise plain-text question with 2-3 concrete options. In Claude Code, use `AskUserQuestion` only if that tool exists in the current runtime.
+以上字段全部转入 §6 的 authoring prompt。
 
-Failure path: if the user does not choose after one clarification attempt, set `status: needs_user_input` and stop before writing files.
+### 4.1 是否停下问用户 (机械路由)
+
+按以下 3 行优先级判断, 短路:
+
+```text
+if 用户指定候选 ≠ "无" 且 用户指定候选 ≠ Top1:
+    停下问用户, 选项 = [Top1, 用户指定候选]
+    问法: "你提的 {用户指定候选} 排第 N ({X_user}/6, 评语: ...),
+           Top1 是 {Top1} ({X1}/6, 评语: ...). 切到 Top1 还是坚持 {用户指定候选}?"
+elif Top1-Top2 分差 < 2:
+    停下问用户, 选项 = 所有满足 (Top1 总分 - Xi) < 2 的候选 (含 Top1 本身)
+    问法: "Top1 与 Top2/Top3 分差 < 2, 势均力敌, 请选: <列出每个候选名 + 一句话评语>"
+else:
+    走 Top1, 不问, 直接进 §5
+```
+
+调用 AskUserQuestion (Claude Code) 或 `request_user_input` (Codex Plan 模式); 都不可用时输出一条编号选项的纯文本问题, 阻塞等待用户答复。
+
+阈值 `Δ ≥ 2` 在 6 分制下意味着 Top1 比 Top2 至少多 1 整个维度分, 才算"明显领先"; 分差 = 0 或 1 都视为势均力敌。
+
+### 4.2 失败路径
+
+- 如果 framing 输出缺少 `Top1` / `Top1-Top2 分差` / `用户指定候选` 任一行, 或候选评分表少于 4 行 → MUST 退回 framing 让它按 §"验收标准" 补齐, NEVER 自己猜。
+- 如果用户在路由 4.1 触发的询问中拒绝选择或一轮未答复, set `status: needs_user_input` 并停在本步, 不写文件。
+- 如果 framing 自己进入它的 §"失败路径" (候选不足 / 用户结果轴识别不出 / 源材料不足) 并返回阻塞 → workflow set `status: fail`, 透传 framing 给出的缺失项, 不在本步再加一层兜底判断。
 
 ## 5. 补齐细节与边界
 
@@ -173,8 +197,8 @@ Workflow:
 1. Intent parse returns `mode: convert`, `runtime: Codex`, `source: docs/postmortem.md`, `target_scope: project skill`.
 2. Capability check returns `status: pass` for `skill-content-fit`, `skill-domain-framing`, `skill-creator`, and `prompt-review`.
 3. `skill-content-fit` returns `结论: 通过` with non-empty `可重复`, `触发条件`, `可执行流程`, `验证方式`, `边界和反例`.
-4. `skill-domain-framing` recommends `release-readiness-check` and excludes incident narrative writing.
-5. Clarification asks the user to choose release readiness vs failure troubleshooting if both containers remain viable.
+4. `skill-domain-framing` 输出 `Top1: release-readiness-check`, `Top1-Top2 分差: 1`, `用户指定候选: 无`。
+5. §4.1 路由命中 `Δ < 2` 分支, 停下问用户在 `release-readiness-check` 与 Top2 (`release-failure-troubleshooting`) 之间二选一; 用户选 `release-readiness-check`。
 6. `skill-creator` writes only under `.codex/skills/release-readiness-check/`.
 7. `prompt-review` reviews `.codex/skills/release-readiness-check/SKILL.md` and returns `评审通过, 无进一步建议`.
 8. Final output includes `result: created`, `skill name`, absolute changed file paths, `review_status: passed`, and `remaining_risks: []`.
@@ -189,6 +213,11 @@ Reason: most skill workflows do not depend on event metadata; asking this by def
 ## 6. 创建或更新 skill
 
 Run `skill-creator` after the framing decision and required details are available.
+
+占位符到 framing 输出字段的映射:
+
+- `{recommended_container}` → `Top1` (或 §4.1 询问用户后选定的候选)
+- `{include_scope}` / `{exclude_scope}` / `{placement}` → framing 输出 `范围边界` 段的 `包含 / 排除 / 放置` 三行
 
 Authoring prompt MUST include:
 
