@@ -1,6 +1,6 @@
 ---
 name: tranfu-coolify-ops
-version: 0.6.0
+version: 0.7.0
 author: aquarius-wing
 origin: own
 updated_at: 2026-06-30
