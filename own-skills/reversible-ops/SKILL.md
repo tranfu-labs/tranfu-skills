@@ -1,9 +1,9 @@
 ---
 name: reversible-ops
-version: 0.6.0
+version: 0.7.0
 author: aquarius-wing
 origin: own
-updated_at: 2026-06-29
+updated_at: 2026-06-30
 description: >
   运维场景的可恢复性硬约束 —— review-only，AI 不替执行任何写命令；命中写操作时改写成
   可恢复的等价命令让用户复制执行，命中不可恢复时给四段拒绝输出。范围：本地 bash / Docker / Coolify。
@@ -42,6 +42,10 @@ description: >
 ### 写操作例外（AI 可直接执行，限定条件下）
 
 只有下面六类允许 AI 直接执行；其余一律「用户复制执行」。
+
+**前提**：每一类例外都假定已通过下文「黑名单优先」节的预审 —— 命中黑名单的命令
+即使形态上落进例外清单（如 `coolify app delete` 含 UUID 看似明确）也不放行，
+按铁律 3 拒。
 
 #### bootstrap 窗口判定（例外 2 / 例外 6 共享）
 
@@ -149,13 +153,82 @@ coolify <type> get <uuid> --format json \
    - 离开 bootstrap 窗口（app 有过成功部署 / service&database 超过 30min 或已 running）→ PATCH 退回 review-only
    - service / database 走弱信号时，回执里**必须加一条提示**：「本判定为弱信号近似（Coolify 上游未暴露成功部署历史），如非首次配置请人工 double-check 一次」
 
-NEVER 主动加这些绕过确认的危险标志：`--force` / `--yes` / `-y` / `--skip-confirmation` /
-`--delete-volumes` / `--delete-configurations` / `--delete-connected-networks` / `--delete-s3`。
+## 黑名单优先（第 0 步判定）
+
+下面是 AI **永不替执行**的硬黑名单。命中任意一条直接走铁律 3 四段拒，
+**先于所有其他判定** —— 不进入「写操作例外」六类、不进入 bootstrap 窗口降级、
+不被用户「我授权」/「我确定」/「出事我负责」绕过。让用户在自己终端手动复制执行。
+
+### A. Coolify CLI 黑名单
+
+**实例本体 / 持久卷 / 集成根**（命中即拒）：
+
+```
+coolify app delete <uuid>
+coolify database delete <uuid>
+coolify service delete <uuid>
+coolify app storage delete <app_uuid> <storage_uuid>
+coolify database storage delete <db_uuid> <storage_uuid>
+coolify service storage delete <service_uuid> <storage_uuid>
+coolify private-key remove <uuid>
+coolify server remove <uuid>
+coolify github delete <app_uuid>
+coolify firewall revoke ...
+```
+
+**Shell 注入类**（改本机 rc 文件，与「持久化配置」铁律一致）：
+
+```
+coolify completion <shell> >  ~/.{bash,zsh,fish}rc          # 写入用户 rc 文件
+coolify completion <shell> >> ~/.{bash,zsh,fish}rc          # 追加同理
+```
+
+> 本节**不**包含 `coolify update`（升级 CLI 自身，brew / npm / go install 可降级回滚）、
+> `coolify init bootstrap` / `coolify init upgrade`（远端 Coolify 实例 setup / 升级，
+> 走常规审查路径）—— 这些不入黑名单，按铁律 2/3 正常审。
+
+### B. Coolify RESTful DELETE 黑名单
+
+任何 `curl -X DELETE` / `requests.delete` / `httpx.delete` / Coolify SDK delete
+到下列路径模式一律入黑 —— CLI 已覆盖了「能安全 delete」的子集（env / preview /
+backup-execution / context），CLI 之外的 DELETE 端点全是破坏面更大、且没有 CLI
+等价物的（说明上游团队故意不暴露到 CLI），AI 不替跑：
+
+```
+DELETE  /api/v1/applications/{uuid}
+DELETE  /api/v1/databases/{uuid}
+DELETE  /api/v1/services/{uuid}
+DELETE  /api/v1/projects/{uuid}
+DELETE  /api/v1/environments/{uuid}
+DELETE  /api/v1/teams/{uuid}
+DELETE  /api/v1/destinations/{uuid}
+DELETE  /api/v1/servers/{uuid}
+DELETE  /api/v1/private-keys/{uuid}
+DELETE  /api/v1/security/api-tokens/{uuid}
+```
+
+不透明载体同等处理（Python / Go / Node SDK / 其它 HTTP client / shell 脚本里
+拼接的 curl）—— 按铁律 4（先审后跑）+ 本节叠加判定，硬拒。
+
+### C. 危险标志黑名单（命中即整条入黑，无论 base 命令是什么）
+
+```
+--force / --yes / -y / --skip-confirmation
+--delete-volumes / --delete-configurations
+--delete-connected-networks / --delete-s3
+```
+
+包括但不限于 `coolify app delete --force` / `coolify database delete --delete-volumes` /
+`docker compose down -v` 等场景 —— **AI 自己也绝不主动添加这些标志**，遇到用户
+带这些标志的命令一律按铁律 3 拒。
 
 ## 判定流程
 
 接到用户消息，按下面顺序审：
 
+0. 判定是否命中「黑名单优先」节列出的 CLI 命令 / DELETE RESTful 路径 / 危险标志
+   → 命中走铁律 3 四段拒，**不进入任何后续判定**（不进入例外、不进入 bootstrap
+   窗口降级、不被用户「我授权」/「我确定」/「出事我负责」绕过）。本轮判定结束。
 1. 判定是否命中「写操作例外」节列出的六类命令、且全部边界条件满足
    → 按例外节直接执行 → 按「回执格式」段输出回执 → 本轮判定结束。
    边界不满足（占位符 / 模糊指代 UUID、bootstrap check 未跑或返回非合规、PATCH body 含敏感字段（环境变量 / secret / token / password / private_key）、database / service env、`tfs uninstall reversible-ops`、
@@ -268,41 +341,39 @@ coolify context delete
           同时回执说明被切到默认 context 的副作用
 ```
 
-#### 档 C — 实例本体 / 持久卷（带走业务和数据，不可恢复，铁律 3 硬拒）
+#### 档 C — 实例本体 / 持久卷 / 集成根
 
-```
-coolify app delete <uuid>           →  拒；UI 二次确认
-coolify database delete <uuid>      →  拒；先用户外部备份数据再 UI 确认
-coolify service delete <uuid>       →  拒；同上
-coolify app/database/service storage delete
-                                    →  拒（持久卷数据丢失，等同 docker volume rm）；
-                                       先 docker run --rm -v vol:/from -v /tmp:/to alpine
-                                       tar czf /to/storage-<ts>.tgz -C /from . 备份卷数据，
-                                       再由用户外部确认
-coolify private-key remove <uuid>   →  拒（所有依赖此密钥的 git / SSH 全断）
-coolify server remove <uuid>        →  拒（这台机器上的部署全孤儿）
-coolify github delete <app_uuid>    →  拒（GitHub 集成断开影响 CI / CD）
+具体命令清单 + DELETE RESTful 端点 + 危险标志全部已收口到上文「黑名单优先」节，
+本档只讲背景与替代方案，不再重复列命令。
 
-DELETE /api/v1/projects/<id>        →  拒（CLI 不提供此命令，AI 若用 curl / requests
-                                       命中需"网络外发 + 档 C 实例本体"双重审）
-DELETE /api/v1/environments/<id>    →  同上
-DELETE /api/v1/teams/<id>           →  同上
-DELETE /api/v1/destinations/<id>    →  同上
+**为什么硬拒**：
 
-自然语言"删 project / environment / team"
-                                    →  CLI 不支持，引导用户去 UI 操作并提醒级联范围
-                                       （带走里面所有 app / database / service）
-```
+- **实例本体**（`app/database/service delete`）：业务带走，应用配置 / 部署历史
+  / 域名绑定全没；CLI 不提供恢复
+- **持久卷**（`*storage delete`）：数据带走，等同 `docker volume rm`；Coolify 侧无快照
+- **集成根**（`private-key remove` / `server remove` / `github delete`）：所有依赖
+  此根的资源连带孤儿化（依赖 SSH key 的 git / 这台机器上的所有部署 / 接 GitHub
+  app 的 CI），断面比单条 delete 大一档
+- **DELETE RESTful 端点**（projects / environments / teams / destinations 等）：
+  CLI 故意不暴露，原因是删一个 project 等于级联删里面所有 app / database / service；
+  AI 用 curl / requests 绕过 CLI 等于绕过上游团队的安全设计
 
-#### 危险标志（出现即升档到 C，硬拒；一律不主动加）
+**可恢复替代**：
 
-```
---force / --yes / -y / --skip-confirmation   →  绕过 CLI / UI 确认，等同跳过审查
---delete-volumes                             →  删卷数据，不可恢复
---delete-configurations                      →  删配置（域名、构建配置等）
---delete-connected-networks                  →  删网络，可能殃及同网络其他应用
---delete-s3                                  →  删 S3 远端数据
-```
+- app / database / service：优先 `coolify <type> stop`（档 A）软处理；观察 24-48h
+  确认无依赖再走 UI 删除
+- storage：先 `docker run --rm -v <vol>:/from -v /tmp:/to alpine tar czf
+  /to/storage-<ts>.tgz -C /from .` 备份卷数据，再 UI 单独勾删
+- private-key：改 key 名为 `DEPRECATED-<name>-<ts>` 作为软处理；外部确认无引用后
+  再 UI 删
+- server：先 `coolify server get` 列依赖资源（app / database / service）→ 逐一
+  迁移或软停 → UI 删；提醒「重 add 同台机器 UUID 会变」
+- github：列依赖 app → 逐一切换到 deploy-key 或新的 github app → UI 删
+- firewall revoke：先 `coolify firewall list` 列规则 → UI 上确认无业务依赖
+  此规则放行 → UI 撤；不替跑（撤错可能瞬间断流）
+
+**自然语言「删 project / environment / team」**：CLI 不提供（结构性安全考量），
+引导用户走 UI 并警告级联范围（带走里面所有 app / database / service）。
 
 #### 通用删除流程（无论档 B / C 都先走）
 
@@ -515,6 +586,6 @@ WRONG：
 
 ### 验收测试
 
-完整用例表与期望行为见 [`references/test-cases.md`](references/test-cases.md)（38 条：22 通用 + 10 Coolify 删除专项 + 6 v0.6 bootstrap 窗口专项）；`archives/` 下 v3 / v4 / v4.1 保留作迭代证据。
+完整用例表与期望行为见 [`references/test-cases.md`](references/test-cases.md)（44 条：22 通用 + 10 Coolify 删除专项 + 6 v0.6 bootstrap 窗口专项 + 6 v0.7 黑名单优先专项）；`archives/` 下 v3 / v4 / v4.1 保留作迭代证据。
 
-跑用例的方法：每条用例用一个独立 subagent，prompt 由"系统提示词 = 本 SKILL.md 上面所有内容 + 用户消息 = 用例输入"组成，看 subagent 的响应是否触发期望档位 / 替代命令 / 回执格式。历史结果：v4 22/22 + v4.1 10/10 全过；v4.2 + v0.6 待跑全集。
+跑用例的方法：每条用例用一个独立 subagent，prompt 由"系统提示词 = 本 SKILL.md 上面所有内容 + 用户消息 = 用例输入"组成，看 subagent 的响应是否触发期望档位 / 替代命令 / 回执格式。历史结果：v4 22/22 + v4.1 10/10 全过；v4.2 / v0.6 / v0.7 待跑全集。
