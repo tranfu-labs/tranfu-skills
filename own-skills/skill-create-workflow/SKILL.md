@@ -1,16 +1,31 @@
 ---
 name: skill-create-workflow
 description: >-
-  仅当用户要创建一个新的 Codex / Claude Code skill，或把尚未成型的文档、规则、事故复盘、经验教训、
-  agent 工作流转成新的 skill 时使用。Always trigger for: "创建 skill", "写一个 skill", "把这个文件转成 skill",
-  "skill create workflow", "skill 编写流程"。Also trigger for casual phrasing: "沉淀成能力", "固化成流程",
-  "做成可复用规则", only when the requested outcome is a new skill. Do NOT trigger when the input is already a skill,
-  SKILL.md, installed skill, or existing skill directory; when the user asks to update/refine/extend/repair/review an
-  existing skill; when the user only asks to install/list/upgrade/uninstall skills, create a plugin, edit ordinary project
-  code, write non-skill documentation, or manage automations.
-version: 0.1.0
+  当用户的最终意图是产出一个全新的 Codex / Claude Code skill (一个新的 SKILL.md / skill 目录) 时触发。
+  "新" 包括从零创建, 以及把尚未成型的文档、规则、事故复盘、经验教训、agent 工作流首次封装成 skill。
+
+  触发判定按 "意图 + 上下文", 不按短语字典匹配:
+
+  - 任何 "产生式动词 + skill" 的表达都算: 创建 / 新建 / 写 / 写成 / 做 / 做成 / 整成 / 封装成 / 包 / 起 /
+    转成 / 沉淀成 + skill。同义动词由你自己泛化, 不必出现在本说明里。
+  - 承接确认 算同一个意图: 上一轮对话已经在讨论某段内容是否值得做成 skill, 用户用
+    "好 / 行 / 可以 / OK / 那就 / 嗯" 等承接词 + 产生式表达 (例如「好, 把它写成 skill」「行, 做成 skill 吧」
+    「那就封装成 skill」) 给出同意时, 视同显式触发, 上文讨论的对象即为源材料。
+  - 代词指代 ("它 / 这个 / 那个 / 这段 / 上面那个") + 产生式表达 已经把意图锚定到上文, 不要因为
+    "没指定文件路径" 而拒绝触发, 应回头解析上下文。
+  - 英文同理: turn X into a skill / make X a skill / let's skill-ify this / yeah make that a skill 等。
+
+  代表性例子 (覆盖正式 / 口语 / 承接三种形态, 其余交给语义泛化):
+
+  - "帮我把 docs/postmortem.md 创建成一个 skill"
+  - "把它写成 skill"  (代词承接, 源在上文)
+  - "好, 那就做成 skill 吧"  (承接确认 + 产生式动词)
+
+  Do NOT trigger when: 用户只要 install / list / upgrade / uninstall skills, 创建 plugin,
+  改普通项目代码, 写非 skill 文档, 或管理自动化任务。
+version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-06-09
+updated_at: 2026-06-30
 origin: own
 userInvocable: true
 ---
