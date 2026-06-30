@@ -2,11 +2,13 @@
 
 reconcile Step 6 用。Env 维度可独立增删改查，**不需要重 PATCH 整个 compose**。
 
+> 术语见 SKILL.md ## 心智模型。
+
 公共环境变量（同 service-crud.md）：
 
 ```bash
-BASE="http://120.77.223.183:8000"
-SERVICE_UUID="<service-uuid>"
+COOLIFY_BASE_URL="http://120.77.223.183:8000"
+COOLIFY_APP_UUID="<service-uuid>"
 ```
 
 ## 列出现有 envs（reconcile Step 6 check）
@@ -14,19 +16,19 @@ SERVICE_UUID="<service-uuid>"
 ```bash
 curl -sS \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs" \
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID/envs" \
   | jq '[.[] | {uuid, key, value, is_literal}]'
 ```
 
 返回数组，每条含 `uuid`（env 的）+ `key` + `value` + 几个 flag。
 
-**注意**：`value` 在响应里**是明文**（除非 `is_shown_once: true`）——agent 看到也不要 echo / 不要写日志。
+**CRITICAL**：响应里的 `value` 是明文（除非 `is_shown_once: true`），agent **MUST NEVER** 把它 echo 到对话、写入日志或粘进 tool input。
 
 ## 对比仓库 .env 与 Coolify 现状（reconcile Step 6 check）
 
 ```bash
 REMOTE_KEYS=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs" | jq -r '.[].key' | sort)
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID/envs" | jq -r '.[].key' | sort)
 
 LOCAL_KEYS=$(grep -v '^\s*#' .env | grep '=' | cut -d= -f1 | sort)
 
@@ -43,7 +45,7 @@ comm -13 <(echo "$LOCAL_KEYS") <(echo "$REMOTE_KEYS")
 for key in $(comm -12 <(echo "$LOCAL_KEYS") <(echo "$REMOTE_KEYS")); do
   local_val_hash=$(grep "^${key}=" .env | cut -d= -f2- | sha256sum | cut -c1-8)
   remote_val_hash=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-    "$BASE/api/v1/services/$SERVICE_UUID/envs" \
+    "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID/envs" \
     | jq -r --arg k "$key" '.[] | select(.key==$k) | .value' \
     | sha256sum | cut -c1-8)
   [ "$local_val_hash" != "$remote_val_hash" ] && echo "$key: 不同 (本地 ${local_val_hash} vs Coolify ${remote_val_hash})"
@@ -59,7 +61,7 @@ curl -sS -X POST \
   -H "Content-Type: application/json" \
   -d "$(jq -nc --arg k "MY_KEY" --arg v "my_value" \
     '{key: $k, value: $v, is_literal: true}')" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs"
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID/envs"
 ```
 
 **`is_literal: true` 是默认推荐**——不让 Coolify 对 `$` `#` 等做 shell 转义，避免密码含特殊字符时被吞。
@@ -76,7 +78,7 @@ curl -sS -X PATCH \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d "$(jq -nc --arg v "new_value" '{value: $v}')" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs/$ENV_UUID"
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID/envs/$ENV_UUID"
 ```
 
 ## 批量改（bulk）
@@ -89,7 +91,7 @@ curl -sS -X PATCH \
 curl -sS -X DELETE \
   -w "\nHTTP=%{http_code}\n" \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs/$ENV_UUID"
+  "$COOLIFY_BASE_URL/api/v1/services/$COOLIFY_APP_UUID/envs/$ENV_UUID"
 ```
 
 **reconcile flow 不主动删 Coolify 上多出来的 env**——只补缺、不删多余。多余 env 一般是用户在 UI 上手动加的（debug / 临时关），自动删会扯到用户的临时状态。Step 6 检测到多余 env 时只**告知用户**，由用户决定。
@@ -103,6 +105,8 @@ curl -sS -X DELETE \
 
 ## 安全纪律
 
-- 任何打印 env 内容的命令都**不直接输出到对话**——用 hash / 长度 / 数量统计代替明文展示。
-- 用户给的 `.env` 文件**也不复读**——读完直接打 API，不在对话里 echo 内容。
-- Coolify API 返回 env 列表里 `value` 是明文——agent 拿来做 diff，**不展示**。
+- 任何打印 env 内容的命令 **MUST NEVER** 直接输出到对话——用 hash / 长度 / 数量统计代替明文展示。
+- 用户给的 `.env` 文件 **MUST NEVER** 复读——读完直接打 API，**MUST NEVER** 在对话里 echo 内容。
+- Coolify API 返回 env 列表里 `value` 是明文——**MUST** 只用于本地 hash/长度/数量比较，**MUST NEVER** 展示原文、**MUST NEVER** 写入对话或日志。
+
+**唯一例外**：用户显式要求 redact 后展示某 key 的截断 hash 或长度时，可输出 hash/长度，**MUST NEVER** 输出原文。

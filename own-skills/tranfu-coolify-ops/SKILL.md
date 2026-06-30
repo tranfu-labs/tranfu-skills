@@ -5,16 +5,12 @@ author: aquarius-wing
 origin: own
 updated_at: 2026-06-29
 description: >
-  把 tranfu-labs 下的 -app 仓库从源码部署到公司 Coolify 实例 (http://120.77.223.183:8000)，
-  端到端走通：仓库代码侧四件套 (Dockerfile / .dockerignore / compose.yml / deploy.yml) + Coolify 端
-  Service 资源 (Docker Compose Empty) + GitHub repo secrets/vars + 触发首次部署 + 公网可访问。
-  唯一流程文档 scenarios/reconcile-deployment.md，9 个 Step 每步 check → diff → act 幂等模式：
-  新项目部署 / 部署故障 / 临时改域名 / 改 env / 改 compose 全部走同一份流程，让流程识别要做什么。
-  触发短语：把 tranfu-labs/<x>-app 上 coolify、把这个项目部署到 coolify、给这个仓库做 coolify onboard、
+  把 tranfu-labs/<x>-app 仓库端到端部署到公司 Coolify 实例，走统一 reconcile 流程，幂等可重跑。
+  触发短语：把 tranfu-labs/<x>-app 上 coolify、把这个项目部署到 coolify、coolify onboard、
   改下这个项目的域名 / env / compose、部署挂了 / 部署没成功、coolify 上访问不了、redeploy / 重新部署。
   口语：「这个项目怎么挂到 coolify」「帮我把这个 app 跑到 coolify 上」「coolify 一下」。
-  不要用于：非 tranfu-labs 仓库（命名不合规直接终止）；非公司 Coolify 实例；纯网页 UI 操作
-  （如手工建 project / 删 volume / 看 logs）；与部署无关的代码改造。
+  Do NOT trigger when：非 tranfu-labs 仓库；非公司 Coolify 实例；纯网页 UI 操作
+  （手工建 project / 删 volume / 看 logs）；与部署无关的代码改造。
 ---
 
 # tranfu Coolify 部署运维
@@ -37,14 +33,27 @@ description: >
 
 ## 心智模型（读一遍再开干）
 
+<!-- Step 编号说明：保留 Step 0, 2-9 (共 9 个; Step 1 已并入 Step 0, 编号保留与历史 commit 对齐) -->
+
+**术语表（顶置，全 skill 范围统一）**：
+
+- **Coolify Service Resource**：Coolify 顶层资源，一条 service 记录，一个 `$COOLIFY_APP_UUID`
+- **sub-application**：`Service.applications[]` 元素，对应一个 compose service。uuid 不在 `/applications` 命名空间，改它的任何字段 **MUST** PATCH `/services/{uuid}`
+- **compose service**：`compose.yml` 的 `services.<name>` 节点
+- **Coolify Application Resource**：Coolify 的 Application 资源类型（git build / nixpacks），**本 skill 不用**
+
+环境变量命名统一长名：`COOLIFY_APP_UUID` / `COOLIFY_BASE_URL`（不用 SERVICE_UUID / BASE 短名）。
+
 - **Docker Compose Empty = Service 资源**（不是 Application）——UI 上"+New Resource → Services → Docker Compose Empty"，API 走 `/api/v1/services` 命名空间。详见 [references/service-vs-application.md](references/service-vs-application.md)
 - **一个 Service = 一份 compose + 内嵌 sub-applications 数组**——compose 里有 N 个 service，sub-applications 数组就有 N 条，每条有独立 uuid + fqdn
 - **改域名走 `urls` 字段**（不是 `domains`、不是 `docker_compose_domains`、不是 compose 里 `SERVICE_FQDN_*`）——详见 [references/urls-vs-docker-compose-domains.md](references/urls-vs-docker-compose-domains.md)
 - **`SERVICE_FQDN_*` 是 Coolify → 容器的 output**，不是 user → Coolify 的 input——compose 里写 `''` 即可，写真值无效。详见 [references/service-fqdn-trap.md](references/service-fqdn-trap.md)
-- **部署链路**：GHA push GHCR → curl `$BASE/api/v1/deploy?uuid=...` → Coolify pull 重启。Coolify 上**关 Auto Deploy on Push / Webhook**，触发权归 workflow。详见 [commands/deploy-trigger.md](commands/deploy-trigger.md)
+- **部署链路**：GHA push GHCR → curl `$COOLIFY_BASE_URL/api/v1/deploy?uuid=...` → Coolify pull 重启。Coolify 上**关 Auto Deploy on Push / Webhook**，触发权归 workflow。详见 [commands/deploy-trigger.md](commands/deploy-trigger.md)
 - **CLI 不靠谱**——Coolify CLI 1.x 命令未文档化，service create 的 type 字段语义不明。本 skill **全部走 HTTP API**，CLI 不依赖
 
 ## 唯一流程入口
+
+**CREATE A TODO LIST FOR THE TASKS BELOW**（9 项，一 Step 一 TODO）：Step 0 preflight → Step 2 四件套 → Step 3 service → Step 4 compose → Step 5 域名 → Step 6 env → Step 7 secrets → Step 8 触发 → Step 9 公网验证。
 
 [`scenarios/reconcile-deployment.md`](scenarios/reconcile-deployment.md)。所有触发都走它。
 
@@ -63,9 +72,17 @@ description: >
 | 8 | 触发 + 部署链路通 | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"reconcile Step 8" |
 | 9 | 公网域名可访问 | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"reconcile Step 9" |
 
-**不允许跳步**——即便用户说"只改一下域名"也要从 Step 0 顺序跑下来，前面已经对的 Step 会快速 skip（check ✓ 跳过 act），但跑全才能保证整套是一致状态。
+**MUST NEVER 跳步**：从 Step 0 顺序跑到 Step 9（Step 1 已并入 Step 0，共 9 个 Step）。check 必跑，仅 act 可幂等 skip。**unless** 用户显式声明 dry-run 只跑 check。
 
-**Act 前一律先把 diff 摆给用户确认**——动 Coolify 上活资源前的硬纪律。
+**MUST** 在 Act 前向用户展示 diff 并等待确认，**NEVER** 在未确认时执行写操作（POST/PATCH/DELETE），**unless** 用户已显式授权批量执行。
+
+## 主流程（父层派发）
+
+1. 读取触发短语 → 识别场景（新部署 / 故障 / 改域名 / 改 env / 改 compose）。
+2. 若识别失败 → 报 **BLOCKER「未知触发场景」**并退出。    # 卫语句
+3. 进入 reconcile 子流程 [`scenarios/reconcile-deployment.md`](scenarios/reconcile-deployment.md)。    # 派发
+4. reconcile 失败 → 按失败 Step 文案输出 → 退出。    # 失败有出口
+5. reconcile 成功 → 输出完成判据全 ✓ 报告 → 结束。    # 显式终止 + 命名产物
 
 ## 不做什么
 
@@ -133,7 +150,7 @@ reconcile 跑完后：
 1. 进 reconcile，create 9 项 TODO
 2. Step 0: 跑 preflight.sh → 全部 ✓（工具 / git / 命名 / GitHub 凭据+权限 / Coolify token+活性+写权限 / GHCR ack）
 3. Step 2: 仓库根 Dockerfile / compose.yml / .dockerignore / .github/workflows/deploy.yml 都没有 → 按 file-generation-rules.md 生成四件套，给用户预览，确认后写入
-5. Step 3: GET /api/v1/services 没找到同名 → 让用户选 project → POST /api/v1/services 带 compose + urls + project/server/env → 拿 $SERVICE_UUID
+5. Step 3: GET /api/v1/services 没找到同名 → 让用户选 project → POST /api/v1/services 带 compose + urls + project/server/env → 拿 $COOLIFY_APP_UUID
 6. Step 4: GET 拿到 docker_compose_raw = 刚 POST 的内容 → ✓ skip（自动同步）
 7. Step 5: GET applications[0].fqdn = "https://markdown-kits-app.tranfu.com:8787" → ✓ skip（POST 时一并设了）
 8. Step 6: 用户给 .env → POST /envs 把每条加进去
@@ -150,7 +167,7 @@ reconcile 跑完后：
 1. 进 reconcile，create 9 项 TODO
 2. Step 0: preflight ✓ skip（环境没变）
 3. Step 2: 四件套都在且合规 → ✓ skip
-4. Step 3: Service 已存在，拿 $SERVICE_UUID → ✓ skip
+4. Step 3: Service 已存在，拿 $COOLIFY_APP_UUID → ✓ skip
 5. Step 4: compose 一致 → ✓ skip
 6. Step 5: fqdn 是期望的 tranfu.com → ✓ skip
 7. Step 6: envs 都齐 → ✓ skip

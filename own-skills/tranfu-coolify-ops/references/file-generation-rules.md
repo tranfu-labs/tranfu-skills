@@ -1,5 +1,7 @@
 # 仓库代码侧四件套生成 / 校验规范
 
+> 术语见 SKILL.md ## 心智模型。
+
 reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规时按下面规则生成 / 改造。**check 和 act 都引用这份文件**，避免规则散落。
 
 四件套：
@@ -8,7 +10,7 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 3. `compose.yml`
 4. `.github/workflows/deploy.yml`
 
-每件**完整覆盖写入**（不输出 diff）。
+每件 MUST 完整覆盖写入; NEVER 输出 diff。
 
 ---
 
@@ -86,7 +88,7 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 | C7 | `environment.PORT` 与监听端口一致 | 修正 |
 | C8 | 数据库连接串用 compose service name（不用 localhost / 宿主机 IP） | 改 |
 | C9 | 数据库密码用 `${SERVICE_PASSWORD_<NAME>}` 魔法变量（不手填、不让部署者界面填） | 改 |
-| C10 | 镜像段只写 `image:`，**禁止 `build:`** | 删 `build:`，改 `image: ghcr.io/<org>/<repo>:<tag>` |
+| C10 | 镜像段只写 image:, **MUST NEVER 出现 build: 段** | 删 `build:`，改 `image: ghcr.io/<org>/<repo>:<tag>` |
 | C11 | healthcheck 防代理（wget 系清环境变量；python urllib 走 NO_PROXY=127.0.0.1） | 修写法 |
 
 ### 额外约束（reconcile-specific）
@@ -136,7 +138,7 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 | 多种命中 | 全部并列 |
 | 都没命中 | **不加 step，不生成假 `echo "no tests"`** |
 
-**测试前先构建**：若项目有独立 build 命令且 test 消费构建产物（典型：monorepo 子包跨包 import 编译出的 `dist`），build step 必须排在 test 之前。
+**MUST 把 build step 排在 test step 之前**, 当满足:【grep 找到 package.json 中独立 build 脚本】且【test 脚本引用 dist/ 或类似构建产物路径】(典型：monorepo 子包跨包 import 编译出的 `dist`)。
 
 ### 多环境扩展规则
 
@@ -145,7 +147,7 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 1. 用户**明确说**要 dev / staging
 2. 当前 git checkout 就在 `dev` 分支上
 
-不满足任一条件 → 沉默，只配默认分支，**不主动问**。
+不满足任一条件 → MUST 只配默认分支, NEVER 主动询问用户。
 
 扩展时机械执行两步：
 1. 在 yml 的 `on.push.branches:` list 下加一行

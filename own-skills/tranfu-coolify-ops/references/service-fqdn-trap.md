@@ -1,5 +1,7 @@
 # `SERVICE_FQDN_*` 是 Coolify → 容器的 output，不是 user → Coolify 的 input
 
+术语见 SKILL.md ## 心智模型.
+
 这是 Coolify 4.x 的一个**反直觉行为**，踩过会浪费很多时间。
 
 ## 坑长什么样
@@ -35,7 +37,7 @@ Issue [#6124](https://github.com/coollabsio/coolify/issues/6124) / [#8912](https
 - `SERVICE_FQDN_MYAPP`（无 port 后缀） → 永远绑死在首次部署时分配的 sslip.io 域名，UI 改域名也不重新解析。
 - `SERVICE_FQDN_MYAPP_8787`（带 port 后缀） → 会跟随 UI / `urls` 字段更新。
 
-**本 skill 一律用 port-suffixed 写法**，不踩这个雷。
+本 skill **MUST 使用 port-suffixed 写法** (SERVICE_FQDN_<SVC>_<PORT>); **NEVER 使用 portless 写法** (SERVICE_FQDN_<SVC>), 见 issue #6124/#8912.
 
 ## compose 里到底要不要写 `SERVICE_FQDN_*`？
 
