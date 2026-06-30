@@ -64,7 +64,7 @@ description: >
 | 4I | 创建 project + service (POST 一次带 compose + urls), 拿 `$SERVICE_UUID` **并明确告知用户** | [commands/service-crud.md](commands/service-crud.md) + [references/coolify-api-fields.md](references/coolify-api-fields.md) |
 | 5I | GH secrets + **自动建 environment** (`gh api PUT`) + env vars | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"GitHub 端配置" |
 | 6I | service env (POST /envs) | [commands/service-env.md](commands/service-env.md) |
-| 7I | agent autonomous `git add + commit + git push` (push 前给用户看 diff stat) | — |
+| 7I | agent autonomous `git add + commit + git push`, 推完告知 commit sha + diff stat + GitHub link (不等 ack) | — |
 
 ### 更新分支 (project 已存在, agent autonomous, 不依赖 user cwd, 按意图条件触发)
 
@@ -99,7 +99,7 @@ description: >
 - **Step 9/10 有窗口与超时** (30s deploy-start + 5min 域名轮询), 不再单次 curl
 - **Step 4I 创建 service 后必须明确把 `$SERVICE_UUID` 告知用户** — 这是 GH workflow 配置的关键值
 
-**Act 前一律先把 diff 摆给用户确认** — 动 Coolify 上活资源 / agent autonomous push 前的硬纪律。
+**全程 autonomous, 中途零停顿**: user 给出初始指令 = 全链路隐式 ack, agent 一路跑到 Step 10 收尾, **不在中途等用户回应**。act 前 GET 用于事后告知 diff, 不是用于等 ack。**唯一例外**: Step 1 后用户意图模糊 → 询问意图; 询问完毕后继续 autonomous。
 
 ## 不做什么
 
@@ -112,7 +112,7 @@ description: >
 - ✗ agent 自己改源码——必须 spawn subagent 按 file-generation-rules.md 修, agent 只组装 prompt + 转发结果
 - ✗ 更新分支主动核对源码 / 主动 push——project 已存在 = 乐观假设已部署好, 只做用户指派的事
 - ✗ 更新分支意图模糊就乱猜或默认 redeploy——询问用户
-- ✗ push 前不给用户看 diff——即便 agent autonomous push，diff stat + 文件清单必须先摆出来
+- ✗ push 前 (或任何 act 前) 停下等 user ack——autonomous 意味着推完告知, 不是推前问。user 给完初始指令就离线了, 中途问只会卡死流程
 - ✗ Coolify UI 上的点击（agent 全走 API）
 - ✗ DELETE service / 清空 volume / 删 project（破坏性操作，专门 reference 处理）
 - ✗ 多 Coolify 实例 / 多 server 调度（公司目前单实例单 server，硬编码进 [commands/prerequisites.md](commands/prerequisites.md)）
@@ -181,7 +181,7 @@ own-skills/tranfu-coolify-ops/
 6. Step 4I: POST /api/v1/projects (name=markdown-kits-app) → $PROJECT_UUID; POST /api/v1/services 带 compose + urls + project/server/env → $SERVICE_UUID → 明确告知 "Service: markdown-kits-app ($SERVICE_UUID), Coolify URL: ..."
 7. Step 5I: gh secret set COOLIFY_API_TOKEN / COOLIFY_BASE_URL; gh variable set --env main 三条 (COOLIFY_APP_UUID=$SERVICE_UUID 等); environment 不存在 → 给 settings URL 让用户手工建
 8. Step 6I: 用户给 .env → POST /envs 逐条加 (值不打印)
-9. Step 7I: git add . / git status / git diff --stat 给用户看 → ack → git commit + git push -u origin main
+9. Step 7I: git add . / git commit / git push -u origin main → 告知 user "commit <sha>, 改了 N 个文件, GitHub link"
 10. Step 8: gh run watch → success, log 无 missing/undefined
 11. Step 9: 轮询 30s 看到 status=deploying → ✓ (无需手动触发)
 12. Step 10: 轮询 curl -I 公网 → 1min 后返 200 → ✓ 收尾报告
@@ -194,9 +194,9 @@ own-skills/tranfu-coolify-ops/
 1. Step 0: preflight ✓ (无需 user cwd)
 2. Step 1: GET /api/v1/projects 找 name=markdown-kits-app 同名存在 → 走更新分支
 3. Step 2U: 意图 = 改域名 → 选 act B
-   - GET /api/v1/services/$SERVICE_UUID 拿当前 urls
-   - 摆 diff 给用户: "当前 https://markdown-kits-app.tranfu.com:8787 → 期望 https://board.tranfu.com:8787"
-   - 用户 ack → PATCH urls → GET 校验 ✓
+   - GET /api/v1/services/$SERVICE_UUID 拿当前 urls (记录 diff)
+   - PATCH urls → GET 校验
+   - 告知 user "已改: https://markdown-kits-app.tranfu.com:8787 → https://board.tranfu.com:8787"
 4. Step 8: 无 push, skip
 5. Step 9: 改域名是 traefik 即时生效, 不需要重启容器, skip
 6. Step 10: curl -I https://board.tranfu.com → 200 → ✓ 收尾
@@ -208,8 +208,8 @@ own-skills/tranfu-coolify-ops/
 正确做法 (更新分支, A 路径)：
 1. Step 0/1 → 走更新分支
 2. Step 2U: 意图 = redeploy → 选 act A
-   - 摆给用户 "将 POST /api/v1/deploy?uuid=$SERVICE_UUID, ack?"
-   - ack → POST → 拿 deployment id
+   - POST /api/v1/deploy?uuid=$SERVICE_UUID → 拿 deployment id
+   - 告知 user "已触发 redeploy, deployment id = ..."
 3. Step 8: 无 push, skip
 4. Step 9: 5s 后看到 status=deploying → ✓ (不需要 fallback POST, 因为 A 就是手工 POST)
 5. Step 10: 轮询公网 → 1min 后 200 → ✓
@@ -221,10 +221,10 @@ own-skills/tranfu-coolify-ops/
 正确做法 (更新分支, C 路径 = 改 env + 隐式 A redeploy)：
 1. Step 0/1 → 走更新分支
 2. Step 2U: 意图 = 改 env → 选 act C
-   - GET /envs 拿当前列表 (不打印 value, 只 key)
-   - 摆 diff: "新增 key=DATABASE_URL (value 隐藏)"
-   - 用户 ack → POST /envs → GET 校验 key 在 ✓
+   - GET /envs 拿当前列表 (不打印 value, 只 key, 记录 diff)
+   - POST /envs → GET 校验 key 在
    - 隐式 A: POST /api/v1/deploy (env 改了必须 redeploy)
+   - 告知 user "已新增 key=DATABASE_URL (value 隐藏), 已触发 redeploy"
 3. Step 8 skip; Step 9 ✓ (看到 deploying); Step 10 ✓
 </example>
 
@@ -250,7 +250,7 @@ own-skills/tranfu-coolify-ops/
    - mktemp 临时目录 + git clone markdown-kits-app
    - spawn subagent 按 file-generation-rules.md 加 redis service (含 SERVICE_PASSWORD_REDIS 魔法变量, 不写 ports)
    - subagent 返回改了 compose.yml, agent 明确告知改了什么
-   - autonomous git add + commit + push (push 前给用户看 diff stat)
+   - autonomous git add + commit + push, 推完告知 user "commit <sha>, 改了 compose.yml, GitHub link"
    - PATCH /api/v1/services/$SERVICE_UUID 的 docker_compose_raw
 3. Step 8: 等 GHA build redis 镜像 (其实 ghcr.io 上 image 不变, 但 deploy.yml 会跑) → success
 4. Step 9: 30s 内看到 deploying → ✓
@@ -265,7 +265,7 @@ own-skills/tranfu-coolify-ops/
 (d) Step 3I / 更新 D 路径 agent 自己 Write 四件套文件 — 必须 spawn subagent, agent 不直接改源码
 (e) subagent 改完没明确告知用户改了哪些文件 — 必须输出清单 "新建/修改 + 主要改了什么"
 (f) Step 4I 创建 service 后只把 $SERVICE_UUID 存到变量, 没告诉用户 — 必须明确报 "Service: $REPO_NAME ($SERVICE_UUID), Coolify URL: ..."
-(g) `git push` 前没给用户看 diff stat — 即便 autonomous, push 前 ack 是硬纪律
+(g) `git push` 前停下问"确认推送?" — autonomous 意味着推完告知 commit sha + diff stat + GitHub link, 不是推前等 ack。user 给完初始指令往往离线了, 中途问会卡死
 (h) `gh secret set COOLIFY_API_TOKEN --body "<原文>"` — 必须保持 `$VAR`, 让 shell 展开
 (i) Step 9 30s 内没看到部署启动, agent 重新 `git push` 想再触发一次 — fallback 是 `POST /api/v1/deploy`, 不是再 push
 (j) Step 10 改成无限轮询 — 5min 硬上限, 到点就报排障入口
