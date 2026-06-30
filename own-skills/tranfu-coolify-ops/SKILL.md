@@ -5,22 +5,17 @@ author: aquarius-wing
 origin: own
 updated_at: 2026-06-30
 description: >
-  把 tranfu-labs 下的 -app 仓库从源码部署到公司 Coolify 实例 (默认 http://120.77.223.183:8000, 可覆盖)。
-  资源形态: Coolify Application (private-github-app) + build_pack=dockercompose + is_auto_deploy_enabled=false;
-  Coolify 通过 GitHub App integration 绑 repo (实例级一次性配置, skill 不接管创建);
-  部署链路: GHA build → push GHCR → GHA POST /api/v1/deploy?uuid=$APP_UUID → Coolify pull GHCR → restart;
-  compose.yml 主 service 只写 image: ghcr.io/...:tag, 不写 build: (Coolify 不构建镜像)。
-  Step 1 入口分流: 同名 Application 不存在 = 初始化分支 (固定流程: mktemp clone / 四件套合规改造(spawn subagent) /
-  创建 project+Application / GH secrets+自动建 environment / autonomous push); Application 已存在 = 更新分支
-  (按用户意图条件触发: A redeploy / B 改域名 / C 改 env / D 改 compose 或源码 / E 改 GH 配置)。
-  agent 全程 autonomous, 永远不依赖 user cwd; 共用收尾验 CI + 30s deploy-start 窗口 + 5min 公网轮询。
-  作用域硬约束: 只处理用户给的 GitHub URL 对应的那一个 project / Application, 同名硬约束
-  (REPO_NAME == PROJECT_NAME == APP_NAME), 不扫描 Coolify 上其他资源; 同名 Service 残留 (0.7 历史) skill 不接管。
-  触发短语：服务器运维机器人请帮忙部署 / 确认并部署 https://github.com/tranfu-labs/<x>-app、
-  把 tranfu-labs/<x>-app 上 coolify、coolify 一下、改下这个项目的域名 / env / compose、
-  redeploy / 重新部署 / 重启、部署挂了 / 部署没成功、coolify 上访问不了。
-  不要用于：非 tranfu-labs 仓库（命名不合规直接终止）；非公司 Coolify 实例；纯网页 UI 操作
-  （如挂 GHCR credential / 装 GitHub App integration）；与部署无关的代码改造。
+  把 tranfu-labs 下的 -app 仓库部署到公司 Coolify 实例。资源走 Application (private-github-app) +
+  build_pack=dockercompose + is_auto_deploy_enabled=false; GitHub App integration 由 ops 一次性手工装,
+  skill 不接管。部署链路: GHA build → push GHCR → POST /api/v1/deploy?uuid=$APP_UUID → Coolify pull GHCR;
+  compose 主 service 只写 image: ghcr.io/..., 禁 build:。Step 1 入口分流: 同名 Application 不存在 → 初始化
+  (mktemp clone + 四件套合规 subagent 修 + 建 project/Application + GH secrets/environment/vars + autonomous push);
+  存在 → 更新分支 (A redeploy / B 改域名 / C 改 env / D 改源码或 compose / E 改 GH 配置)。
+  agent 全程 autonomous 不依赖 user cwd, 收尾验 CI + 30s deploy-start + 5min 公网轮询。
+  同名硬约束 REPO_NAME == PROJECT_NAME == APP_NAME; 旧 Service 残留 (0.7 历史) skill 不接管。
+  触发短语: 帮忙部署 / 确认并部署 https://github.com/tranfu-labs/<x>-app、coolify 一下、
+  改域名/env/compose、redeploy / 重新部署 / 重启、部署挂了、coolify 访问不了。
+  不要用于: 非 tranfu-labs 仓库; 非公司 Coolify; UI 操作 (挂 GHCR credential / 装 GitHub App); 与部署无关的改动。
 ---
 
 # tranfu Coolify 部署运维
