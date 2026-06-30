@@ -18,12 +18,22 @@ curl -sS \
   | jq '[.[] | {uuid, name, service_type, status}]'
 ```
 
-按 name 找一个（reconcile Step 3）：
+按 name 找一个（仅 ad-hoc 排障用，跨 project 同名会误命中）：
 
 ```bash
 curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" "$BASE/api/v1/services" \
   | jq --arg name "<svc-name>" '.[] | select(.name == $name) | .uuid'
 ```
+
+**reconcile Step 3 用：按 name + project_uuid 双重 filter**（防跨 project 同名误命中）：
+
+```bash
+curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" "$BASE/api/v1/services" \
+  | jq -r --arg n "$SVC_NAME" --arg p "$PROJECT_UUID" \
+    '.[] | select(.name == $n and .project_uuid == $p) | .uuid'
+```
+
+`$PROJECT_UUID` 由 Step 3.1 通过 `GET /api/v1/projects | jq 'select(.name == $REPO_NAME)'` 取得（同名约束: `REPO_NAME = PROJECT_NAME = SVC_NAME`）。
 
 ## 创建 Docker Compose Empty Service
 

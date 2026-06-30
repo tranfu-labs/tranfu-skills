@@ -84,6 +84,8 @@ jobs:
           TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
           BASE:  ${{ secrets.COOLIFY_BASE_URL }}
         run: |
+          # defensive strip: 若 BASE 末尾误带 / 会拼出 //api 导致 Coolify 404
+          BASE="${BASE%/}"
           curl -sSL --fail-with-body -X POST \
             -H "Authorization: Bearer $TOKEN" \
             "$BASE/api/v1/deploy?uuid=$COOLIFY_APP_UUID&force=false"
