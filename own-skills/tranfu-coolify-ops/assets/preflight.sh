@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # preflight.sh — tranfu-coolify-ops 部署前全部前置检测
 #
-# 用法:  ./preflight.sh [BASE_URL]
-#        默认 BASE_URL = http://120.77.223.183:8000
+# 用法:
+#   ./preflight.sh                                     # cwd 已在 repo, 默认 BASE
+#   ./preflight.sh https://github.com/tranfu-labs/foo  # 给 GitHub URL, cwd 不在 repo 也行 (软警告)
+#   ./preflight.sh https://github.com/tranfu-labs/foo http://my-coolify:8000
+#   ./preflight.sh http://my-coolify:8000              # 只覆盖 BASE, 走旧 cwd 检查
 #
-# 工作目录: cd 到你要部署的 git 仓库根目录再跑
+# 工作目录:
+#   - 不传 GITHUB_URL: cwd 必须在 git 仓库根 (硬 check)
+#   - 传了 GITHUB_URL: cwd 不必匹配 — Step 2I 会 mktemp clone (软警告)
 #
 # 退出码:
 #   0  全部 ✓                       → 安全进 reconcile flow
@@ -18,7 +23,32 @@
 
 set -u
 
-BASE="${1:-http://120.77.223.183:8000}"
+# 参数解析: 第一个参数含 github.com 当 GITHUB_URL, 否则当 BASE
+GITHUB_URL=""
+BASE=""
+case "${1:-}" in
+  *github.com*) GITHUB_URL="$1"; BASE="${2:-http://120.77.223.183:8000}" ;;
+  "")           BASE="http://120.77.223.183:8000" ;;
+  *)            BASE="$1" ;;
+esac
+BASE="${BASE:-http://120.77.223.183:8000}"
+
+# 从 GITHUB_URL 解析期望的 org/name (若给了)
+EXPECTED_ORG=""
+EXPECTED_NAME=""
+if [ -n "$GITHUB_URL" ]; then
+  URL_CLEAN="${GITHUB_URL%.git}"
+  URL_CLEAN="${URL_CLEAN%/}"
+  case "$URL_CLEAN" in
+    *github.com:*) URL_PATH="${URL_CLEAN#*github.com:}" ;;
+    *github.com/*) URL_PATH="${URL_CLEAN#*github.com/}" ;;
+    *)             URL_PATH="" ;;
+  esac
+  if [ -n "$URL_PATH" ]; then
+    EXPECTED_ORG="${URL_PATH%%/*}"
+    EXPECTED_NAME="${URL_PATH##*/}"
+  fi
+fi
 
 PASS=0; FAIL=0; MANUAL=0
 ok()     { echo "  ✓ $1"; PASS=$((PASS+1)); }
@@ -49,64 +79,100 @@ fi
 echo
 echo "▸ Git 仓库状态"
 
+# 软/硬 check 分流: 传了 GITHUB_URL → 走"软检查模式"(Step 2I 会 mktemp clone, cwd 不在 repo 是合法状态)
+SOFT_MODE=0
+if [ -n "$GITHUB_URL" ]; then
+  SOFT_MODE=1
+  echo "  (软检查模式: 传了 GITHUB_URL=$GITHUB_URL, cwd 不在 repo 只 ⚠ 不 ✗)"
+fi
+
+# 先校验 GITHUB_URL 本身合规 (若传了)
+if [ -n "$GITHUB_URL" ]; then
+  if [ -z "$EXPECTED_ORG" ] || [ -z "$EXPECTED_NAME" ]; then
+    fail "GITHUB_URL 解析失败: $GITHUB_URL (期望 https://github.com/<org>/<repo>)"
+  else
+    if [ "$EXPECTED_ORG" = "tranfu-labs" ]; then
+      ok "GITHUB_URL org = tranfu-labs ($EXPECTED_ORG/$EXPECTED_NAME)"
+    else
+      fail "GITHUB_URL org=$EXPECTED_ORG (期望 tranfu-labs)"
+    fi
+    if echo "$EXPECTED_NAME" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)*-app$'; then
+      ok "GITHUB_URL 命名合规 (烤肉串-app, 全小写)"
+    else
+      fail "GITHUB_URL 命名不合规: $EXPECTED_NAME (期望 烤肉串-app 形式)"
+    fi
+  fi
+fi
+
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
 if [ -n "$REPO_ROOT" ]; then
-  ok "仓库根: $REPO_ROOT"
+  ok "cwd 在 git 仓库: $REPO_ROOT"
+elif [ "$SOFT_MODE" = "1" ]; then
+  manual "cwd 不在 git 仓库 (软检查通过: Step 2I 会 mktemp 临时 clone)"
 else
-  fail "当前 cwd 不在 git 仓库 (cd 到仓库根再跑)"
+  fail "当前 cwd 不在 git 仓库 (cd 到仓库根再跑, 或传 GITHUB_URL 进入软检查模式)"
 fi
 
 REPO_ORG=""; REPO_NAME=""
-ORIGIN=$(git remote get-url origin 2>/dev/null || true)
-if [ -n "$ORIGIN" ]; then
-  # 用 bash 字符串操作解析 (BSD sed 不支持 +? 非贪婪量词, portable 起见手撕)
-  # 去掉可能的 .git 后缀和尾部 /
-  ORIGIN_CLEAN="${ORIGIN%.git}"
-  ORIGIN_CLEAN="${ORIGIN_CLEAN%/}"
-  # 找 github.com 后的部分 (ssh: git@github.com:org/repo, https: https://github.com/org/repo)
-  case "$ORIGIN_CLEAN" in
-    *github.com:*) REPO_PATH="${ORIGIN_CLEAN#*github.com:}" ;;
-    *github.com/*) REPO_PATH="${ORIGIN_CLEAN#*github.com/}" ;;
-    *)             REPO_PATH="" ;;
-  esac
-
-  if [ -n "$REPO_PATH" ]; then
-    REPO_ORG="${REPO_PATH%%/*}"
-    REPO_NAME="${REPO_PATH##*/}"
-    if [ -n "$REPO_ORG" ] && [ -n "$REPO_NAME" ] && [ "$REPO_ORG" != "$REPO_NAME" ]; then
-      ok "origin: $REPO_ORG/$REPO_NAME"
-    else
-      fail "origin URL 解析失败: $ORIGIN (期望 github.com:<org>/<repo> 或 https://github.com/<org>/<repo>)"
-      REPO_ORG=""; REPO_NAME=""
-    fi
-  else
-    fail "origin 不是 GitHub URL: $ORIGIN (本 skill 只支持 GitHub 仓库)"
-  fi
-else
-  fail "无 origin remote (git remote add origin <url>)"
-fi
-
-if [ -n "$REPO_ORG" ]; then
-  if [ "$REPO_ORG" = "tranfu-labs" ]; then
-    ok "org = tranfu-labs"
-  else
-    fail "org=$REPO_ORG (期望 tranfu-labs)"
-  fi
-fi
-
-if [ -n "$REPO_NAME" ]; then
-  if echo "$REPO_NAME" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)*-app$'; then
-    ok "命名合规 (烤肉串-app, 全小写)"
-  else
-    fail "命名不合规: $REPO_NAME (期望 烤肉串-app 形式)"
-  fi
-fi
-
 if [ -n "$REPO_ROOT" ]; then
+  ORIGIN=$(git remote get-url origin 2>/dev/null || true)
+  if [ -n "$ORIGIN" ]; then
+    ORIGIN_CLEAN="${ORIGIN%.git}"
+    ORIGIN_CLEAN="${ORIGIN_CLEAN%/}"
+    case "$ORIGIN_CLEAN" in
+      *github.com:*) REPO_PATH="${ORIGIN_CLEAN#*github.com:}" ;;
+      *github.com/*) REPO_PATH="${ORIGIN_CLEAN#*github.com/}" ;;
+      *)             REPO_PATH="" ;;
+    esac
+
+    if [ -n "$REPO_PATH" ]; then
+      REPO_ORG="${REPO_PATH%%/*}"
+      REPO_NAME="${REPO_PATH##*/}"
+      if [ -n "$REPO_ORG" ] && [ -n "$REPO_NAME" ] && [ "$REPO_ORG" != "$REPO_NAME" ]; then
+        ok "cwd origin: $REPO_ORG/$REPO_NAME"
+
+        # 若传了 GITHUB_URL, 比对 cwd 是否就是目标 repo
+        if [ -n "$EXPECTED_ORG" ] && [ -n "$EXPECTED_NAME" ]; then
+          if [ "$REPO_ORG" = "$EXPECTED_ORG" ] && [ "$REPO_NAME" = "$EXPECTED_NAME" ]; then
+            ok "cwd repo 与 GITHUB_URL 匹配"
+          else
+            manual "cwd 在 $REPO_ORG/$REPO_NAME, 但 GITHUB_URL 指向 $EXPECTED_ORG/$EXPECTED_NAME (软检查: Step 2I 会 mktemp clone 目标 repo)"
+          fi
+        fi
+      else
+        fail "cwd origin URL 解析失败: $ORIGIN"
+        REPO_ORG=""; REPO_NAME=""
+      fi
+    else
+      fail "cwd origin 不是 GitHub URL: $ORIGIN"
+    fi
+  elif [ "$SOFT_MODE" = "0" ]; then
+    fail "cwd 无 origin remote (git remote add origin <url>, 或传 GITHUB_URL 进入软检查模式)"
+  fi
+
+  # 命名合规 (仅当 cwd 在 repo 且 GITHUB_URL 没给时强校验; 给了 GITHUB_URL 已经在前面校验过期望命名)
+  if [ -z "$GITHUB_URL" ] && [ -n "$REPO_ORG" ]; then
+    if [ "$REPO_ORG" = "tranfu-labs" ]; then
+      ok "cwd org = tranfu-labs"
+    else
+      fail "cwd org=$REPO_ORG (期望 tranfu-labs)"
+    fi
+    if [ -n "$REPO_NAME" ]; then
+      if echo "$REPO_NAME" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)*-app$'; then
+        ok "cwd 命名合规 (烤肉串-app, 全小写)"
+      else
+        fail "cwd 命名不合规: $REPO_NAME"
+      fi
+    fi
+  fi
+
+  # working tree clean (软模式只 ⚠)
   if (cd "$REPO_ROOT" && git diff --quiet && git diff --cached --quiet); then
-    ok "working tree clean"
+    ok "cwd working tree clean"
+  elif [ "$SOFT_MODE" = "1" ]; then
+    manual "cwd working tree dirty (软检查: Step 2I 会用 mktemp clone 全新副本, 不动 cwd)"
   else
-    fail "working tree dirty (先 git commit / stash)"
+    fail "cwd working tree dirty (先 git commit / stash, 或传 GITHUB_URL 进入软检查模式)"
   fi
 fi
 
@@ -130,15 +196,19 @@ if [ -n "$GH_USER" ]; then
   fi
 fi
 
-if [ -n "$GH_USER" ] && [ -n "$REPO_ORG" ] && [ -n "$REPO_NAME" ]; then
-  IS_ADMIN=$(gh api "repos/$REPO_ORG/$REPO_NAME" --jq '.permissions.admin' 2>/dev/null || true)
+# admin 权限探测: 优先用 GITHUB_URL 指定的 repo (软检查模式), 否则用 cwd 的 origin
+ADMIN_ORG="${EXPECTED_ORG:-$REPO_ORG}"
+ADMIN_NAME="${EXPECTED_NAME:-$REPO_NAME}"
+
+if [ -n "$GH_USER" ] && [ -n "$ADMIN_ORG" ] && [ -n "$ADMIN_NAME" ]; then
+  IS_ADMIN=$(gh api "repos/$ADMIN_ORG/$ADMIN_NAME" --jq '.permissions.admin' 2>/dev/null || true)
   case "$IS_ADMIN" in
     true)
-      ok "repo admin permission" ;;
+      ok "repo admin permission ($ADMIN_ORG/$ADMIN_NAME)" ;;
     false)
-      fail "用户 $GH_USER 对 $REPO_ORG/$REPO_NAME 无 admin permission (无法 set secret/variable)" ;;
+      fail "用户 $GH_USER 对 $ADMIN_ORG/$ADMIN_NAME 无 admin permission (无法 set secret/variable)" ;;
     "")
-      fail "拿不到 $REPO_ORG/$REPO_NAME 的 permission (repo 不存在或网络问题)" ;;
+      fail "拿不到 $ADMIN_ORG/$ADMIN_NAME 的 permission (repo 不存在或网络问题)" ;;
     *)
       fail "permission 探测异常返回: $IS_ADMIN" ;;
   esac
