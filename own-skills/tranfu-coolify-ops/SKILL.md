@@ -44,7 +44,6 @@ description: >
 - **一个 Service = 一份 compose + 内嵌 sub-applications 数组**——compose 里有 N 个 service，sub-applications 数组就有 N 条，每条有独立 uuid + fqdn
 - **改域名走 `urls` 字段**（不是 `domains`、不是 `docker_compose_domains`、不是 compose 里 `SERVICE_FQDN_*`）——详见 [references/urls-vs-docker-compose-domains.md](references/urls-vs-docker-compose-domains.md)
 - **`SERVICE_FQDN_*` 是 Coolify → 容器的 output**，不是 user → Coolify 的 input——compose 里写 `''` 即可，写真值无效。详见 [references/service-fqdn-trap.md](references/service-fqdn-trap.md)
-- **Coolify 魔法变量在 compose 里声明一次, Coolify 自动注入容器 + 自动塞 service envs 表, 任何前缀都不要在 service envs endpoint 重复 POST** — 8 种前缀 (`SERVICE_PASSWORD_` / `_PASSWORDWITHSYMBOLS_` / `_REALBASE64_` / `_HEX_32_/_64_/_128_` / `_FQDN_`) + 选型口诀详见 [references/coolify-magic-vars.md](references/coolify-magic-vars.md); reconcile 跑 .env diff 必须 grep 过滤这些前缀
 - **部署链路**：GHA push GHCR → curl `$BASE/api/v1/deploy?uuid=...` → Coolify pull 重启。Coolify 上**关 Auto Deploy on Push / Webhook**，触发权归 workflow。详见 [commands/deploy-trigger.md](commands/deploy-trigger.md)
 - **CLI 不靠谱**——Coolify CLI 1.x 命令未文档化，service create 的 type 字段语义不明。本 skill **全部走 HTTP API**，CLI 不依赖
 
@@ -146,7 +145,6 @@ own-skills/tranfu-coolify-ops/
 └── references/                           ← 心智模型 / 字段语义 / 排障
     ├── service-vs-application.md         ← Service 不是 Application
     ├── service-fqdn-trap.md              ← SERVICE_FQDN_* 是 output 不是 input
-    ├── coolify-magic-vars.md             ← 8 类魔法变量前缀 + 选型口诀 + reconcile skip 规则
     ├── urls-vs-docker-compose-domains.md ← 改域名走 urls, 不是 domains
     ├── coolify-api-fields.md             ← openapi 字段速查
     ├── file-generation-rules.md          ← 四件套生成 / 校验规范
@@ -279,6 +277,5 @@ own-skills/tranfu-coolify-ops/
 (p) 更新分支用户说"看下 markdown-kits-app", agent 默认跑 redeploy — 意图模糊必须询问, 不要乱猜
 (q) Step 5I 报 "environment '$DEFAULT_BRANCH' 不存在, 请去 settings 手工建" — 用 `gh api -X PUT repos/.../environments/<name>` 自动建, REST API 支持
 (r) `gh secret set COOLIFY_BASE_URL --body "http://120.77.223.183:8000/"` — 末尾斜杠会拼出 `//api` Coolify 404, 必须 `${BASE%/}` strip
-(s) compose 里写了 `SERVICE_HEX_64_JWT: ''`, Step 6I 又往 service envs endpoint POST 一次 `SERVICE_HEX_64_JWT` — 重复写, Coolify 自己已经塞进去了; 任何 `SERVICE_*_<ID>` 前缀都不要碰 envs endpoint
-(t) Step 6I / 更新 C 路径跑 .env diff 时没 grep 过滤魔法变量前缀, 看到 Coolify 上有几十个 SERVICE_* key 就以为是"用户漏配", 误诊
+(s) Step 6I / 更新 C 路径往 service envs POST 一份 `SERVICE_PASSWORD_*` / `SERVICE_HEX_*` / `SERVICE_FQDN_*` — 这些是 compose 里声明的魔法变量, Coolify 自己注入 + 自己塞 envs 表; reconcile 必须按 [commands/service-env.md](commands/service-env.md) 的 grep filter 跳过, 否则要么重复 POST 冲突要么 .env diff 误诊 "Coolify 多了一堆 key"
 </bad-example>

@@ -313,17 +313,7 @@ gh variable set IMAGE_TAG_SHA_PREFIX --env "$DEFAULT_BRANCH" --body ""
 **Act 纪律**：
 
 - 值永不打印到对话；读 `.env` 的命令不 echo 内容
-- **必须 grep 过滤 Coolify 魔法变量前缀**, 这些是 compose 里声明的, Coolify 自己已经注入了, 不能重复 POST (详见 [../references/coolify-magic-vars.md](../references/coolify-magic-vars.md))：
-
-```bash
-MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
-grep -v '^\s*#' .env | grep '=' \
-  | grep -vE "$MAGIC_PREFIXES" \
-  | while IFS='=' read -r key value; do
-    # POST 每条非魔法变量
-    ...
-  done
-```
+- **必须按 [../commands/service-env.md](../commands/service-env.md) 的 grep filter 过滤 Coolify 魔法变量前缀** (compose 声明的 `SERVICE_PASSWORD_*` / `SERVICE_HEX_*` / `SERVICE_FQDN_*` 等, Coolify 自己注入, 重复 POST 会冲突)
 
 ### Step 7I: git add + commit + push（agent autonomous）
 
@@ -366,7 +356,7 @@ agent 从用户原话提炼意图, 按下表执行对应 act：
 |---|---|---|---|
 | `redeploy` / 重新部署 / 重启 / 重新拉镜像 | **A** | POST `/api/v1/deploy?uuid=$SERVICE_UUID&force=false` | [../commands/deploy-trigger.md](../commands/deploy-trigger.md) §"手工触发部署" |
 | 改 / 加 / 删域名 | **B** | PATCH `/api/v1/services/$SERVICE_UUID` 改 `urls` 字段 | [../commands/domain.md](../commands/domain.md) |
-| 改 / 加 / 删 env 变量 | **C** | POST/PATCH `/api/v1/services/$SERVICE_UUID/envs` → 后接 A (env 改了必须 redeploy 才生效); **必须 grep 过滤魔法变量前缀**, 详见 [../references/coolify-magic-vars.md](../references/coolify-magic-vars.md) | [../commands/service-env.md](../commands/service-env.md) |
+| 改 / 加 / 删 env 变量 | **C** | POST/PATCH `/api/v1/services/$SERVICE_UUID/envs` → 后接 A (env 改了必须 redeploy 才生效); 按 service-env.md 的 grep filter 跳过魔法变量前缀 | [../commands/service-env.md](../commands/service-env.md) |
 | 改 compose / Dockerfile / 改源码 / 改 deploy.yml | **D** | `mktemp -d` clone → spawn subagent 按 [../references/file-generation-rules.md](../references/file-generation-rules.md) 改 → autonomous push → PATCH `docker_compose_raw` (若 compose 变了) | [../commands/service-crud.md](../commands/service-crud.md) §"更新 compose" |
 | 改 GH secrets / vars | **E** | `gh secret set` / `gh variable set` (按需) | [../commands/deploy-trigger.md](../commands/deploy-trigger.md) §"GitHub 端配置" |
 | 用户意图模糊或不在上表 | — | **询问用户具体要做什么**, 不要乱猜更不要默认全跑 |
@@ -534,5 +524,4 @@ exit 1
 - **Step 1 不要列 project 让用户挑**：同名约束消除歧义，没找到就由 Step 4I 自动建
 - **Step 1 不要只按 name filter service**（如果走更新分支）：必须 `name + project_uuid` 双重 filter
 - **COOLIFY_BASE_URL 末尾不要带 `/`**：会拼出 `//api/v1/deploy` → Coolify 404; preflight + gh secret set + deploy.yml template 三层都 strip
-- **不要把 Coolify 魔法变量重复 POST 到 service envs**: compose 里写了 `SERVICE_HEX_64_JWT: ''` 就完事了, Coolify 自己注入 + 自己塞 envs 表; Step 6I / 更新 C 路径**必须先 grep 过滤** `^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)`, 详见 [../references/coolify-magic-vars.md](../references/coolify-magic-vars.md)
 - **Token 安全**：永不 `echo $COOLIFY_API_TOKEN`、永不在命令字符串里写 token 原文、永不打印 `.env` 内容
