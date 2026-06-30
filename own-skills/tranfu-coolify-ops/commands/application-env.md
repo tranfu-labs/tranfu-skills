@@ -1,12 +1,12 @@
-# Service Env 操作速查
+# Application Env 操作速查
 
-reconcile Step 6 用。Env 维度可独立增删改查，**不需要重 PATCH 整个 compose**。
+reconcile Step 6I / 更新分支 C 用。Env 维度可独立增删改查，**不需要重 PATCH 整个 application**。
 
-公共环境变量（同 service-crud.md）：
+公共环境变量（同 application-crud.md）：
 
 ```bash
 BASE="http://120.77.223.183:8000"
-SERVICE_UUID="<service-uuid>"
+APP_UUID="<application-uuid>"
 ```
 
 ## 列出现有 envs（reconcile Step 6 check）
@@ -14,7 +14,7 @@ SERVICE_UUID="<service-uuid>"
 ```bash
 curl -sS \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs" \
+  "$BASE/api/v1/applications/$APP_UUID/envs" \
   | jq '[.[] | {uuid, key, value, is_literal}]'
 ```
 
@@ -30,7 +30,7 @@ curl -sS \
 MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
 
 REMOTE_KEYS=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs" \
+  "$BASE/api/v1/applications/$APP_UUID/envs" \
   | jq -r '.[].key' \
   | grep -vE "$MAGIC_PREFIXES" \
   | sort)
@@ -52,7 +52,7 @@ comm -13 <(echo "$LOCAL_KEYS") <(echo "$REMOTE_KEYS")
 for key in $(comm -12 <(echo "$LOCAL_KEYS") <(echo "$REMOTE_KEYS")); do
   local_val_hash=$(grep "^${key}=" .env | cut -d= -f2- | sha256sum | cut -c1-8)
   remote_val_hash=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-    "$BASE/api/v1/services/$SERVICE_UUID/envs" \
+    "$BASE/api/v1/applications/$APP_UUID/envs" \
     | jq -r --arg k "$key" '.[] | select(.key==$k) | .value' \
     | sha256sum | cut -c1-8)
   [ "$local_val_hash" != "$remote_val_hash" ] && echo "$key: 不同 (本地 ${local_val_hash} vs Coolify ${remote_val_hash})"
@@ -68,7 +68,7 @@ curl -sS -X POST \
   -H "Content-Type: application/json" \
   -d "$(jq -nc --arg k "MY_KEY" --arg v "my_value" \
     '{key: $k, value: $v, is_literal: true}')" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs"
+  "$BASE/api/v1/applications/$APP_UUID/envs"
 ```
 
 **`is_literal: true` 是默认推荐**——不让 Coolify 对 `$` `#` 等做 shell 转义，避免密码含特殊字符时被吞。
@@ -77,35 +77,50 @@ curl -sS -X POST \
 
 ## 改一个 env 的值
 
-```bash
-ENV_UUID="<env-uuid>"   # 从 list 拿
+PATCH endpoint 接受 `key + value` body (相同 key 即覆盖)：
 
+```bash
 curl -sS -X PATCH \
   -w "\nHTTP=%{http_code}\n" \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "$(jq -nc --arg v "new_value" '{value: $v}')" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs/$ENV_UUID"
+  -d "$(jq -nc --arg k "MY_KEY" --arg v "new_value" '{key: $k, value: $v}')" \
+  "$BASE/api/v1/applications/$APP_UUID/envs"
 ```
 
 ## 批量改（bulk）
 
-如果一次要改很多，**不要**串行打 PATCH（慢 + 容易半成功），用 bulk endpoint（如果 server 支持）。本 skill 先不用 bulk，串行 N 个足够，因为 reconcile 跑频次不高。
+OpenAPI 暴露 `PATCH /api/v1/applications/{uuid}/envs/bulk`, body 是 `{"data": [{key, value, ...}]}`：
+
+```bash
+curl -sS -X PATCH \
+  -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$(jq -nc '{data: [
+    {key: "K1", value: "v1", is_literal: true},
+    {key: "K2", value: "v2", is_literal: true}
+  ]}')" \
+  "$BASE/api/v1/applications/$APP_UUID/envs/bulk"
+```
+
+本 skill 默认串行 N 次 POST/PATCH (好定位错), 仅当一次性 >10 条时考虑 bulk。
 
 ## 删除一个 env
 
 ```bash
+ENV_UUID="<env-uuid>"   # 从 list 拿
+
 curl -sS -X DELETE \
   -w "\nHTTP=%{http_code}\n" \
   -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs/$ENV_UUID"
+  "$BASE/api/v1/applications/$APP_UUID/envs/$ENV_UUID"
 ```
 
 **reconcile flow 不主动删 Coolify 上多出来的 env**——只补缺、不删多余。多余 env 一般是用户在 UI 上手动加的（debug / 临时关），自动删会扯到用户的临时状态。Step 6 检测到多余 env 时只**告知用户**，由用户决定。
 
 ## 关于 Coolify 魔法变量
 
-**核心规则**: 魔法变量在 compose.yml 里声明 (例如 `SERVICE_PASSWORD_REDIS: ''`), Coolify 部署时自动生成 + 注入容器 env + 自动塞一份到 service envs 表 (UI 可见但不可改)。**reconcile 绝不再往 envs endpoint 重复 POST** — 要么被忽略要么冲突, 还会污染 .env diff。
+**核心规则**: 魔法变量在 compose.yml 里声明 (例如 `SERVICE_PASSWORD_REDIS: ''`), Coolify 部署时自动生成 + 注入容器 env + 自动塞一份到 application envs 表 (UI 可见但不可改)。**reconcile 绝不再往 envs endpoint 重复 POST** — 要么被忽略要么冲突, 还会污染 .env diff。
 
 reconcile Step 6I + 更新分支 C 路径自动 skip 的前缀:
 
@@ -123,7 +138,7 @@ reconcile Step 6I + 更新分支 C 路径自动 skip 的前缀:
 MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
 ```
 
-同一 `<ID>` 跨 service 引用拿到的是同一个值 (Coolify 按 ID 持久化, 不按 service), 应用栈内不会出现"应用持的密码和数据库持的密码对不上"。
+同一 `<ID>` 跨 service 引用拿到的是同一个值 (Coolify 按 ID 持久化, 不按 service / application), 应用栈内不会出现"应用持的密码和数据库持的密码对不上"。
 
 ## 安全纪律
 

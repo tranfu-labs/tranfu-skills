@@ -256,12 +256,12 @@ if [ -n "${COOLIFY_API_TOKEN:-}" ]; then
       -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{"name": "preflight-write-probe"}' \
-      "$BASE/api/v1/services/00000000000000000000000000000000" 2>/dev/null || echo "000")
+      "$BASE/api/v1/applications/00000000000000000000000000000000" 2>/dev/null || echo "000")
     case "$WRITE_CODE" in
       404)
-        ok "token 有写权限 (PATCH dummy → 404 = write OK + 资源不存在)" ;;
+        ok "token 有写权限 (PATCH dummy application → 404 = write OK + 资源不存在)" ;;
       422)
-        ok "token 有写权限 (PATCH dummy → 422 = 字段校验过, 鉴权过)" ;;
+        ok "token 有写权限 (PATCH dummy application → 422 = 字段校验过, 鉴权过)" ;;
       401|403)
         fail "token 无写权限 (PATCH dummy → $WRITE_CODE, 只读 token)" ;;
       *)
@@ -270,6 +270,32 @@ if [ -n "${COOLIFY_API_TOKEN:-}" ]; then
   fi
 else
   fail "COOLIFY_API_TOKEN 未设置 (在 shell 里 export COOLIFY_API_TOKEN=... 后重试)"
+fi
+
+# ---------- Coolify · GitHub App integration (硬 check) ----------
+# 0.8 走 Application + private-github-app 形态, 必须有一个 organization 匹配 tranfu-labs 的 GitHub App 装好.
+# 这是 Coolify 实例级一次性配置 (上传 private key / installation id 等), skill 不接管创建.
+echo
+echo "▸ Coolify · GitHub App integration (organization=tranfu-labs)"
+
+GITHUB_APP_UUID=""
+if [ "$TOKEN_OK" = "1" ]; then
+  APPS_JSON=$(curl -sS --max-time 10 \
+    -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+    "$BASE/api/v1/github-apps" 2>/dev/null || echo "[]")
+  GITHUB_APP_UUID=$(echo "$APPS_JSON" | jq -r '[.[] | select(.organization == "tranfu-labs")][0].uuid // ""' 2>/dev/null || true)
+
+  if [ -n "$GITHUB_APP_UUID" ] && [ "$GITHUB_APP_UUID" != "null" ]; then
+    APP_NAME=$(echo "$APPS_JSON" | jq -r --arg u "$GITHUB_APP_UUID" '.[] | select(.uuid == $u) | .name' 2>/dev/null || echo "?")
+    ok "GitHub App integration 已装: name='$APP_NAME' uuid=$GITHUB_APP_UUID"
+    echo "  export GITHUB_APP_UUID=$GITHUB_APP_UUID  # reconcile Step 4I 会用到"
+  else
+    fail "Coolify 实例上没有 organization=tranfu-labs 的 GitHub App integration"
+    echo "    去 Coolify UI 装一次 (一次性配置, 全 org 复用):"
+    echo "      $BASE/source  (Sources → GitHub App → New)"
+    echo "    需要: GitHub App ID / Installation ID / Client ID/Secret / Private Key"
+    echo "    skill 不接管创建 — 装完 export GITHUB_APP_UUID=<uuid> 后重跑 preflight"
+  fi
 fi
 
 # ---------- GHCR registry credential (manual ack) ----------
