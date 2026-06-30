@@ -24,11 +24,20 @@ curl -sS \
 
 ## 对比仓库 .env 与 Coolify 现状（reconcile Step 6 check）
 
-```bash
-REMOTE_KEYS=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  "$BASE/api/v1/services/$SERVICE_UUID/envs" | jq -r '.[].key' | sort)
+**必须 grep 过滤 Coolify 魔法变量前缀**, 否则每次都误诊 "Coolify 多了一堆 key"（详见 [../references/coolify-magic-vars.md](../references/coolify-magic-vars.md)）：
 
-LOCAL_KEYS=$(grep -v '^\s*#' .env | grep '=' | cut -d= -f1 | sort)
+```bash
+MAGIC_PREFIXES='^(SERVICE_PASSWORD_|SERVICE_PASSWORDWITHSYMBOLS_|SERVICE_REALBASE64_|SERVICE_HEX_|SERVICE_FQDN_)'
+
+REMOTE_KEYS=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+  "$BASE/api/v1/services/$SERVICE_UUID/envs" \
+  | jq -r '.[].key' \
+  | grep -vE "$MAGIC_PREFIXES" \
+  | sort)
+
+LOCAL_KEYS=$(grep -v '^\s*#' .env | grep '=' | cut -d= -f1 \
+  | grep -vE "$MAGIC_PREFIXES" \
+  | sort)
 
 echo "缺的 (本地有，Coolify 没):"
 comm -23 <(echo "$LOCAL_KEYS") <(echo "$REMOTE_KEYS")
@@ -94,12 +103,21 @@ curl -sS -X DELETE \
 
 **reconcile flow 不主动删 Coolify 上多出来的 env**——只补缺、不删多余。多余 env 一般是用户在 UI 上手动加的（debug / 临时关），自动删会扯到用户的临时状态。Step 6 检测到多余 env 时只**告知用户**，由用户决定。
 
-## 关于 `SERVICE_PASSWORD_*` / `SERVICE_FQDN_*` 这类 Coolify 魔法变量
+## 关于 Coolify 魔法变量（完整清单见 [../references/coolify-magic-vars.md](../references/coolify-magic-vars.md)）
 
-- **不要往 envs endpoint 写 `SERVICE_PASSWORD_*` 或 `SERVICE_FQDN_*`**——它们是 Coolify 自动生成 / 注入容器的"特殊键"，写进 envs 表反而会被忽略或冲突。
-- `SERVICE_PASSWORD_*` 在 compose 里 `${SERVICE_PASSWORD_FOO}` 引用即可，Coolify 自己生成、自己持久化。
-- `SERVICE_FQDN_*` 见 [../references/service-fqdn-trap.md](../references/service-fqdn-trap.md)，是 output 不是 input。
-- reconcile Step 6 检查时**自动 skip 这些前缀**，不参与 diff。
+**核心规则**: 魔法变量在 compose.yml 里声明 = Coolify 自动注入容器, **绝不在 service envs endpoint 重复 POST 一遍** — 重复写要么被忽略要么冲突, 还会污染 .env diff。
+
+reconcile Step 6 + 更新分支 C 路径自动 skip 的前缀:
+
+| 前缀 | 用途 |
+|---|---|
+| `SERVICE_PASSWORD_` | 普通随机密码 (含 `_64_` 变体) |
+| `SERVICE_PASSWORDWITHSYMBOLS_` | 含特殊符号随机密码 (含 `_64_` 变体) |
+| `SERVICE_REALBASE64_` | Base64 编码随机串 (含 `_64_` 变体) |
+| `SERVICE_HEX_` | 十六进制随机串 (`_32_` / `_64_` / `_128_` 变体) |
+| `SERVICE_FQDN_` | output 方向, 见 [../references/service-fqdn-trap.md](../references/service-fqdn-trap.md) |
+
+Coolify UI 上能看到这些 key (供观测), 但**不可改 / 不必改**。本 skill 跑 reconcile 时一律绕开它们。
 
 ## 安全纪律
 
