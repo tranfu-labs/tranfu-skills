@@ -1,0 +1,65 @@
+{
+  "id": "wechat-doodle",
+  "styleFile": "references/styles/wechat-style-doodle.md",
+  "platform": "wechat",
+  "canvas": {
+    "width": 1600,
+    "height": 1200,
+    "ratio": "4:3",
+    "orientation": "horizontal"
+  },
+  "colors": {
+    "paper.warmBeige": "#F7E8C8",
+    "paper.creamWhite": "#FFF8EA",
+    "ink.deepBrown": "#3D2418",
+    "accent.peach": "#F1B58E",
+    "accent.softPink": "#F5C6C2",
+    "accent.dustyBlue": "#B9CEDB",
+    "accent.mintGreen": "#BFD9B6",
+    "accent.palePurple": "#D7C6E8",
+    "accent.creamYellow": "#F6D982",
+    "brand.red": "#E63A46"
+  },
+  "layout": {
+    "contentSafeArea": {
+      "x": 80,
+      "y": 80,
+      "width": 1440,
+      "height": 1040
+    },
+    "brandReservedArea": {
+      "x": 1320,
+      "y": 44,
+      "width": 240,
+      "height": 100
+    }
+  },
+  "fixedComponents": {
+    "pageNumberBadge": false,
+    "brandSlot": {
+      "enabled": true,
+      "anchor": "top-right",
+      "x": 1350,
+      "y": 64,
+      "width": 170,
+      "height": 46,
+      "assetFit": "contain"
+    }
+  },
+  "inputHandling": {
+    "allowSameAspectRatioResize": true,
+    "ratioTolerance": 0.002,
+    "outputCanvasIsAuthoritative": true
+  },
+  "generationConstraints": {
+    "forbidModelDrawnBrand": true,
+    "forbidPageNumberBadge": true,
+    "keepBrandReservedAreaClear": true
+  },
+  "styleReference": {
+    "image": "assets/style-references/wechat-doodle.png",
+    "usage": "QA and failure review only; do not use as generation input or copy its content.",
+    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and fixed-component treatment.",
+    "isGenerationInput": false
+  }
+}

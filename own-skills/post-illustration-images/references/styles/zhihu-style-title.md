@@ -1,0 +1,8 @@
+
+Create a 16:9 modern AI/SaaS/developer-tool infographic poster with a clean premium product-launch aesthetic. Use a soft off-white to pale blue-gray gradient background with very subtle low-opacity IDE, terminal, code editor, file tree, and browser UI panels as atmospheric decorations. Use an asymmetric layout: large bold headline block on the left, structured decision-flow cards on the right.
+
+The right side should feature a small central rounded decision node connected by thin gray branching lines to several vertically stacked white rounded cards. Each card has soft shadows, light borders, large rounded corners, and a glassmorphism/neumorphism feel. Inside each card: a soft-colored icon container, a small numbered pill, bold dark label text, a vivid orange-red arrow, and result text. Use simple line icons.
+
+Typography should be heavy modern sans-serif for the headline, dark charcoal/black, with smaller gray supporting text. Use vivid orange-red only as the accent color for underline marks, arrows, highlighted words, and small emphasis elements. Keep the palette minimal: black, dark gray, light blue-gray, white, and orange-red. Add a small rounded tip bar near the bottom with a line icon and subtle gray text. Keep the bottom-right brand reserved area visually clean and free of text, icons, cards, arrows, and key content. Do not draw any logo, brand placeholder, watermark, TF mark, Tranfu text, or page-number badge.
+
+Minimal, spacious, clean, technology-oriented, high-end UI infographic style. No photos, no cartoon illustration, no heavy 3D, no clutter. Replace all text content according to the new topic; only preserve the visual style, layout logic, spacing, color system, and UI-card composition.

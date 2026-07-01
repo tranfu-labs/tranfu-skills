@@ -1,0 +1,65 @@
+{
+  "id": "xhs-cream-paper",
+  "styleFile": "references/styles/xhs-style-cream-paper.md",
+  "platform": "xiaohongshu",
+  "canvas": {
+    "width": 1080,
+    "height": 1440,
+    "ratio": "3:4",
+    "orientation": "vertical"
+  },
+  "colors": {
+    "paper.warmCream": "#FFF7EA",
+    "paper.offWhite": "#FFFDF5",
+    "ink.nearBlack": "#171313",
+    "highlight.mint": "#BFE8D3",
+    "accent.coral": "#F26D5B",
+    "accent.skyBlue": "#B9D7FF",
+    "accent.yellow": "#FFD966",
+    "surface.pastelTint": "#F5F1E8",
+    "shadow.warmGray": "#D8CFC3"
+  },
+  "layout": {
+    "mainPaperRegion": {
+      "x": 0,
+      "y": 0,
+      "width": 1080,
+      "height": 1440
+    },
+    "contentSafeArea": {
+      "x": 80,
+      "y": 96,
+      "width": 920,
+      "height": 1248
+    },
+    "brandReservedArea": null
+  },
+  "fixedComponents": {
+    "pageNumberBadge": false,
+    "brandSlot": {
+      "enabled": false,
+      "anchor": null,
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null,
+      "assetFit": "contain"
+    }
+  },
+  "generationConstraints": {
+    "forbidModelDrawnBrand": true,
+    "forbidPageNumberBadge": false,
+    "keepBrandReservedAreaClear": false,
+    "forbidPhotorealisticImagery": true,
+    "forbidRealAppScreenshots": true,
+    "forbidGlossy3D": true,
+    "avoidDarkCyberpunkMood": true,
+    "avoidOneColorDominance": true
+  },
+  "styleReference": {
+    "image": "assets/style-references/xhs-cream-paper.png",
+    "usage": "QA and failure review only; do not use as generation input or copy its content.",
+    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and fixed-component treatment.",
+    "isGenerationInput": false
+  }
+}

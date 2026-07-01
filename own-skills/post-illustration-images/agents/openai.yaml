@@ -1,0 +1,4 @@
+interface:
+  display_name: "Post Illustration Images"
+  short_description: "公众号、小红书、知乎文章配图稳定生产与质检交付流程"
+  default_prompt: "Use $post-illustration-images to create platform-ready illustrations for this post."

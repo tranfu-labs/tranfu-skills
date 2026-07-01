@@ -1,0 +1,67 @@
+{
+  "id": "xhs-explainer-notebook",
+  "styleFile": "references/styles/xhs-style-explainer-notebook.md",
+  "platform": "xiaohongshu",
+  "canvas": {
+    "width": 1086,
+    "height": 1448,
+    "ratio": "3:4",
+    "orientation": "vertical"
+  },
+  "colors": {
+    "canvas.coralPink": "#F7A6A3",
+    "canvas.softPink": "#FBD1CE",
+    "paper.warmWhite": "#FFFDF5",
+    "paper.edgePink": "#EFA39C",
+    "ink.black": "#171313",
+    "accent.yellow": "#FFD84A",
+    "accent.red": "#F0564A",
+    "brand.red": "#E63A46",
+    "accent.blueSoft": "#B9D7FF",
+    "accent.greenSoft": "#BFE8A5",
+    "accent.orangeSoft": "#FFC477"
+  },
+  "layout": {
+    "mainPaperRegion": {
+      "x": 52,
+      "y": 42,
+      "width": 982,
+      "height": 1354
+    },
+    "contentSafeArea": {
+      "x": 92,
+      "y": 112,
+      "width": 902,
+      "height": 1196
+    },
+    "brandReservedArea": {
+      "x": 848,
+      "y": 1328,
+      "width": 208,
+      "height": 90
+    }
+  },
+  "fixedComponents": {
+    "pageNumberBadge": false,
+    "brandSlot": {
+      "enabled": true,
+      "anchor": "bottom-right",
+      "x": 878,
+      "y": 1358,
+      "width": 148,
+      "height": 40,
+      "assetFit": "contain"
+    }
+  },
+  "generationConstraints": {
+    "forbidModelDrawnBrand": true,
+    "forbidPageNumberBadge": true,
+    "keepBrandReservedAreaClear": true
+  },
+  "styleReference": {
+    "image": "assets/style-references/xhs-explainer-notebook.png",
+    "usage": "QA and failure review only; do not use as generation input or copy its content.",
+    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and fixed-component treatment.",
+    "isGenerationInput": false
+  }
+}
