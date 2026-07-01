@@ -1,7 +1,7 @@
 ---
 name: github-delivery-check
 description: 'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like "推到 GitHub", "创建 GitHub 仓库", "首次提交", "整理成可部署项目", or "用 GitHub交付规范 Skill". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.'
-version: 0.1.2
+version: 0.1.3
 author: 06666666
 updated_at: 2026-07-01
 origin: own
@@ -13,7 +13,7 @@ Target type: product project repository with code, README, config examples, and 
 
 Prepare a product project for GitHub delivery so another teammate can understand, configure, deploy, and verify it.
 
-Default action: inspect the project, fix delivery docs, verify locally, and push directly to the GitHub main branch. Stop only for GitHub authorization, real secret risk, missing product facts, failed verification, unsafe Git state, or user-requested discussion-only mode.
+Default action: inspect the project, fix delivery docs, verify locally, and push directly to the GitHub main branch. MUST stop only when GitHub authorization is missing, real secret risk exists, required product facts are missing, required verification fails, Git state is unsafe, or the user requested discussion-only mode.
 
 ## When To Use
 
@@ -77,6 +77,8 @@ If engineers need deployment secrets, list only variable names, target location,
 ```text
 WRONG:
   README.md contains ACCESS_TOKEN=ghp_real_token_value
+
+Reason: README is committed to GitHub, so a real token there becomes a repository secret leak.
 
 GOOD:
   .env.example contains ACCESS_TOKEN=Bearer <provided-privately>
@@ -161,6 +163,8 @@ Repository naming rules:
 ```text
 WRONG:
   TranFu_App
+
+Reason: Uses uppercase and underscore; repository names must use lowercase letters, digits, and hyphens.
 
 GOOD:
   tranfu-app
