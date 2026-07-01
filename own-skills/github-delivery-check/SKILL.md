@@ -1,21 +1,42 @@
 ---
 name: github-delivery-check
-description: '当用户说"推到 GitHub" / "创建 GitHub 仓库" / "首次提交" / "整理成可部署项目" / "用 GitHub交付规范 Skill"时，检查产品代码、补齐 README 部署说明、本地验证，并默认推送到 GitHub 主分支，输出交付卡。Do NOT trigger when 用户只要求普通代码修改、代码评审、线上部署且不涉及 GitHub 交付，或只想讨论方案不执行。'
-version: 0.1.0
+description: 'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like "推到 GitHub", "创建 GitHub 仓库", "首次提交", "整理成可部署项目", or "用 GitHub交付规范 Skill". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.'
+version: 0.1.1
 author: 06666666
 updated_at: 2026-06-29
 origin: own
 ---
 
-# GitHub 交付规范
+# GitHub Delivery Check
 
-把一个产品项目整理成可以被团队接手、部署和追踪的 GitHub 交付状态。
+Target type: a product project repository with code, README, config examples, and deployment files. Do not use this skill for prompts, other skills, agent definitions, docs-only assets, or product copy alone.
 
-本 Skill 是执行型流程，不是只给建议。默认先检查、补齐、验证，再推送到 GitHub 主分支。只有授权、关键事实或安全问题阻塞时，才停下来找用户。
+Prepare a product project for GitHub delivery so another teammate can understand, configure, deploy, and verify it.
+
+This is an execution workflow. By default, inspect the project, fix delivery docs, verify locally, and push to the GitHub main branch. MUST stop only when GitHub authorization is missing, real secret risk exists, required product facts are missing, verification cannot be completed, or the user requested discussion-only mode.
+
+## Terminology
+
+- `main branch` = `主分支`
+- `production URL` = `生产链接`
+- `local verification` = `本地验证`
+- `deployment config` = `部署配置`
+- `GitHub Delivery Card` = the final Chinese chat-message artifact
+- `Delivery Ledger` = the structured internal record that feeds the final card
+
+Use these terms consistently. The final user-facing card may use the Chinese labels above.
 
 ## When to use
 
-当用户要把产品代码交付到 GitHub，或让技术同学根据仓库部署时使用。典型触发短语：
+Use this skill when the user wants a product project delivered through GitHub, including:
+
+- Push a product project to GitHub.
+- Create a new GitHub repository.
+- Make a project deployable from its README.
+- Update an existing GitHub repository.
+- Hand deployment configuration to engineers.
+
+Also match Chinese requests:
 
 - "推到 GitHub"
 - "创建 GitHub 仓库"
@@ -23,109 +44,218 @@ origin: own
 - "整理成可部署项目"
 - "用 GitHub交付规范 Skill"
 
-也适用于已有仓库更新、补 README 部署说明、检查项目能否交付部署、给技术整理部署配置。
+Do NOT use this skill when:
 
-不适用：用户只要求普通代码修改、代码评审、线上部署且不涉及 GitHub 交付，或明确说先讨论方案不执行。
+- The user only wants ordinary code changes -> use the normal coding workflow.
+- The user asks for code review -> use the review workflow.
+- The user asks to deploy to production without GitHub delivery -> use the deploy workflow.
+- The user explicitly says discussion-only or planning-only -> stay in normal conversation and do not push.
 
-## 工作模式
+If the user intent is ambiguous, ask one confirmation question before Step 1:
+
+```text
+Do you want me to push this project to GitHub main, update an existing repository, or only prepare/check the README without pushing?
+```
+
+Continue only after the intent maps to GitHub delivery. If the answer is discussion-only, stop this skill.
+
+## Ownership
+
+Default ownership is `edit file + run verification + push GitHub`.
+
+MUST edit project files when README, env examples, gitignore, or delivery metadata are missing and the fix is local to the target project.
+
+MUST NOT push unless all conditions below hold:
+
+- The user intent maps to GitHub delivery.
+- GitHub authorization is confirmed.
+- No real secret is present in files to be pushed.
+- Required product metadata is available for first-push delivery.
+- README deployment instructions are complete.
+- Required local verification targets have status `pass`, `fixed`, or `not_applicable`.
+
+## Delivery Ledger
+
+Maintain this internal ledger while executing. Use the same field names when filling the final card.
+
+```yaml
+delivery_ledger:
+  inspection:
+    target_type: product_project_repository
+    project_type: frontend|backend|full_stack|docker|static_site|server_deployment|unknown
+    git_state: existing_remote|git_without_remote|not_git_repo|unknown
+    default_branch: main|other|unknown
+    repo_owner: string|unknown
+    repo_name: string|unknown
+    production_url: string|unknown
+  prepush:
+    blockers:
+      - id: string
+        status: pass|fixed|blocked
+        reason: string
+        next_step: string
+    secrets: pass|fixed|blocked
+    readme: pass|fixed|blocked
+    env_example: pass|fixed|not_applicable|blocked
+  verification:
+    targets:
+      - id: install|build|test|lint|web_http|api_health|docker_build|docker_compose|static_assets
+        command_or_check: string
+        status: pass|fail|fixed|not_applicable|blocked
+        observable_signal: exit_code_0|http_200|page_rendered|file_exists|not_applicable|blocked_reason
+  github:
+    authorization: pass|blocked
+    push_status: pushed|not_pushed
+    repository: owner/repo|unknown
+    branch: string|unknown
+  final:
+    conclusion: 已推送完成|未推送：待 GitHub 授权|未推送：需先修复|暂不建议推送
+```
+
+## Workflow
 
 CREATE A TODO LIST FOR THE TASKS BELOW:
 
-1. 自动识别项目和仓库状态
-2. 补齐首次提交所需信息
-3. 检查安全、README 和部署说明
-4. 本地安装、构建、测试和启动验证
-5. 推送到 GitHub 主分支
-6. 输出最终交付卡
+1. Inspect project and Git state.
+2. Complete first-push product metadata when needed.
+3. Verify GitHub authorization.
+4. Run pre-push checks.
+5. Complete README deployment instructions.
+6. Run local verification.
+7. Push to GitHub main branch.
+8. Produce the GitHub Delivery Card.
 
-完成标准：
+Done means:
 
-- 已判断是首次提交还是已有仓库更新。
-- README.md 有可执行的部署说明。
-- 未发现真实密钥、密码、token、私钥被提交。
-- 能运行的安装、构建、测试、本地启动流程已经实际跑过。
-- Web 项目已经打开页面验证；API 项目已经请求代表性接口；Docker 项目已经尝试容器启动。
-- GitHub 已推送到主分支，或明确给出未推送原因和下一步。
+- `delivery_ledger.inspection.project_type` and `git_state` are not `unknown`, or the final card says why they remain blocked.
+- First-push metadata fields are resolved when `git_state != existing_remote`.
+- `delivery_ledger.github.authorization` is `pass`, or final conclusion is `未推送：待 GitHub 授权`.
+- `delivery_ledger.prepush.blockers[]` has no item with `status=blocked`, unless final conclusion is a non-push state.
+- README.md exists and contains deployment instructions.
+- `delivery_ledger.prepush.secrets` is `pass` or `fixed`.
+- Each verification target has status `pass`, `fixed`, `not_applicable`, or `blocked`; blocked targets must appear in the final card.
+- GitHub has been pushed to the main branch, or the final card gives a precise non-push reason.
 
-## Step 1: 自动识别项目
+## Failure Paths
 
-任务：先从代码判断项目类型、部署方式和 GitHub 状态，不要一开始问用户项目类型。
+- Missing or unreadable project directory -> ask for the correct path and stop.
+- Git CLI unavailable -> final conclusion `未推送：需先修复`; next step: install or expose Git.
+- Git state cannot be determined -> final conclusion `未推送：需先修复`; next step: fix Git repository state.
+- GitHub CLI unavailable and no other GitHub tool can create/push repos -> final conclusion `未推送：待 GitHub 授权`.
+- GitHub auth, network, or API failure -> final conclusion `未推送：待 GitHub 授权` or `未推送：需先修复`, matching the concrete error.
+- Existing remote diverges or push is non-fast-forward -> pull/rebase only when safe; otherwise final conclusion `未推送：需先修复`.
+- Branch protection blocks direct main push -> create PR only if user accepts; otherwise final conclusion `未推送：需先修复`.
+- Current environment lacks write permission -> final conclusion `未推送：需先修复`.
+- Verification cannot be reproduced -> final conclusion `未推送：需先修复`.
+- User asks to operate on another repository outside the current target -> confirm scope before editing.
 
-输入：当前项目目录、Git 状态、已有 README、环境变量示例和部署文件。
+## Step 1: Inspect Project And Git State
 
-输出：项目类型、部署方式、首次提交或已有仓库更新。
+Task: Identify project type, deployment shape, and repository state before asking the user.
 
-判断规则：
+Input: Current project directory, file tree, Git status, README, env examples, package files, deployment files.
 
-- 前端：`package.json`、`vite`、`next`、`react`、`vue`、`astro`、`svelte`、静态构建目录。
-- 后端：服务入口、路由、端口、数据库、API 框架、server 启动脚本。
-- 全栈：同时存在前端与后端目录，或一个项目内有 UI 和 API。
-- Docker：`Dockerfile`、`docker-compose.yml`、`compose.yml`。
-- 静态站：纯 HTML/CSS/JS 或构建后产物可由静态服务器托管。
-- 服务器部署：需要环境变量、持久服务、数据库、反向代理、后台进程或容器。
+Output: `delivery_ledger.inspection`.
 
-仓库状态：
+Procedure:
 
-- 有 Git remote：按已有仓库更新处理。
-- 无 Git remote：按首次提交处理。
-- 当前不是 Git 仓库：初始化 Git，再按首次提交处理。
+1. Verify the target directory exists and is readable. If not -> use Failure Paths and stop.
+2. Verify `git` is available before reading Git state. If not -> set `git_state=unknown`, use Failure Paths, and stop.
+3. Inspect files before asking the user about project type.
+4. Classify project type:
+   - Frontend: `package.json`, Vite, Next.js, React, Vue, Astro, Svelte, static build scripts, or static assets.
+   - Backend: server entrypoint, route definitions, API framework, port config, database config, or service start command.
+   - Full-stack: both UI and API surfaces in one repository.
+   - Docker: `Dockerfile`, `docker-compose.yml`, or `compose.yml`.
+   - Static site: HTML/CSS/JS or build output that can be served statically.
+   - Server deployment: env vars, long-running service, database, reverse proxy, daemon, or container runtime.
+   - Otherwise -> set `project_type=unknown`.
+5. Classify Git state:
+   - Existing Git remote -> `existing_remote`.
+   - Git repository without remote -> `git_without_remote`.
+   - Not a Git repository -> `not_git_repo`.
+   - Otherwise -> `unknown`.
+6. If `project_type=unknown`, ask at most three key questions and stop this run.
+7. If `git_state=unknown`, final conclusion is `未推送：需先修复` and stop.
+8. Write `delivery_ledger.inspection` and continue.
 
-若既不是 Git 仓库也没有明确项目文件，MUST 先说明无法判断项目，再问最多 3 个关键信息并退出本轮检查。
+## Step 2: Complete First-Push Product Metadata
 
-只有代码里无法判断的信息才问用户。每次最多问 3 个关键问题。
+Task: Collect only the product facts that cannot be inferred from code.
 
-## Step 2: 首次提交信息
+Input: `delivery_ledger.inspection`, user-provided facts, existing README, package metadata.
 
-任务：首次提交到 GitHub 时补齐仓库和产品信息。
+Output: completed first-push metadata in `delivery_ledger.inspection`.
 
-输入：代码识别结果、用户已提供的信息、团队命名规则。
+Dispatch by Git state from Step 1:
 
-输出：可用于 README、GitHub 仓库和交付卡的产品信息。
+- `existing_remote` -> skip first-push metadata collection and continue to Step 3.
+- `git_without_remote` -> continue this step.
+- `not_git_repo` -> continue this step.
+- Otherwise -> final conclusion `未推送：需先修复` and stop.
 
-必须补齐：
+For first GitHub push, MUST resolve:
 
-- 产品中文名
-- 产品英文名
-- 产品简介
-- 仓库名称
-- 生产链接
+- Chinese product name.
+- English product name.
+- Product summary.
+- Repository name.
+- Production URL.
 
-仓库命名规则：
+Repository naming rules:
 
-- 使用英文小写、数字和短横线。
-- 默认以 `-app` 结尾，例如 `tranfu-app`。
-- 不使用空格、下划线、中文或大写字母。
+- Use lowercase English letters, digits, and hyphens.
+- Default suffix is `-app`, for example `tranfu-app`.
+- NEVER use spaces, underscores, Chinese characters, or uppercase letters.
 
-生产链接规则：
+```text
+WRONG:
+  TranFu_App
 
-- 默认格式是 `https://仓库名.tranfu.com/`。
-- 示例：仓库名 `tranfu-app`，生产链接 `https://tranfu-app.tranfu.com/`。
+Reason: Uses uppercase and underscore, so it is not a deployable repo-name default.
 
-GitHub owner 优先从现有 remote、团队上下文或用户指定信息判断。无法确认时只问一次仓库归属。
+GOOD:
+  tranfu-app
+```
 
-## Step 3: GitHub 授权
+Production URL rule:
 
-任务：确认当前环境能访问 GitHub。
+- Default format is `https://{repo-name}.tranfu.com/`.
+- Example: `tranfu-app` -> `https://tranfu-app.tranfu.com/`.
 
-输入：本机 GitHub CLI 或运行时 GitHub 工具状态。
+GitHub owner resolution:
 
-输出：已授权状态，或给用户的授权链接和一次性授权码。
+1. Use existing Git remote owner when present.
+2. Use explicit team or user context when present.
+3. Ask once if owner cannot be inferred.
 
-先检查 GitHub 是否已连接。
+If required metadata is incomplete at the end of this step, final conclusion is `未推送：需先修复` and the next step is to provide the missing metadata.
 
-优先使用当前环境可用的 GitHub 工具；如果使用 GitHub CLI，先运行：
+## Step 3: Verify GitHub Authorization
+
+Task: Confirm that the current environment can create or push GitHub repositories.
+
+Input: GitHub CLI state or available GitHub tool state.
+
+Output: `delivery_ledger.github.authorization`.
+
+Procedure:
+
+1. Verify `gh` CLI exists. If another authenticated GitHub tool is available, use it and set authorization status from that tool.
+2. If neither `gh` nor another GitHub tool exists -> final conclusion `未推送：待 GitHub 授权` and stop.
+3. If `gh` exists, run:
 
 ```bash
 gh auth status
 ```
 
-如果未登录，运行可生成授权链接和授权码的网页登录流程，例如：
+4. If authorization is missing, start a web/device authorization flow such as:
 
 ```bash
 gh auth login --hostname github.com --git-protocol https --web
 ```
 
-然后把当次输出的链接和授权码直接给用户：
+5. MUST give the user the real link and one-time code printed by the command:
 
 ```text
 请打开这个链接：
@@ -135,146 +265,210 @@ https://github.com/login/device
 XXXX-XXXX
 ```
 
-授权码是一次性的，必须用命令实时生成。不要编造授权码。用户完成授权后继续检查和推送。
+```text
+WRONG:
+  输入授权码：ABCD-1234
 
-若无法完成授权，最终结论写 `未推送：待 GitHub 授权`，并给出下一步。
+Reason: The agent invented a code instead of reading live command output.
 
-## Step 4: 推送前检查
+GOOD:
+  输入授权码：<code printed by gh auth login --web>
+```
 
-任务：检查仓库是否适合推送。
+NEVER invent an authorization code. The code must come from live command output.
 
-输入：项目文件、Git 待提交内容、README、环境变量和本地配置。
+Failure exit: if authorization cannot be completed, final conclusion is `未推送：待 GitHub 授权`.
 
-输出：检查通过、已修复后通过，或明确阻塞原因。
+## Step 4: Run Pre-Push Checks
 
-必须检查：
+Task: Decide whether the project is safe and complete enough to push.
 
-- 是否有疑似密钥、密码、token、私钥、cookie、真实 access token。
-- `.env`、本地配置、部署配置是否被误加入 Git。
-- 是否有 `.env.example` 或等价示例文件。
-- README.md 是否存在。
-- README.md 是否包含部署说明。
-- 依赖是否能安装。
-- 构建是否能跑。
-- 测试是否能跑；若项目没有测试，说明项目未提供测试。
-- 本地服务是否能启动。
-- 端口、启动命令、环境变量是否能从代码或文档中对应上。
+Input: Project files, Git staged/unstaged files, README, env files, local config, deployment config.
 
-安全检查要覆盖隐藏文件，但排除 `.git`、依赖目录和构建产物。发现真实密钥时，不要在回复里复述原值；先移除、加入忽略规则、替换为占位符，并重新检查。
+Output: `delivery_ledger.prepush`.
 
-如果真实密钥已进入 Git 历史，默认停止推送，结论写 `暂不建议推送`，并说明需要先清理历史或更换密钥。
+Pre-push guards:
 
-## Step 5: README 部署说明
+- If real or suspected secrets are present -> follow Secret handling below before continuing.
+- If `.env`, local config, deployment config, database files, dependency folders, or build caches are staged -> unstage/remove them, update ignore rules when needed, set blocker status `fixed`, and re-run this step.
+- If env vars are needed and `.env.example` or equivalent example config is missing -> create placeholder-only example config, set `env_example=fixed`, and re-run this step.
+- If README.md is missing -> run Step 5 to create it, then return to Step 4.
+- If README.md exists but lacks deployment instructions -> run Step 5 to complete it, then return to Step 4.
+- If dependencies cannot be installed or are missing -> add a Step 6 verification target with status `blocked` or `not_applicable`, then continue to Step 6.
+- If a build command exists -> add verification target `build`.
+- If tests or lint exist -> add verification target `test` or `lint`.
+- If a local service start command exists -> add verification target `web_http`, `api_health`, or both.
+- If ports, commands, env vars, or deployment notes conflict -> fix README/config consistency, set blocker status `fixed`, and re-run this step.
+- If no verification target exists and the project type requires runtime validation -> final conclusion `未推送：需先修复`; next step: add a runnable verification command or explain why verification is not applicable.
+- If no verification target exists and the project is docs/static-only -> set target status `not_applicable` with reason.
+- If all guards pass -> continue to Step 5.
 
-任务：补齐 README.md 中给技术同学看的部署说明。
+Secret handling:
 
-输入：项目识别结果、启动命令、构建命令、端口、环境变量和生产链接。
+- MUST scan hidden files, but exclude `.git`, dependency directories, and generated build output.
+- NEVER quote real secret values in the final reply.
+- If a real secret is in a tracked file, remove it, replace with placeholders, update ignore rules, set `secrets=fixed`, and re-scan.
+- If a real secret is already in Git history, stop. Final conclusion is `暂不建议推送`, and the next step is to clean history or rotate the secret.
 
-输出：包含部署说明的 README.md。
+Each guard MUST update `delivery_ledger.prepush.blockers[]` with `id`, `status`, `reason`, and `next_step`.
 
-README.md 必须让技术同学拿到仓库后能部署。至少包含：
+## Step 5: Complete README Deployment Instructions
 
-- 产品名称和简介
-- 本地启动方式
-- 依赖安装方式
-- 构建方式
-- 环境变量说明
-- 端口说明
-- 部署方式
-- 生产链接
-- 验证方式
-- 常见问题或注意事项
+Task: Make README.md usable for engineer handoff.
 
-环境变量说明只写字段名、用途和示例占位符。不要写真实密钥。
+Input: Project type, product metadata, install command, start command, build command, port, env vars, deploy method, production URL.
 
-示例：
+Output: README.md with deployment instructions and `delivery_ledger.prepush.readme`.
+
+README.md MUST include:
+
+- Product name and summary.
+- Local setup.
+- Dependency installation.
+- Build command.
+- Environment variables.
+- Port information.
+- Deployment method.
+- Production URL.
+- Verification method.
+- Notes or common failure points.
+
+Env var documentation rules:
+
+- Document field names, purpose, and placeholder examples.
+- NEVER include real tokens, passwords, cookies, or private keys.
+- If engineers must configure server env vars, keep placeholders in README and list the exact required config block in the GitHub Delivery Card.
+
+Example:
 
 ```bash
 API_BASE_URL=https://api.example.com
-ACCESS_TOKEN=Bearer <由负责人提供>
+ACCESS_TOKEN=Bearer <provided-by-owner>
 ```
 
-如果项目需要技术或运维单独配置服务器环境变量，README 中写“需要配置”，最终交付卡中单独列“部署配置”。
+```text
+WRONG:
+  ACCESS_TOKEN=ghp_real_token_value_in_readme
 
-## Step 6: 本地验证
+Reason: A real token in README becomes a GitHub secret leak.
 
-任务：用真实命令验证项目能安装、构建、启动或访问。
+GOOD:
+  ACCESS_TOKEN=Bearer <provided-by-owner>
+```
 
-输入：项目类型、README 命令、包管理器、测试脚本、部署文件。
+## Step 6: Run Local Verification
 
-输出：验证结果和失败时的修复结果。
+Task: Run real commands to verify the project before pushing.
 
-必须实际运行，不能只看代码。
+Input: Project type, README commands, package manager, test scripts, Docker files, deployment files, Step 4 verification targets.
 
-按项目情况选择：
+Output: `delivery_ledger.verification.targets[]`.
 
-- Node 项目：用锁文件判断包管理器，运行安装、构建、测试或 lint。
-- Web 项目：启动本地服务，打开页面，检查主要页面是否渲染正常。
-- API 项目：启动服务，请求健康检查或代表性接口。
-- Docker 项目：构建镜像或运行 compose，确认容器能启动。
-- 静态站：本地静态服务打开页面，检查资源是否加载。
+MUST run actual commands. Do not rely on static inspection only.
 
-如果某一步跑不通，先修复再测。只有外部账号、付费服务、生产密钥或第三方权限缺失时，才允许记录为阻塞。
+Verification by project type:
 
-## Step 7: 推送到 GitHub
+- Node project -> MUST infer package manager from lockfile; run install when dependencies are missing; run build, tests, or lint when scripts exist.
+- Web project -> MUST start the local server when a start command exists; MUST check `http_200` or `page_rendered` when a browser or HTTP tool is available.
+- API project -> MUST start the service and request a health endpoint or representative route when a route can be inferred.
+- Docker project -> MUST run docker build or compose startup when Docker files exist and Docker is available.
+- Static site -> MUST serve locally or check static asset existence.
 
-任务：把通过检查的项目推送到 GitHub。
+For every verification target, record:
 
-输入：Git 状态、GitHub 授权状态、目标仓库、提交说明。
+- `command_or_check`
+- `status`
+- `observable_signal`
+- `blocked_reason` when blocked
 
-输出：GitHub 仓库、主分支和推送状态。
+If verification fails, fix the issue and re-run the failing check.
 
-默认直接推送到主分支。
+MUST NOT mark blocked unless the failure depends on external accounts, paid services, production secrets, third-party permissions, unavailable local runtime, or missing commands that cannot be created safely.
 
-默认分支优先使用现有仓库的主分支；新仓库默认使用 `main`。
+If no local verification can run:
 
-不默认创建 PR。只有以下情况才不直推主分支：
+- Runtime project with no runnable verification -> final conclusion `未推送：需先修复`.
+- Static/docs-only delivery with no runtime -> record `not_applicable` and continue.
 
-- 当前仓库不是用户或团队可直接维护的仓库。
-- 主分支有保护规则。
-- 当前改动风险大，用户未确认。
-- GitHub 权限不足。
-- 用户明确要求走 PR。
+## Step 7: Push To GitHub
 
-首次提交：
+Task: Push the verified project to GitHub.
 
-1. 初始化 Git。
-2. 创建 GitHub 仓库。
-3. 添加 remote。
-4. 提交所有应提交文件。
-5. 推送到主分支。
+Input: `delivery_ledger.inspection`, `delivery_ledger.github`, `delivery_ledger.prepush`, `delivery_ledger.verification`, commit message, default branch.
 
-已有仓库更新：
+Output: `delivery_ledger.github.push_status`.
 
-1. 确认 remote 和当前分支。
-2. 拉取或检查远端状态，避免覆盖他人改动。
-3. 提交本次交付改动。
-4. 推送到主分支。
+Before dispatch:
 
-提交说明要清楚表达交付内容，例如：
+1. Verify first-push metadata is complete when `git_state != existing_remote`; if incomplete -> return to Step 2.
+2. Verify all required verification targets have status `pass`, `fixed`, or `not_applicable`; if not -> return to Step 6 or stop with `未推送：需先修复`.
+3. Verify target owner/repo is known; if not -> return to Step 2.
+4. For first push, check whether `owner/repo` already exists.
+   - If it exists and belongs to the intended project -> run Existing repository procedure.
+   - If it exists but may be a different project -> stop with `未推送：需先修复` and ask for repo confirmation.
+   - If it does not exist -> run First push procedure.
+
+Dispatch by Git state from Step 1:
+
+- `existing_remote` -> run Existing repository procedure.
+- `git_without_remote` -> run First push procedure.
+- `not_git_repo` -> run First push procedure.
+- Otherwise -> final conclusion `未推送：需先修复` and stop.
+
+Default branch behavior:
+
+- Existing repository -> use the existing default/main branch.
+- New repository -> use `main`.
+- Default action -> push directly to main branch.
+
+Do not create a PR by default. Use a PR only when:
+
+- The repository is not directly maintained by the user/team.
+- Branch protection blocks direct push.
+- The change is high risk and user confirmation is missing.
+- GitHub permission is insufficient.
+- The user explicitly requests a PR.
+
+First push procedure:
+
+1. Initialize Git when needed.
+2. Create the GitHub repository only after repo-existence check passes.
+3. Add remote.
+4. Commit all intended delivery files.
+5. Push to main branch.
+
+Existing repository procedure:
+
+1. Confirm remote and current branch.
+2. Check remote state to avoid overwriting teammate changes.
+3. If remote diverges -> pull/rebase only when safe; otherwise stop with `未推送：需先修复`.
+4. Commit delivery changes.
+5. Push to main branch.
+
+Commit message MUST be clear, for example:
 
 ```text
 Prepare product for GitHub delivery
 ```
 
-如果项目适合下载或部署版本交付，再根据项目情况创建 tag 或 release；不要默认创建 release。
+Create a tag or release only when the project needs a downloadable or deployable version artifact. Do not create releases by default.
 
-## Step 8: 最终交付卡
+## Step 8: Produce GitHub Delivery Card
 
-任务：用短卡片汇报 GitHub 交付结果。
+Task: Report the delivery result in a short Chinese card.
 
-输入：项目名、仓库、分支、生产链接、验证结果、安全检查和部署配置。
+Input: `delivery_ledger`.
 
-输出：最终交付卡。
+Output artifact: `GitHub Delivery Card`, a single chat-message artifact unless the user explicitly asks for a file.
 
-最终回复要短，结论必须是以下之一：
+Final conclusion MUST be exactly one of:
 
 - `已推送完成`
 - `未推送：待 GitHub 授权`
 - `未推送：需先修复`
 - `暂不建议推送`
 
-交付卡模板：
+Use this success shape:
 
 ```text
 交付结论：已推送完成
@@ -300,24 +494,50 @@ GitHub 状态：已推送到主分支
 技术按部署配置补环境变量后部署。
 ```
 
-如果没有需要技术额外配置的内容，部署配置写“无额外配置”。
+Use these minimum blocked shapes:
 
-如果未推送，交付卡必须写清楚阻塞原因和最短下一步，不要输出长篇解释。
+```text
+交付结论：未推送：待 GitHub 授权
 
-失败出口：
+阻塞原因：当前环境还没有 GitHub 授权。
+下一步：打开授权链接并输入本次命令生成的一次性授权码。
+```
 
-- GitHub 未授权且用户未完成授权 → 交付结论写 `未推送：待 GitHub 授权`，给出授权下一步并结束。
-- 发现真实密钥进入 Git 历史 → 交付结论写 `暂不建议推送`，说明需先清理历史或更换密钥并结束。
-- 本地验证失败且无法在当前环境修复 → 交付结论写 `未推送：需先修复`，列出最短修复项并结束。
-- 用户明确说只讨论不执行 → 不推送，输出建议并结束。
+```text
+交付结论：未推送：需先修复
+
+阻塞原因：本地验证没有可执行命令或验证失败。
+下一步：补齐启动/构建/测试命令后重新运行本 Skill。
+```
+
+```text
+交付结论：暂不建议推送
+
+阻塞原因：真实密钥已经进入 Git 历史。
+下一步：先清理历史或更换密钥，再重新检查。
+```
+
+```text
+WRONG:
+  交付结论：基本完成了
+
+Reason: Free-form conclusion breaks the required four-state delivery card.
+
+GOOD:
+  交付结论：已推送完成
+```
+
+If no additional engineer config is needed, write `部署配置：无额外配置`.
+
+If not pushed, the GitHub Delivery Card MUST include the blocker and the shortest next step.
 
 ## What NOT to do
 
-- NEVER 把本地构建通过说成“已经部署上线”。
-- NEVER 把推送 GitHub 说成“生产已发布”。
-- NEVER 在 README、最终回复或截图里暴露真实密钥。
-- NEVER 跳过本地验证直接推送，除非用户明确要求且已说明风险。
-- NEVER 默认创建 PR；本 Skill 默认直推主分支。
-- NEVER 编造 GitHub 授权码、仓库链接或生产链接。
-- NEVER 因为缺少 README 部署说明就直接推送；先补齐。
-- NEVER 把 `.env`、私钥、数据库文件、构建缓存、依赖目录提交到 GitHub。
+- NEVER say GitHub push means production is deployed.
+- NEVER say local build success means production is live.
+- NEVER expose real secrets in GitHub, README, screenshots, or final replies.
+- NEVER push before completing README deployment instructions.
+- NEVER skip local verification unless the final card clearly marks verification as blocked or not applicable.
+- NEVER create a PR by default; this skill defaults to direct main branch delivery.
+- NEVER invent GitHub authorization codes, repository URLs, or production URLs.
+- NEVER commit `.env`, private keys, database files, dependency directories, build caches, or local-only config.
