@@ -59,6 +59,32 @@ function blobSha(filePath) {
   }
 }
 
+// 浅 clone 里 git log 只能看到截断边界, 会把老 skill 的 published_at 算成错误的近期日期 —
+// 错值比缺值更糟, 所以浅 clone / 非 git 环境下整体省略 published_at (CI 用 fetch-depth: 0, 不受影响).
+const isShallowRepo = (() => {
+  try {
+    return execSync("git rev-parse --is-shallow-repository").toString().trim() === "true";
+  } catch {
+    return true;
+  }
+})();
+if (isShallowRepo) console.error("warn: shallow or non-git repository, omitting published_at");
+
+function publishedAt(filePath) {
+  if (isShallowRepo) return "";
+  try {
+    // --diff-filter=A 只取"添加"该文件的 commit; --follow 让目录改名/迁移后仍追溯到最初发布.
+    // 输出按时间倒序, 最后一行是首次进入仓库的 commit; %cI 取 committer date,
+    // squash merge 下即 PR 合入 main 的时刻. 统一转 UTC ISO8601 输出.
+    const out = execSync(`git log --follow --diff-filter=A --format=%cI -- "${filePath}"`)
+      .toString().trim();
+    const oldest = out.split("\n").filter(Boolean).pop();
+    return oldest ? new Date(oldest).toISOString() : "";
+  } catch {
+    return "";
+  }
+}
+
 const skills = [];
 for (const [root, type] of Object.entries(ROOTS)) {
   let dirs;
@@ -78,11 +104,13 @@ for (const [root, type] of Object.entries(ROOTS)) {
     for (const field of ["version", "author", "updated_at"]) {
       if (fm[field]) optionalMetadata[field] = fm[field];
     }
+    const published = publishedAt(skillMd);
     skills.push({
       name: fm.name,
       type,
       description: fm.description,
       ...optionalMetadata,
+      ...(published ? { published_at: published } : {}),
       path: skillDir,
       files: listFiles(skillDir),
       sha: blobSha(skillMd),

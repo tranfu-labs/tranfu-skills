@@ -123,6 +123,12 @@ test("valid frontmatter → skill included in index", () => {
     assert.equal(goodSkill.updated_at, "2026-01-01");
     assert.ok(Array.isArray(goodSkill.files), "files should be array");
     assert.ok(goodSkill.files.includes("SKILL.md"), "files should include SKILL.md");
+    assert.ok(goodSkill.published_at, "published_at should be set for committed skill");
+    assert.match(
+      goodSkill.published_at,
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/,
+      "published_at should be UTC ISO8601"
+    );
   } finally {
     cleanupTempDir(tmpDir);
   }
@@ -181,6 +187,87 @@ test("YAML folded block scalar (>) description → folded to single line", () =>
       `folded description should have no newlines, got: ${JSON.stringify(skill.description)}`
     );
   } finally {
+    cleanupTempDir(tmpDir);
+  }
+});
+
+// ----- Test 5: published_at = 首次提交时间, 后续 commit 不改变它 -----
+test("published_at stays at first-add commit after later modifications", () => {
+  const tmpDir = setupTempFixtures();
+  const gitEnv = {
+    ...process.env,
+    GIT_AUTHOR_NAME: "test",
+    GIT_AUTHOR_EMAIL: "test@test.com",
+    GIT_COMMITTER_NAME: "test",
+    GIT_COMMITTER_EMAIL: "test@test.com",
+  };
+  try {
+    const skillMd = join(tmpDir, "own-skills", "good-skill", "SKILL.md");
+    // 首次提交时间以 git 为准 (setupTempFixtures 已 commit)
+    const firstAdd = execSync(
+      'git log --follow --diff-filter=A --format=%cI -- "own-skills/good-skill/SKILL.md"',
+      { cwd: tmpDir, encoding: "utf8" }
+    ).trim().split("\n").filter(Boolean).pop();
+
+    // 修改并二次 commit, 用一个明显不同的未来 committer date
+    writeFileSync(skillMd, readFileSync(skillMd, "utf8") + "\nmodified\n");
+    execSync('git add -A && git commit -m update', {
+      cwd: tmpDir,
+      stdio: "pipe",
+      env: { ...gitEnv, GIT_COMMITTER_DATE: "2030-01-01T00:00:00Z" },
+    });
+
+    const { indexJson } = runBuildIndex(tmpDir);
+    const goodSkill = indexJson.skills.find((s) => s.name === "good-skill");
+    assert.equal(
+      goodSkill.published_at,
+      new Date(firstAdd).toISOString(),
+      "published_at should equal first-add commit date, not the later modification"
+    );
+  } finally {
+    cleanupTempDir(tmpDir);
+  }
+});
+
+// ----- Test 6: 未提交的新 skill → 省略 published_at, 不合成空值 -----
+test("uncommitted skill → published_at omitted", () => {
+  const tmpDir = setupTempFixtures();
+  try {
+    const newDir = join(tmpDir, "own-skills", "uncommitted-skill");
+    mkdirSync(newDir, { recursive: true });
+    writeFileSync(
+      join(newDir, "SKILL.md"),
+      "---\nname: uncommitted-skill\ndescription: not yet committed\n---\nbody\n"
+    );
+    const { indexJson } = runBuildIndex(tmpDir);
+    const skill = indexJson.skills.find((s) => s.name === "uncommitted-skill");
+    assert.ok(skill, "uncommitted-skill should still be in index");
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(skill, "published_at"),
+      false,
+      "published_at should be omitted for uncommitted skill"
+    );
+  } finally {
+    cleanupTempDir(tmpDir);
+  }
+});
+
+// ----- Test 7: 浅 clone → 整体省略 published_at (错值比缺值更糟) -----
+test("shallow clone → published_at omitted", () => {
+  const tmpDir = setupTempFixtures();
+  const shallowDir = `${tmpDir}-shallow`;
+  try {
+    execSync(`git clone --depth 1 "file://${tmpDir}" "${shallowDir}"`, { stdio: "pipe" });
+    const { indexJson } = runBuildIndex(shallowDir);
+    const goodSkill = indexJson.skills.find((s) => s.name === "good-skill");
+    assert.ok(goodSkill, "good-skill should be in index");
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(goodSkill, "published_at"),
+      false,
+      "published_at should be omitted in shallow clone"
+    );
+  } finally {
+    cleanupTempDir(shallowDir);
     cleanupTempDir(tmpDir);
   }
 });
