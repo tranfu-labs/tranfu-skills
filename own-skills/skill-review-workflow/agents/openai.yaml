@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill 审查工作流"
+  short_description: "用创建门禁的同一套尺子审查已有 skill, 产出三态裁决报告"
+  default_prompt: "使用 $skill-review-workflow，对指定的已有 skill 依次跑内容准入反检、任务域反检、prompt 质量审查和结构完整性检查，给出三态裁决报告。"
