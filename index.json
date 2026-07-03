@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-07-03T09:31:03.639Z",
+  "generated_at": "2026-07-03T10:12:14.188Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -411,7 +411,6 @@
       "published_at": "2026-06-12T10:07:31.000Z",
       "path": "own-skills/project-init-docs",
       "files": [
-        ".DS_Store",
         "SKILL.md",
         "assets/wireframes/AGENTS.md",
         "assets/wireframes/CLAUDE.md",
@@ -450,10 +449,10 @@
     {
       "name": "prompt-review",
       "type": "own",
-      "description": "当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、 agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、 “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。 不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、 发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。 安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET（含建议改法）， 从不编辑提示词 / SKILL / 文件；委派工作必须有边界；不要求网络访问。",
-      "version": "0.7.0",
+      "description": "当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、 agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、 “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。 不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、 发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。 安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET （direct 型给改法案例、think 型给作者思考的问题）， 从不编辑提示词 / SKILL / 文件；委派工作必须有边界；不要求网络访问。",
+      "version": "0.8.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-11",
+      "updated_at": "2026-07-03",
       "published_at": "2026-05-13T11:03:33.000Z",
       "path": "own-skills/prompt-review",
       "files": [
