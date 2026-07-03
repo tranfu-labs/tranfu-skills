@@ -1,7 +1,7 @@
 ---
 name: agentic
 description: Analyze, design, and review agentic architectures for AI products and complex workflows. Use for requests about agentic 架构, agentic workflow, 多 agent 架构, single agent vs multi-agent, agent 技术栈/工作流程, memory/state/tool planning, LangGraph/CrewAI/OpenAI Agents/PydanticAI selection, or recommending an agentic architecture from project vision and existing technical architecture. Do NOT use for ordinary bug fixes, small code edits, pure prompt review, generic UI work, provider smoke tests, deployment-only tasks, or already-scoped implementation unless the user asks to rethink agentic architecture.
-version: 0.1.2
+version: 0.1.3
 author: griffithkk3-del
 updated_at: 2026-07-03
 origin: own
@@ -36,7 +36,7 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 4. Decide whether agentic behavior is necessary by comparing against non-agentic baselines.
 5. Map product workflow into deterministic steps, AI-assisted steps, tool calls, state transitions, and human checkpoints.
 6. Select the simplest fitting agentic shape if needed.
-7. Recommend a technical stack that respects existing project constraints and current official docs.
+7. Recommend a technical stack that respects existing project constraints and current official or primary-source docs.
 8. Define state, memory, tool, orchestration, safety, and evaluation boundaries.
 9. Produce `AGENTIC_PACKET` and verification gates.
 10. If implementation is explicitly requested, produce an implementation plan and verification matrix before editing.
@@ -180,7 +180,8 @@ Completion means the output names the recommended architecture shape, rejected a
 - MUST define a baseline comparison before claiming agentic value.
 - MUST define who owns state, memory, tools, permissions, and evaluation.
 - MUST reject or defer frameworks that conflict with project constraints.
-- MUST report research or documentation gaps when recommending current libraries without checking official docs.
+- MUST check current official docs or primary sources before recommending current libraries, frameworks, SDKs, CLIs, or cloud services as `add` or implementation choices.
+- MUST mark recommendations as `unverified` and list `official_docs_to_check` when current official docs or primary sources have not been checked.
 
 ## Failure Paths
 
