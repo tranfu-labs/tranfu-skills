@@ -1,13 +1,13 @@
 ---
-name: agentic
-description: Analyze, design, and review agentic architectures for AI products and complex workflows. Use for requests about agentic 架构, agentic workflow, 多 agent 架构, single agent vs multi-agent, agent 技术栈/工作流程, memory/state/tool planning, LangGraph/CrewAI/OpenAI Agents/PydanticAI selection, or recommending an agentic architecture from project vision and existing technical architecture. Do NOT use for ordinary bug fixes, small code edits, pure prompt review, generic UI work, provider smoke tests, deployment-only tasks, or already-scoped implementation unless the user asks to rethink agentic architecture.
-version: 0.1.4
+name: agent-architecture-decision
+description: Analyze, design, and review agentic architectures for AI products and complex workflows. Use for requests about agentic 架构, agentic workflow, 多 agent 架构, single agent vs multi-agent, agent 技术栈/工作流程, memory/state/tool planning, LangGraph/CrewAI/OpenAI Agents/PydanticAI selection, or recommending an agentic architecture from project vision and existing technical architecture. Also matches casual asks like '要不要上 agent / 要不要用 LangGraph'、'该不该拆多个 agent'、'这个功能普通 workflow 够不够'、'帮我设计 agent 流程'. Do NOT use for ordinary bug fixes or small code edits (use openspec-driven-development), pure prompt review (use prompt-review), generic UI work, provider smoke tests, deployment-only tasks (use coolify-deploy), or already-scoped implementation unless the user asks to rethink agentic architecture.
+version: 0.2.0
 author: griffithkk3-del
 updated_at: 2026-07-03
 origin: own
 ---
 
-# Agentic
+# Agent Architecture Decision
 
 Use this skill to decide whether a project needs agentic architecture and, if so, design the simplest effective workflow, memory/state model, tool-use model, orchestration approach, evaluation gates, and implementation roadmap.
 
@@ -19,31 +19,31 @@ This skill must connect recommendations to the concrete project context: vision,
 
 Choose one mode before acting:
 
-- `discuss-only`: analyze and recommend; do not edit files.
+- `discuss-only`: analyze and recommend; output a slim `AGENTIC_PACKET` (at minimum: `mode`, `agentic_value_hypothesis`, `recommended_shape`, `why_not_simpler`, `why_not_more_complex`, `rejected_options`, `open_questions`); do not edit files.
 - `architecture-packet`: produce a complete `AGENTIC_PACKET`; do not edit files.
-- `materialize-docs`: update architecture or product-control docs only after explicit user approval.
-- `implement-slice`: implement a bounded first slice only after architecture and verification gates pass.
+- `materialize-docs`: produce the complete `AGENTIC_PACKET` and update architecture or product-control docs only after explicit user approval.
+- `implement-slice`: produce the complete `AGENTIC_PACKET` including the `implementation` block, then implement a bounded first slice only after the Implementation Gate passes.
 
-If the user only asks for analysis, default to `discuss-only`. If the user says "execute" after an architecture packet, first state the file/action plan and only edit when the requested scope is clear.
+If the user only asks for analysis, default to `discuss-only`. If the user says "execute" after an architecture packet, first state the file/action plan and only edit after ALL Implementation Gate conditions are true.
 
 ## Workflow
 
 CREATE A TODO LIST FOR THE TASKS BELOW:
 
 1. Parse the request and choose a run mode. If the requested outcome is ambiguous, ask one focused question and stop.
-2. Verify read access to the project root, project docs, source tree, tests, and agent rules. If the project cannot be read, report a blocker and stop.
+2. Verify read access to the project root, project docs, source tree, tests, and agent rules. If the project cannot be read but the conversation already provides project context inline → continue in `discuss-only` mode using the inline context and mark every claim not verified against the repo as `unverified`. If neither a readable project nor inline context exists → report a blocker and stop.
 3. Inspect existing project docs, architecture notes, source tree, AI/provider code, data flow, tests, and agent rules before making claims.
 4. Identify current deterministic workflows, RAG paths, tool/API integrations, persistence, memory, and deployment constraints.
-5. Decide whether agentic behavior is necessary by comparing against non-agentic baselines.
+5. Decide whether agentic behavior is necessary by comparing against non-agentic baselines. If a non-agentic workflow is sufficient → set `recommended_shape` to that non-agentic option (Architecture Selection shape 1 or 2), skip step 7, and apply steps 8–12 to the selected workflow; otherwise → continue to step 6.
 6. Map the product workflow into deterministic steps, AI-assisted steps, tool calls, state transitions, and human checkpoints.
-7. Select the simplest fitting agentic shape if needed.
+7. Select the simplest fitting agentic shape.
 8. Recommend a technical stack that respects existing project constraints and current official or primary-source docs.
 9. Define state, memory, tool, orchestration, safety, and evaluation boundaries.
-10. Produce `AGENTIC_PACKET`, verification gates, and explicit unverified items.
+10. Produce the `AGENTIC_PACKET` required by the selected mode (slim for `discuss-only`, complete for all other modes), evaluation gates, and explicit `unverified_items`.
 11. If implementation is explicitly requested, produce an implementation plan and verification matrix before editing.
 12. Output the selected mode, recommended shape, rejected alternatives, first safe next step, and any blockers; then stop.
 
-MUST stop and ask one focused question when the project goal, primary user action, or write authorization is ambiguous.
+MUST stop and ask one focused question when the project goal or primary user action is ambiguous. If only write authorization is unclear, do NOT stop: stay in `architecture-packet` when the user asked for a complete packet, otherwise `discuss-only`, and ask for authorization only when the user requests a write action.
 
 ## Mode Routing
 
@@ -83,7 +83,7 @@ Recommend an agentic workflow when:
 - multiple specialized roles have distinct inputs, outputs, and evaluation criteria;
 - autonomous event handling is required and can be safely bounded.
 
-If the value hypothesis cannot be measured, do not present agentic architecture as settled.
+If the value hypothesis cannot be measured, NEVER present agentic architecture as settled — MUST present it as a hypothesis with the missing baseline named.
 
 ## Architecture Selection
 
@@ -164,19 +164,21 @@ AGENTIC_PACKET:
     next:
     later:
     not_doing:
+  first_slice:
+  unverified_items:
+  files_changed:
+  implementation:            # fill only for materialize-docs / implement-slice
+    changed_file_plan:
+    module_boundaries:
+    verification_matrix:
+    rollback_sunset_conditions:
   rejected_options:
   open_questions:
 ```
 
-For implementation requests, add:
+For `materialize-docs` or `implement-slice` requests, MUST fill the `implementation` block (`changed_file_plan`, `module_boundaries`, `verification_matrix`, `rollback_sunset_conditions`) and `unverified_items` before any edit.
 
-- changed-file plan;
-- module boundaries;
-- verification matrix;
-- rollback/sunset conditions for new abstractions;
-- explicit items that remain unverified.
-
-Completion means the output names the recommended architecture shape, rejected alternatives, state/memory/tool boundaries, evaluation baseline, first implementation slice, and unverified risks. If no implementation was requested, completion means the packet clearly states that no files were changed.
+Completion means the packet fills `recommended_shape`, `rejected_options`, `state_model`, `tool_model`, `evaluation.baseline`, `first_slice`, and `unverified_items`. If no implementation was requested, `files_changed` MUST state that no files were changed.
 
 ## Implementation Gate
 
@@ -184,7 +186,7 @@ Before editing project files, all conditions below MUST be true:
 
 1. The selected mode is `materialize-docs` or `implement-slice`.
 2. The user has explicitly authorized the write scope.
-3. The architecture packet names the first slice, module boundaries, rollback or sunset conditions, and verification matrix.
+3. The architecture packet fills `first_slice`, `implementation.module_boundaries`, `implementation.rollback_sunset_conditions`, and `implementation.verification_matrix`.
 4. The proposed change does not introduce a new agent framework unless the baseline comparison justifies it.
 5. The project rules do not reject the proposed framework, dependency, or persistence model.
 
@@ -202,15 +204,15 @@ If any condition is false, stop with an implementation gate instead of editing.
 - MUST define who owns state, memory, tools, permissions, and evaluation.
 - MUST reject or defer frameworks that conflict with project constraints.
 - MUST check current official docs or primary sources before recommending current libraries, frameworks, SDKs, CLIs, or cloud services as `add` or implementation choices.
-- MUST mark recommendations as `unverified` and list `official_docs_to_check` when current official docs or primary sources have not been checked.
+- ONLY when current official docs or primary sources cannot be accessed in this runtime may a recommendation still be made without the check above; in that case MUST mark it `unverified` and list `official_docs_to_check`.
 
 ## Failure Paths
 
-- If the project cannot be read, report a blocker and do not make architecture or stack claims.
+- If the project cannot be read and no inline project context exists, report a blocker and do not make architecture or stack claims; if inline context exists, continue in `discuss-only` and mark repo-dependent claims as `unverified`.
 - If project vision, target user, or primary workflow remains unclear, ask one focused question and stop before recommending a stack.
 - If official docs or primary sources for a current framework cannot be checked, mark the recommendation as `unverified` and list `official_docs_to_check`.
 - If the user requests implementation before the architecture packet and verification gates are clear, provide an implementation gate and stop before editing.
-- If write authorization is unclear, stay in `discuss-only` or `architecture-packet` mode and do not modify files.
+- If write authorization is unclear, apply the write-authorization rule in Workflow: do not stop and do not modify files; stay in `architecture-packet` when the user asked for a complete packet, otherwise `discuss-only`.
 - If the agentic value hypothesis has no measurable baseline, present agentic architecture as a hypothesis rather than a settled decision.
 - If tools can mutate production, financial, legal, security, or user-visible state, require explicit approval or defer the action.
 
