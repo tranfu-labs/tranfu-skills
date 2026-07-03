@@ -35,15 +35,13 @@ jobs:
         if: failure()
         run: npm run validate:json > /tmp/validate.json || true
       - name: upload validate-output artifact on failure
-        # lark-ci-notify.yml 通过 workflow_run 触发后会下载此 artifact 渲染错误明细.
+        # 保留失败明细 artifact, 方便在 GitHub Actions 页面排查校验错误.
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: validate-output
           path: /tmp/validate.json
           retention-days: 7
-      # PR comment 现由 lark-ci-notify.yml 在 workflow_run 触发后渲染 (Q1),
-      # 跟 Lark 卡内容同款: SKILL 改动 + 按 validator 分组 + 全部错误明细 + 复跑命令.
       - run: npm run build:index
       - name: Publish index.json to rolling `catalog` release
         # 仅 main push 触发. PR 上只跑 build:index 做 sanity check, 不发布.
