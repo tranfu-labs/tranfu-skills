@@ -1,27 +1,27 @@
 {
   "version": 1,
-  "generated_at": "2026-06-05T02:37:59.201Z",
+  "generated_at": "2026-07-03T09:31:03.639Z",
   "skills": [
     {
       "name": "tranfu-publish",
       "type": "meta",
-      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐外部 skill URL 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 按当前 CI gate 准备并提交 tranfu-skills PR: validator hard gate 包括 SKILL.md frontmatter、现有/新增 cases 格式、安全扫描; build:index 会把 README/cases/output 等已有文件和 external source_url 暴露到 catalog, 但缺失不阻塞. 用户确认后才 git push / gh pr create. Do NOT trigger when search / install / list / update / uninstall / doctor.",
-      "version": "0.2.1",
+      "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 按 templates/ 起草全部内容 (frontmatter / README §同类对比 / README §使用技巧 / case-file / PR title+body) 后自动切分支 / commit / push / gh pr create —— 触发即视为发布意图, 不再等用户二次确认。不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill)。",
+      "version": "0.4.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-05-30",
+      "updated_at": "2026-06-17",
+      "published_at": "2026-05-14T05:10:06.000Z",
       "path": "meta-skills/tranfu-publish",
       "files": [
         "README.md",
         "SKILL.md",
         "framework.png",
         "framework.svg",
-        "references/case-sources.md",
-        "references/ci-checks.md",
-        "references/hard-rules.md",
-        "templates/case-prompt.md",
-        "templates/pr-body.md"
+        "templates/case-file.md",
+        "templates/pr-body.md",
+        "templates/section-使用技巧.md",
+        "templates/section-同类对比.md"
       ],
-      "sha": "71edfefe3e4506395067a837278d48c4eda1de9f"
+      "sha": "61381cb6c63b05ab31982d660582b6f164a7d370"
     },
     {
       "name": "tranfu-router",
@@ -30,6 +30,7 @@
       "version": "0.1.0",
       "author": "aquarius-wing",
       "updated_at": "2026-05-26",
+      "published_at": "2026-05-14T05:10:06.000Z",
       "path": "meta-skills/tranfu-router",
       "files": [
         "README.md",
@@ -38,12 +39,50 @@
       "sha": "d630043de9ddf79138783a0a699b15daa8a21cb8"
     },
     {
+      "name": "agent-architecture-decision",
+      "type": "own",
+      "description": "Analyze, design, and review agentic architectures for AI products and complex workflows. Use for requests about agentic 架构, agentic workflow, 多 agent 架构, single agent vs multi-agent, agent 技术栈/工作流程, memory/state/tool planning, LangGraph/CrewAI/OpenAI Agents/PydanticAI selection, or recommending an agentic architecture from project vision and existing technical architecture. Also matches casual asks like '要不要上 agent / 要不要用 LangGraph'、'该不该拆多个 agent'、'这个功能普通 workflow 够不够'、'帮我设计 agent 流程'. Do NOT use for ordinary bug fixes or small code edits (use openspec-driven-development), pure prompt review (use prompt-review), generic UI work, provider smoke tests, deployment-only tasks (use coolify-deploy), or already-scoped implementation unless the user asks to rethink agentic architecture.",
+      "version": "0.2.0",
+      "author": "griffithkk3-del",
+      "updated_at": "2026-07-03",
+      "published_at": "2026-07-03T09:04:22.000Z",
+      "path": "own-skills/agent-architecture-decision",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/architecture-patterns.md",
+        "references/evaluation-gates.md",
+        "references/memory-and-state.md",
+        "references/orchestration-selection.md",
+        "references/technical-stack-and-workflow.md",
+        "references/tool-use-and-safety.md"
+      ],
+      "sha": "7e3b67669dbd17c9f54aa01cc6290ed909babdfe"
+    },
+    {
+      "name": "ai-opportunity-evaluation",
+      "type": "own",
+      "description": "'当用户说\"判断这个项目怎么样\" / \"立项判断\" / \"这个方向能不能做\" / \"这个产品想法值不值得做\" / \"用 AI机会立项判断 Skill，帮我分析\"时，做 TranFu 产品想法立项会诊，短问后输出一屏以内的立项判断卡。Do NOT trigger when 用户已经明确要求直接开发、修 bug、部署、写代码，或已完成立项并要求写 PRD。'",
+      "version": "0.1.0",
+      "author": "06666666",
+      "updated_at": "2026-06-26",
+      "published_at": "2026-06-29T02:56:33.000Z",
+      "path": "own-skills/ai-opportunity-evaluation",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "db0c74fcf34f43174cfd9b55e3a0c48fdd46cbf3"
+    },
+    {
       "name": "ai-startup-feasibility-check",
       "type": "own",
       "description": "AI 创业方向可行性强制自检（v2）。在以下任一情境下必须使用此技能：(1) 用户做任何含 AI / 大模型 / LLM / Agent / AIGC / Copilot / 生成式 AI / Claude / GPT / Anthropic / OpenAI / DeepSeek / Qwen / 豆包 / Kimi / MCP / A2A / 模型公司 / 智能体 / 智能驾驶 / 智能座舱 等关键词的市场研究、行业分析、赛道判断、竞争格局分析、行业研报；(2) 用户评估 AI 创业方向、AI 投资机会、AI 项目可行性、AI 创业公司、AI startup；(3) 用户描述一个项目并问\"怎么样 / 值不值得做 / 能不能成 / X 赛道值得进入吗 / X 是不是好生意 / 我想做 X / 评估 X 项目 / 帮我看看 X / 这个项目能做吗\"；(4) 用户分析 AI 创业方向时寻找介入机会、判断生态机会、研究开放平台介入路径；(5) 与 elite-market-researcher / market-analysis 等市场研究技能联合使用做 AI 相关任何研究时（即使用户没明确要求自检，只要话题在 AI 领域内，本技能必须并行触发）。本技能强制对研究目标应用 13 条 AI 创业禁止清单 + 三维评分体系（替代风险 / 杠杆方向 / 单位经济）+ 10 题自检表，产出结构化的可行性诊断报告。与 elite-market-researcher 并用时，本技能产出\"AI 创业可行性自检\"章节作为研报强制附录，禁止省略。本技能优先级高于一般市场研究——在 AI 相关研究中，没有这一层自检的报告视为不合格。",
       "version": "0.1.1",
       "author": "tf-nezha",
       "updated_at": "2026-05-25",
+      "published_at": "2026-05-25T06:12:07.000Z",
       "path": "own-skills/ai-startup-feasibility-check",
       "files": [
         "README.md",
@@ -56,12 +95,41 @@
       "sha": "020f2a0138d13723831e16038e787c42ad776335"
     },
     {
+      "name": "article-cover-image",
+      "type": "own",
+      "description": "Use when the user provides a title or article and wants one horizontal article, content, video, PPT, or banner cover image, or a prompt for that cover image. Also trigger for Chinese phrasing such as 做个文章封面, 生成公众号封面, 视频封面, PPT 首页图, Banner 封面, 给这个标题配封面. Do NOT trigger when the user wants an icon or symbol; route to black-line-icon-style. Do NOT trigger when the user wants an infographic, knowledge card, comparison table, process diagram, long chart, or formal logo; route to the matching visual workflow. Do NOT trigger when the user only wants article copywriting, non-visual analysis, or a prompt unrelated to cover-image generation; route to the matching writing workflow.",
+      "version": "0.2.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-18",
+      "published_at": "2026-06-22T02:52:53.000Z",
+      "path": "own-skills/article-cover-image",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "36570248241e56a98e2b8ed1e68a26449746ddea"
+    },
+    {
+      "name": "black-line-icon-style",
+      "type": "own",
+      "description": "Use when the user wants a minimalist black-and-white line icon, symbol, UI entry icon, logo-like auxiliary mark, empty-state symbol, or abstract technology/workflow icon. Also trigger for Chinese phrasing such as 做个黑白图标, 线性 icon, AI 工作流 icon, 极简符号, UI 入口图标, 空状态图标. Do NOT trigger when the user wants a colorful illustration, realistic image, 3D render, complex poster, article cover, infographic with text, or formal brand logo; route article covers to article-cover-image, infographics to a dedicated infographic workflow, and formal logos to a logo design workflow or human design.",
+      "version": "0.2.1",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-22",
+      "published_at": "2026-06-22T06:50:51.000Z",
+      "path": "own-skills/black-line-icon-style",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "adcca502036cd30a806b8602349c4103c5197a4b"
+    },
+    {
       "name": "business-analysis-pipeline",
       "type": "own",
       "description": "当用户说\"评估 AI 产品商业可行性 / 分析这个产品方向 / 创业方向评估 / 投资尽调 / 出商业分析报告\"时, 走 PEST → 波特五力 → SWOT → BMC → 机会矩阵 → 战略建议 → 执行摘要 7 步 pipeline, 用 KF 编号交叉引用前序模块, 输出 120 分制 (S/A/B/C/D 五级) 结构化商业分析报告.",
       "version": "0.1.0",
       "author": "06666666",
       "updated_at": "2026-05-13",
+      "published_at": "2026-05-13T13:44:30.000Z",
       "path": "own-skills/business-analysis-pipeline",
       "files": [
         "README.md",
@@ -76,6 +144,7 @@
       "version": "0.1.2",
       "author": "aquarius-wing",
       "updated_at": "2026-05-11",
+      "published_at": "2026-05-09T10:06:59.000Z",
       "path": "own-skills/credibility-review",
       "files": [
         "README.md",
@@ -116,6 +185,7 @@
       "version": "0.1.0",
       "author": "griffithkk3-del",
       "updated_at": "2026-05-18",
+      "published_at": "2026-05-19T02:11:09.000Z",
       "path": "own-skills/daily-report",
       "files": [
         "README.md",
@@ -144,6 +214,7 @@
       "version": "0.1.0",
       "author": "tf-nezha",
       "updated_at": "2026-05-21",
+      "published_at": "2026-05-21T11:58:07.000Z",
       "path": "own-skills/elite-market-researcher",
       "files": [
         "README.md",
@@ -156,12 +227,65 @@
       "sha": "d0bfbbff855f72c19caf33bf9da253744cb421bb"
     },
     {
+      "name": "generate-product-logo",
+      "type": "own",
+      "description": "Generate product-aware logo design rules, visual style directions, and logo/icon concepts. Use when the user asks to create, explore, refine, or export a product logo, app icon, browser icon, favicon, social-preview logo, brand mark, or logo style guide. Also match Chinese requests like \"做个/设计 Logo\", \"做 app icon/favicon\", \"品牌标记\", or \"Logo 设计规范\". Ask for missing product context before visual work. Do NOT trigger when the user only wants generic image generation, non-logo brand copy, trademark/legal clearance, vectorization of an existing final logo, or unrelated UI design.",
+      "version": "0.1.0",
+      "author": "06666666",
+      "updated_at": "2026-06-15",
+      "published_at": "2026-06-16T08:51:00.000Z",
+      "path": "own-skills/generate-product-logo",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/style-and-workflow.md"
+      ],
+      "sha": "a4ae7652da66a5ccefed40db78e7bfc6344be091"
+    },
+    {
+      "name": "github-delivery-check",
+      "type": "own",
+      "description": "'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like \"推到 GitHub\", \"创建 GitHub 仓库\", \"首次提交\", \"整理成可部署项目\", or \"用 GitHub交付规范 Skill\". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.'",
+      "version": "0.1.3",
+      "author": "06666666",
+      "updated_at": "2026-07-01",
+      "published_at": "2026-06-29T09:18:15.000Z",
+      "path": "own-skills/github-delivery-check",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "70bb903b2151bb025ec039ed433567a55be97788"
+    },
+    {
+      "name": "github-repo-completeness",
+      "type": "own",
+      "description": "GitHub 项目完备性检查与补全引导。扫描已有 repo，生成缺失清单，按优先级逐项引导用户补全。 不直接生成所有内容，而是引导用户决策后再执行。 Always trigger for: repo completeness, 项目完备性, 项目完善, 项目包装, project packaging, open source ready, 开源准备, github setup, 补全项目, project health, project checklist, 项目清单. Also triggers for: \"这个项目还缺什么\", \"帮我完善项目结构\", \"准备开源\". Do NOT trigger when: 写代码 / 修 bug / code review；从零起草需求或 PRD（走 write-spec）； scaffold 全新空项目骨架（走脚手架类 skill）；发版 / 打包发布版本（走 release）； 发布 skill 到公司库（走 tranfu-publish）；部署上线（走 coolify-deploy）。",
+      "version": "0.3.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-15",
+      "published_at": "2026-05-14T11:03:11.000Z",
+      "path": "own-skills/github-repo-completeness",
+      "files": [
+        "SKILL.md",
+        "references/ci-recipes.md",
+        "references/contributing-playbook.md",
+        "references/gitignore-by-stack.md",
+        "references/issue-pr-templates.md",
+        "references/readme-playbook.md"
+      ],
+      "sha": "f0580c6e251c745703279d427fd22d7a3c35fb54"
+    },
+    {
       "name": "goal-driven-decomposition",
       "type": "own",
       "description": "Solve \"build/make/design X\" goals AND follow-up edits (\"做一个网站\", \"build a tool\", \"加用户登录\", \"X 偏了改一下\"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).",
       "version": "0.2.0",
       "author": "aquarius-wing",
       "updated_at": "2026-05-28",
+      "published_at": "2026-05-17T13:14:12.000Z",
       "path": "own-skills/goal-driven-decomposition",
       "files": [
         "HISTORY.md",
@@ -182,6 +306,7 @@
       "version": "1.1.0",
       "author": "BruceL017",
       "updated_at": "2026-05-12",
+      "published_at": "2026-05-12T10:15:25.000Z",
       "path": "own-skills/lark-safe-write",
       "files": [
         "README.en.md",
@@ -197,6 +322,7 @@
       "version": "0.1.0",
       "author": "tf-nezha",
       "updated_at": "2026-05-12",
+      "published_at": "2026-05-21T12:28:56.000Z",
       "path": "own-skills/market-analysis",
       "files": [
         "README.md",
@@ -207,22 +333,96 @@
       "sha": "892028f8769a0d6fcdad99b269d61661840a5e77"
     },
     {
-      "name": "project-packaging",
+      "name": "openspec-driven-development",
       "type": "own",
-      "description": "GitHub 项目完备性检查与补全引导。扫描项目，生成缺失清单，按优先级逐项引导用户补全。 不直接生成所有内容，而是引导用户决策后再执行。 Always trigger for: project packaging, 项目包装, 项目美化, 项目完善, open source ready, 开源准备, github setup, 补全项目, project health, project checklist, 项目清单. Also triggers for: \"这个项目还缺什么\", \"帮我完善项目结构\", \"准备开源\". Do NOT trigger when: user wants to write code, fix bugs, or do code review.",
-      "version": "0.2.0",
+      "description": "在已经采用 OpenSpec 约定的项目里做日常开发执行时使用：把一个开发任务（新功能 / bugfix / 重构 / 加模块 / 改交互 / 排查并修 bug） 跑成「识别并按进场点路由 → 采访或诊断澄清真实目标 → 先在聊天框出方案（改页面给字符图，落到 wireframes.md；含可测逻辑或单文件 diff>200 行给单测+AI验证用例）→ 从最新 main 切 feature 分支并落盘 openspec/changes → 反思方案 → 按 spec 写码 → 反思代码符合度 → 归档（移动 change、合并 spec-delta、若有 wireframes.md 则回流到 docs/wireframes/）→ 更新 AGENTS.md → commit 到 feature 分支 → 有 remote 则推分支并开 PR（body 粘 proposal.md）」的闭环。 触发于「做个功能」「加个 X」「改一下 Y」「重构 / 优化 Z」「开始开发」「开始写代码」「按 openspec 走一遍」等开发执行请求； 也触发于咨询 / 讨论口吻的开发问题：「你会如何做 / 改 X」「能不能加 X」「讨论一下 X」「是不是要做成 Y 呀」「X 做在哪里」； 以及 bug 讨论「为什么 X 不对 / 出问题」和进场点变体「实施 openspec/changes/<X>」「方案实施完了帮我检查是否符合方案 / 有无遗漏」。 即使用户没点名 openspec，只要仓库里已有 openspec/ 目录就应主动用它。 不要用于：非开发任务（纯查询 / 查资料 / 跑命令、以及与具体改动无关的「是否符合规范 / 标准」泛合规审计）； 冷启动从零搭 AGENTS.md+openspec 骨架（那是 project-init-docs）；打 tag / 写 changelog / 版本号策略（那是 release）。",
+      "version": "0.5.1",
       "author": "aquarius-wing",
-      "updated_at": "2026-05-29",
-      "path": "own-skills/project-packaging",
+      "updated_at": "2026-06-30",
+      "published_at": "2026-06-17T08:46:47.000Z",
+      "path": "own-skills/openspec-driven-development",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "aec94b6243148613801e4960e0b45c5607634cba"
+    },
+    {
+      "name": "post-illustration-images",
+      "type": "own",
+      "description": "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, and Zhihu posts. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or the user explicitly names another image-generation skill. Safety boundaries: one suite style, one image per generation, no model-drawn logos or page badges.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-01",
+      "published_at": "2026-07-01T10:54:57.000Z",
+      "path": "own-skills/post-illustration-images",
+      "files": [
+        ".gitignore",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/brand/tranfu-logo-reference.svg",
+        "assets/style-references/wechat-doodle.png",
+        "assets/style-references/xhs-cream-paper.png",
+        "assets/style-references/xhs-explainer-notebook.png",
+        "assets/style-references/xhs-orange-card.png",
+        "assets/style-references/zhihu-tech.png",
+        "references/brand.md",
+        "references/content-structures.md",
+        "references/product-design.md",
+        "references/prompt-compiler.md",
+        "references/qa-checklist.md",
+        "references/style-index.md",
+        "references/styles/wechat-style-doodle.md",
+        "references/styles/wechat-style-doodle.spec.json",
+        "references/styles/xhs-style-cream-paper.md",
+        "references/styles/xhs-style-cream-paper.spec.json",
+        "references/styles/xhs-style-explainer-notebook.md",
+        "references/styles/xhs-style-explainer-notebook.spec.json",
+        "references/styles/xhs-style-orange-card.md",
+        "references/styles/xhs-style-orange-card.spec.json",
+        "references/styles/zhihu-style-title.md",
+        "references/styles/zhihu-style-title.spec.json",
+        "scripts/apply-brand-overlay.mjs",
+        "scripts/check-rsvg-convert.mjs"
+      ],
+      "sha": "dc8c1a6671fdf1839461607df14717dbf3f7d17b"
+    },
+    {
+      "name": "product-title-generation",
+      "type": "own",
+      "description": "Generate concise Chinese product, feature, module, entry, activity-theme, or brand-short titles. Use when the user asks for 产品标题、模块命名、功能入口名、品牌化短标题、中文命名、起名、取名、叫什么、入口标题、产品名、name this feature, or product title, especially 4-6 character product-like titles from product names, feature descriptions, technical capabilities, learning services, launch platforms, observability, or mixed Chinese-English concepts. Do NOT trigger for slogans or long marketing copy -> use copywriting; SEO headlines -> use SEO/content; trademark/legal availability -> use legal review; code identifiers or variable names -> use code naming/refactor; full brand strategy -> use brand strategy.",
+      "version": "\"0.1.5\"",
+      "author": "tranfu",
+      "updated_at": "\"2026-06-29\"",
+      "published_at": "2026-06-24T06:44:14.000Z",
+      "path": "own-skills/product-title-generation",
       "files": [
         "SKILL.md",
-        "references/ci-recipes.md",
-        "references/contributing-playbook.md",
-        "references/gitignore-by-stack.md",
-        "references/issue-pr-templates.md",
-        "references/readme-playbook.md"
+        "agents/openai.yaml"
       ],
-      "sha": "948047485fc6a16b1e3f3cdb7adc1ca3f70ea02f"
+      "sha": "10b6a5f68dcb92492338deb5824cd11ad58c4ac2"
+    },
+    {
+      "name": "project-init-docs",
+      "type": "own",
+      "description": "当用户在一个代码仓库里说\"初始化\"时，分析真实仓库并一次性搭建 AI 驱动开发所需的知识与规格基线： AGENTS.md（AI 项目操作手册）、CLAUDE.md（指向 AGENTS.md 的一行指针）、 docs/architecture/module-map.md（模块地图）、openspec/specs/<domain>/spec.md（业务域事实规格）、 openspec/changes/（先设计再实现的变更工作区）、docs/adr/（架构决策记录）、 docs/wireframes/（字符图线框，默认生成）。 触发词包括\"初始化\"\"初始化项目\"\"init 一下文档\"\"搭 AI 协作脚手架\"\"建 AGENTS.md 体系\"\"加线框图/页面版式\"， 也覆盖口语化说法，例如\"帮我把项目文档初始化一下\"\"搭一套 AI 能看懂的文档底座\"\"把项目结构和规范记录下来\"， 即使用户只说\"初始化\"也在仓库语境内触发。 内容必须来自对真实仓库的分析而非空白模板，幂等不破坏已存在文件。 任何目录级\"怎么在这工作\"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。 不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、 只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。",
+      "version": "0.4.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-20",
+      "published_at": "2026-06-12T10:07:31.000Z",
+      "path": "own-skills/project-init-docs",
+      "files": [
+        ".DS_Store",
+        "SKILL.md",
+        "assets/wireframes/AGENTS.md",
+        "assets/wireframes/CLAUDE.md",
+        "assets/wireframes/_template/page.md",
+        "assets/wireframes/flow.md",
+        "assets/wireframes/legend.md",
+        "references/file-templates.md",
+        "scripts/fill.sh",
+        "scripts/probe.sh"
+      ],
+      "sha": "6af302b02f6c90812ceb2ce0a6ba9d9fb17a076f"
     },
     {
       "name": "project-scoring",
@@ -231,6 +431,7 @@
       "version": "0.2.0",
       "author": "griffithkk3-del",
       "updated_at": "2026-05-21",
+      "published_at": "2026-05-13T07:12:17.000Z",
       "path": "own-skills/project-scoring",
       "files": [
         "README.md",
@@ -249,16 +450,77 @@
     {
       "name": "prompt-review",
       "type": "own",
-      "description": "Multi-round prompt/skill review loop. Launches a reviewer subagent that audits prompt files against an embedded engineering checklist, reports findings via SendMessage, and re-reviews after fixes until all issues are resolved. Self-contained — no network dependency. Always trigger for: review prompt, review skill, review agent, audit prompt, check prompt quality, prompt engineering review, skill review, agent review, evaluate prompt, lint prompt. Also triggers for: \"帮我审一下这个 prompt\", \"检查提示词质量\", \"评审这个 agent 定义\", \"这个 skill 写得怎么样\", \"优化提示词\". Do NOT trigger when: user wants to review CODE (not prompts), run tests, or do functional QA.",
-      "version": "0.1.0",
+      "description": "当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、 agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、 “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。 不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、 发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。 安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET（含建议改法）， 从不编辑提示词 / SKILL / 文件；委派工作必须有边界；不要求网络访问。",
+      "version": "0.7.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-05-13",
+      "updated_at": "2026-06-11",
+      "published_at": "2026-05-13T11:03:33.000Z",
       "path": "own-skills/prompt-review",
       "files": [
         "README.md",
         "SKILL.md"
       ],
-      "sha": "10e8d97d02e5301aa995b2e0c1026f3ea05e11bf"
+      "sha": "00643c4d4dcec4cb232d4f3869bc5dece860afd5"
+    },
+    {
+      "name": "reversible-ops",
+      "type": "own",
+      "description": "运维场景的可恢复性硬约束 —— review-only，AI 不替执行任何写命令；命中写操作时改写成 可恢复的等价命令让用户复制执行，命中不可恢复时给四段拒绝输出。范围：本地 bash / Docker / Coolify。 触发短语：删 / 清理 / 改 / 改配置 / 改 .env / 重启 / 重建 / kill / rm / mv 走 / 备份 / docker rm / docker volume rm / docker compose down / docker exec / git reset --hard / git clean / coolify app delete / coolify env / coolify server remove / coolify private-key remove / 加个 cron / 改 /etc/hosts； 口语：「帮我删一下」「清掉这些」「把这台机器从 coolify 摘了」「改一下环境变量」 「写个脚本批量处理」「能跑这条命令吗」。 不要用于：纯查询（ls / cat 非敏感文件 / docker ps / docker inspect / 一次性 docker logs / coolify list / coolify status）—— 默认放行不需要走本 skill；与运维无关的代码任务 （走 openspec-driven-development）；只查文档（直接答即可）；编写部署用的 Dockerfile / compose 本身（走 coolify-deploy）；tranfu 团队 Coolify 业务流程（走 tranfu-coolify-ops，本 skill 是 它的安全底座但不替代它的工作流）。",
+      "version": "0.7.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-30",
+      "published_at": "2026-06-25T08:33:38.000Z",
+      "path": "own-skills/reversible-ops",
+      "files": [
+        "SKILL.md",
+        "references/test-cases.md"
+      ],
+      "sha": "fde82dbb5099996fd26a7a1682f8a2bd4d91079c"
+    },
+    {
+      "name": "skill-content-fit",
+      "type": "own",
+      "description": "Always trigger for: 创建新 Codex skill 前的准入判断、把尚未成型的项目知识/经验教训/执行规则/误差反馈/事故复盘/文档片段转成 skill 前的内容适配评估、判断内容是否值得沉淀成可复用能力。 Also trigger for casual phrasing: \"这个适合写成 skill 吗\", \"能不能固化成 skill\", \"要不要沉淀成能力\", \"这段经验值得做成规则吗\", even if the user does not use the word skill. Do NOT trigger when: 输入已经是 skill、SKILL.md、已安装 skill，或用户是在审查、优化、更新、修复现有 skill。",
+      "version": "0.1.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-09",
+      "published_at": "2026-06-01T01:09:34.000Z",
+      "path": "own-skills/skill-content-fit",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "f9a0fbb18cbd1ae3fa48bfac75e824becb24972a"
+    },
+    {
+      "name": "skill-create-workflow",
+      "type": "own",
+      "description": "当用户的最终意图是产出一个全新的 Codex / Claude Code skill (一个新的 SKILL.md / skill 目录) 时触发。 \"新\" 包括从零创建, 以及把尚未成型的文档、规则、事故复盘、经验教训、agent 工作流首次封装成 skill。 触发判定按 \"意图 + 上下文\", 不按短语字典匹配: - 任何 \"产生式动词 + skill\" 的表达都算: 创建 / 新建 / 写 / 写成 / 做 / 做成 / 整成 / 封装成 / 包 / 起 / 转成 / 沉淀成 + skill。同义动词由你自己泛化, 不必出现在本说明里。 - 承接确认 算同一个意图: 上一轮对话已经在讨论某段内容是否值得做成 skill, 用户用 \"好 / 行 / 可以 / OK / 那就 / 嗯\" 等承接词 + 产生式表达 (例如「好, 把它写成 skill」「行, 做成 skill 吧」 「那就封装成 skill」) 给出同意时, 视同显式触发, 上文讨论的对象即为源材料。 - 代词指代 (\"它 / 这个 / 那个 / 这段 / 上面那个\") + 产生式表达 已经把意图锚定到上文, 不要因为 \"没指定文件路径\" 而拒绝触发, 应回头解析上下文。 - 英文同理: turn X into a skill / make X a skill / let's skill-ify this / yeah make that a skill 等。 代表性例子 (覆盖正式 / 口语 / 承接三种形态, 其余交给语义泛化): - \"帮我把 docs/postmortem.md 创建成一个 skill\" - \"把它写成 skill\"  (代词承接, 源在上文) - \"好, 那就做成 skill 吧\"  (承接确认 + 产生式动词) Do NOT trigger when: 用户只要 install / list / upgrade / uninstall skills, 创建 plugin, 改普通项目代码, 写非 skill 文档, 或管理自动化任务。",
+      "version": "0.3.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-30",
+      "published_at": "2026-06-09T08:35:51.000Z",
+      "path": "own-skills/skill-create-workflow",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "edfbf4eb36b6f5a9ccb381f75baa1cd27f8af919"
+    },
+    {
+      "name": "skill-domain-framing",
+      "type": "own",
+      "description": "在用户要把尚未成型的事故复盘、guardrail 文档、经验片段、issue/PR 记录或普通项目文档创建成新的 Codex skill 前使用，用来先抽象任务域、命名轴、范围边界和验收标准。Always trigger for: 创建新 skill 前的任务域框定、把经验沉淀成能力前的容器命名、从复盘/PR/issue 提炼 skill 范围。Also trigger for casual phrasing: \"这个该做成什么 skill\", \"先帮我定一下 skill 范围\", \"沉淀成能力前先命名\", \"别被事故名词带偏\". Do NOT trigger when: 输入已经是 skill、SKILL.md、已安装 skill，或用户是在审查、优化、更新、修复现有 skill。",
+      "version": "0.2.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-30",
+      "published_at": "2026-06-01T01:09:34.000Z",
+      "path": "own-skills/skill-domain-framing",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "9b14f93841b989c57536df5d3e3c268084b65b2a"
     },
     {
       "name": "skill-reverse-engineer",
@@ -267,6 +529,7 @@
       "version": "0.1.0",
       "author": "BruceL017",
       "updated_at": "2026-05-12",
+      "published_at": "2026-05-12T09:26:04.000Z",
       "path": "own-skills/skill-reverse-engineer",
       "files": [
         ".gitignore",
@@ -279,12 +542,29 @@
       "sha": "b111abd39c5a7b028bdb9ce6b49500918e86c8d4"
     },
     {
+      "name": "strategy-first-development",
+      "type": "own",
+      "description": "复杂项目开发前的战略共识、成熟项目调研、技术栈选择、路线图规划和项目控制面文档落地 workflow。Always trigger for: 新产品/MVP、多页面 web app、AI 产品、前后端系统、provider/deployment 选择、架构升级、复杂开发、用户要求先定战略/北极星/路线图/技术栈/参考项目或避免重复造轮子。Do NOT trigger when: 创建/更新/审查 skill 的元任务、单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review、仅安装/部署已有项目且无需重选产品技术路线。",
+      "version": "0.2.0",
+      "author": "griffithkk3-del",
+      "updated_at": "2026-06-22",
+      "published_at": "2026-06-15T03:24:30.000Z",
+      "path": "own-skills/strategy-first-development",
+      "files": [
+        "README.md",
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "6519f78002cb62ab2e9bc6816d1ce477db3ccd99"
+    },
+    {
       "name": "structured-thinking-advisor",
       "type": "own",
       "description": "当用户说\"帮我审视这份文档 / 优化这段表达 / 重构这个结构 / 这思路对吗 / 帮我深度共创\"时, 以\"结构化思考与系统设计顾问\"介入：拆解结构、校验逻辑、提炼方法论、给 2-3 个不同维度的优化版本, 主动指出问题而非复述.",
       "version": "0.1.0",
       "author": "06666666",
       "updated_at": "2026-05-13",
+      "published_at": "2026-05-13T12:12:09.000Z",
       "path": "own-skills/structured-thinking-advisor",
       "files": [
         "README.md",
@@ -293,12 +573,126 @@
       "sha": "11a94e09032f8f4ce06a7f87e6f20dbc221f4524"
     },
     {
+      "name": "tranfu-coolify-ops",
+      "type": "own",
+      "description": "把 tranfu-labs 下的 -app 仓库部署到公司 Coolify 实例。资源走 Application (private-github-app) + build_pack=dockercompose + is_auto_deploy_enabled=false; GitHub App integration 由 ops 一次性手工装, skill 不接管。部署链路: GHA build → push GHCR → POST /api/v1/deploy?uuid=$APP_UUID → Coolify pull GHCR; compose 主 service 只写 image: ghcr.io/..., 禁 build:。Step 1 入口分流: 同名 Application 不存在 → 初始化 (mktemp clone + 四件套合规 subagent 修 + 建 project/Application + GH secrets/environment/vars + autonomous push); 存在 → 更新分支 (A redeploy / B 改域名 / C 改 env / D 改源码或 compose / E 改 GH 配置)。 agent 全程 autonomous 不依赖 user cwd, 收尾验 CI + 30s deploy-start + 5min 公网轮询。 同名硬约束 REPO_NAME == PROJECT_NAME == APP_NAME; 旧 Service 残留 (0.7 历史) skill 不接管。 触发短语: 帮忙部署 / 确认并部署 https://github.com/tranfu-labs/<x>-app、coolify 一下、 改域名/env/compose、redeploy / 重新部署 / 重启、部署挂了、coolify 访问不了。 不要用于: 非 tranfu-labs 仓库; 非公司 Coolify; UI 操作 (挂 GHCR credential / 装 GitHub App); 与部署无关的改动。",
+      "version": "0.8.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-30",
+      "published_at": "2026-06-23T08:59:52.000Z",
+      "path": "own-skills/tranfu-coolify-ops",
+      "files": [
+        "SKILL.md",
+        "assets/deploy.yml.template",
+        "assets/preflight.sh",
+        "commands/app.md",
+        "commands/application-crud.md",
+        "commands/application-env.md",
+        "commands/context.md",
+        "commands/conventions.md",
+        "commands/deploy-trigger.md",
+        "commands/domain.md",
+        "commands/prerequisites.md",
+        "commands/project.md",
+        "commands/server.md",
+        "commands/tranfu-naming.md",
+        "references/archived-coolify-deploy.md",
+        "references/coolify-api-fields.md",
+        "references/coolify-clear-deployments-and-redeploy.md",
+        "references/coolify-cli-1.6.2-onboard-quirks.md",
+        "references/coolify-compose-deploy-failure-triage.md",
+        "references/coolify-disk-capacity-and-prune.md",
+        "references/coolify-docker-inspection.md",
+        "references/coolify-env-redeploy.md",
+        "references/file-generation-rules.md",
+        "references/service-fqdn-trap.md",
+        "references/service-vs-application.md",
+        "references/urls-vs-docker-compose-domains.md",
+        "scenarios/reconcile-deployment.md"
+      ],
+      "sha": "c49182bf287bfbd12e69f6f43dc259a7aa9467dd"
+    },
+    {
+      "name": "tranfu-linear-ui-icon-set",
+      "type": "own",
+      "description": "当用户需要生成或描述一组 4 个独立的 64x64px 极简线性 UI 图标时触发；适用于小型 icon set、 带柔和浅色直角底板、统一描边和视觉语言的界面图标。Do NOT trigger when 用户要 logo/品牌标识、 整页 UI、海报、复杂插画、3D/拟物/卡通/像素风图像、透明背景或圆角底板。",
+      "version": "0.1.0",
+      "author": "chuanye312-coder",
+      "updated_at": "2026-06-29",
+      "published_at": "2026-06-29T03:37:41.000Z",
+      "path": "own-skills/tranfu-linear-ui-icon-set",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "69a40be8d085a92af47e64b9cf4e82b927bac958"
+    },
+    {
+      "name": "tranfu-website-design",
+      "type": "own",
+      "description": "Apply TranFu website brand and UI design rules for create, modify, refactor, review, or visual QA tasks on TranFu React/Vite website UI. Trigger for \"按 TranFu 风格做一个新区块\", \"检查这个页面是否符合 TranFu 网站设计规范\", \"重构这个组件但保持官网风格\", Figma-to-TranFu UI integration, and TranFu layout, color, typography, logo, component, motion, media, or copy-impact UI work. Do NOT trigger when the site is not TranFu, the task is pure copywriting with no UI/brand impact, logo redesign, a standalone brand book, or visual-irrelevant code work.",
+      "version": "0.2.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-22",
+      "published_at": "2026-06-15T06:05:31.000Z",
+      "path": "own-skills/tranfu-website-design",
+      "files": [
+        "INSTALL.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/README.md",
+        "assets/app-icon-primary.svg",
+        "assets/logo-lockup-h-en-primary-on-light.svg",
+        "assets/logo-symbol-primary.svg",
+        "assets/logo-wordmark-primary.svg",
+        "references/design-spec.md"
+      ],
+      "sha": "b13aa900182655eef5fd6f5babfdb8b30f4adc5c"
+    },
+    {
+      "name": "visual-design-producer",
+      "type": "own",
+      "description": "'Produce original HTML visual artifacts from a Producer Handoff, Visual DNA Design System, JSON/tokens, or standalone design brief. Use for landing pages, app UIs, dashboards, decks, posters, WeChat visuals, Xiaohongshu cards, product prototypes, or other HTML-based outputs; also match Chinese requests such as \"帮我做一个页面\", \"出一张海报\", \"用这个 DNA 做小红书卡\", or \"产 HTML deck\". Supports optional brand integration when brand context is provided. Do NOT use for: extracting visual DNA from source samples (use visual-dna-system); prompt review (use prompt-review); code review (use code-review); copying source sample brand identity (refuse that part).'",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-06-18",
+      "published_at": "2026-06-22T02:31:17.000Z",
+      "path": "own-skills/visual-design-producer",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/anti-slop-quality-gate.md",
+        "references/artifact-router.md",
+        "references/brand-integration-slot.md",
+        "references/html-engineering-spec.md"
+      ],
+      "sha": "69f6081495a1cbcdd83ada6bbc7c18c35f4a03b6"
+    },
+    {
+      "name": "visual-dna-system",
+      "type": "own",
+      "description": "Extract a reusable, de-branded Visual DNA Design System from visual samples such as websites, screenshots, Figma references, images, decks, posters, app UIs, or HTML/CSS. Use when the user asks to analyze visual style, distill design DNA, create transferable visual tokens, or make a downstream prompt without copying the source. Also trigger for Chinese requests like \"提取这个网站的视觉风格\", \"把这个 UI 抽成可复用设计系统\", \"分析这套海报的视觉 DNA\", \"生成可迁移视觉 tokens\". Do NOT use for producing final websites, dashboards, decks, posters, prototypes, direct brand recreation, prompt review, or code review.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-06-18",
+      "published_at": "2026-06-18T10:07:38.000Z",
+      "path": "own-skills/visual-dna-system",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml",
+        "references/example-mini-output.md",
+        "references/originality-guardrails.md",
+        "references/output-schema.md"
+      ],
+      "sha": "3c76ac1effbc0359d591103e096a69b54e9c6e18"
+    },
+    {
       "name": "visual-pipeline",
       "type": "own",
       "description": "当用户要设计一个页面 (UI/视觉/产品层, 不是只写代码) 或修改已有视觉设计时, 驱动三段流水线 (显示信息 → 显示框架 → 风格+实践), 每页独立, 先文档后 HTML. 输入 = \"已知用户场景 + 已知要显示什么\", 输出 = 高保真选定版. 不用于: 文案小改 / 单 bug 代码修复 / 纯后端.",
       "version": "0.1.0",
       "author": "aquarius-wing",
       "updated_at": "2026-05-24",
+      "published_at": "2026-05-24T11:21:23.000Z",
       "path": "own-skills/visual-pipeline",
       "files": [
         "README.md",
@@ -321,12 +715,28 @@
       "sha": "ee11720f74bd1468bbea8c378d55c28e21f25f4d"
     },
     {
+      "name": "write-social-preview-head",
+      "type": "own",
+      "description": "编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。",
+      "version": "0.1.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-01",
+      "published_at": "2026-06-01T01:09:34.000Z",
+      "path": "own-skills/write-social-preview-head",
+      "files": [
+        "SKILL.md",
+        "agents/openai.yaml"
+      ],
+      "sha": "a2e57efc471a0a5092d36596b047002759c39930"
+    },
+    {
       "name": "write-spec",
       "type": "own",
       "description": "从模糊想法或功能需求生成结构化 PRD/feature spec，含目标、非目标、用户故事、验收标准、成功指标。触发：写 spec / 写 PRD / 规划功能 / scope 一下",
       "version": "0.1.0",
       "author": "cnrandomgod-jpg",
       "updated_at": "2026-05-12",
+      "published_at": "2026-05-12T08:47:46.000Z",
       "path": "own-skills/write-spec",
       "files": [
         "README.md",
@@ -335,12 +745,30 @@
       "sha": "c3cfb6ccc79e32150fce47de1c384a652e6a98bb"
     },
     {
+      "name": "xiaohongshu-card-publish",
+      "type": "own",
+      "description": "把一篇小红书文案变成可发布的 1080×1440 成品配图——用本 skill 自带的卡片模板填充、 组织系列预览、再用 playwright 导出无损 WebP。当用户给一段小红书文案说 「根据这份文档生成预览」「生成卡片」「做成小红书配图」「排成一组卡片」，或对某系列说 「导出」「截图」「按尺寸出图」「批量出图」时，使用这个 skill。 不要用于：改卡片模板本身的版式/CSS 或新增模板主题、定义文案输入格式或分页规则等数据建模、 选型构建工具链、与本仓库无关的通用 HTML 或截图任务。",
+      "version": "0.1.1",
+      "author": "aquarius-wing",
+      "updated_at": "2026-06-17",
+      "published_at": "2026-06-17T02:11:36.000Z",
+      "path": "own-skills/xiaohongshu-card-publish",
+      "files": [
+        "SKILL.md",
+        "assets/app.html",
+        "assets/default.html",
+        "scripts/export.py"
+      ],
+      "sha": "2a1adbc6bb1d5d0848f4b5f5a1c3a9e8c15a7b3c"
+    },
+    {
       "name": "andrej-karpathy-skills",
       "type": "external",
       "description": "基于 Andrej Karpathy 对 LLM 编码陷阱的观察，改善 Claude Code 行为的单文件行为准则。减少过度工程、无关改动和意图偏差。触发：任何 Claude Code 编码对话自动生效。",
       "version": "0.1.0",
       "author": "multica-ai",
       "updated_at": "2026-05-13",
+      "published_at": "2026-05-13T12:03:46.000Z",
       "path": "external-skills/andrej-karpathy-skills",
       "files": [
         "SKILL.md"
@@ -355,6 +783,7 @@
       "version": "1.0.0",
       "author": "elder-plinius",
       "updated_at": "2026-05-22",
+      "published_at": "2026-05-22T03:32:04.000Z",
       "path": "external-skills/claude-design-system",
       "files": [
         "README.md",
@@ -370,6 +799,7 @@
       "version": "0.1.0",
       "author": "yizhiyanhua-ai",
       "updated_at": "2026-05-09",
+      "published_at": "2026-05-09T10:52:23.000Z",
       "path": "external-skills/fireworks-tech-graph",
       "files": [
         "SKILL.md"
@@ -378,12 +808,29 @@
       "source_url": "https://github.com/yizhiyanhua-ai/fireworks-tech-graph"
     },
     {
+      "name": "make-interfaces-feel-better",
+      "type": "external",
+      "description": "Design engineering principles for making UI feel polished through typography, radius, shadows, motion, hit areas, image outlines, and micro-interactions. Trigger when building or reviewing frontend UI components, tightening animations, hover/press states, icon transitions, tabular numbers, text wrapping, optical alignment, or when the user says \"make it feel better\" / \"feels off\" / \"UI polish\". Do NOT trigger when: 用户要先做完整设计系统或风格选型 (走 ui-ux-pro-max) / 只审 a11y 合规 (走 web-design-guidelines) / 只做 TranFu 官网品牌规范 (走 tranfu-website-design) / 纯后端或业务逻辑改动.",
+      "version": "0.1.0",
+      "author": "jakubkrehel",
+      "updated_at": "2026-06-26",
+      "published_at": "2026-06-26T02:06:18.000Z",
+      "path": "external-skills/make-interfaces-feel-better",
+      "files": [
+        "README.md",
+        "SKILL.md"
+      ],
+      "sha": "93711b06b89a195aac7d46d6f4a23929fb2b99f7",
+      "source_url": "https://github.com/jakubkrehel/make-interfaces-feel-better/tree/main/skills/make-interfaces-feel-better"
+    },
+    {
       "name": "openspec",
       "type": "external",
       "description": "当用户做多轮迭代或长期维护项目时, 用 /opsx:propose → /opsx:apply → /opsx:archive 把每个 change 拆成 proposal/specs/design/tasks 文件夹, archive 后规范沉淀到 specs/, 下次改同一模块 AI 可读历史规范",
       "version": "1.3.1",
       "author": "Fission-AI",
       "updated_at": "2026-05-12",
+      "published_at": "2026-05-12T03:08:13.000Z",
       "path": "external-skills/openspec",
       "files": [
         "SKILL.md"
@@ -398,6 +845,7 @@
       "version": "1.0.0",
       "author": "JeffLi1993",
       "updated_at": "2026-05-20",
+      "published_at": "2026-05-21T02:54:54.000Z",
       "path": "external-skills/seo-audit",
       "files": [
         "SKILL.md"
@@ -412,6 +860,7 @@
       "version": "1.0.0",
       "author": "JeffLi1993",
       "updated_at": "2026-05-20",
+      "published_at": "2026-05-20T09:36:46.000Z",
       "path": "external-skills/seo-audit-full",
       "files": [
         "SKILL.md"
@@ -426,6 +875,7 @@
       "version": "5.1.0",
       "author": "obra",
       "updated_at": "2026-05-12",
+      "published_at": "2026-05-12T23:41:53.000Z",
       "path": "external-skills/superpowers",
       "files": [
         "SKILL.md"
@@ -436,15 +886,16 @@
     {
       "name": "ui-ux-pro-max",
       "type": "external",
-      "description": "AI-powered design intelligence with 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 15+ tech stacks. Trigger when user asks for design system / 配色 / 字体搭配 / UI 风格选型 / 落地页结构 / 图表选型 / UX 守则 / \"帮我做一套设计系统\". Do NOT trigger when: 用户只要写功能代码 / 修 bug / 项目结构包装 (走 project-packaging).",
+      "description": "AI-powered design intelligence with 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 15+ tech stacks. Trigger when user asks for design system / 配色 / 字体搭配 / UI 风格选型 / 落地页结构 / 图表选型 / UX 守则 / \"帮我做一套设计系统\". Do NOT trigger when: 用户只要写功能代码 / 修 bug / 项目结构包装 (走 github-repo-completeness).",
       "version": "2.5.0",
       "author": "NextLevelBuilder",
       "updated_at": "2026-05-20",
+      "published_at": "2026-05-20T02:34:23.000Z",
       "path": "external-skills/ui-ux-pro-max",
       "files": [
         "SKILL.md"
       ],
-      "sha": "c9f5899c2a3a78432146bb75a5cfd421ec106f9b",
+      "sha": "397b451b855c324bb876e0b01df5adf6775f8d31",
       "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"
     },
     {
@@ -454,6 +905,7 @@
       "version": "1.0.0",
       "author": "vercel",
       "updated_at": "2026-05-20",
+      "published_at": "2026-05-20T07:59:09.000Z",
       "path": "external-skills/web-design-guidelines",
       "files": [
         "SKILL.md"

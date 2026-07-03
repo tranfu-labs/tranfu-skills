@@ -236,6 +236,8 @@ index.json                    catalog 快照和老 CLI 兼容数据源
 
 `published_*` 字段仅写在本地 skill 的 `SKILL.md`（由 `tranfu-publish` 写入），不进本仓库。`installed_*` 字段仅写在装机端 `SKILL.md`（由 `tfs install` 写入），也不进本仓库。
 
+注意区分：catalog（`index.json`）里每个 skill 的 `published_at` **不是** frontmatter 字段，由 `build:index` 从 git 推导——取 `SKILL.md` 首次进入仓库的提交时间（squash merge 下即 PR 合入 main 的时刻），UTC ISO8601 格式；浅 clone 或文件尚未提交时省略该字段。
+
 ### 本地校验和 CI
 
 维护者提交前优先跑：
