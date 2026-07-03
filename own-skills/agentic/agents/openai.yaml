@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agentic"
+  short_description: "Design agentic architectures"
+  default_prompt: "Use $agentic to inspect this project and recommend the simplest effective agentic architecture, technical stack, workflow, memory/state model, tool-use design, evaluation gates, and implementation roadmap."
