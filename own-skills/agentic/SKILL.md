@@ -1,7 +1,7 @@
 ---
 name: agentic
 description: Analyze, design, and review agentic architectures for AI products and complex workflows. Use for requests about agentic 架构, agentic workflow, 多 agent 架构, single agent vs multi-agent, agent 技术栈/工作流程, memory/state/tool planning, LangGraph/CrewAI/OpenAI Agents/PydanticAI selection, or recommending an agentic architecture from project vision and existing technical architecture. Do NOT use for ordinary bug fixes, small code edits, pure prompt review, generic UI work, provider smoke tests, deployment-only tasks, or already-scoped implementation unless the user asks to rethink agentic architecture.
-version: 0.1.1
+version: 0.1.2
 author: griffithkk3-del
 updated_at: 2026-07-03
 origin: own
@@ -181,6 +181,16 @@ Completion means the output names the recommended architecture shape, rejected a
 - MUST define who owns state, memory, tools, permissions, and evaluation.
 - MUST reject or defer frameworks that conflict with project constraints.
 - MUST report research or documentation gaps when recommending current libraries without checking official docs.
+
+## Failure Paths
+
+- If the project cannot be read, report a blocker and do not make architecture or stack claims.
+- If project vision, target user, or primary workflow remains unclear, ask one focused question and stop before recommending a stack.
+- If official docs or primary sources for a current framework cannot be checked, mark the recommendation as `unverified` and list `official_docs_to_check`.
+- If the user requests implementation before the architecture packet and verification gates are clear, provide an implementation gate and stop before editing.
+- If write authorization is unclear, stay in `discuss-only` or `architecture-packet` mode and do not modify files.
+- If the agentic value hypothesis has no measurable baseline, present agentic architecture as a hypothesis rather than a settled decision.
+- If tools can mutate production, financial, legal, security, or user-visible state, require explicit approval or defer the action.
 
 ## Examples
 
