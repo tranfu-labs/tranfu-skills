@@ -27,3 +27,5 @@ The skill completes when it states that the webhook smoke test placeholder was r
 ## Failure Path
 
 If the request is not explicitly a webhook smoke test, do not run this skill and explain that it is test-only.
+
+<!-- webhook synchronize retry after enabling webhook toolsets -->
