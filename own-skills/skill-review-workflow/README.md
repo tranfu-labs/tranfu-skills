@@ -2,7 +2,7 @@
 
 skill-create-workflow 的审查视角: 对一个已有 skill 用创建时的同一套门禁反向检验——内容准入 (skill-content-fit)、任务域与命名 (skill-domain-framing)、prompt 工程质量 (prompt-review A–G)、结构完整性 (机械清单), 产出带三态裁决 (通过 / 需修改 / 建议重构) 的 `SKILL_REVIEW_REPORT`。只审不改。
 
-架构: 主 agent 只做编排、合并与裁决, 不通读被审文件; 四门全部由 SubAgent 执行。门 3 对每个 prompt-bearing 文件并发派 3 个 reviewer (维度 A,B / C,D / E,F,G), 主 agent 合并 REVIEW_PACKET 时按文件顺序对 issue id 顺移去冲突。
+架构: 主 agent 只做编排、合并与裁决, 不通读被审文件; 四门全部由 SubAgent 执行, 且分级短路——门 1 打回或门 2 判容器框错, 立即出局部报告退出; 门 3 先审 SKILL.md (3 个 reviewer 按维度 A,B / C,D / E,F,G 并发, 门 4 结构检查同波并发), SKILL.md 有 BLOCKER/HIGH 也直接退出, 其余 prompt-bearing 文件排在后一波。主 agent 合并 REVIEW_PACKET 时按文件顺序对 issue id 顺移去冲突。
 
 ## 什么时候用它
 
