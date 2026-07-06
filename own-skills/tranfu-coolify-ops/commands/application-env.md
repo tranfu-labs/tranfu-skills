@@ -118,6 +118,28 @@ curl -sS -X DELETE \
 
 **reconcile flow 不主动删 Coolify 上多出来的 env**——只补缺、不删多余。多余 env 一般是用户在 UI 上手动加的（debug / 临时关），自动删会扯到用户的临时状态。Step 6 检测到多余 env 时只**告知用户**，由用户决定。
 
+## IMAGE_REF 运行镜像变量
+
+`IMAGE_REF` 是新部署模板写入的 Coolify Application env，用来把生产运行镜像固定到不可变 sha tag：
+
+```yaml
+# compose.yml
+image: ${IMAGE_REF:-ghcr.io/<org>/<repo>:latest}
+pull_policy: always
+```
+
+deploy workflow 在 docker build/push 成功后 PATCH：
+
+```bash
+IMAGE_REF=ghcr.io/<org>/<repo>:sha-<commit>
+```
+
+规则：
+
+- `IMAGE_REF` 由 CI 维护，不要求用户在 `.env` 中提供。
+- `.env` 对比时如果本地没有 `IMAGE_REF` 而 Coolify 有，不要把它当成“多余 env”提示删除。
+- 回滚应用版本时可以把 `IMAGE_REF` 改回上一个 sha tag，再 POST `/deploy?force=false`。
+
 ## 关于 Coolify 魔法变量
 
 **核心规则**: 魔法变量在 compose.yml 里声明 (例如 `SERVICE_PASSWORD_REDIS: ''`), Coolify 部署时自动生成 + 注入容器 env + 自动塞一份到 application envs 表 (UI 可见但不可改)。**reconcile 绝不再往 envs endpoint 重复 POST** — 要么被忽略要么冲突, 还会污染 .env diff。

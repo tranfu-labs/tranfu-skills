@@ -86,7 +86,8 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 | C7 | `environment.PORT` 与监听端口一致 | 修正 |
 | C8 | 数据库连接串用 compose service name（不用 localhost / 宿主机 IP） | 改 |
 | C9 | 密码 / secret / token 一律走 Coolify 魔法变量, compose 里 `SERVICE_<TYPE>_<ID>: ''` 声明 + `APP_KEY: ${SERVICE_<TYPE>_<ID>}` 引用 (按强度选: 数据库密码用 `PASSWORD` 无符号; JWT/session 用 `REALBASE64_64` 或 `HEX_64`; OAuth client secret 用 `PASSWORDWITHSYMBOLS`; encryption key 用 `HEX_64` / `HEX_128`); 5 类前缀 (`PASSWORD_` / `PASSWORDWITHSYMBOLS_` / `REALBASE64_` / `HEX_32_/_64_/_128_` / `FQDN_`) 不在 service envs 重复 POST, 见 [../commands/application-env.md](../commands/application-env.md) | 改 |
-| C10 | 镜像段只写 `image:`，**禁止 `build:`** | 删 `build:`，改 `image: ghcr.io/<org>/<repo>:<tag>` |
+| C10 | 镜像段只写 `image:`，**禁止 `build:`**。对 GHA → GHCR → Coolify 链路，主 service 必须写成 `image: ${IMAGE_REF:-ghcr.io/<org>/<repo>:latest}` 并加 `pull_policy: always`；真实运行版本由 CI 在 build/push 成功后写入 Coolify app env `IMAGE_REF=ghcr.io/<org>/<repo>:sha-<commit>`，deploy 再读取该不可变 tag | 删 `build:`；若仍是裸 `ghcr.io/...:latest`，改为 `IMAGE_REF` 模板 + `pull_policy: always` |
+| C12 | 回滚友好：compose 不把具体 sha tag 写死进 git；只保留 `IMAGE_REF` 模板。回滚通过改 Coolify app env `IMAGE_REF` 到上一个 sha tag 并 redeploy 完成 | 删除写死 sha tag，恢复 `IMAGE_REF` 模板 |
 | C11 | healthcheck 防代理（wget 系清环境变量；python urllib 走 NO_PROXY=127.0.0.1） | 修写法 |
 
 ### 额外约束（reconcile-specific）
@@ -116,6 +117,42 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 | W6 | 三个 var 引用全部走 `${{ vars.* }}` 而不是 inline UUID | 改 |
 | W7 | `jobs.*.environment: ${{ github.ref_name }}` 保留 | 不允许删除 |
 | W8 | `on.push.branches:` 是纵向 yaml list（每分支一行），不是 inline `[main]` | 改纵向 |
+| W9 | workflow 计算 `IMAGE_REF=ghcr.io/<org>/<repo>:sha-<commit>`（或按环境前缀如 `dev-<sha>`），并在 `触发 Coolify 部署` 前 PATCH `/applications/$COOLIFY_APP_UUID/envs` 写入 key=`IMAGE_REF`, `is_literal=true` | 加 `写入 Coolify 运行镜像引用` step，必须在 build/push 成功之后、POST deploy 之前 |
+| W10 | **禁止旧变量名/旧 webhook 形态**：workflow 不得包含 `COOLIFY_APPLICATION_UUID`、`COOLIFY_API_URL`、`COOLIFY_WEBHOOK`、`COOLIFY_TOKEN`。0.8 标准只允许 `COOLIFY_APP_UUID`、`COOLIFY_BASE_URL`、`COOLIFY_API_TOKEN` | 一旦 grep 到旧变量名，直接判不合规并重写 workflow；不要尝试同时兼容两套变量 |
+| W11 | deploy step 不得因 secret/var 为空而静默 skip。默认模板不对 `Update Coolify IMAGE_REF` / `Trigger Coolify deploy` 加 `if:`；缺变量应通过 `test -n "$COOLIFY_APP_UUID"` 等命令 fail fast | 删除“变量存在才执行”的 skip 型 `if:`；如确需分支/环境条件，必须同时保留 fail-fast 检查并在文档里说明 |
+| W12 | 默认模板的运行时验证依赖步骤名：`Update Coolify IMAGE_REF` 和 `Trigger Coolify deploy`。这两个名字是模板契约，不是业务语义；若未来改名，必须同步修改 Step 8 run-log 检查 | 缺失时优先按模板恢复；不要只因为 GHA success 就跳过验证 |
+
+### Workflow 静态硬校验命令
+
+在 Step 3I / 更新 D 路径中，除 yaml parse 外必须执行这组硬校验；任一失败都不能进入 commit/push：
+
+```bash
+WF=.github/workflows/deploy.yml
+
+# 旧变量名 / webhook 形态一律不允许
+! grep -qE 'COOLIFY_APPLICATION_UUID|COOLIFY_API_URL|COOLIFY_WEBHOOK|COOLIFY_TOKEN' "$WF"
+
+# 新变量名必须齐全
+grep -q 'COOLIFY_APP_UUID' "$WF"
+grep -q 'COOLIFY_BASE_URL' "$WF"
+grep -q 'COOLIFY_API_TOKEN' "$WF"
+
+# IMAGE_REF 必须先写入 Coolify，再触发 deploy；步骤名是 Step 8 的默认模板契约
+# 若未来改名，必须同步 Step 8 run-log validation
+grep -q 'Update Coolify IMAGE_REF' "$WF"
+grep -q 'Trigger Coolify deploy' "$WF"
+grep -q '/api/v1/applications/$COOLIFY_APP_UUID/envs/bulk\|/api/v1/applications/$COOLIFY_APP_UUID/envs' "$WF"
+grep -q '/api/v1/deploy?uuid=$COOLIFY_APP_UUID' "$WF"
+
+# 禁止变量缺失时静默 skip；缺变量必须在 step 内 fail fast
+! awk '/name: Update Coolify IMAGE_REF/{f=1} f&&/^[[:space:]]*if:/&&/COOLIFY|secret|var/{print; exit 1} /^[[:space:]]*- name: Trigger Coolify deploy/{f=0}' "$WF"
+! awk '/name: Trigger Coolify deploy/{f=1} f&&/^[[:space:]]*if:/&&/COOLIFY|secret|var/{print; exit 1} /^[[:space:]]*- name: /&&f&&$0 !~ /Trigger Coolify deploy/{f=0}' "$WF"
+grep -q 'test -n "$COOLIFY_APP_UUID"' "$WF"
+grep -q 'test -n "$COOLIFY_BASE_URL"' "$WF"
+grep -q 'test -n "$COOLIFY_API_TOKEN"' "$WF"
+```
+
+If a workflow intentionally uses branch/environment conditions, the condition must not hide missing Coolify vars. Keep `test -n` fail-fast checks inside the step and update Step 8 run-log validation if step names change.
 
 ### 占位符替换表
 
@@ -190,8 +227,10 @@ reconcile Step 2 用这份规范判断「仓库现状是否合规」，不合规
 
 - **`curl -f --fail-with-body` 双开必炸**：curl 8.x 把这两个选项标记互斥，CI 直接 `exit 2`。只保留 `--fail-with-body`。这条对所有 GHA 里用 curl 通知 webhook 的步骤通用。
 
-- **Coolify deploy API 返回 200 但应用没动**：通常镜像没真换 digest（tag 同名但内容相同），Coolify 视作"已是最新"跳过。要么改 tag（加 sha 后缀），要么 `force=true`——但 `force=true` 强制重启，副作用大，少用。
+- **Coolify deploy API 返回 200 但应用没动**：通常镜像没真换 digest，或 compose 复用了本机已有 mutable tag。新模板必须用 `IMAGE_REF` 指向 sha tag，并在 compose 加 `pull_policy: always`；不要靠 `force=true` 解决版本可追溯问题，`force=true` 只作为明确需要强制重启的临时手段。
 
 - **GHCR 401 / not found**：Coolify 没挂 registry credential，或 GHCR 包默认 private 而 token 没 `read:packages`。把 GHCR 包改 public 是最简单的解，公司项目则在 Coolify 里挂 credential。
 
 - **GHCR 镜像名带大写跑不动**：`${{ github.repository }}` 原样保留仓库名大小写，但 GHCR 强制全小写。仓库名含大写时要在 workflow 里手动 `tr '[:upper:]' '[:lower:]'`，或干脆把仓库名改成全小写。
+
+- **GHCR / pnpm / Coolify Application 细节坑**：private GHCR 拉取权限、`pnpm` native dependency build policy、`packageManager` vs `pnpm/action-setup` 版本冲突、`docker_compose_location` API 字段差异等，不放在本四件套通用规则正文；遇到时查 [ghcr-pnpm-coolify-deploy-quirks.md](ghcr-pnpm-coolify-deploy-quirks.md)。

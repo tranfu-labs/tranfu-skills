@@ -8,7 +8,7 @@ description: >
   把 tranfu-labs 下的 -app 仓库部署到公司 Coolify 实例。资源走 Application (private-github-app) +
   build_pack=dockercompose + is_auto_deploy_enabled=false; GitHub App integration 由 ops 一次性手工装,
   skill 不接管。部署链路: GHA build → push GHCR → POST /api/v1/deploy?uuid=$APP_UUID → Coolify pull GHCR;
-  compose 主 service 只写 image: ghcr.io/..., 禁 build:。Step 1 入口分流: 同名 Application 不存在 → 初始化
+  compose 主 service 只写 image: ${IMAGE_REF:-ghcr.io/...:latest} + pull_policy: always, 禁 build:；GHA 写 IMAGE_REF=sha-tag 再 deploy。Step 1 入口分流: 同名 Application 不存在 → 初始化
   (mktemp clone + 四件套合规 subagent 修 + 建 project/Application + GH secrets/environment/vars + autonomous push);
   存在 → 更新分支 (A redeploy / B 改域名 / C 改 env / D 改源码或 compose / E 改 GH 配置)。
   agent 全程 autonomous 不依赖 user cwd, 收尾验 CI + 30s deploy-start + 5min 公网轮询。
@@ -16,6 +16,11 @@ description: >
   触发短语: 帮忙部署 / 确认并部署 https://github.com/tranfu-labs/<x>-app、coolify 一下、
   改域名/env/compose、redeploy / 重新部署 / 重启、部署挂了、coolify 访问不了。
   不要用于: 非 tranfu-labs 仓库; 非公司 Coolify; UI 操作 (挂 GHCR credential / 装 GitHub App); 与部署无关的改动。
+installed_by: tranfu-skills
+installed_version: 714089689e076b099b91dbd44a8997c55e23429b
+installed_at: 20260630T132409Z
+installed_source: own
+
 ---
 
 # tranfu Coolify 部署运维
@@ -38,21 +43,34 @@ description: >
 
 ## 心智模型（读一遍再开干）
 
-- **GitHub repo name == Coolify project name == Coolify Application name**——三者同名是硬约束。给一个 `https://github.com/tranfu-labs/markdown-kits-app`，立刻派生 `REPO_NAME = PROJECT_NAME = APP_NAME = markdown-kits-app`，全 skill 围绕这一个锚点定位资源，**不扫描其他 project / 不让用户从列表里挑**
+- **GitHub repo name == Coolify project name == intended Application name**——从 GitHub URL 初始化/同名探测时三者同名是硬约束。给一个 `https://github.com/tranfu-labs/markdown-kits-app`，立刻派生 `REPO_NAME = PROJECT_NAME = APP_NAME = markdown-kits-app`，全 skill 围绕这一个锚点定位资源，**不扫描其他 project / 不让用户从列表里挑**。但若入口是 Coolify UI URL / 已知 Application UUID，Coolify 返回的 `name` 可能是派生显示名（如 `<repo>:<branch>-<uuid>`），此时不要用 `name == repo` 判失败；以 `git_repository` / `git_branch` / `build_pack` / `github_app_uuid` / `project_uuid` / `docker_compose_location` / `docker_compose_domains` 等绑定字段判定 0.8 形态。
+- **Application 创建/GHA 成功后仍 unhealthy 要继续排障到可观测结论**——先读 deployment 记录和容器日志；常见根因是运行时 env 缺失（例如应用启动直接抛 missing env）。如果 `coolify app logs <uuid> --lines N` 因 `Application is not running` 拿不到运行日志，可用只读 `docker ps -a --filter name=<app_uuid>` + `docker logs --tail N <container>` 取退出容器日志；注意 Coolify CLI 的 app logs 参数是 `--lines`/`-n`，不是 `--tail`。补 env 时不展示值，补完立即 POST `/deploy?force=false` 并验证 `running:healthy` + 公网 2xx/3xx。细节见 [references/application-onboard-runtime-env-pitfalls.md](references/application-onboard-runtime-env-pitfalls.md)；数据引导类失败案例见 [references/session-2026-07-02-college-fit-app-data-bootstrap-notes.md](references/session-2026-07-02-college-fit-app-data-bootstrap-notes.md)。
+- **用户在聊天里贴出的 secret 不要硬编码进脚本/JSON 字面量**——Hermes/Feishu/日志脱敏层可能把值改写成占位符，导致 Coolify env 写入假的 masked value；也会扩大泄露面。优先让用户/运维在 UI 或终端手动录入，或使用不会把明文写入生成代码/日志的安全通道；若无法保证，就输出可复制模板而不是代执行。写完只验证 key/HTTP 状态，不打印 value；若怀疑写入被脱敏，明确要求人工覆盖并轮换。案例见 [references/session-2026-07-03-offerpilot-env-redaction-pitfall.md](references/session-2026-07-03-offerpilot-env-redaction-pitfall.md)。
+- **Coolify 全量只读盘点是部署 reconcile 的例外入口**——当用户明确要求遍历 project/resources/deployments、输出域名/首次成功部署日期/状态清单时，可以跨 project 做只读 inventory；不得执行 PATCH/POST deploy/env/delete/start/stop/restart。使用 `projects/{uuid}` 建 environment→project 映射、`/api/v1/resources` 取资源归属和域名、deployment 历史取最早 `finished/success`。详见 [references/coolify-read-only-inventory.md](references/coolify-read-only-inventory.md)。
+- **GHA success + Coolify deployment `finished` 不等于应用可用**——deployment `finished` 只说明部署流程结束，Application 可能随后从 `restarting:unknown` 落到 `exited:unhealthy`，公网返回 `503 no available server`。收尾必须继续查 `coolify app get` 运行状态 + 公网/health route；若运行日志因 `Application is not running` 取不到，先读 deployment logs，再按 `reversible-ops` 只读规则取一次性容器日志。案例和命令见 [references/session-2026-07-02-college-fit-app-finished-but-unhealthy.md](references/session-2026-07-02-college-fit-app-finished-but-unhealthy.md)。
+- **`503 no available server` 的多服务 Application 排障顺序**——先确认目标 Application `status`；若为 `exited:unhealthy` / `restarting:unknown`，不要只重启或只看 GHA success。读取最近 deployment logs，定位具体 unhealthy service（例如 `dependency failed to start: container asr-... is unhealthy`）；若 `coolify app logs` 返回 `Application is not running`，这是预期限制，不代表无日志，改查 `coolify app deployments list/logs`。多服务 compose 中 `depends_on: condition: service_healthy` 会让一个子服务 unhealthy 拖垮整组，即使其他服务 healthy。恢复后必须同时验证 `coolify app get == running:healthy` 和公网 `/`、关键 health route 返回 2xx。
+- **env 重复 key 是风险信号但不自动清理**——Coolify env API 可能已有重复 `IMAGE_REF` / 业务配置 key，排障时只输出 key/count/hash/长度，不展示值；若当前恢复不依赖删除重复项，不要自动 DELETE。删除重复 env 属于有风险清理，应单独列出受影响 key、保留候选和值哈希差异后再请求确认。
+- **GHA success 也可能只是 build-only success**——如果仓库 workflow 使用旧变量名/条件（如 `COOLIFY_APPLICATION_UUID`、`COOLIFY_API_URL`、webhook token），`Update Coolify IMAGE_REF` / `Deploy to Coolify` 可能被 skip 但整条 run 仍 success。用户说 workflow 成功后，仍要打开实际 workflow 或 run job summary 确认 deploy step 没被跳过；social-media-analytics-app 细节见 [references/session-2026-07-03-social-media-analytics-app-onboard-notes.md](references/session-2026-07-03-social-media-analytics-app-onboard-notes.md)。
 - **资源类型: Application (private-github-app) + build_pack=dockercompose**——POST `/api/v1/applications/private-github-app` 创建, GET/PATCH/DELETE 走 `/api/v1/applications/{uuid}`。**不用 Service / Compose Empty namespace** (那是 0.7 旧形态)。详见 [references/service-vs-application.md](references/service-vs-application.md)
+- **Application 身份确认要多锚点**——不要只靠 `git_repository` 或 `name` 选目标；重复 Application、`project_uuid=null`、旧 unhealthy 实例都可能存在。写 env / deploy 前用生产域名、已验证 UUID、status、deployment URL/path 等交叉确认；重复 env key 只列 key/hash，不自动删或覆盖。详见 [references/application-identity-and-env-duplicates.md](references/application-identity-and-env-duplicates.md)
+- **GHA deploy template must contain executable auth headers, not log-masked placeholders**——`assets/deploy.yml.template` and generated workflows must use `-H "Authorization: Bearer $TOKEN"` inside run steps. Never commit copied log-redaction text like `Bearer ***`; it produces invalid shell/YAML and deploy calls fail silently or at curl parse time. After generating or editing workflow files, run a static check for: no `***`, `Update Coolify IMAGE_REF`, `Trigger Coolify deploy`, `Bearer $TOKEN`, no old variable names, and YAML parse success. When patching repeated YAML header lines, do not use broad fuzzy replace; patch with surrounding step context or rewrite the full file then read back the relevant section.
 - **GitHub App integration 是 Coolify 实例级一次性配置**——`GET /api/v1/github-apps` 找 `organization=tranfu-labs` 的那一条, preflight 校验存在并 export `$GITHUB_APP_UUID`。skill **永不接管创建** (要上传 private key / installation id, 一次性手工配置, 所有 tranfu-labs 项目复用同一个)。不存在 → preflight 终止 + 给 UI 入口
-- **Auto Deploy on Push 永远关闭**——`is_auto_deploy_enabled: false`. Coolify 收到 GitHub push 不部署, 部署只能由 GHA build 完后 POST `/api/v1/deploy` 触发。4I.4 GET 必须校验这个字段
-- **镜像链路: GHA → GHCR → Coolify pull**——compose 里 service 只写 `image: ghcr.io/${REPO}:${TAG}` **不写 `build:`** (Coolify dockercompose build pack 看到 `build:` 会尝试自 build, 跟 GHA 链路撞); Coolify 走 `docker compose pull` + `up`, 不构建。详见 [references/file-generation-rules.md](references/file-generation-rules.md)
+- **Auto Deploy on Push 永远关闭**——`is_auto_deploy_enabled: false`. Coolify 收到 GitHub push 不部署, 部署只能由 GHA build 完后 POST `/api/v1/deploy` 触发。4I.4 GET 必须校验这个字段；**接管/更新已有 Application 时也必须确认 UI 的 Deployment → Auto Deploy 已关闭**，不要只看 GHA 链路或默认假设。若 API 返回 `null`/缺字段/不确定，按未确认处理，明确提醒用户到 UI 关掉或给出可恢复的 PATCH/设置命令模板，不能在报告里声称已关闭。
+- **镜像链路: GHA → GHCR → IMAGE_REF → Coolify pull**——compose 里主 service 只写 `image: ${IMAGE_REF:-ghcr.io/${REPO}:latest}` + `pull_policy: always`，**不写 `build:`**。GHA build/push 成功后先 PATCH/POST Coolify app env `IMAGE_REF=ghcr.io/${REPO}:sha-<commit>`，再 POST `/api/v1/deploy`；Coolify 读取不可变 sha tag 拉镜像。`latest` 只是 fallback/滚动标签，不是生产版本真相。回滚 = 改 `IMAGE_REF` 回上一个 sha tag + redeploy，不需要改 git 或重 build。若更新旧仓库从 `IMAGE_TAG`/`latest` 迁到 `IMAGE_REF`，注意验证 workflow 先写 `IMAGE_REF` 再 deploy，并检查是否已有重复 `IMAGE_REF` env（只报告，不自动删除）。详见 [references/file-generation-rules.md](references/file-generation-rules.md)、[references/application-ghcr-node-deploy-quirks.md](references/application-ghcr-node-deploy-quirks.md) 和 [references/session-2026-07-01-agentreach-image-ref-notes.md](references/session-2026-07-01-agentreach-image-ref-notes.md)
+- **生成 workflow 时避免 Bearer header 被脱敏破坏**——在 Hermes/ops 会话里写 `.github/workflows/deploy.yml` 时，形如 `Authorization: Bearer $TOKEN` 的文本可能被安全脱敏层改写成 `***`，导致文件或 patch 变成无效 shell/YAML。模板和手写修复优先用 `curl --oauth2-bearer "$TOKEN"` 携带 Coolify token，或在最终文件中显式静态校验“不含 `***` 且含 `--oauth2-bearer "$TOKEN"`”。详见 [references/hermes-bearer-header-redaction.md](references/hermes-bearer-header-redaction.md)
 - **一个 Application + dockercompose = 一份 compose + 内嵌 sub-applications 数组**——compose 里有 N 个 service, sub-applications 数组就有 N 条, 每条有独立 uuid + fqdn
 - **改域名走 `docker_compose_domains` 字段**（不是 `domains`、不是 `urls`、不是 compose 里 `SERVICE_FQDN_*`）——详见 [references/urls-vs-docker-compose-domains.md](references/urls-vs-docker-compose-domains.md)
 - **`SERVICE_FQDN_*` 是 Coolify → 容器的 output**, 不是 user → Coolify 的 input——compose 里写 `''` 即可, 写真值无效。详见 [references/service-fqdn-trap.md](references/service-fqdn-trap.md)
 - **改 compose 走 git push, 不走 PATCH `docker_compose_raw`**——0.7 Service 形态 compose 存在 Coolify 里 (base64), 改了要 PATCH; 0.8 Application 形态 compose 存在 git repo 里, **改完 push 即可**, Coolify 下次 deploy 自动读最新 commit
 - **部署链路**: GHA push GHCR → curl `$BASE/api/v1/deploy?uuid=$APP_UUID` → Coolify pull 重启。详见 [commands/deploy-trigger.md](commands/deploy-trigger.md)
-- **同名 Service 残留 (0.7 历史) skill 不接管**——Step 1 探测到同名 Service 而无 Application 时, 终止并告知用户手动 DELETE 旧 service 后重跑
+- **同名 Service 残留 (0.7 历史) skill 不接管**——Step 1 探测到同名 Service 而无 Application 时, 终止并告知用户手动 DELETE 旧 service 后重跑；legacy Service 可能 `project_uuid=null`，不能只按 `name + project_uuid` 查，需额外 name-only/null-project fallback（见 [references/session-2026-07-02-offerpilot-legacy-service-null-project.md](references/session-2026-07-02-offerpilot-legacy-service-null-project.md)）
+- **Application identity 不只看 `git_repository`**——Coolify 里可能存在同 repo/同名的重复 Application，或 API 返回 `project_uuid=null` 导致 Step 1 的 `name + project_uuid` filter 漏掉真实线上实例；写 env / deploy 前必须用 domain、已验证 UUID、status、deployment URL 等多锚点确认目标。详见 [references/application-identity-and-env-duplicates.md](references/application-identity-and-env-duplicates.md)
 
 ## 唯一流程入口
 
 [`scenarios/reconcile-deployment.md`](scenarios/reconcile-deployment.md)。所有触发都走它。
+
+**GitHub URL 是标准入口**。如果用户只给 Coolify UI URL（`/project/<project_uuid>/environment/<env_uuid>/application/<app_uuid>`），先按 [references/coolify-url-entrypoint-and-legacy-application.md](references/coolify-url-entrypoint-and-legacy-application.md) 做只读归一化和形态判定：从 Application 反推 `git_repository`，重新套 `tranfu-labs/<x>-app` 硬范围，并确认它是否已经是 0.8 Application 形态。**注意：Coolify Application 的 `name` 可为实例显示名/派生名（例如 `<repo>:<branch>-<uuid>`），不要求等于 GitHub repo 名；不能仅因 name 不同判定为旧/非 0.8。** 若关键字段显示为旧/非 0.8 形态（例如 `github_app_uuid=null`、`is_auto_deploy_enabled=null`、`project_uuid=null`、`docker_compose_location=/compose.yml`），只报告差异并建议并行新建 0.8 Application；不要原地 PATCH 接管。
 
 **Step 0 + Step 1 必跑**, 由 Step 1 入口分流到「初始化部署分支」(固定流程) 或「更新部署分支」(按意图条件触发), 最后两条分支汇合到共用收尾。
 
@@ -63,7 +81,7 @@ description: >
 | 0 | preflight (工具 / 凭据 / Coolify 活性 / **GitHub App integration 校验** / 命名 / GHCR ack) | [assets/preflight.sh](assets/preflight.sh) |
 | 1 | 同名 project + Application 探测 (入口分流) | [commands/application-crud.md](commands/application-crud.md) |
 | 2I | `mktemp -d` 临时目录 + git clone (永远不污染 user cwd) | — |
-| 3I | compose 合规 check → 不合规 **spawn subagent** 按规则修源码 (主 service 必须 `image:` 无 `build:`) | [references/file-generation-rules.md](references/file-generation-rules.md) |
+| 3I | compose 合规 check → 不合规 **spawn subagent** 按规则修源码 (主 service 必须 `image: ${IMAGE_REF:-ghcr.io/...:latest}` + `pull_policy: always`, 无 `build:`；deploy.yml 必须写 `IMAGE_REF` 后再 POST deploy) | [references/file-generation-rules.md](references/file-generation-rules.md) |
 | 4I | 创建 project + Application (POST `/applications/private-github-app` 带 `github_app_uuid` + `build_pack=dockercompose` + `is_auto_deploy_enabled=false` + `docker_compose_domains`), 拿 `$APP_UUID` **并明确告知用户** | [commands/application-crud.md](commands/application-crud.md) + [references/coolify-api-fields.md](references/coolify-api-fields.md) |
 | 5I | GH secrets + **自动建 environment** (`gh api PUT`) + env vars (`COOLIFY_APP_UUID = $APP_UUID`) | [commands/deploy-trigger.md](commands/deploy-trigger.md) §"GitHub 端配置" |
 | 6I | application env (POST `/applications/$APP_UUID/envs`) | [commands/application-env.md](commands/application-env.md) |
@@ -97,8 +115,16 @@ description: >
 - **Auto Deploy 显式关闭** (`is_auto_deploy_enabled: false`)——Coolify 收到 GitHub push 不触发自动部署, 部署链路由 GHA 完全掌控
 - **改 compose 不再 PATCH 任何字段**——更新分支 D 路径 push 即可, Coolify 下次 deploy 读最新 commit (0.7 形态需要 PATCH `docker_compose_raw`)
 - **GitHub App integration 是 preflight 硬约束**——`GET /api/v1/github-apps` 找 organization=tranfu-labs, 不存在终止; skill 不接管创建
+- **Application/GHCR/Node 部署坑先看参考**——遇到 `docker_compose_location` 422、`github_app_uuid`/`is_auto_deploy_enabled` echo 为 null、GitHub empty var 422、pnpm native module binding 缺失、GHCR private pull unauthorized，先查 [references/application-ghcr-node-deploy-quirks.md](references/application-ghcr-node-deploy-quirks.md)。`docker_compose_location` 创建 payload 在 Coolify 4.1.2 上应优先用 `/compose.yml`；pnpm native dependency policy 用 `onlyBuiltDependencies` 而不是旧 `allowBuilds`，案例见 [references/session-2026-07-03-social-media-analytics-app-onboard-notes.md](references/session-2026-07-03-social-media-analytics-app-onboard-notes.md)
+- **多服务 Application / Exited+restart 诊断先看参考**——多服务 compose（api+web+worker）要明确 `docker_compose_domains` 绑定哪个 service；GHA 写 `IMAGE_REF` 的 env payload 只传 `{key,value,is_literal}`；deployment `finished` 后仍 `exited:unhealthy` 时区分部署记录、当前 restart counters、域名绑定 service、容器是否仍可 logs。详见 [references/session-2026-07-01-alphaos-app-0-8-notes.md](references/session-2026-07-01-alphaos-app-0-8-notes.md)
+- **tranfu-agents telemetry DB / `/skills` 页面少量数据诊断**——`tf.db` 文件大不等于 `/skills` usage 表应有很多行；先看 `/api/skills?days=30` 的聚合窗口与 `funnel` 字段，再用 `docker inspect <container> .Mounts` 确认当前容器实际挂载的 `/data` volume，避免误看旧的相似 `*-tf-data` volume。详见 [references/tranfu-agents-volume-and-skills-dashboard-notes.md](references/tranfu-agents-volume-and-skills-dashboard-notes.md)
+- **dev/staging 分支环境必须用 GitHub Environment vars，不要硬编码 UUID**——为 dev/staging 新建独立 Coolify Application，identity 用 `git_repository + git_branch + expected domain`，GitHub Environment 与分支同名并设置 `COOLIFY_APP_UUID` / `IMAGE_TAG_ROLLING` / `IMAGE_TAG_SHA_PREFIX`；workflow 保留 `jobs.<job>.environment: ${{ github.ref_name }}` 并读取 `${{ vars.COOLIFY_APP_UUID }}`。若旧 workflow 硬编码 UUID 或只用 mutable `:dev` tag，改为先写 Coolify app env `IMAGE_REF=...:dev-<sha>` 再 deploy。详见 [references/session-2026-07-05-tranfu-agents-dev-branch-notes.md](references/session-2026-07-05-tranfu-agents-dev-branch-notes.md)
+- **college-fit-app 数据初始化模式**——若容器健康但没有下载/导入全国数据，先查 Coolify env 是否残留 `APP_MODE=static`；当前自动后台初始化应使用 `APP_MODE=auto`、`DB_PATH=/data/collegefit.sqlite`、`DB_READONLY=1`、`DB_BOOTSTRAP_MODE=preseed`、`PORT=3000`，不要用 `APP_MODE=full` 作为首次 bootstrap。详见 [references/session-2026-07-02-college-fit-app-auto-bootstrap-notes.md](references/session-2026-07-02-college-fit-app-auto-bootstrap-notes.md)
+- **OfferPilot 多服务 ASR unhealthy 诊断**——若部署日志显示 `asr` 容器 `Started → Waiting → Error` 且 `agent` healthy，先不要假设是 Qwen key/网络；读 compose 健康检查和 ASR imports/requirements。`/health` 不连外部 ASR 时，常见是启动/import 依赖缺失，例如 `websocket` import 需要 `websocket-client`（不是 `websockets`）。详见 [references/session-2026-07-05-offerpilot-asr-websocket-client.md](references/session-2026-07-05-offerpilot-asr-websocket-client.md)
+- **同名 project 已存在但无 Application / Service = 空壳 project**——初始化分支继续走，但 Step 4I 复用已发现的 `PROJECT_UUID`，不要新建第二个 project、不要列 project 让用户挑。offerpilot-app 的一次会话细节见 [references/session-2026-07-02-offerpilot-app-empty-project-onboard-notes.md](references/session-2026-07-02-offerpilot-app-empty-project-onboard-notes.md)
+- **Step 10 公网 URL 推导优先读 `docker_compose_domains`**——当前 Coolify GET 可能返回顶层 `fqdn` 为自动 `*.sslip.io` 且 `.applications=null`；dockercompose 真实产品域名常在 `docker_compose_domains`，并可能是 JSON 字符串。该字段可能是数组，也可能是对象字符串（例如 `{"web":{"domain":"https://offerpilot-app.tranfu.com:8080"}}`）；轮询前先兼容解析两种形态、strip 容器端口，再 fallback 到 fqdn。另见 [references/session-2026-07-01-alphaos-app-url-verification-notes.md](references/session-2026-07-01-alphaos-app-url-verification-notes.md) 和 [references/session-2026-07-02-offerpilot-app-onboard-notes.md](references/session-2026-07-02-offerpilot-app-onboard-notes.md)
 - **域名字段从 `urls: [{name, url}]` 换成 `docker_compose_domains: [{name, domain}]`**——key 也从 `url` 变成 `domain`
-- **同名 Service 残留 (0.7 历史) 触发不接管路径**——Step 1 给提示后终止, 不主动迁移
+
 
 **继承 0.7 的设计** (不变):
 
@@ -111,7 +137,9 @@ description: >
 - Step 9/10 有窗口与超时 (30s deploy-start + 5min 域名轮询), 不再单次 curl
 - Step 4I 创建 Application 后必须明确把 `$APP_UUID` 告知用户 — 这是 GH workflow 配置的关键值
 
-**全程 autonomous, 中途零停顿**: user 给出初始指令 = 全链路隐式 ack, agent 一路跑到 Step 10 收尾, **不在中途等用户回应**。act 前 GET 用于事后告知 diff, 不是用于等 ack。**唯一例外**: Step 1 后用户意图模糊 → 询问意图; 询问完毕后继续 autonomous。
+**全程 autonomous, 中途零停顿**: user 给出初始指令 = 全链路隐式 ack, agent 一路跑到 Step 10 收尾, **不在中途等用户回应**。act 前 GET 用于事后告知 diff, 不是用于等 ack。**例外**: (1) Step 1 后用户意图模糊 → 询问意图; 询问完毕后继续 autonomous。(2) 用户任何时候明确说“停止部署 / stop / cancel / 暂停 / 别继续” → 立即硬取消：不再创建/修改 Coolify 资源、不写 GH secrets/vars、不 commit/push、不触发 deploy、不继续轮询；报告已经发生和明确未发生的边界。若此前已派后台 subagent 在 mktemp clone 中改文件，不再使用其结果推进部署，只说明其改动限于临时目录。
+
+**安全叠加层（ops profile / reversible-ops）**: 若当前会话的 `AGENTS.md` 或已加载的 `reversible-ops` 要求 review-only / 不替执行写操作，则本 skill 的 “autonomous push / PATCH / POST deploy” 不覆盖该安全门。此时仍按本 skill 完成只读归一化、mktemp clone、源码/compose/workflow 修改和本地校验；到 `git commit && git push`、Coolify app env PATCH、POST deploy 等写操作时，输出可恢复的用户执行命令（含 `git revert HEAD && git push` 或 `IMAGE_REF` 回滚模板），等待用户执行；用户回报 commit/run/deployment 后再继续 Step 8/9/10 观察。不要声称已部署，也不要停在计划不产出可执行命令。
 
 ## 不做什么
 
@@ -164,7 +192,10 @@ own-skills/tranfu-coolify-ops/
     ├── service-fqdn-trap.md              ← SERVICE_FQDN_* 是 output 不是 input
     ├── urls-vs-docker-compose-domains.md ← 改域名走 docker_compose_domains (Application 形态)
     ├── coolify-api-fields.md             ← openapi 字段速查 (主 namespace /applications, 旧 /services 归档段)
+    ├── coolify-api-fields.md             ← openapi 字段速查 (主 namespace /applications, 旧 /services 归档段)
     ├── file-generation-rules.md          ← 四件套生成 / 校验规范 (主 service 必须 image: 无 build:)
+    ├── application-ghcr-node-deploy-quirks.md ← 本轮沉淀: Application API / GHCR private / pnpm native module 坑
+    ├── archived-coolify-deploy.md        ← 旧 coolify-deploy skill 归档说明
     ├── archived-coolify-deploy.md        ← 旧 coolify-deploy skill 归档说明
     ├── coolify-compose-deploy-failure-triage.md  ← Step 8 排障 (DEPRECATED-CLI)
     ├── coolify-docker-inspection.md      ← Step 9 容器证据采集 (DEPRECATED-CLI)
@@ -183,7 +214,7 @@ own-skills/tranfu-coolify-ops/
 - [ ] Coolify Application status = running
 - [ ] Coolify Application GET 返回 `is_auto_deploy_enabled == false` + `build_pack == "dockercompose"` + `github_app_uuid == $GITHUB_APP_UUID`
 - [ ] GHA 最近一次 deploy.yml run = success + log 无 "missing variable" 类报错
-- [ ] 仓库根四件套（Dockerfile / .dockerignore / compose.yml / deploy.yml）全在且合规 (compose 主 service `image: ghcr.io/...` 无 `build:`)
+- [ ] 仓库根四件套（Dockerfile / .dockerignore / compose.yml / deploy.yml）全在且合规 (compose 主 service `image: ${IMAGE_REF:-ghcr.io/...:latest}` + `pull_policy: always`、无 `build:`；deploy.yml 在 POST deploy 前写入 Coolify app env `IMAGE_REF=...:sha-<commit>`)
 
 任一未达 → 流程中止在对应 Step，按该 Step 的失败文案给用户。
 
@@ -195,7 +226,7 @@ own-skills/tranfu-coolify-ops/
 2. Step 0: preflight.sh "https://github.com/tranfu-labs/markdown-kits-app" → 全部 ✓ (含 GitHub App integration 校验, export $GITHUB_APP_UUID)
 3. Step 1: GET /api/v1/projects 找 name=`markdown-kits-app` → 没找到 → 走初始化部署分支
 4. Step 2I: mktemp -d 临时目录 → git clone → cd
-5. Step 3I: bash 跑 compose check → compose.yml 不存在 + Dockerfile 不存在 → spawn subagent 按 file-generation-rules.md 生成四件套 (compose 主 service `image: ghcr.io/tranfu-labs/markdown-kits-app:latest` 无 `build:`) → subagent 回报 "新建: Dockerfile, .dockerignore, compose.yml, .github/workflows/deploy.yml" → 明确告知用户"已按 coolify-deploy 修改源码"
+5. Step 3I: bash 跑 compose check → compose.yml 不存在 + Dockerfile 不存在 → spawn subagent 按 file-generation-rules.md 生成四件套 (compose 主 service `image: ${IMAGE_REF:-ghcr.io/tranfu-labs/markdown-kits-app:latest}` + `pull_policy: always`，无 `build:`；deploy.yml 在 POST deploy 前写 `IMAGE_REF=ghcr.io/tranfu-labs/markdown-kits-app:sha-<commit>`) → subagent 回报 "新建: Dockerfile, .dockerignore, compose.yml, .github/workflows/deploy.yml" → 明确告知用户"已按 coolify-deploy 修改源码"
 6. Step 4I.1: POST /api/v1/projects (name=markdown-kits-app) → $PROJECT_UUID
 7. Step 4I.3: POST /api/v1/applications/private-github-app 带 github_app_uuid + git_repository=tranfu-labs/markdown-kits-app + git_branch=main + build_pack=dockercompose + is_auto_deploy_enabled=false + docker_compose_domains + ports_exposes + instant_deploy=false → $APP_UUID
 8. Step 4I.4: GET /api/v1/applications/$APP_UUID 校验 build_pack=dockercompose / is_auto_deploy_enabled=false → ✓ 明确告知 "Application: markdown-kits-app ($APP_UUID), auto_deploy=false, Coolify URL: ..."
@@ -268,7 +299,7 @@ own-skills/tranfu-coolify-ops/
 1. Step 0/1 → 走更新分支
 2. Step 2U: 意图 = 改 compose → 选 act D
    - mktemp 临时目录 + git clone markdown-kits-app
-   - spawn subagent 按 file-generation-rules.md 加 redis service (含 SERVICE_PASSWORD_REDIS 魔法变量, 不写 ports; redis 用官方镜像直接 `image: redis:7-alpine`, 主应用 service 仍是 `image: ghcr.io/...` 无 build)
+   - spawn subagent 按 file-generation-rules.md 加 redis service (含 SERVICE_PASSWORD_REDIS 魔法变量, 不写 ports; redis 用官方镜像直接 `image: redis:7-alpine`, 主应用 service 仍是 `image: ${IMAGE_REF:-ghcr.io/...:latest}` + `pull_policy: always` 无 build)
    - subagent 返回改了 compose.yml, agent 明确告知改了什么
    - autonomous git add + commit + push, 推完告知 user "commit <sha>, 改了 compose.yml, GitHub link"
    - **不调任何 PATCH** — compose 走 git binding, Coolify 触发 deploy 时自己读最新 commit 的 compose

@@ -5,11 +5,13 @@ reconcile Step 7 / Step 8 用。
 ## 链路总览
 
 ```
-git push -> GitHub Actions deploy.yml -> docker build -> push GHCR
+git push -> GitHub Actions deploy.yml -> docker build -> push GHCR (rolling tag + sha tag)
+                                              ↓
+                              PATCH /applications/$APP_UUID/envs IMAGE_REF=ghcr.io/<org>/<repo>:sha-<commit>
                                               ↓
                                      curl POST $BASE/api/v1/deploy?uuid=<application-uuid>
                                               ↓
-                              Coolify (Application + dockercompose) 收到 -> docker compose pull -> up
+                              Coolify (Application + dockercompose) 读取 IMAGE_REF -> pull immutable sha tag -> up
 ```
 
 Coolify Application 创建时 `is_auto_deploy_enabled=false`——GitHub push 不触发 Coolify 自动部署, 触发权完全归 GHA workflow。即便 Coolify GitHub App integration 会订阅 GitHub push webhook, 因为 auto_deploy 关了, Coolify 收到 push 也不动。
@@ -53,7 +55,9 @@ gh api -X PUT "repos/$REPO_ORG/$REPO_NAME/environments/$DEFAULT_BRANCH" >/dev/nu
 ```bash
 gh variable set COOLIFY_APP_UUID       --env main --body "<application-uuid>"
 gh variable set IMAGE_TAG_ROLLING      --env main --body "latest"
-gh variable set IMAGE_TAG_SHA_PREFIX   --env main --body ""
+# IMAGE_TAG_SHA_PREFIX 可省略；deploy.yml.template 默认使用 sha-，避免 GitHub env var 空值 422。
+# 如要显式配置，也必须非空：
+gh variable set IMAGE_TAG_SHA_PREFIX   --env main --body "sha-"
 ```
 
 多环境（dev）— 也先 `gh api PUT` 建 environment 再 set vars：
@@ -70,6 +74,30 @@ gh variable set IMAGE_TAG_SHA_PREFIX   --env dev --body "dev-"
 ```bash
 gh variable list --env main | grep -E '^COOLIFY_APP_UUID|^IMAGE_TAG_'
 ```
+
+### Runtime image env written by CI
+
+`IMAGE_REF` 是 Coolify Application env，不是 GitHub environment var。deploy workflow 在镜像 push 成功后写入。首次部署时 key 不存在，`PATCH /envs` 会返回 `404 Environment variable not found`，所以模板必须 `PATCH` 失败 404 时 fallback `POST` 创建：
+
+```bash
+IMAGE_REF="ghcr.io/$REPO_ORG/$REPO_NAME:sha-$GITHUB_SHA"
+BODY="$(jq -nc --arg k IMAGE_REF --arg v "$IMAGE_REF" '{key:$k,value:$v,is_literal:true}')"
+HTTP_CODE=$(curl -sS -o /tmp/coolify-image-ref-response.json -w "%{http_code}" -X PATCH \
+  -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$BODY" \
+  "$BASE/api/v1/applications/$APP_UUID/envs")
+if [ "$HTTP_CODE" = "404" ]; then
+  HTTP_CODE=$(curl -sS -o /tmp/coolify-image-ref-response.json -w "%{http_code}" -X POST \
+    -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$BODY" \
+    "$BASE/api/v1/applications/$APP_UUID/envs")
+fi
+[ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ] || { cat /tmp/coolify-image-ref-response.json; exit 1; }
+```
+
+回滚时只需要把这个 app env 改回上一个 sha tag 后重新 deploy；不需要改 `compose.yml` 或重新 build。
 
 ## 手工触发部署
 

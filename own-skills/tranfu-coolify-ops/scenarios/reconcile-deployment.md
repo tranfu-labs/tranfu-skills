@@ -171,8 +171,23 @@ EOF
       exit 1
     fi
 
-    echo "  Project 是空壳 (无 Application 无 Service) → 走初始化部署分支 (复用 $PROJECT_UUID)"
-    # 进 Step 2I, 跳过 4I.1 创建 project, 复用 $PROJECT_UUID
+    # fallback: 0.8 Application 的 name 可能是派生显示名，且 project_uuid 可能为 null。
+    # 若 name + project_uuid 没找到，不要立刻判初始化；先按 repo/domain 找 scoped candidate，
+    # 再用 GET /applications/$uuid 验证 git_repository/git_branch/build_pack/docker_compose_location。
+    APP_UUID=$(curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+      "$BASE/api/v1/applications" \
+      | jq -r --arg repo "$REPO_ORG/$REPO_NAME" --arg domain "$APP_NAME.tranfu.com" \
+        '[.[] | select((.git_repository == $repo) or (.docker_compose_domains|tostring|contains($domain)) or (.fqdn|tostring|contains($domain)))] | .[0].uuid // ""')
+
+    if [ -n "$APP_UUID" ]; then
+      echo "✓ 找到派生名 / project_uuid=null 的 0.8 Application candidate: $APP_UUID → 验证后走更新部署分支"
+      curl -sS -H "Authorization: Bearer $COOLIFY_API_TOKEN" "$BASE/api/v1/applications/$APP_UUID" \
+        | jq '{uuid,name,project_uuid,status,git_repository,git_branch,build_pack,docker_compose_location,docker_compose_domains,is_auto_deploy_enabled}'
+      echo "  注意: 接管/更新已有 Application 时必须确认 Deployment → Auto Deploy 已关闭；若 is_auto_deploy_enabled 为 null/缺失，不要声称已关闭，需提醒用户 UI 复核或按 reversible-ops 给可恢复设置命令。"
+    else
+      echo "  Project 是空壳 (无 Application 无 Service) → 走初始化部署分支 (复用 $PROJECT_UUID)"
+      # 进 Step 2I, 跳过 4I.1 创建 project, 复用 $PROJECT_UUID
+    fi
   fi
 fi
 ```
@@ -466,6 +481,8 @@ agent 从用户原话提炼意图, 按下表执行对应 act：
 - 不主动核对 envs / domains / secrets (除非用户明说要改)
 - 不主动改 `is_auto_deploy_enabled` (0.8 永远 false, 任何 PATCH 不带这个字段)
 
+**D 路径例外硬线**：一旦用户要求改源码 / compose / Dockerfile / deploy.yml，必须在 commit/push 前重新跑 `file-generation-rules.md` 的静态硬校验，尤其是 workflow 旧变量名检查和 deploy step skip 检查。发现 `COOLIFY_APPLICATION_UUID`、`COOLIFY_API_URL`、`COOLIFY_WEBHOOK`、`COOLIFY_TOKEN`，或 `Update Coolify IMAGE_REF` / `Trigger Coolify deploy` 步骤缺失、带会静默 skip 的 `if:` 条件，必须先修 workflow，不能只改用户点名的那一行。
+
 > 任一 act 完跳到共用收尾 [Step 8](#step-8-等-gha-跑完--验-ci-无错)（Step 8/9/10 内部自判断要不要 act, 无需上层 tracking）。
 
 ---
@@ -495,18 +512,31 @@ RUN_EXIT=$?
 CONCLUSION=$(gh run view "$RUN_ID" --json conclusion --jq .conclusion)
 
 # 4. 验 log 无 "缺变量" 类报错 (CI 跑成功但 secret 没设的 silent fail)
-LOG_WARN=$(gh run view "$RUN_ID" --log 2>/dev/null \
+RUN_LOG=$(gh run view "$RUN_ID" --log 2>/dev/null)
+LOG_WARN=$(printf '%s\n' "$RUN_LOG" \
   | grep -iE "missing|undefined|not set|缺少|未定义|secret.*empty|variable.*empty" \
   | head -10)
+
+# 5. 验部署步骤不是 silent skip：GHA success 但 deploy step 被跳过必须失败
+# 默认模板的步骤名是运行时验证契约；如模板改名，必须同步这里。
+IMAGE_REF_STEP_COUNT=$(printf '%s\n' "$RUN_LOG" | grep -c "Update Coolify IMAGE_REF" || true)
+DEPLOY_STEP_COUNT=$(printf '%s\n' "$RUN_LOG" | grep -c "Trigger Coolify deploy" || true)
+OLD_VAR_COUNT=$(gh api "repos/$REPO_ORG/$REPO_NAME/contents/.github/workflows/deploy.yml?ref=$DEFAULT_BRANCH" --jq .content \
+  | base64 -d \
+  | grep -cE 'COOLIFY_APPLICATION_UUID|COOLIFY_API_URL|COOLIFY_WEBHOOK|COOLIFY_TOKEN' || true)
 ```
 
 **Diff**：
 
-- `CONCLUSION == "success"` && `LOG_WARN` 空 → ✓ 进 Step 9
+- `CONCLUSION == "success"` && `LOG_WARN` 空 && `IMAGE_REF_STEP_COUNT > 0` && `DEPLOY_STEP_COUNT > 0` && `OLD_VAR_COUNT == 0` → ✓ 进 Step 9
 - `CONCLUSION != "success"` → 终止，输出 `gh run view $RUN_ID --log-failed`
 - `LOG_WARN` 非空 → 终止，把命中的行贴给用户（通常是 `COOLIFY_APP_UUID` 之类没 set）
+- `IMAGE_REF_STEP_COUNT == 0` 或 `DEPLOY_STEP_COUNT == 0` → 终止，说明 workflow 可能 build-only success、deploy step 被条件 skip，或模板步骤名与 Step 8 检查漂移；先修 workflow/检查逻辑，不要直接 fallback POST deploy
+- `OLD_VAR_COUNT > 0` → 终止，说明 workflow 仍含旧变量名/旧 webhook 形态；按 `file-generation-rules.md` 重写 workflow
 
 ### Step 9: 30s 内验 Coolify 启动部署（fallback 手动触发）
+
+Step 9 只处理“workflow 已经执行部署步骤，但 Coolify 30 秒内未进入部署状态”的传递失败。若 Step 8 发现 workflow 旧变量名、deploy step 被 skip、或模板步骤名与检查漂移，必须先修 workflow；不要用手动 POST deploy 掩盖 workflow 合约问题。
 
 ```bash
 T0=$(date +%s)
