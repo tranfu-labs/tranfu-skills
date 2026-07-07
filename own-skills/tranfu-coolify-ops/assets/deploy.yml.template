@@ -1,18 +1,14 @@
 name: Build and Publish to GHCR
 
-# push 到部署分支时触发：前置检查 → 跑测试卡口（如有）→ 构建镜像(滚动 tag + sha tag) → 推 GHCR → 通知 Coolify 拉新镜像部署。
+# push 到部署分支时触发：前置检查 → 跑测试卡口（如有）→ 构建镜像(滚动 tag + sha tag) → 推 GHCR → 写入 IMAGE_REF → 通知 Coolify 拉新镜像部署。
 # 配置依赖（统一在 Settings → Secrets and variables → Actions 配）：
-#   - secret  COOLIFY_API_TOKEN     (Coolify API token，仅 deploy 权限，repo 级)
-#   - secret  COOLIFY_BASE_URL      (例: http://120.77.223.183:8000，repo 级)
-#   - 每个部署分支在 Settings → Environments 建一个同名 environment，并在该 environment 的 Variables 下配：
-#       COOLIFY_APP_UUID       (该环境对应 Coolify 应用的 UUID)
-#       IMAGE_TAG_ROLLING      (滚动 tag，如 prod 配 "latest"、dev 配 "dev")
-#       IMAGE_TAG_SHA_PREFIX   (sha tag 前缀，prod 配 ""、dev 配 "dev-")
+#   - secret  COOLIFY_API_TOKEN
+#   - secret  COOLIFY_BASE_URL
+#   - 每个部署分支同名 environment variables: COOLIFY_APP_UUID / IMAGE_TAG_ROLLING / IMAGE_TAG_SHA_PREFIX
 on:
   push:
     branches:
       - {{DEFAULT_BRANCH}}
-      # 加环境：此处加分支名 + 在 Settings → Environments 建同名 env 并配 COOLIFY_APP_UUID / IMAGE_TAG_ROLLING / IMAGE_TAG_SHA_PREFIX
   workflow_dispatch:
 
 env:
@@ -22,29 +18,29 @@ env:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name }}   # 分支名 = environment 名；即便只有一个环境也保留这一行，删除等于放弃多环境扩展点
+    environment: ${{ github.ref_name }}
 
     permissions:
       contents: read
       packages: write
 
     env:
-      COOLIFY_APP_UUID:     ${{ vars.COOLIFY_APP_UUID }}
-      IMAGE_TAG_ROLLING:    ${{ vars.IMAGE_TAG_ROLLING }}
-      IMAGE_TAG_SHA_PREFIX: ${{ vars.IMAGE_TAG_SHA_PREFIX }}
+      COOLIFY_APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
+      IMAGE_TAG_ROLLING: ${{ vars.IMAGE_TAG_ROLLING }}
+      IMAGE_TAG_SHA_PREFIX: ${{ vars.IMAGE_TAG_SHA_PREFIX || 'sha-' }}
+      IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ vars.IMAGE_TAG_SHA_PREFIX || 'sha-' }}${{ github.sha }}
 
     steps:
       - name: 前置检查（Coolify 部署所需配置）
         env:
           TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
-          BASE:  ${{ secrets.COOLIFY_BASE_URL }}
+          BASE: ${{ secrets.COOLIFY_BASE_URL }}
         run: |
           missing=()
           [ -z "$TOKEN" ] && missing+=("repo secret: COOLIFY_API_TOKEN")
-          [ -z "$BASE"  ] && missing+=("repo secret: COOLIFY_BASE_URL")
-          [ -z "$COOLIFY_APP_UUID" ]  && missing+=("environment '${{ github.ref_name }}' var: COOLIFY_APP_UUID")
+          [ -z "$BASE" ] && missing+=("repo secret: COOLIFY_BASE_URL")
+          [ -z "$COOLIFY_APP_UUID" ] && missing+=("environment '${{ github.ref_name }}' var: COOLIFY_APP_UUID")
           [ -z "$IMAGE_TAG_ROLLING" ] && missing+=("environment '${{ github.ref_name }}' var: IMAGE_TAG_ROLLING")
-          # IMAGE_TAG_SHA_PREFIX 允许为空字符串（prod 通常就是空），不校验
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::缺少 Coolify 部署配置，构建已中止："
             printf '  - %s\n' "${missing[@]}"
@@ -75,16 +71,45 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG_ROLLING }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG_SHA_PREFIX }}${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ vars.IMAGE_TAG_SHA_PREFIX || 'sha-' }}${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: 触发 Coolify 部署
+      - name: Update Coolify IMAGE_REF
         env:
           TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
-          BASE:  ${{ secrets.COOLIFY_BASE_URL }}
+          BASE: ${{ secrets.COOLIFY_BASE_URL }}
         run: |
-          # defensive strip: 若 BASE 末尾误带 / 会拼出 //api 导致 Coolify 404
+          test -n "$COOLIFY_APP_UUID"
+          test -n "$BASE"
+          test -n "$TOKEN"
+          BASE="${BASE%/}"
+          BODY="$(jq -nc --arg k IMAGE_REF --arg v "$IMAGE_REF" '{key: $k, value: $v, is_literal: true}')"
+          HTTP_CODE=$(curl -sS -o /tmp/coolify-image-ref-response.json -w "%{http_code}" -X PATCH \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$BODY" \
+            "$BASE/api/v1/applications/$COOLIFY_APP_UUID/envs")
+          if [ "$HTTP_CODE" = "404" ]; then
+            HTTP_CODE=$(curl -sS -o /tmp/coolify-image-ref-response.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$BODY" \
+              "$BASE/api/v1/applications/$COOLIFY_APP_UUID/envs")
+          fi
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            cat /tmp/coolify-image-ref-response.json
+            exit 1
+          fi
+
+      - name: Trigger Coolify deploy
+        env:
+          TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          BASE: ${{ secrets.COOLIFY_BASE_URL }}
+        run: |
+          test -n "$COOLIFY_APP_UUID"
+          test -n "$BASE"
+          test -n "$TOKEN"
           BASE="${BASE%/}"
           curl -sSL --fail-with-body -X POST \
             -H "Authorization: Bearer $TOKEN" \
