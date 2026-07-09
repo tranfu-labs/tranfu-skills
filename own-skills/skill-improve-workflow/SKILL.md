@@ -1,5 +1,6 @@
 ---
 name: skill-improve-workflow
+name_zh: 技能提升工作流
 description: >-
   当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量提升时触发——
   用 skill-create-workflow 创建时的同一套门禁反向检验并把它改到合格: 四门反检出问题后,
