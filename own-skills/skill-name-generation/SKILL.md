@@ -1,5 +1,6 @@
 ---
 name: skill-name-generation
+name_zh: Skill 名称生成
 description: >
   给一个已有 skill 的 slug + description 生成人类可读的显示名, 一次配对输出 `display_name` (英文 Title Case 短语) 与 `display_name_zh` (中文 4-8 字), 用于 frontmatter / 展示层。触发于: "给这个 skill 起个显示名 / 起个中文名 / 起个人类可读名 / 生成 display_name / display name / skill 叫什么 / skill 起名 / skill 命名 / human-readable name / 帮我给 skill X 起个中英文名"。也覆盖批量回填存量 skill 显示名字段的场景。Do NOT trigger when: 起产品/功能/模块名 (走 product-title-generation) / 给代码变量·函数·类命名 (走 code naming) / 起 skill 的 slug 容器名 (走 skill-domain-framing) / 写 slogan·营销文案·SEO 标题·商标合规。也不改任何 SKILL.md 或 openai.yaml 文件——写不写字段由用户自行决定。
 version: 0.1.0
