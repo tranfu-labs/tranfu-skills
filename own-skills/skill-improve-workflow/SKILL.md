@@ -1,36 +1,37 @@
 ---
-name: skill-review-workflow
+name: skill-improve-workflow
 description: >-
-  当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量审查时触发——
-  这是 skill-create-workflow 的审查视角: 用创建时的同一套门禁反向检验已有 skill。
+  当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量提升时触发——
+  用 skill-create-workflow 创建时的同一套门禁反向检验并把它改到合格: 四门反检出问题后,
+  确定类改法征同意即改、判断类采访用户拍板。
 
-  触发判定按 "审查意图 + 完整 skill 目标", 不按短语字典匹配:
+  触发判定按 "提升 / 审查意图 + 完整 skill 目标", 不按短语字典匹配:
 
-  - 任何 "审查式动词 + 已有 skill" 的表达都算: 审查 / 审 / 评审 / 检查 / 体检 / 把关 /
-    review / audit + 一个已存在的 skill。
-  - 口语说法同理: "这个 skill 写得怎么样"、"帮我看看 own-skills/xxx 质量"、
-    "这个 skill 要不要重构"、"它还够格当 skill 吗"。
-  - 代词承接同理: 上文在讨论某个已有 skill 时, "审一下它" 即触发, 目标取上文。
+  - 任何 "提升式或审查式动词 + 已有 skill" 都算: 提升 / 改进 / 完善 / 优化 / 打磨 / 精炼 /
+    审查 / 审 / 评审 / 检查 / 体检 / 把关 / improve / review / audit + 一个已存在的 skill。
+  - 口语说法同理: "帮我把这个 skill 提升一下"、"完善下 own-skills/xxx"、
+    "这个 skill 写得怎么样"、"这 skill 要不要重构"、"它还够格当 skill 吗"。
+  - 代词承接同理: 上文在讨论某个已有 skill 时, "提升一下它 / 审一下它" 即触发, 目标取上文。
 
   Do NOT trigger when: 创建全新 skill (走 skill-create-workflow); 目标只是一段 prompt /
-  agent 定义文本而非完整 skill 目录 (直接走 prompt-review); install / list / upgrade /
-  uninstall skills (走 tranfu-router); 用户不要审查结论、只想直接改写或重构某 skill
-  (走 skill-create-workflow 的 update / repair 模式)。
+  agent 定义文本而非完整 skill 目录 (直接走 prompt-review); 用户点名给 skill 加某功能 / 改某个
+  具体行为、不要质量审查 (走 skill-create-workflow update / repair); install / list /
+  upgrade / uninstall 已装 skill (走 tranfu-router)。
 
   安全边界: 审查阶段只审不改; 仅在审后修复阶段, 对有确定改法的问题逐条或批量征得用户
   同意后才落盘, 判断类问题一律采访用户拍板, NEVER 擅自替用户决定或未经同意改文件。
-version: 0.4.0
+version: 0.5.0
 author: aquarius-wing
 updated_at: 2026-07-09
 origin: own
 userInvocable: true
 ---
 
-# Skill 审查工作流
+# Skill 提升工作流
 
 ## 核心职责
 
-把 "审查一个已有 skill" 的请求跑成两阶段闭环: **审查阶段** (四门反检 → 三态裁决报告) + **审后修复阶段** (确定类征同意即改, 判断类采访用户)。四门 = 内容准入反检 → 任务域与命名反检 → prompt 工程质量 → 结构完整性; 三态 = 通过 / 需修改 / 建议重构。
+把 "提升一个已有 skill 的质量" 的请求跑成两阶段闭环: **审查阶段** (四门反检 → 三态裁决报告) + **审后修复阶段** (确定类征同意即改, 判断类采访用户)。审查是手段, 把 skill 改到合格是结果——这也是本 skill 按结果 (提升) 而非按活动 (审查) 命名的原因。四门 = 内容准入反检 → 任务域与命名反检 → prompt 工程质量 → 结构完整性; 三态 = 通过 / 需修改 / 建议重构。
 
 架构 (三条原则):
 
@@ -347,7 +348,7 @@ REMEDIATION_SUMMARY:
 - SKILL.md 引用的附属文件缺失 → 门 4 记 HIGH (悬空引用), 继续审查。
 - 修复阶段征询工具都不可用 (无 AskUserQuestion / request_user_input, 且非交互会话) → NEVER 擅自落盘; 跳过修复阶段, 在报告里标 `remediation: skipped-no-consent-channel` 并把待修项留给用户手动处理。
 - batch 模式中单个 skill 审查中断或短路退出 → 该 skill 在汇总表记录其 verdict 与短路点, 其余继续。
-- 目标是 `skill-review-workflow` 自身 → 照常审, 无特权豁免。
+- 目标是 `skill-improve-workflow` 自身 → 照常审, 无特权豁免。
 
 <example>
 User: "帮我审一下 own-skills/daily-report 这个 skill"

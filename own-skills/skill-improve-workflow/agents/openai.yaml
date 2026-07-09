@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill 提升工作流"
+  short_description: "用创建门禁的同一套尺子把已有 skill 审查并改到合格, 确定类征同意即改、判断类采访拍板"
+  default_prompt: "使用 $skill-improve-workflow，对指定的已有 skill 先跑内容准入反检、任务域反检、prompt 质量审查和结构完整性四门给出三态裁决, 再进入审后修复: 确定类改法征我同意后直接改, 判断类问题带进度采访我拍板。"
