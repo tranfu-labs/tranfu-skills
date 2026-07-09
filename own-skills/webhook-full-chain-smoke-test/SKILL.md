@@ -1,5 +1,6 @@
 ---
 name: webhook-full-chain-smoke-test
+name_zh: Webhook 全链路冒烟测试
 description: Temporary skill for testing the full tranfu-skills webhook chain: pre-agent name_zh, squash merge, catalog sync, tranfucom CI, and Feishu notification.
 argument-hint: "<smoke test input>"
 version: 0.1.0
