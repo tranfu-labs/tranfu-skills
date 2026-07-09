@@ -21,3 +21,5 @@ Use this skill only for webhook smoke testing.
 1. Confirm the webhook received a real pull request event.
 2. Confirm the pre-agent workflow can add `name_zh` to this file.
 3. Remove this skill after the test is complete.
+
+<!-- Synchronize trigger marker for webhook test. -->
