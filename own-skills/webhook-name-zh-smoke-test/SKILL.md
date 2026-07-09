@@ -1,5 +1,6 @@
 ---
 name: webhook-name-zh-smoke-test
+name_zh: Webhook 中文名冒烟测试
 description: Temporary smoke-test skill used to verify the tranfu-skills webhook name_zh pre-agent workflow.
 argument-hint: "<test input>"
 version: 0.1.0
