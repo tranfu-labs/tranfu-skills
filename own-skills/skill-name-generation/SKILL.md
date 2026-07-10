@@ -5,7 +5,7 @@ display_name: Skill Display Name Generation
 display_name_zh: Skill 显示名生成
 description: >
   给一个已有 skill 的 slug + description 生成人类可读的显示名, 一次配对输出 `display_name` (英文 Title Case 短语) 与 `display_name_zh` (中文 4-8 字), 用于 frontmatter / 展示层。触发于: "给这个 skill 起个显示名 / 起个中文名 / 起个人类可读名 / 生成 display_name / display name / skill 叫什么 / skill 起名 / skill 命名 / human-readable name / 帮我给 skill X 起个中英文名"。也覆盖批量回填存量 skill 显示名字段的场景。Do NOT trigger when: 起产品/功能/模块名 (走 product-title-generation) / 给代码变量·函数·类命名 (走 code naming) / 起 skill 的 slug 容器名 (走 skill-domain-framing) / 写 slogan·营销文案·SEO 标题·商标合规。也不改任何 SKILL.md 或 openai.yaml 文件——写不写字段由用户自行决定。
-version: 0.2.0
+version: 0.3.0
 author: aquarius-wing
 updated_at: 2026-07-10
 origin: own
@@ -53,7 +53,7 @@ CREATE A TODO LIST FOR THE TASKS BELOW. Keep the list internal unless the user a
 1. 读输入。用户 MUST 提供 skill 的 slug + description; 也可指一个 `SKILL.md` 路径, 由本 skill 从 frontmatter 读取。若两者都缺, 进入失败路径 F1。
 2. 判越界。若输入实际是**产品/功能/模块**、**代码标识符**、**slogan/SEO 标题**、**商标合规**、或用户在要**新的 slug**, 停下路由到对应 skill (见 §Ownership), NEVER 硬起显示名。
 3. 判 **skill 类型** (决定英文与中文各自的句式)。**先看 description 的第一个能力动词** (生成 / 分析 / 审查 / 编排 / 提供), 再看 slug 只作印证 (见 §字段职责与权重); **当 slug 形态词后缀与 description 主职冲突时, 以 description 为准**。无法归入任一类时按能力/生成型兜底并在理由里注明。
-4. 配对生成候选。同一类型下同时生成英文与中文, 两字段指同一件事; MUST 产出至少 6 组配对进入筛选池 (推荐 + 备选 3 组 + 淘汰缓冲)。
+4. 配对生成候选。同一类型下同时生成英文与中文, 两字段指同一件事; MUST 产出至少 6 组配对进入筛选池 (推荐 + 备选 3 组 + 淘汰缓冲)。3 组备选 MUST 覆盖**至少 2 种切入角度** (角度池: description 主职重构 / slug 语汇沿用 / 目标场景或方法学第三视角); 3 组都是同一角度的近义词轮换 → 淘汰其中 2 组回步骤 4 补生成。
 5. 套 §命名规约 筛选。淘汰不合规约的候选。若剩余不足 1 推荐 + 3 备选, 回步骤 4 补生成; 补生成 2 轮仍不足 → 进入失败路径 F2。
 6. 选推荐。按优先级排序: 语义与原 description 贴合度 > 触发对齐 (未来用户提及该 skill 时会用的词是否落在候选里) > 句式与 skill 类型一致 > 中英文长度与语气对齐。
 7. 按 §输出格式 输出。推荐组 MUST NOT 与备选任一组重复。
@@ -75,8 +75,10 @@ CREATE A TODO LIST FOR THE TASKS BELOW. Keep the list internal unless the user a
 
 **英文 (`display_name`)**:
 
-- MUST 是 Title Case 的正常英文短语, NEVER 只把 slug 的连字符换空格 (`Skill Name Generation` 除非语义恰好落在这, 否则算 slug 空格化, 淘汰)。
-- MUST 从 description 语义来, NEVER 拿 slug 逐字翻译。
+- MUST 是 Title Case 的正常英文短语。
+- MUST 从 description 语义来。slug 空格化仅当 slug 里的核心动词/名词与 description 主职**一一对应**时允许——判定方式: 把 description 里的核心动词与核心名词各挑 1-2 个出来, 看是否都能在 slug 空格化后的名字里找到语义对应; 有任一核心词落空, 则算 slug 空格化, 淘汰。
+  - 允许例: `skill-create-workflow → Skill Creation Workflow`。description 主职 = "编排 skill 创建流程", 核心词 create/workflow 都在 slug 里。
+  - 淘汰例: `skill-name-generation → Skill Name Generation`。description 主职 = "配对生成 display_name / display_name_zh", 核心词 "显示名 / display_name" **不在 slug 里** (slug 只有过度抽象的 name/generation), 不构成一一对应。
 - MUST 保留品牌 / 专有名词的原大小写: `OpenSpec`, `GitHub`, `Lark`, `AI`, `Agent`, `MCP`, `SEO`, `PR`。品牌名 NEVER 翻译成中文再回译。
 - 长度目安 2-5 词; 单词过多算解释短语, 淘汰。
 
@@ -124,6 +126,8 @@ CREATE A TODO LIST FOR THE TASKS BELOW. Keep the list internal unless the user a
 ```
 
 **批量输入** (用户一次给多个 skill): 对每个 skill 重复上面的完整块, 用二级标题 `## <slug>` 分隔。
+
+每组的 "理由" MUST 指明核心词的来源: 这组候选的核心动词或核心名词, 从 description 的哪个短语抽出, 或从 slug 的哪一段承接。NEVER 用 "简洁明了" / "通用性强" / "适用面广" 这类无信息陈述当理由——这类陈述在步骤 5 筛选时视同**缺理由**, 回步骤 4 补生成。
 
 Output only this block unless the user explicitly asks for analysis, more options, fewer options, or a different format.
 
@@ -315,7 +319,7 @@ Output:
 - 理由: 简洁明了。
 ```
 
-Reason: 英文只把 slug 的连字符换空格 (`Skill Name Generation`), 违反 "MUST 从 description 语义来, NEVER 拿 slug 逐字翻译"。中文"简洁明了"也不算理由。合规改法应从 description 的核心动词与对象重构, 例如 `Skill Display Name Composer` / `Skill 显示名生成器`, 并写出为什么这样起。
+Reason: 英文只把 slug 的连字符换空格 (`Skill Name Generation`), 违反 "MUST 从 description 语义来"。中文"简洁明了"也不算理由。合规改法应从 description 的核心动词与对象重构, 例如 `Skill Display Name Composer` / `Skill 显示名生成器`, 并写出为什么这样起。**本例为何不满足 slug 空格化的一一对应豁免**: description 核心词是 "显示名 / display_name", slug 里的 name/generation 只覆盖了 "生成", 未覆盖 "显示名", 一一对应缺一半, 故仍淘汰。
 </bad-example>
 
 <bad-example>
@@ -359,7 +363,7 @@ Output:
 - 理由: 通用性强, 适用面广。
 ```
 
-Reason: 语义漂移——原 description 的核心词是 "product title / 产品标题", 显示名把 "product title" 抽掉换成通用的 "naming / 起名", 未来用户请求 "帮我给产品起个标题" 时不会想到 `Naming Studio`, 触发对齐落空。合规改法必须让核心词 "产品标题 / product title" 出现在名字里。
+Reason: 语义漂移——原 description 的核心词是 "product title / 产品标题", 显示名把 "product title" 抽掉换成通用的 "naming / 起名", 未来用户请求 "帮我给产品起个标题" 时不会想到 `Naming Studio`, 触发对齐落空。合规改法必须让核心词 "产品标题 / product title" 出现在名字里。**附带违规**: `- 理由: 通用性强, 适用面广` 属无信息陈述, 独立触发 "词源可校验" 规约的淘汰条件。合规写法应写清 "核心词从 description 的 'concise Chinese product titles' 抽出 → 保留 product/title 作为主词根"。
 </bad-example>
 
 ## Runtime Tool Notes
