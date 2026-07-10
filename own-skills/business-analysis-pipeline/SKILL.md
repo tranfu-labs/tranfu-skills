@@ -1,9 +1,11 @@
 ---
 name: business-analysis-pipeline
+display_name: Business Analysis Pipeline
+display_name_zh: 商业分析流水线
 description: 当用户说"评估 AI 产品商业可行性 / 分析这个产品方向 / 创业方向评估 / 投资尽调 / 出商业分析报告"时, 走 PEST → 波特五力 → SWOT → BMC → 机会矩阵 → 战略建议 → 执行摘要 7 步 pipeline, 用 KF 编号交叉引用前序模块, 输出 120 分制 (S/A/B/C/D 五级) 结构化商业分析报告.
 version: 0.1.0
 author: 06666666
-updated_at: 2026-05-13
+updated_at: 2026-07-10
 origin: own
 ---
 

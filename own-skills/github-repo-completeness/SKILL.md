@@ -1,5 +1,7 @@
 ---
 name: github-repo-completeness
+display_name: GitHub Repo Completeness
+display_name_zh: GitHub 项目完备性
 description: >
   GitHub 项目完备性检查与补全引导。扫描已有 repo，生成缺失清单，按优先级逐项引导用户补全。
   不直接生成所有内容，而是引导用户决策后再执行。
@@ -12,7 +14,7 @@ description: >
 userInvocable: true
 version: 0.3.0
 author: aquarius-wing
-updated_at: 2026-06-15
+updated_at: 2026-07-10
 origin: own
 ---
 

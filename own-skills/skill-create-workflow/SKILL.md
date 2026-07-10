@@ -1,5 +1,7 @@
 ---
 name: skill-create-workflow
+display_name: Skill Creation Workflow
+display_name_zh: Skill 创建工作流
 description: >-
   当用户的最终意图是产出一个全新的 Codex / Claude Code skill (一个新的 SKILL.md / skill 目录) 时触发。
   "新" 包括从零创建, 以及把尚未成型的文档、规则、事故复盘、经验教训、agent 工作流首次封装成 skill。
@@ -25,7 +27,7 @@ description: >-
   改普通项目代码, 写非 skill 文档, 或管理自动化任务。
 version: 0.3.0
 author: aquarius-wing
-updated_at: 2026-06-30
+updated_at: 2026-07-10
 origin: own
 userInvocable: true
 ---

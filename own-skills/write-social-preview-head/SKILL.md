@@ -1,9 +1,11 @@
 ---
 name: write-social-preview-head
+display_name: Social Preview Head Writer
+display_name_zh: 社交分享 Head 编写
 description: 编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。
 version: 0.1.0
 author: aquarius-wing
-updated_at: 2026-06-01
+updated_at: 2026-07-10
 origin: own
 ---
 

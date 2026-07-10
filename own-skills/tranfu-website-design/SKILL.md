@@ -1,5 +1,7 @@
 ---
 name: tranfu-website-design
+display_name: TranFu Website Design
+display_name_zh: TranFu 官网设计规范
 description: >
   Apply TranFu website brand and UI design rules for create, modify, refactor,
   review, or visual QA tasks on TranFu React/Vite website UI. Trigger for
@@ -11,7 +13,7 @@ description: >
   visual-irrelevant code work.
 version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-06-22
+updated_at: 2026-07-10
 origin: own
 ---
 

@@ -1,5 +1,7 @@
 ---
 name: project-init-docs
+display_name: Project Docs Initialization
+display_name_zh: 项目文档初始化
 description: >
   当用户在一个代码仓库里说"初始化"时，分析真实仓库并一次性搭建 AI 驱动开发所需的知识与规格基线：
   AGENTS.md（AI 项目操作手册）、CLAUDE.md（指向 AGENTS.md 的一行指针）、
@@ -15,7 +17,7 @@ description: >
   只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。
 version: 0.4.0
 author: aquarius-wing
-updated_at: 2026-06-20
+updated_at: 2026-07-10
 origin: own
 ---
 

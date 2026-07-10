@@ -1,9 +1,11 @@
 ---
 name: product-title-generation
+display_name: Product Title Generation
+display_name_zh: 产品标题生成
 description: Generate concise Chinese product, feature, module, entry, activity-theme, or brand-short titles. Use when the user asks for 产品标题、模块命名、功能入口名、品牌化短标题、中文命名、起名、取名、叫什么、入口标题、产品名、name this feature, or product title, especially 4-6 character product-like titles from product names, feature descriptions, technical capabilities, learning services, launch platforms, observability, or mixed Chinese-English concepts. Do NOT trigger for slogans or long marketing copy -> use copywriting; SEO headlines -> use SEO/content; trademark/legal availability -> use legal review; code identifiers or variable names -> use code naming/refactor; full brand strategy -> use brand strategy.
 version: "0.1.5"
 author: tranfu
-updated_at: "2026-06-29"
+updated_at: "2026-07-10"
 origin: own
 ---
 

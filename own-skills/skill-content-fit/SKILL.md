@@ -1,12 +1,14 @@
 ---
 name: skill-content-fit
+display_name: Skill Content Fit Check
+display_name_zh: Skill 内容准入评估
 description: >
   Always trigger for: 创建新 Codex skill 前的准入判断、把尚未成型的项目知识/经验教训/执行规则/误差反馈/事故复盘/文档片段转成 skill 前的内容适配评估、判断内容是否值得沉淀成可复用能力。
   Also trigger for casual phrasing: "这个适合写成 skill 吗", "能不能固化成 skill", "要不要沉淀成能力", "这段经验值得做成规则吗", even if the user does not use the word skill.
   Do NOT trigger when: 输入已经是 skill、SKILL.md、已安装 skill，或用户是在审查、优化、更新、修复现有 skill。
 version: 0.1.0
 author: aquarius-wing
-updated_at: 2026-06-09
+updated_at: 2026-07-10
 origin: own
 ---
 

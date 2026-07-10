@@ -1,9 +1,11 @@
 ---
 name: tranfu-publish
+display_name: TranFu Skill Publish
+display_name_zh: TranFu Skill 发布
 description: 当用户说"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例"时, 按 templates/ 起草全部内容 (frontmatter / README §同类对比 / README §使用技巧 / case-file / PR title+body) 后自动切分支 / commit / push / gh pr create —— 触发即视为发布意图, 不再等用户二次确认。不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill)。
 version: 0.4.0
 author: aquarius-wing
-updated_at: 2026-06-17
+updated_at: 2026-07-10
 origin: meta
 type: meta
 ---

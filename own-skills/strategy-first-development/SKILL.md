@@ -1,10 +1,12 @@
 ---
 name: strategy-first-development
+display_name: Strategy-First Development
+display_name_zh: 战略先行开发流程
 description: >
   复杂项目开发前的战略共识、成熟项目调研、技术栈选择、路线图规划和项目控制面文档落地 workflow。Always trigger for: 新产品/MVP、多页面 web app、AI 产品、前后端系统、provider/deployment 选择、架构升级、复杂开发、用户要求先定战略/北极星/路线图/技术栈/参考项目或避免重复造轮子。Do NOT trigger when: 创建/更新/审查 skill 的元任务、单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review、仅安装/部署已有项目且无需重选产品技术路线。
 version: 0.2.0
 author: griffithkk3-del
-updated_at: 2026-06-22
+updated_at: 2026-07-10
 origin: own
 ---
 

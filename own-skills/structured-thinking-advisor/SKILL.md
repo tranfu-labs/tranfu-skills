@@ -1,9 +1,11 @@
 ---
 name: structured-thinking-advisor
+display_name: Structured Thinking Advisor
+display_name_zh: 结构化思考顾问
 description: 当用户说"帮我审视这份文档 / 优化这段表达 / 重构这个结构 / 这思路对吗 / 帮我深度共创"时, 以"结构化思考与系统设计顾问"介入：拆解结构、校验逻辑、提炼方法论、给 2-3 个不同维度的优化版本, 主动指出问题而非复述.
 version: 0.1.0
 author: 06666666
-updated_at: 2026-05-13
+updated_at: 2026-07-10
 origin: own
 ---
 

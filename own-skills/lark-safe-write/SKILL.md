@@ -1,9 +1,11 @@
 ---
 name: lark-safe-write
+display_name: Lark Safe Write
+display_name_zh: 飞书安全写入
 version: 1.1.0
 description: "Lark/Feishu wiki 安全写入流程：强制先备份、再写入、后验证，防止覆盖丢失。支持创建新 wiki 节点和更新现有文档内容。当用户需要向飞书知识库写入、更新、覆盖文档时，必须遵循本 skill 的完整流程。"
 author: BruceL017
-updated_at: 2026-05-12
+updated_at: 2026-07-10
 origin: own
 metadata:
   requires:

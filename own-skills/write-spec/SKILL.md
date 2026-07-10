@@ -1,10 +1,12 @@
 ---
 name: write-spec
+display_name: Feature Spec Writer
+display_name_zh: 功能规格编写
 description: 从模糊想法或功能需求生成结构化 PRD/feature spec，含目标、非目标、用户故事、验收标准、成功指标。触发：写 spec / 写 PRD / 规划功能 / scope 一下
 argument-hint: "<feature or problem statement>"
 version: 0.1.0
 author: cnrandomgod-jpg
-updated_at: 2026-05-12
+updated_at: 2026-07-10
 origin: own
 ---
 

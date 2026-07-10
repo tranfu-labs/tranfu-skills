@@ -1,9 +1,11 @@
 ---
 name: visual-dna-system
+display_name: Visual DNA System
+display_name_zh: 视觉 DNA 系统
 description: Extract a reusable, de-branded Visual DNA Design System from visual samples such as websites, screenshots, Figma references, images, decks, posters, app UIs, or HTML/CSS. Use when the user asks to analyze visual style, distill design DNA, create transferable visual tokens, or make a downstream prompt without copying the source. Also trigger for Chinese requests like "提取这个网站的视觉风格", "把这个 UI 抽成可复用设计系统", "分析这套海报的视觉 DNA", "生成可迁移视觉 tokens". Do NOT use for producing final websites, dashboards, decks, posters, prototypes, direct brand recreation, prompt review, or code review.
 version: 0.1.0
 author: BruceL017
-updated_at: 2026-06-18
+updated_at: 2026-07-10
 origin: own
 ---
 

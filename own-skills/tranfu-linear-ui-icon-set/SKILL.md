@@ -1,12 +1,14 @@
 ---
 name: tranfu-linear-ui-icon-set
+display_name: Linear UI Icon Set
+display_name_zh: 线性 UI 图标组
 description: >
   当用户需要生成或描述一组 4 个独立的 64x64px 极简线性 UI 图标时触发；适用于小型 icon set、
   带柔和浅色直角底板、统一描边和视觉语言的界面图标。Do NOT trigger when 用户要 logo/品牌标识、
   整页 UI、海报、复杂插画、3D/拟物/卡通/像素风图像、透明背景或圆角底板。
 version: 0.1.0
 author: chuanye312-coder
-updated_at: 2026-06-29
+updated_at: 2026-07-10
 origin: own
 ---
 

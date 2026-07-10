@@ -1,9 +1,11 @@
 ---
 name: tranfu-router
+display_name: TranFu Skill Router
+display_name_zh: TranFu Skill 路由
 description: 当用户说"搜公司 skill 关于 X / 装 X 到 user / project / 列公司库 skill / 列已装的公司 skill / 升级公司 skill / 卸载公司 skill X / 诊断 tfs 环境"时, 调本地 tranfu-skills CLI (二进制 tfs) 完成. 自动识别当前 runtime (Claude Code / Codex CLI) 通过 --runtime 传给 tfs, 用 --json 解析结果. Do NOT 接发布 / publish / 推 skill 到公司库意图 (那走 tranfu-publish skill).
 version: 0.1.0
 author: aquarius-wing
-updated_at: 2026-05-26
+updated_at: 2026-07-10
 origin: meta
 type: meta
 ---
