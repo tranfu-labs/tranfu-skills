@@ -1,4 +1,7 @@
 interface:
-  display_name: "TranFu Website Design"
-  short_description: "Apply TranFu website UI rules"
-  default_prompt: "Use $tranfu-website-design to create or review a TranFu website UI change against the brand design spec."
+  display_name: "TranFu Website & Product UI"
+  short_description: "应用 TranFu 官网与产品 UI 的品牌、组件和响应式规范。"
+  default_prompt: "Use $tranfu-website-design to create, modify, review, or visually validate a TranFu website or product UI."
+
+policy:
+  allow_implicit_invocation: true

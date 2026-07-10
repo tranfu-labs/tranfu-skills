@@ -1,6 +1,6 @@
-# TranFu Website Design Skill
+# TranFu Website & Product UI Design Skill
 
-This package contains the TranFu website design skill with bundled Figma logo assets.
+This package contains the TranFu website and product UI design skill with bundled brand assets, modular references, and icon verification tooling.
 
 ## Install
 
