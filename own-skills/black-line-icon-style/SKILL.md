@@ -1,12 +1,14 @@
 ---
 name: black-line-icon-style
+display_name: Black Line Icon Style
+display_name_zh: 黑白线性图标风
 description: >
   Use when the user wants a minimalist black-and-white line icon, symbol, UI entry icon, logo-like auxiliary mark, empty-state symbol, or abstract technology/workflow icon.
   Also trigger for Chinese phrasing such as 做个黑白图标, 线性 icon, AI 工作流 icon, 极简符号, UI 入口图标, 空状态图标.
   Do NOT trigger when the user wants a colorful illustration, realistic image, 3D render, complex poster, article cover, infographic with text, or formal brand logo; route article covers to article-cover-image, infographics to a dedicated infographic workflow, and formal logos to a logo design workflow or human design.
 version: 0.2.1
 author: aquarius-wing
-updated_at: 2026-06-22
+updated_at: 2026-07-10
 origin: own
 ---
 

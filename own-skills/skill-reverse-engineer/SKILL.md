@@ -1,9 +1,11 @@
 ---
 name: skill-reverse-engineer
+display_name: Skill Reverse Engineering
+display_name_zh: Skill 逆向工程
 description: Reverse-engineer, audit, and improve AI agent skills. Use when analyzing SKILL.md files, prompt workflows, agent instructions, or skill directories.
 version: 0.1.0
 author: BruceL017
-updated_at: 2026-05-12
+updated_at: 2026-07-10
 origin: own
 ---
 

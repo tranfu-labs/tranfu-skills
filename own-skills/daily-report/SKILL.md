@@ -1,11 +1,13 @@
 ---
 name: daily-report
+display_name: AI Daily Report
+display_name_zh: AI 日报图生成
 description: >-
   当用户要把 AI 新闻、日报素材或结构化 JSON 渲染成 TranFu 公开发布图片时使用。
   Do NOT trigger when: 用户只要纯文本日报、文章改写、通用图片生成或非 AI 主题海报。
 version: 0.1.0
 author: griffithkk3-del
-updated_at: 2026-05-18
+updated_at: 2026-07-10
 origin: own
 license: internal
 ---

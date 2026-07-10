@@ -1,9 +1,11 @@
 ---
 name: visual-design-producer
+display_name: Visual Design Producer
+display_name_zh: 视觉设计产出器
 description: 'Produce original HTML visual artifacts from a Producer Handoff, Visual DNA Design System, JSON/tokens, or standalone design brief. Use for landing pages, app UIs, dashboards, decks, posters, WeChat visuals, Xiaohongshu cards, product prototypes, or other HTML-based outputs; also match Chinese requests such as "帮我做一个页面", "出一张海报", "用这个 DNA 做小红书卡", or "产 HTML deck". Supports optional brand integration when brand context is provided. Do NOT use for: extracting visual DNA from source samples (use visual-dna-system); prompt review (use prompt-review); code review (use code-review); copying source sample brand identity (refuse that part).'
 version: 0.1.0
 author: BruceL017
-updated_at: 2026-06-18
+updated_at: 2026-07-10
 origin: own
 ---
 

@@ -1,9 +1,11 @@
 ---
 name: visual-pipeline
+display_name: Visual Design Pipeline
+display_name_zh: 视觉设计流水线
 description: 当用户要设计一个页面 (UI/视觉/产品层, 不是只写代码) 或修改已有视觉设计时, 驱动三段流水线 (显示信息 → 显示框架 → 风格+实践), 每页独立, 先文档后 HTML. 输入 = "已知用户场景 + 已知要显示什么", 输出 = 高保真选定版. 不用于: 文案小改 / 单 bug 代码修复 / 纯后端.
 version: 0.1.0
 author: aquarius-wing
-updated_at: 2026-05-24
+updated_at: 2026-07-10
 origin: own
 ---
 

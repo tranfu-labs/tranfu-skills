@@ -1,5 +1,7 @@
 ---
 name: article-cover-image
+display_name: Article Cover Image
+display_name_zh: 文章封面图生成
 description: >
   Use when the user provides a title or article and wants one horizontal article, content, video, PPT, or banner cover image, or a prompt for that cover image.
   Also trigger for Chinese phrasing such as 做个文章封面, 生成公众号封面, 视频封面, PPT 首页图, Banner 封面, 给这个标题配封面.
@@ -8,7 +10,7 @@ description: >
   Do NOT trigger when the user only wants article copywriting, non-visual analysis, or a prompt unrelated to cover-image generation; route to the matching writing workflow.
 version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-06-18
+updated_at: 2026-07-10
 origin: own
 ---
 

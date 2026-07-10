@@ -1,9 +1,11 @@
 ---
 name: generate-product-logo
+display_name: Product Logo Generation
+display_name_zh: 产品 Logo 生成
 description: Generate product-aware logo design rules, visual style directions, and logo/icon concepts. Use when the user asks to create, explore, refine, or export a product logo, app icon, browser icon, favicon, social-preview logo, brand mark, or logo style guide. Also match Chinese requests like "做个/设计 Logo", "做 app icon/favicon", "品牌标记", or "Logo 设计规范". Ask for missing product context before visual work. Do NOT trigger when the user only wants generic image generation, non-logo brand copy, trademark/legal clearance, vectorization of an existing final logo, or unrelated UI design.
 version: 0.1.0
 author: 06666666
-updated_at: 2026-06-15
+updated_at: 2026-07-10
 origin: own
 ---
 

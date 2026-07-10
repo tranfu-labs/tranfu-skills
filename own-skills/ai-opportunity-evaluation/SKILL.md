@@ -1,9 +1,11 @@
 ---
 name: ai-opportunity-evaluation
+display_name: AI Opportunity Evaluation
+display_name_zh: AI 机会立项判断
 description: '当用户说"判断这个项目怎么样" / "立项判断" / "这个方向能不能做" / "这个产品想法值不值得做" / "用 AI机会立项判断 Skill，帮我分析"时，做 TranFu 产品想法立项会诊，短问后输出一屏以内的立项判断卡。Do NOT trigger when 用户已经明确要求直接开发、修 bug、部署、写代码，或已完成立项并要求写 PRD。'
 version: 0.1.0
 author: 06666666
-updated_at: 2026-06-26
+updated_at: 2026-07-10
 origin: own
 ---
 

@@ -1,5 +1,7 @@
 ---
 name: openspec-driven-development
+display_name: OpenSpec-Driven Development
+display_name_zh: OpenSpec 驱动开发
 version: 0.5.1
 description: >-
   在已经采用 OpenSpec 约定的项目里做日常开发执行时使用：把一个开发任务（新功能 / bugfix / 重构 / 加模块 / 改交互 / 排查并修 bug）
@@ -13,7 +15,7 @@ description: >-
   不要用于：非开发任务（纯查询 / 查资料 / 跑命令、以及与具体改动无关的「是否符合规范 / 标准」泛合规审计）；
   冷启动从零搭 AGENTS.md+openspec 骨架（那是 project-init-docs）；打 tag / 写 changelog / 版本号策略（那是 release）。
 author: aquarius-wing
-updated_at: 2026-06-30
+updated_at: 2026-07-10
 origin: own
 userInvocable: true
 ---

@@ -1,9 +1,11 @@
 ---
 name: xiaohongshu-card-publish
+display_name: Xiaohongshu Card Export
+display_name_zh: 小红书卡片出图
 version: 0.1.1
 origin: own
 author: aquarius-wing
-updated_at: 2026-06-17
+updated_at: 2026-07-10
 description: >-
   把一篇小红书文案变成可发布的 1080×1440 成品配图——用本 skill 自带的卡片模板填充、
   组织系列预览、再用 playwright 导出无损 WebP。当用户给一段小红书文案说

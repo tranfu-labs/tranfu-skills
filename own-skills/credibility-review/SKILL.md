@@ -1,9 +1,11 @@
 ---
 name: credibility-review
+display_name: Credibility Review
+display_name_zh: 文章可信度审稿
 description: Review a draft 踩坑记 or 养成记 article (for tranfu-site or anywhere following the same rules) by spawning two independent fresh agents in parallel — A 轨 simulates a reader with dual-axis 耐心/信任 scoring, B 轨 runs anti-pattern catalog detection — then composes a tri-state verdict (可发 / 待审查 / 退稿). Trigger when user says 审稿/审一下/检查文章/帮我看下这篇/check this draft/review this article/抓一下问题/看看哪里不对, OR pastes a markdown article tagged 踩坑/养成 and asks for feedback, OR provides a path to such a file in tranfu-site/src/content/posts/. Output combines reader-trajectory + catalog hits — NOT a rewrite. Anchored to tranfu-site/goal-docs/05-design-踩坑记-final.md + 06-design-养成记-final.md.
 version: 0.1.2
 author: aquarius-wing
-updated_at: 2026-05-11
+updated_at: 2026-07-10
 origin: own
 published_to: tranfu-labs/tranfu-skills
 published_version: 0.1.2

@@ -1,9 +1,11 @@
 ---
 name: project-scoring
+display_name: AI Project Scoring
+display_name_zh: AI 项目评分
 description: Use when user says "评估这个 AI 项目" to score AI workflows and produce a decision memo.
 version: 0.2.0
 author: griffithkk3-del
-updated_at: 2026-05-21
+updated_at: 2026-07-10
 origin: own
 ---
 

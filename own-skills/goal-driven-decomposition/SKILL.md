@@ -1,10 +1,12 @@
 ---
 name: goal-driven-decomposition
+display_name: Goal-Driven Decomposition
+display_name_zh: 目标驱动分解
 description: >-
   Solve "build/make/design X" goals AND follow-up edits ("做一个网站", "build a tool", "加用户登录", "X 偏了改一下"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).
 version: 0.2.0
 author: aquarius-wing
-updated_at: 2026-05-28
+updated_at: 2026-07-10
 origin: own
 ---
 

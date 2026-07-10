@@ -1,9 +1,11 @@
 ---
 name: reversible-ops
+display_name: Reversible Ops
+display_name_zh: 运维可回滚守则
 version: 0.7.0
 author: aquarius-wing
 origin: own
-updated_at: 2026-06-30
+updated_at: 2026-07-10
 description: >
   运维场景的可恢复性硬约束 —— review-only，AI 不替执行任何写命令；命中写操作时改写成
   可恢复的等价命令让用户复制执行，命中不可恢复时给四段拒绝输出。范围：本地 bash / Docker / Coolify。
