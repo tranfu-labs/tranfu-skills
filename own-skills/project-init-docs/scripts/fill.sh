@@ -40,6 +40,7 @@ STATIC_TARGETS=(
 
 REPO_FACT_TARGETS=(
   "AGENTS.md"
+  "DEPLOY.md"
   "docs/architecture/module-map.md"
 )
 
@@ -265,6 +266,39 @@ TODO: 需人工确认
 是否保留按下面规则判断：
 - 若本项目确定为**无界面**的工具 / 库 / CLI / SDK 类（如纯 npm 工具包），删除整个 `docs/wireframes/` 目录，并删除本节。
 - 若有界面，按 `docs/wireframes/AGENTS.md` 的约定，为每个真实路由在 `docs/wireframes/pages/` 下补一页。
+EOF
+      ;;
+
+    "DEPLOY.md")
+      # repo-fact 骨架：7 节部署契约；探测到的真实事实由 AI 填正文，探测不到留 TODO。
+      write_if_needed "$target" <<'EOF'
+# 部署说明
+
+> 面向高级程序员 / 后续 AI：一眼看清「部署到哪、怎么建、怎么发、怎么退、怎么验」。
+> 每节内容 MUST 来自真实仓库文件（Dockerfile / compose / CI workflow / 平台配置 / .env.example …）；
+> 探测不到的字段一律留 `TODO: 需人工确认`，NEVER 编造。
+> 环境变量小节只列名字与用途，NEVER 写入真实值或密钥。
+
+## 部署目标
+TODO: 需人工确认
+
+## 环境要求
+TODO: 需人工确认
+
+## 环境变量
+TODO: 需人工确认
+
+## 构建与部署命令
+TODO: 需人工确认
+
+## 部署流程
+TODO: 需人工确认
+
+## 回滚
+TODO: 需人工确认
+
+## 健康检查
+TODO: 需人工确认
 EOF
       ;;
 
