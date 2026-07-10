@@ -1,8 +1,10 @@
 ---
 name: post-illustration-images
+display_name: Post Illustration Generation
+display_name_zh: 文章配图生成
 version: 0.1.0
 author: BruceL017
-updated_at: 2026-07-01
+updated_at: 2026-07-10
 origin: own
 allow_exec: true
 description: Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, and Zhihu posts. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or the user explicitly names another image-generation skill. Safety boundaries: one suite style, one image per generation, no model-drawn logos or page badges.

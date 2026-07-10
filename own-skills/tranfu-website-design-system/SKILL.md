@@ -1,9 +1,11 @@
 ---
 name: tranfu-website-design-system
+display_name: TranFu Website Design System
+display_name_zh: TranFu 官网设计系统
 description: Apply the extracted TranFu official website responsive design system when creating, implementing, refactoring, or reviewing TranFu website UI from Figma screenshots or code. Trigger for TranFu homepage, product center, skill resource, practice article, detail-page, responsive breakpoint, color, typography, spacing, radius, component, layout, visual QA, agent-prompt-guide, and Chinese requests like "按 TranFu 官网风格", "官网设计规范", or "响应式设计". Do NOT trigger for non-TranFu websites, pure copywriting, logo redesign, backend-only changes, or unrelated code review.
 version: 0.1.0
 author: chuanye312-coder
-updated_at: 2026-07-07
+updated_at: 2026-07-10
 origin: own
 ---
 

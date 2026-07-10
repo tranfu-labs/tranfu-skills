@@ -1,9 +1,11 @@
 ---
 name: agent-architecture-decision
+display_name: Agent Architecture Decision
+display_name_zh: Agent 架构决策
 description: Analyze, design, and review agentic architectures for AI products and complex workflows. Use for requests about agentic 架构, agentic workflow, 多 agent 架构, single agent vs multi-agent, agent 技术栈/工作流程, memory/state/tool planning, LangGraph/CrewAI/OpenAI Agents/PydanticAI selection, or recommending an agentic architecture from project vision and existing technical architecture. Also matches casual asks like '要不要上 agent / 要不要用 LangGraph'、'该不该拆多个 agent'、'这个功能普通 workflow 够不够'、'帮我设计 agent 流程'. Do NOT use for ordinary bug fixes or small code edits (use openspec-driven-development), pure prompt review (use prompt-review), generic UI work, provider smoke tests, deployment-only tasks (use coolify-deploy), or already-scoped implementation unless the user asks to rethink agentic architecture.
 version: 0.2.0
 author: griffithkk3-del
-updated_at: 2026-07-03
+updated_at: 2026-07-10
 origin: own
 ---
 

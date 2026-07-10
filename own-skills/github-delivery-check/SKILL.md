@@ -1,9 +1,11 @@
 ---
 name: github-delivery-check
+display_name: GitHub Delivery Check
+display_name_zh: GitHub 交付检查
 description: 'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like "推到 GitHub", "创建 GitHub 仓库", "首次提交", "整理成可部署项目", or "用 GitHub交付规范 Skill". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.'
 version: 0.1.3
 author: 06666666
-updated_at: 2026-07-01
+updated_at: 2026-07-10
 origin: own
 ---
 

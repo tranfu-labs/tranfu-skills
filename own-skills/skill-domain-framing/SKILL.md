@@ -1,10 +1,12 @@
 ---
 name: skill-domain-framing
+display_name: Skill Domain Framing
+display_name_zh: Skill 任务域框定
 description: >
   在用户要把尚未成型的事故复盘、guardrail 文档、经验片段、issue/PR 记录或普通项目文档创建成新的 Codex skill 前使用，用来先抽象任务域、命名轴、范围边界和验收标准。命名判据是"触发对齐"：名字要落在用户请求这能力时会用的词上；动作/编排型 skill 的动词名（create/improve/review）同样合格，不因"是动词"被劝改。Always trigger for: 创建新 skill 前的任务域框定、把经验沉淀成能力前的容器命名、从复盘/PR/issue 提炼 skill 范围。Also trigger for casual phrasing: "这个该做成什么 skill", "先帮我定一下 skill 范围", "沉淀成能力前先命名", "别被事故名词带偏". Do NOT trigger when: 输入已经是 skill、SKILL.md、已安装 skill，或用户是在审查、优化、更新、修复现有 skill。
 version: 0.3.0
 author: aquarius-wing
-updated_at: 2026-07-09
+updated_at: 2026-07-10
 origin: own
 ---
 

@@ -1,5 +1,7 @@
 ---
 name: prompt-review
+display_name: Prompt Review
+display_name_zh: 提示词审查
 description: >
   当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、
   agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、
@@ -11,7 +13,7 @@ description: >
   从不编辑提示词 / SKILL / 文件；委派工作必须有边界；不要求网络访问。
 version: 0.9.0
 author: aquarius-wing
-updated_at: 2026-07-03
+updated_at: 2026-07-10
 origin: own
 ---
 

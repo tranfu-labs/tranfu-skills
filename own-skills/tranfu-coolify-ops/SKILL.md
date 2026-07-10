@@ -1,9 +1,11 @@
 ---
 name: tranfu-coolify-ops
+display_name: Tranfu Coolify Deployment
+display_name_zh: Tranfu Coolify 部署
 version: 0.8.0
 author: aquarius-wing
 origin: own
-updated_at: 2026-06-30
+updated_at: 2026-07-10
 description: >
   把 tranfu-labs 下的 -app 仓库部署到公司 Coolify 实例。资源走 Application (private-github-app) +
   build_pack=dockercompose + is_auto_deploy_enabled=false; GitHub App integration 由 ops 一次性手工装,
