@@ -66,11 +66,112 @@ export function parseFrontmatter(markdown) {
       continue;
     }
 
-    data[key] = stripQuotes(rawValue.trim());
+    if (rawValue.trim() === "") {
+      const nested = parseIndentedBlock(lines, i + 1, 0);
+      if (nested.nextIndex > i + 1) {
+        data[key] = nested.value;
+        i = nested.nextIndex;
+        continue;
+      }
+    }
+
+    data[key] = parseScalar(rawValue.trim());
     i++;
   }
 
   return { data, error: null };
+}
+
+// Parse the small, JSON-compatible nested YAML subset used by skill metadata:
+// indented maps, scalar lists, JSON-style inline arrays/objects, and booleans.
+// Ordinary textual scalars remain strings for backward compatibility.
+function parseIndentedBlock(lines, startIndex, parentIndent) {
+  let firstIndex = startIndex;
+  while (firstIndex < lines.length && lines[firstIndex].trim() === "") firstIndex++;
+  if (
+    firstIndex >= lines.length ||
+    !/^\s+/.test(lines[firstIndex]) ||
+    indentation(lines[firstIndex]) <= parentIndent
+  ) {
+    return { value: "", nextIndex: startIndex };
+  }
+
+  const baseIndent = indentation(lines[firstIndex]);
+  const isList = lines[firstIndex].slice(baseIndent).startsWith("-");
+  const value = isList ? [] : {};
+  let i = firstIndex;
+
+  while (i < lines.length) {
+    if (lines[i].trim() === "") {
+      i++;
+      continue;
+    }
+
+    const currentIndent = indentation(lines[i]);
+    if (currentIndent < baseIndent) break;
+    if (currentIndent > baseIndent) {
+      // A deeper line is normally consumed by the recursive branch above it.
+      // If it is orphaned, leave it for the caller instead of guessing.
+      break;
+    }
+
+    const content = lines[i].slice(baseIndent);
+    if (isList) {
+      const item = content.match(/^-\s*(.*)$/);
+      if (!item) break;
+      const rawItem = item[1].trim();
+      if (rawItem === "") {
+        const nested = parseIndentedBlock(lines, i + 1, baseIndent);
+        value.push(nested.value);
+        i = nested.nextIndex;
+      } else {
+        value.push(parseScalar(rawItem));
+        i++;
+      }
+      continue;
+    }
+
+    const entry = content.match(/^([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)$/);
+    if (!entry) break;
+    const [, key, rawValue] = entry;
+    if (rawValue.trim() === "") {
+      const nested = parseIndentedBlock(lines, i + 1, baseIndent);
+      value[key] = nested.value;
+      i = nested.nextIndex;
+    } else {
+      value[key] = parseScalar(rawValue.trim());
+      i++;
+    }
+  }
+
+  return { value, nextIndex: i };
+}
+
+function indentation(line) {
+  return line.match(/^\s*/)[0].length;
+}
+
+function parseScalar(value) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return stripQuotes(value);
+  }
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (value === "null" || value === "~") return null;
+  if (
+    (value.startsWith("[") && value.endsWith("]")) ||
+    (value.startsWith("{") && value.endsWith("}"))
+  ) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      // Keep non-JSON YAML flow syntax as text rather than dropping the field.
+    }
+  }
+  return value;
 }
 
 export function findSkillFiles(rootDir = process.cwd()) {

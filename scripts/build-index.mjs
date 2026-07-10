@@ -2,43 +2,14 @@ import { readdirSync, readFileSync, writeFileSync, statSync } from "fs";
 import { execSync } from "child_process";
 import { join, relative } from "path";
 
+import { parseFrontmatter } from "./validate-frontmatter.mjs";
+
 const ROOTS = { "meta-skills": "meta", "own-skills": "own", "external-skills": "external" };
 
-function parseFrontmatter(md) {
-  // 支持: key: value (单行) + key: > / >- / | / |- (block scalar 多行)
-  const m = md.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const out = {};
-  const lines = m[1].split("\n");
-  let i = 0;
-  while (i < lines.length) {
-    const kv = lines[i].match(/^(\w+):\s*(.*)$/);
-    if (!kv) { i++; continue; }
-    const [, key, rawVal] = kv;
-    const blockMarker = rawVal.match(/^([>|])([+-]?)$/);
-    if (blockMarker) {
-      // block scalar: 收集后续缩进行 (或空行) 到下一个 key
-      const folded = blockMarker[1] === ">";
-      i++;
-      const blockLines = [];
-      while (i < lines.length) {
-        const ln = lines[i];
-        if (ln.match(/^\s+/) || ln.trim() === "") {
-          blockLines.push(ln.replace(/^\s+/, ""));
-          i++;
-        } else break;
-      }
-      let value = folded
-        ? blockLines.filter(ln => ln.trim()).join(" ").trim()  // folded: 全 fold 成单空格分隔
-        : blockLines.join("\n").trim();                         // literal: 保留换行
-      out[key] = value;
-    } else {
-      out[key] = rawVal.trim();
-      i++;
-    }
-  }
-  return out;
-}
+// These fields describe the generated catalog entry itself. Frontmatter may contain
+// similarly named lifecycle metadata, but it must not be able to override the values
+// derived from the repository layout and git history.
+const GENERATED_FIELDS = new Set(["type", "published_at", "path", "files", "sha"]);
 
 function listFiles(dir, base = dir) {
   const out = [];
@@ -95,26 +66,26 @@ for (const [root, type] of Object.entries(ROOTS)) {
     const skillMd = join(skillDir, "SKILL.md");
     let md;
     try { md = readFileSync(skillMd, "utf8"); } catch { continue; }
-    const fm = parseFrontmatter(md);
+    const { data: fm, error: frontmatterError } = parseFrontmatter(md);
+    if (frontmatterError) {
+      console.error(`skip ${skillDir}: ${frontmatterError}`);
+      continue;
+    }
     if (!fm.name || !fm.description) {
       console.error(`skip ${skillDir}: missing frontmatter name/description`);
       continue;
     }
-    const optionalMetadata = {};
-    for (const field of ["version", "author", "updated_at"]) {
-      if (fm[field]) optionalMetadata[field] = fm[field];
-    }
+    const frontmatterMetadata = Object.fromEntries(
+      Object.entries(fm).filter(([field]) => !GENERATED_FIELDS.has(field)),
+    );
     const published = publishedAt(skillMd);
     skills.push({
-      name: fm.name,
+      ...frontmatterMetadata,
       type,
-      description: fm.description,
-      ...optionalMetadata,
       ...(published ? { published_at: published } : {}),
       path: skillDir,
       files: listFiles(skillDir),
       sha: blobSha(skillMd),
-      ...(type === "external" && fm.source_url ? { source_url: fm.source_url } : {})
     });
   }
 }

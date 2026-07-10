@@ -226,6 +226,8 @@ index.json                    catalog 快照和老 CLI 兼容数据源
 | 字段 | own | external | 说明 |
 |---|---|---|---|
 | name | ✓ | ✓ | kebab-case = 目录名 |
+| display_name | 可选 | 可选 | 英文展示名 |
+| display_name_zh | 可选 | 可选 | 中文展示名 |
 | description | ✓ | ✓ | ≤ 100 字，含触发场景 |
 | version | ✓ | 可选 | semver |
 | author | ✓ | 可选 | 原作者 GitHub handle |
@@ -237,6 +239,8 @@ index.json                    catalog 快照和老 CLI 兼容数据源
 `published_*` 字段仅写在本地 skill 的 `SKILL.md`（由 `tranfu-publish` 写入），不进本仓库。`installed_*` 字段仅写在装机端 `SKILL.md`（由 `tfs install` 写入），也不进本仓库。
 
 注意区分：catalog（`index.json`）里每个 skill 的 `published_at` **不是** frontmatter 字段，由 `build:index` 从 git 推导——取 `SKILL.md` 首次进入仓库的提交时间（squash merge 下即 PR 合入 main 的时刻），UTC ISO8601 格式；浅 clone 或文件尚未提交时省略该字段。
+
+`build:index` 会默认把能解析的所有 frontmatter 字段写入 catalog（包括嵌套 metadata 对象和数组），无需为 `display_name` / `display_name_zh` / `recommend_reason` 等展示字段单独改生成脚本。`type` / `published_at` / `path` / `files` / `sha` 是生成字段，始终以仓库目录和 git 推导值为准，不会被 frontmatter 同名字段覆盖。
 
 ### 本地校验和 CI
 

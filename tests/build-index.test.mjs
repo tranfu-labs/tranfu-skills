@@ -121,6 +121,16 @@ test("valid frontmatter → skill included in index", () => {
     assert.equal(goodSkill.version, "0.1.0");
     assert.equal(goodSkill.author, "test");
     assert.equal(goodSkill.updated_at, "2026-01-01");
+    assert.equal(goodSkill.display_name, "Good Skill");
+    assert.equal(goodSkill.display_name_zh, "好技能");
+    assert.equal(goodSkill.origin, "own");
+    assert.equal(goodSkill.recommend_reason, "Useful catalog metadata");
+    assert.equal(goodSkill.userInvocable, true);
+    assert.equal(goodSkill["argument-hint"], "<input>");
+    assert.deepEqual(goodSkill.metadata, {
+      requires: { bins: ["node", "rg"] },
+      relatedSkills: ["../other/SKILL.md"],
+    });
     assert.ok(Array.isArray(goodSkill.files), "files should be array");
     assert.ok(goodSkill.files.includes("SKILL.md"), "files should include SKILL.md");
     assert.ok(goodSkill.published_at, "published_at should be set for committed skill");
@@ -134,7 +144,30 @@ test("valid frontmatter → skill included in index", () => {
   }
 });
 
-// ----- Test 2: Missing name/description → skipped, stderr warning, others unaffected -----
+// ----- Test 2: Generated catalog fields cannot be overridden by frontmatter -----
+test("generated catalog fields take precedence over frontmatter", () => {
+  const tmpDir = setupTempFixtures();
+  try {
+    const skillMd = join(tmpDir, "own-skills", "good-skill", "SKILL.md");
+    const content = readFileSync(skillMd, "utf8").replace(
+      "origin: own\n",
+      "origin: own\ntype: external\npublished_at: 1999-01-01\npath: elsewhere\nfiles: fake\nsha: fake\n",
+    );
+    writeFileSync(skillMd, content);
+
+    const { indexJson } = runBuildIndex(tmpDir);
+    const goodSkill = indexJson.skills.find((s) => s.name === "good-skill");
+    assert.equal(goodSkill.type, "own");
+    assert.notEqual(goodSkill.published_at, "1999-01-01");
+    assert.equal(goodSkill.path, "own-skills/good-skill");
+    assert.ok(Array.isArray(goodSkill.files));
+    assert.notEqual(goodSkill.sha, "fake");
+  } finally {
+    cleanupTempDir(tmpDir);
+  }
+});
+
+// ----- Test 3: Missing name/description → skipped, stderr warning, others unaffected -----
 test("missing name/description → skip with stderr warn, other skills unaffected", () => {
   const tmpDir = setupTempFixtures();
   try {
@@ -272,7 +305,7 @@ test("shallow clone → published_at omitted", () => {
   }
 });
 
-// ----- Test 3: External skill preserves source_url -----
+// ----- Test 8: External skill preserves source_url -----
 test("external type preserves source_url field", () => {
   const tmpDir = setupTempFixtures();
   try {
