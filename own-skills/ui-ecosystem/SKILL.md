@@ -17,6 +17,8 @@ The protected result is: after frontend technical/design selection is complete, 
 
 This skill complements strategy and reference-project workflows. It does not choose the whole product strategy. It runs after enough frontend direction exists to map tools to the selected ecosystem.
 
+For creation rationale and naming evidence, see `references/creation-rationale.md` only when auditing or evolving this skill.
+
 ## Run Modes
 
 Choose one mode before acting:
@@ -40,42 +42,6 @@ If the user asks to "完善", "实现", "做页面", "改 UI", "提升美观", "
 - NEVER copy code from reference projects or templates unless license compatibility and adoption scope are checked.
 - NEVER let ecosystem tooling override project rules, design constraints, accessibility requirements, or existing component ownership.
 - NEVER stop at a raw recommendation list when the user asked to implement; use the selected ecosystem in the actual UI work and verify the rendered result.
-
-## Content Fit
-
-Conclusion: pass
-
-- Repeatable: frontend builds, redesigns, dashboards, landing pages, component work, and visual polish repeatedly need stack-matched ecosystem support.
-- Trigger: "ui 根据前端选型推荐 mcp/plugin/skill", "do not hand-roll frontend", "recommend ecosystem tools after frontend selection", "improve frontend beauty", "use the chosen ecosystem".
-- Workflow: inspect frontend choices, map stack to tools, install or activate tools, use official examples and mature components, verify rendered UI.
-- Executable: use tool discovery, package/docs lookup, repo inspection, official examples, package managers, browser screenshots, and existing skills.
-- Verifiable: report selected tools, installed dependencies or activated skills, files changed, screenshots or browser checks, and commands run.
-- Boundary: do not run before product/stack direction exists; do not use tools that fight project constraints; do not copy licensed code without review.
-
-## Domain Framing
-
-Candidate scoring:
-
-| Rank | Candidate | Axis | Total | Result Fit | Boundary Clarity | Path Layering | Comment |
-|---|---|---|---:|---:|---:|---:|---|
-| 1 | ui-ecosystem | user-result axis | 6 | 2 | 2 | 2 | Short memorable UI-prefixed name for the desired result: stack-matched ecosystem support for better UI, with clear include/exclude and author/verify/troubleshoot layers. |
-| 2 | frontend-mcp-plugin-recommendation | implementation-object axis | 4 | 1 | 1 | 2 | Useful but too focused on MCP/plugin objects, missing component libraries, official examples, skills, and design systems. |
-| 3 | frontend-code-generation-quality-gate | repeat-task axis | 3 | 1 | 1 | 1 | Captures quality control but can trigger too late, after the UI was already hand-rolled. |
-| 4 | design-tooling-installation | platform/tool axis | 2 | 0 | 1 | 1 | Over-centers installation rather than using tools to improve user-visible frontend quality. |
-
-Top1: ui-ecosystem
-Top1-Top2 分差: 2
-用户指定候选: 无
-
-Scope:
-- Include: frontend UI creation, redesign, visual polish, component implementation, design-system adoption, stack-matched MCP/plugin/skill/tool selection, dependency adoption, and official example absorption after frontend direction is known.
-- Exclude: early strategy/stack selection with no frontend direction, backend-only tasks, one-off package documentation lookup, pure CSS bug fixes, prompt-only UI critique, wholesale template cloning, and license-sensitive code copying.
-- Placement: this skill's source lesson belongs in the main workflow, tool-selection checklist, verification checklist, and bad examples.
-
-Path layering:
-- Normal path: identify existing frontend choices, discover ecosystem tools, select adopt/absorb/reject actions, install/activate only approved tools, and use them in the implementation.
-- Verification path: prove the chosen tools were actually used and the UI renders well through deterministic checks plus browser or screenshot review when applicable.
-- Troubleshooting path: if no compatible tool exists or a tool fails, document the failure, fall back to official docs/examples or current project patterns, and mark unverified items.
 
 ## Workflow
 
@@ -125,6 +91,21 @@ Failure exits:
 - Dependency install not authorized -> do not install; provide exact proposed command and continue with existing tools.
 - License unclear -> do not copy code; absorb patterns only and mark license risk.
 - Tool conflicts with project rules or design system -> reject it and explain.
+
+## Nearby Skill Routing
+
+Use this routing before tool selection:
+
+| User intent | Primary workflow |
+|---|---|
+| Decide product shape, user, roadmap, or frontend stack | `strategy-first-development` |
+| Search mature GitHub/product references before design decisions | `similar-project-reference` |
+| Apply brand-specific TranFu website rules | `tranfu-website-design` |
+| Review accessibility/design compliance after UI exists | `web-design-guidelines` |
+| Improve component feel, micro-interactions, or polish within an existing implementation | `make-interfaces-feel-better` or `emil-design-eng` |
+| Build UI after frontend choices are known and ecosystem help is desired | `ui-ecosystem` |
+
+If multiple workflows apply, run strategy/reference/design-review first, then run `ui-ecosystem` when the implementation needs stack-matched tools.
 
 ## Tool Discovery Rules
 
@@ -206,6 +187,25 @@ Unverified:
 - <tool discovery, license, visual QA, mobile, a11y, etc.>
 ```
 
+## Definition Of Done
+
+For `recommend-only`, done means:
+
+- `UI_ECOSYSTEM_PACKET` is present.
+- Current frontend choices and local files inspected are listed.
+- At least one MCP/plugin/skill/tool discovery attempt is reported, or the discovery failure is explicitly marked.
+- Every candidate has `adopt`, `activate`, `absorb`, `spike`, or `reject`.
+- Unverified items are visible.
+
+For `implement-with-ecosystem`, done means:
+
+- `UI_ECOSYSTEM_PACKET` was produced before edits/installations.
+- Approved tools were actually used in the implementation, not merely recommended.
+- Files changed and dependency changes are reported.
+- Deterministic checks ran where available.
+- UI work was visually inspected when a browser-rendered surface changed.
+- The final handoff states which parts remain hand-rolled and why.
+
 ## Adoption Heuristics
 
 - Component primitives: adopt when the project needs common UI controls and the library matches the current framework and accessibility bar.
@@ -228,6 +228,30 @@ Do NOT use this skill when:
 - The user explicitly asks to hand-code a component from scratch for learning or interview purposes.
 - The change is a tiny text, color, spacing, or CSS bug fix where tool discovery would be overhead.
 - The task is to install a specific known package only; use package docs and project commands directly.
+
+## Trigger Tests
+
+Should trigger:
+
+- "Next.js + Tailwind 定了，做 dashboard，不要手搓 UI，先找 MCP/插件/skill。"
+- "ui 根据前端选型推荐合适的组件生态并安装使用。"
+- "React 项目已经用了 shadcn，帮设置页提升美观，看看还有哪些生态工具能用。"
+- "Vue + Naive UI 的后台页面，帮我基于生态组件改得专业一点。"
+- "前端选型完成了，先别裸写代码，列出可用 UI 工具再实现。"
+
+Should not trigger:
+
+- "我们要做什么产品，帮我定技术栈和路线图。" -> strategy first.
+- "审一下这个页面的 accessibility 问题。" -> design/a11y review.
+- "修一个后端接口 500。" -> backend bug workflow.
+- "只安装 lucide-react。" -> package docs/install workflow.
+- "我想从零练习手写 dropdown。" -> learning/from-scratch exception.
+
+Ambiguous:
+
+- "让 UI 更好看。" Trigger only if frontend context exists; otherwise ask for stack/page context.
+- "参考几个竞品页面。" Use reference workflow first, then this skill if implementation follows.
+- "帮我做首页。" If no stack/design direction exists, ask or route to strategy/reference first.
 
 ## Examples
 
