@@ -130,3 +130,32 @@ test("parseFrontmatter (unit): folded value collapses whitespace", () => {
   assert.equal(error, null);
   assert.equal(data.desc, "hello world");
 });
+
+test("parseFrontmatter (unit): nested metadata maps and lists stay structured", () => {
+  const { data, error } = parseFrontmatter(`---
+name: nested
+metadata:
+  requires:
+    bins: ["node", "rg"]
+  relatedSkills:
+    - "../foo/SKILL.md"
+    - "../bar/SKILL.md"
+---
+`);
+  assert.equal(error, null);
+  assert.deepEqual(data.metadata, {
+    requires: { bins: ["node", "rg"] },
+    relatedSkills: ["../foo/SKILL.md", "../bar/SKILL.md"],
+  });
+});
+
+test("parseFrontmatter (unit): JSON-compatible scalar types stay typed", () => {
+  const { data, error } = parseFrontmatter(
+    '---\nenabled: true\ndisabled: false\ntags: ["one", "two"]\nquoted: "true"\n---\n',
+  );
+  assert.equal(error, null);
+  assert.equal(data.enabled, true);
+  assert.equal(data.disabled, false);
+  assert.deepEqual(data.tags, ["one", "two"]);
+  assert.equal(data.quoted, "true");
+});
