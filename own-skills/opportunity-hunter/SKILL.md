@@ -1,9 +1,11 @@
 ---
 name: opportunity-hunter
+display_name: Startup Opportunity Hunter
+display_name_zh: 创业机会猎手
 description: 创业机会猎法（机会发现与快筛端）。在找创业机会、判断痛点/新闻/政策/新模型是否构成机会、做卖铲子判断或头脑风暴方向时使用。用四猎场定位、why-now 扳机、卖铲子提问和四道杀闸快速淘汰候选；AI 方向存活后衔接 ai-startup-feasibility-check 做深度自检。
 version: 0.1.0
 author: tf-nezha
-updated_at: 2026-07-07
+updated_at: 2026-07-10
 origin: own
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: skill-improve-workflow
 name_zh: 技能提升工作流
+display_name: Skill Improvement Workflow
+display_name_zh: Skill 提升工作流
 description: >-
   当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量提升时触发——
   用 skill-create-workflow 创建时的同一套门禁反向检验并把它改到合格: 四门反检出问题后,
@@ -23,7 +25,7 @@ description: >-
   同意后才落盘, 判断类问题一律采访用户拍板, NEVER 擅自替用户决定或未经同意改文件。
 version: 0.7.0
 author: aquarius-wing
-updated_at: 2026-07-09
+updated_at: 2026-07-10
 origin: own
 userInvocable: true
 ---
