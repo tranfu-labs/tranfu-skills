@@ -1,91 +1,76 @@
-# github-delivery-check
+---
+prompt_examples:
+  - prompt: Push this project to the GitHub main branch.
+    scene: standard delivery
+  - prompt: This is the product's first commit — create the repo, complete the README, push to main.
+    scene: new repository
+  - prompt: We already have a repo; complete the README deployment section, verify locally, then push.
+    scene: update repository
+  - prompt: Check whether this project can install, build, start, and be verified.
+    scene: pre-delivery check
+  - prompt: Prepare this project so engineers can deploy it directly — spell out the deployment config.
+    scene: hand off to engineers
+---
 
-帮助 TranFu 团队把产品项目整理成可部署、可交接、可追踪的 GitHub 交付状态。它会自动判断项目类型，补齐 README 部署说明，本地验证后默认推送到主分支。
+[English](./README.md) | [中文](./README.zh.md)
 
-## 什么时候用它
+# GitHub Delivery Check
 
-- 项目首次提交，需要创建新的 GitHub 仓库。
-- 已有项目更新，需要把改动推到 GitHub 主分支。
-- 产品代码需要交付给技术同学部署。
-- 需要检查 README 是否有部署说明。
-- 需要确认项目能不能安装、构建、启动和验证。
+Turns a product project into a deployable, hand-offable, trackable GitHub delivery — the skill classifies the project, completes the README deployment section, verifies locally, and pushes straight to main by default.
 
-## 同类 Skill 对比
+## When to use it
 
-> 由 tranfu-publish 起草, 作者 / 推荐者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
+**Standard delivery**:
 
-### 公司库内
+The product code is largely finished and I want the skill to push it straight to the GitHub main branch instead of opening a PR to merge later.
 
-- `github:yeet` — 偏向把当前改动发布成 GitHub PR；**本 skill 区别**：默认直推主分支，并要求补齐部署说明和交付卡。
-- `review` — 偏向代码落地前的风险审查；**本 skill 区别**：目标是把产品整理成 GitHub 可部署交付状态。
-- `ship` — 偏向完整发版、变更记录和 PR；**本 skill 区别**：面向团队产品首次入库或主分支交付。
+**New repository**:
 
-### 外部世界
+This product is landing on GitHub for the first time. I want the skill to create the repo, name it under the tranfu convention (lowercase + hyphens + `-app`), derive the production URL, complete the README, and push to main.
 
-- 暂无
+**Update repository**:
 
-### 本 skill 独特价值
+There's already a GitHub remote. I just want the skill to align the README deployment section, run local verification, and push the latest changes to main.
 
-- 主分支 GitHub 交付。
-- README 部署说明门禁。
-- 技术部署配置交付卡。
+**Pre-delivery check**:
 
-## 使用技巧
+I want it to run real commands to prove the project can install, build, start, and be exercised (Node install + build/test, Web serve + HTTP hit, Docker build/compose) — not static inspection only.
 
-> 由 tranfu-publish 引导起草 (作者 / 推荐者答, AI 整合, 推荐者签字).
-> 帮助阅读者纵向上手 — tacit knowledge 在此. 横向同类对比见上方 §同类 Skill 对比.
+**Hand off to engineers**:
 
-### 材料方案
+An engineer is going to deploy this. I want the skill to emit a GitHub Delivery Card that lists env-var field names and target locations clearly, while real secret values move through a private channel.
 
-- 首次提交时准备产品中文名、英文名和简介。
-- 提前确认仓库名，例如 `tranfu-app`。
-- 如需技术部署，准备服务器环境变量字段名；真实值走私密渠道给技术。
+**Not this skill**: ordinary code changes → normal coding workflow; code review → `review`; production deployment not tied to GitHub delivery → `deploy`; tagging / version bumps → `release`; explicit "discuss only / don't push" → the skill reports without touching Git.
 
-### 推荐用法
+## What it produces
 
-- 在产品代码基本完成后使用。
-- 让 Agent 检查、补 README、跑本地验证。
-- 默认直推主分支，除非权限或风险阻塞。
+**Pushes straight to main by default; does not open a PR by default** — the most counterintuitive part. A PR is used only when branch protection or permissions block a direct push, the repo isn't directly maintained by the team, or the user explicitly asks for one.
 
-### 已知限制
+- **Project-type classification**: frontend / backend / full-stack / Docker / static site / server deployment — inspect files first, ask the user second, never the other way around.
+- **First-push product metadata**: Chinese name, English name, summary, repo name (lowercase-hyphen + `-app`), production URL (`https://{repo}.tranfu.com/`), GitHub owner — all required before pushing.
+- **Pre-push secret scan**: tracked files, staged files, and hidden files (excluding `.git`, dependency directories, and build output); a secret already in Git history is called `暂不建议推送` and stops.
+- **README deployment gate**: install, run locally, build, env vars, port, deploy, production URL, health check — any missing piece is completed before pushing.
+- **Real local verification**: Node runs build/test/lint, Web hits HTTP 200, API hits the health endpoint, Docker runs build/compose — failures are fixed and re-run; nothing runnable means verdict `未推送: 需先修复`.
+- **GitHub Delivery Card**: the conclusion is exactly one of `已推送完成` / `未推送: 待 GitHub 授权` / `未推送: 需先修复` / `暂不建议推送`; the card lists env-var names + target location and says real values are "provided privately."
+- **Never does**: claim a GitHub push equals production; invent auth codes / repo URLs / production URLs; commit `.env` / private keys / DB files / dependency dirs / build caches; open a PR to replace a direct push without permission.
 
-- 不代表生产已经上线。
-- GitHub 未授权时需要用户输入一次性授权码。
-- 本地未提交的 `.env` 和服务器环境变量可以放真实值，但不能进 GitHub、README、截图或最终回复。
-- 密钥进入 Git 历史时必须先处理。
+## Prerequisites & boundaries
 
-## 怎么用 (触发示例)
+**Prerequisites**:
 
-跟 Codex 说：
+The target directory is readable and `git` is available; pushing to GitHub requires `gh` CLI or an equivalent authenticated GitHub tool (`gh auth status`); local verification requires the matching runtime (Node / Docker / Python, etc.) to be available locally.
 
-- "用 $github-delivery-check 把这个项目推到 GitHub。"
-- "这个产品首次提交，帮我创建 GitHub 仓库并推主分支。"
-- "检查这个项目能不能交付给技术部署，并推到 GitHub。"
-- "已有仓库，帮我补 README 部署说明、本地验证后推送。"
+**Adjacent skills**:
 
-## 你会看到什么
+| Situation | Skill |
+|---|---|
+| Turn current changes into a reviewed PR | `github:yeet` |
+| Full release + changelog + version bump | `ship` / `release` |
+| Cold-start `AGENTS.md` + `openspec/` scaffolding | `project-init-docs` |
 
-```text
-交付结论：已推送完成
+**Subtle boundaries**:
 
-项目：xxx
-仓库：owner/repo
-主分支：main
-生产链接：https://xxx.tranfu.com/
-
-本地验证：通过
-README 部署说明：已补齐
-安全检查：未发现密钥泄露
-GitHub 状态：已推送到主分支
-
-部署配置：
-- SERVER_API_BASE_URL：配置到服务器环境变量，例如 https://api.example.com
-- SERVER_ACCESS_TOKEN：配置到服务器环境变量，真实值由负责人私下提供
-
-注意：
-- 真实密钥可以放在本地未提交的 .env 或服务器环境变量里。
-- 真实密钥不能写进 GitHub、README、PR、截图或最终回复。
-
-下一步：
-...
-```
+- Real secrets may live in a local uncommitted `.env` or in server environment variables; they must not appear in GitHub, README, `.env.example`, screenshots, or the final reply.
+- When GitHub authorization is missing, the skill hands the user the real link and one-time code printed by `gh auth login --web` — it never invents them.
+- Repo-existence conflict (`owner/repo` exists but may belong to a different project) → stops at `未推送: 需先修复` and asks the user to confirm before pushing.
+- "Push to the GitHub main branch" triggers this skill; "merge to main and go live" does not (that is `deploy`); code review before landing does not (that is `review`).

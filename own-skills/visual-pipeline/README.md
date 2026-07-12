@@ -1,50 +1,68 @@
+---
+prompt_examples:
+  - prompt: Design the settings page for our internal review tool.
+    scene: new page from scratch
+  - prompt: The header on the review page doesn't feel right, help me fix it.
+    scene: modify an existing design
+  - prompt: Take the dashboard, list, and detail pages of the new product through the pipeline one by one.
+    scene: multi-page project
+  - prompt: Fields and user scenario are already locked, push it straight to high-fidelity.
+    scene: input locked, into style stage
+  - prompt: The overall vibe is off, I want a magazine feel instead of a dashboard feel.
+    scene: style re-selection
+  - prompt: Get the wireframe out first, don't jump to color yet — I want to see the skeleton before pixels.
+    scene: skeleton before style
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
 # visual-pipeline
 
-产品设计**后段**流水线: 已知"用户场景 + 要显示什么" → 高保真选定版.
+A back-half product-design pipeline: given "user scenario + what to display" as input, drive it to a high-fidelity chosen version.
 
-单位是**页面**, 一个页面跑一遍. 三段顺序: 显示信息 → 显示框架 → 风格 + 实践. 每段先文档后 HTML, 不跳段, 改动走归属判定.
+The unit is a **page**. One page runs the pipeline once. Three stages in strict order: display info → skeleton → style + practice. Every stage writes docs before HTML, no stage-skipping, and every change goes through a routing decision.
 
-代码实现及之后的环节不在范围内.
+Code implementation and everything after it are out of scope.
 
-## 什么时候用它
+## When to use it
 
-- 用户说"设计 / 做 / 改 X 页面" 且偏视觉 / 产品层
-- 输入已经收敛到"用户场景 + 要显示什么", 等着把它变成像素
-- 一个页面跑一次, 多个页面跑多次, 每页独立判定风格
+- The user says "design / build / change page X" and the ask is on the visual / product layer
+- Input has already converged to "user scenario + what to display", now waiting to be turned into pixels
+- One page one run, multiple pages multiple runs, each page judges its own style
 
-不用于: 纯文案小改 / 单 bug 代码修复 / 纯后端 / 还没想清楚要做什么的需求探索阶段.
+Not for: pure copy tweaks / single-bug code fixes / pure backend work / requirement-discovery stage where the ask is still unclear.
 
-## 同类 Skill 对比
+## Comparison with similar skills
 
-> 由 tranfu-publish 起草, 作者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
+> Drafted by tranfu-publish, signed off by the author. Helps a reader decide horizontally which one to install, or jump to a better-fit sibling.
 
-### 公司库内
-- [ui-ux-pro-max](../../external-skills/ui-ux-pro-max/SKILL.md) — UI/UX 材料库 (67 style / 96 配色 / 57 字体); **本 skill 区别**: 它是材料库, 在"风格段"内被调用; 本 skill 是流程纪律, 管段间顺序与归属
-- [claude-design-system](../../external-skills/claude-design-system/SKILL.md) — Anthropic 内部 design 工具 system prompt 镜像 (HTML 制品参考材料); **本 skill 区别**: 它是 prompt 参考, 本 skill 是可执行流程, 强制分段不可跳
+### Inside the company library
+- [ui-ux-pro-max](../../external-skills/ui-ux-pro-max/SKILL.md) — a UI/UX material library (67 styles / 96 palettes / 57 font pairings); **this skill differs**: it's a material library called inside the "style stage"; this skill is process discipline, governing stage order and change routing
+- [claude-design-system](../../external-skills/claude-design-system/SKILL.md) — a mirror of Anthropic's internal design-tool system prompt (a reference for HTML artifacts); **this skill differs**: it's a prompt reference, whereas this skill is an executable pipeline that enforces non-skippable stages
 
-### 外部世界
-- [claude-wireframe-skill](https://github.com/Magdoub/claude-wireframe-skill) — 一把出 5 个 B&W 线框 + 并行加色彩变体; **本 skill 区别**: 它是"多选并列", 本 skill 是"单页深耕 + 改动可回退"
-- [claude-design-skill](https://github.com/jiji262/claude-design-skill) — Claude.ai 内部 prompt 复刻, 出 HTML 制品 (decks / landing / 动画); **本 skill 区别**: 它范围全 (含演示/海报), 本 skill 限定页面设计 + 强制三段顺序
+### Outside world
+- [claude-wireframe-skill](https://github.com/Magdoub/claude-wireframe-skill) — one-shot output of five B&W wireframes plus parallel color variants; **this skill differs**: that one is "many parallel options", this one is "single page in depth with reversible changes"
+- [claude-design-skill](https://github.com/jiji262/claude-design-skill) — a replica of the Claude.ai internal prompt, produces HTML artifacts (decks / landing / animation); **this skill differs**: that one covers a wide range (including slides and posters), this one is scoped to page design with a mandatory three-stage order
 
-### 本 skill 独特价值
-- 强制分段先文档后 HTML, 视觉决策有文档可追
-- 改动必先归属判定, 防止复现历史阻塞
-- 每页独立风格段, 多页项目里防全局调性吃单页
+### Unique value of this skill
+- Mandatory stages, docs before HTML, so visual decisions leave a traceable paper trail
+- Any change is routed to its owning stage first, preventing the historical blocker from coming back
+- Each page has its own style stage, protecting per-page choices from being flattened by a project-wide tone
 
-## 使用技巧
+## Tips for using it
 
-> 由作者起草. 帮助阅读者纵向上手.
+> Drafted by the author. Helps a reader get started vertically.
 
-### 材料方案
-- 试过"一把梭出 HTML 让用户挑", 决策无文档无法回退, 改第二轮就废
-- 试过"全局一套风格通吃", 单页特殊场景被压平, 用户连续否定后无锚点
+### Material lessons
+- We tried "one-shot pile of HTML, let the user pick" — decisions had no docs, no way to roll back, and round two fell apart
+- We tried "one style fits all pages" — special per-page scenarios got flattened, and after a few user rejections there was no anchor left
 
-### 推荐用法
-- 先按调用方约定确认页面输出目录 (例 `web-goal-docs/<page>/`)
-- 第一页跑全三段建立基线, 后续页可引用"继承自项目共享设计语言"
-- 用户说"不对"先归属再改, 别直接动 HTML — 这是核心使用纪律
+### Recommended usage
+- First confirm the page output directory with the caller (e.g. `web-goal-docs/<page>/`)
+- Run all three stages on the first page to set a baseline; later pages can reference "inherited from the project shared design language"
+- When the user says "wrong", route first, then edit — don't jump straight into the HTML; this is the core discipline
 
-### 已知限制
-- 不做需求层决策 (用户场景 / 字段优先级), 输入端必须已经锁定
-- 不出代码, `03-selected.html` 是 ground truth, 代码层做不出退回风格段
-- 全程中文, 产物里禁止 S1/P0/R1 等英文缩写 (可能不符合英文项目惯例)
+### Known limits
+- Doesn't make requirement-layer decisions (user scenario, field priority) — inputs must be locked upstream
+- Doesn't emit code; `03-selected.html` is the ground truth, decisions made at code layer can't roll back into the style stage
+- Everything is in Chinese, artifacts forbid short labels like S1/P0/R1 (may not match the conventions of an English-first project)
