@@ -2,11 +2,11 @@
 prompt_examples:
   - prompt: 初始化。
     scene: 仓库根初始化
-  - prompt: 这个老项目还没 AGENTS.md, 帮我搭一套 AI 能看懂的文档底座。
+  - prompt: 这个老项目还没 AGENTS.md, 帮我按真实事实把项目文档一次沉下来。
     scene: 存量补齐
   - prompt: 帮我把项目文档初始化一下, 把结构、命令、业务域一起沉下来。
-    scene: AI 底座冷启动
-  - prompt: 给这个项目加线框图, 每页画个版式事实源。
+    scene: AI 冷启动
+  - prompt: 给这个项目加线框图, 每页把版式画清楚。
     scene: 加线框图
   - prompt: 帮我搭 DEPLOY.md, 把部署到哪、怎么建、怎么退写清楚。
     scene: 部署源初始化
@@ -40,13 +40,13 @@ prompt_examples:
 
 ## 它会产出什么 / 你会看到什么
 
-**默认先出执行前小结、用户确认才动笔; 目录级说明一律 `AGENTS.md` + `CLAUDE.md`, 绝不用 `README`**——最反常识的两点。
+**默认先出执行前小结、用户确认才动笔; 各目录的说明文件一律用 `AGENTS.md` + `CLAUDE.md`, 绝不用 `README`**——最反常识的两点。
 
 - **探测仓库**: 扫 `package.json` / `Dockerfile` / CI 工作流 / 路由等, 抽真实命令、模块、业务域、部署形态、页面清单; 亮出计划生成的文件清单等用户确认
 - **落盘骨架**: 跑 `scripts/fill.sh` 铺静态骨架 (各 `CLAUDE.md` 指针、`changes/AGENTS.md` + `_template/`、`adr/AGENTS.md` + 0000 ADR、`docs/wireframes/` 静态骨架) + 事实文件骨架 (小节标题 + `TODO`)
 - **填事实正文**: 根 `AGENTS.md`、`DEPLOY.md`、`module-map.md`、各 `spec.md`、`page.md`、`flow.md` 按真实事实填, 探测不到的整节留 `TODO: 需人工确认`
 - **线框图默认铺**: `docs/wireframes/` 静态骨架 + `flow.md` 无条件生成; 有路由再 `--pages` 追加 `pages/<page>.md`; 是否保留留给根 `AGENTS.md` 的删除规则
-- **幂等不覆盖**: 已存在文件读现有内容, 只补缺失小节或报差异, 覆盖前必须经用户确认
+- **重复跑也安全**: 已存在的文件读一遍, 只补缺失小节或报差异, 覆盖前必须经用户确认
 - **绝不会做**: 跑脚手架命令 (`npm init` / `create-react-app` / `cargo new`); 在 `DEPLOY.md` 里写真实密钥值; 编造探测不到的命令与依赖; 用 `README` 当目录指南
 
 ## 前置条件 / 边界
@@ -74,4 +74,4 @@ prompt_examples:
 
 - 仓库根说「初始化」→ 触发; 不在仓库里说「初始化」→ 不触发
 - 「搭 `AGENTS.md` 体系 / 加 `DEPLOY.md` / 铺线框图」→ 触发 (基线一部分); 「改 `AGENTS.md` 部署一节」→ 不触发 (局部编辑)
-- 无界面工具 / 库 → 依旧铺 `docs/wireframes/` 静态骨架 + 保留删除规则; init 阶段不替用户判定 UI 与否
+- 无界面工具 / 库 → 依旧铺 `docs/wireframes/` 静态骨架 + 保留删除规则; 初始化阶段不替用户判定界面与否
