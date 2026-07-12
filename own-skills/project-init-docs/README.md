@@ -1,77 +1,79 @@
 ---
 prompt_examples:
-  - prompt: 初始化。
-    scene: 仓库根初始化
-  - prompt: 这个老项目还没 AGENTS.md, 帮我按真实事实把项目文档一次沉下来。
-    scene: 存量补齐
-  - prompt: 帮我把项目文档初始化一下, 把结构、命令、业务域一起沉下来。
-    scene: AI 冷启动
-  - prompt: 给这个项目加线框图, 每页把版式画清楚。
-    scene: 加线框图
-  - prompt: 帮我搭 DEPLOY.md, 把部署到哪、怎么建、怎么退写清楚。
-    scene: 部署源初始化
+  - prompt: Init this repo.
+    scene: Repo root init
+  - prompt: This legacy project still has no AGENTS.md — pin down the project docs in one pass, grounded in real facts.
+    scene: Backfill for existing code
+  - prompt: Init the project docs and pin down the structure, commands, and business domains in one go.
+    scene: AI cold-start
+  - prompt: Add wireframes to this project, one clear layout per page.
+    scene: Add wireframes
+  - prompt: Set up a DEPLOY.md that spells out where we deploy, how we build, and how to roll back.
+    scene: Deploy source-of-truth init
 ---
 
-# 项目文档初始化
+[English](./README.md) | [中文](./README.zh.md)
 
-在仓库根说「初始化」时, 扫真实事实一次性铺 AI 协作基线——`AGENTS.md` / `DEPLOY.md` / `spec.md` / 线框图对齐同一套契约。
+# Project Documentation Init
 
-## 什么时候用它
+When you say "init" at a repo root, this skill probes real facts and lays down the AI-collaboration baseline in one pass — `AGENTS.md` / `DEPLOY.md` / `spec.md` / wireframes, all aligned to the same contract.
 
-**正面初始化**:
+## When to use it
 
-我在一个已经能跑的仓库根说「初始化」, 想 skill 扫真实栈与目录、把 AI 协作基线一次铺好, 而不是拷空白模板。
+**Standard init**:
 
-**存量补齐**:
+I'm at the root of a repo that already runs, and I say "init" — I want the skill to scan the real stack and directory layout and lay down the AI-collaboration baseline in one pass, not copy a blank template over.
 
-老项目代码在、文档欠账——没 `AGENTS.md`、没 `module-map.md`、没 `DEPLOY.md`, 想让 skill 按真实事实一次性补齐, 命令抄真实脚本、模块抄真实目录。
+**Backfilling existing code**:
 
-**AI 冷启动**:
+The code is there but the docs never caught up — no `AGENTS.md`, no `module-map.md`, no `DEPLOY.md`. I want the skill to backfill everything from real facts: commands lifted from actual scripts, modules from actual directories.
 
-我想让后续任何 AI 拿到仓库就能干活——`AGENTS.md` 知禁区、`DEPLOY.md` 知部署、`module-map.md` 知依赖、`openspec/` 与 `docs/wireframes/` 知契约与版式事实。
+**AI cold-start**:
 
-**显式指名**:
+I want any future AI to be productive the moment it clones the repo — `AGENTS.md` for the do-not-touch list, `DEPLOY.md` for how to ship, `module-map.md` for dependencies, `openspec/` and `docs/wireframes/` for the contract and layout facts.
 
-我点名要「搭 `AGENTS.md` 体系 / 加个 `DEPLOY.md` / 铺线框图」, 想让 skill 按同一套骨架把点名的部分与关联小节一起对齐。
+**Explicit ask**:
 
-**不接**:
+I name a specific piece — "set up the `AGENTS.md` hierarchy / add a `DEPLOY.md` / lay down wireframes" — and I want the skill to apply the same skeleton, aligning the requested piece together with its related sections.
 
-跑 `npm init` / `create-react-app` 这类脚手架 → 与本 skill 无关; 只想写一份 `README` / 贡献指南 → 普通编辑; 改 `AGENTS.md` 的某一节 → 普通编辑; 打 tag / 版本号 → **release**; 日常写码闭环 → **openspec-driven-development**。
+**Not this skill**:
 
-## 它会产出什么 / 你会看到什么
+Running scaffolding commands like `npm init` / `create-react-app` — unrelated to this skill; writing a single `README` or contribution guide — plain editing; tweaking one section of `AGENTS.md` — plain editing; tagging / version bumps — **release**; day-to-day coding loop — **openspec-driven-development**.
 
-**默认先出执行前小结、用户确认才动笔; 各目录的说明文件一律用 `AGENTS.md` + `CLAUDE.md`, 绝不用 `README`**——最反常识的两点。
+## What it produces / What you'll see
 
-- **探测仓库**: 扫 `package.json` / `Dockerfile` / CI 工作流 / 路由等, 抽真实命令、模块、业务域、部署形态、页面清单; 亮出计划生成的文件清单等用户确认
-- **落盘骨架**: 跑 `scripts/fill.sh` 铺静态骨架 (各 `CLAUDE.md` 指针、`changes/AGENTS.md` + `_template/`、`adr/AGENTS.md` + 0000 ADR、`docs/wireframes/` 静态骨架) + 事实文件骨架 (小节标题 + `TODO`)
-- **填事实正文**: 根 `AGENTS.md`、`DEPLOY.md`、`module-map.md`、各 `spec.md`、`page.md`、`flow.md` 按真实事实填, 探测不到的整节留 `TODO: 需人工确认`
-- **线框图默认铺**: `docs/wireframes/` 静态骨架 + `flow.md` 无条件生成; 有路由再 `--pages` 追加 `pages/<page>.md`; 是否保留留给根 `AGENTS.md` 的删除规则
-- **重复跑也安全**: 已存在的文件读一遍, 只补缺失小节或报差异, 覆盖前必须经用户确认
-- **绝不会做**: 跑脚手架命令 (`npm init` / `create-react-app` / `cargo new`); 在 `DEPLOY.md` 里写真实密钥值; 编造探测不到的命令与依赖; 用 `README` 当目录指南
+**By default a preflight summary comes first — nothing gets written until you confirm; every per-directory instruction file is `AGENTS.md` + `CLAUDE.md`, never `README`** — those are the two most counterintuitive rules.
 
-## 前置条件 / 边界
+- **Probe the repo**: scan `package.json` / `Dockerfile` / CI workflows / routes and extract real commands, modules, business domains, deployment shape, and page inventory; surface the planned file list for you to confirm
+- **Write out the skeleton**: run `scripts/fill.sh` to lay down the static skeleton (per-directory `CLAUDE.md` pointers, `changes/AGENTS.md` + `_template/`, `adr/AGENTS.md` + ADR 0000, `docs/wireframes/` skeleton) plus fact-file stubs (section headings + `TODO`)
+- **Fill in the facts**: populate root `AGENTS.md`, `DEPLOY.md`, `module-map.md`, every `spec.md`, `page.md`, `flow.md` from what was actually detected; anything unprobeable stays as `TODO: needs human confirmation`
+- **Wireframes laid down by default**: the `docs/wireframes/` skeleton + `flow.md` are always generated; if routes exist, `--pages` appends `pages/<page>.md`; whether to keep them is left to the deletion rule in root `AGENTS.md`
+- **Safe to rerun**: existing files are read first; the skill only fills missing sections or reports diffs, and any overwrite requires your confirmation
+- **Never does**: run scaffolding commands (`npm init` / `create-react-app` / `cargo new`); write real secret values into `DEPLOY.md`; invent commands or dependencies it couldn't detect; use `README` as a directory guide
 
-**前置**:
+## Prerequisites & boundaries
 
-一个已 clone 的代码仓库根目录, 能跑 `bash` 执行 `scripts/probe.sh` 与 `scripts/fill.sh`; 有路由的项目还需要 `python3` (线框图列宽用 `east_asian_width` 校验, 禁 `awk length` / `wc -L`)。
+**Prerequisites**:
 
-**相邻 skill 分工**:
+A cloned repo root with `bash` available to run `scripts/probe.sh` and `scripts/fill.sh`; projects with routes also need `python3` (wireframe column widths are measured with `east_asian_width`, never `awk length` or `wc -L`).
 
-| 动作 | 交给 |
+**Adjacent skills**:
+
+| Action | Skill |
 |---|---|
-| 日常开发闭环 (方案 → 分支 → change → 归档) | **openspec-driven-development** |
-| 打 tag / 写 changelog / 定版本号 | **release** |
-| 审 / 优化提示词或 SKILL.md | **prompt-review** |
+| Day-to-day dev loop (plan → branch → change → archive) | **openspec-driven-development** |
+| Tagging / changelog / version bumps | **release** |
+| Reviewing or refining a prompt / SKILL.md | **prompt-review** |
 
-**不接的场景**:
+**Out of scope**:
 
-- 脚手架命令 (`git init` / `npm init` / `create-react-app` / `cargo new`)
-- 只新建单个文档 (「写个 `README`」/「写个贡献指南」)
-- 已有 `AGENTS.md` 的局部小修改 (那是普通编辑)
-- 编写业务代码 / 修 bug
+- Scaffolding commands (`git init` / `npm init` / `create-react-app` / `cargo new`)
+- Creating a single doc ("write a `README`" / "write a contribution guide")
+- Localized edits to an existing `AGENTS.md` (that's plain editing)
+- Writing business code / fixing bugs
 
-**微妙边界**:
+**Subtle boundaries**:
 
-- 仓库根说「初始化」→ 触发; 不在仓库里说「初始化」→ 不触发
-- 「搭 `AGENTS.md` 体系 / 加 `DEPLOY.md` / 铺线框图」→ 触发 (基线一部分); 「改 `AGENTS.md` 部署一节」→ 不触发 (局部编辑)
-- 无界面工具 / 库 → 依旧铺 `docs/wireframes/` 静态骨架 + 保留删除规则; 初始化阶段不替用户判定界面与否
+- Saying "init" at a repo root → triggers; saying "init" outside a repo → doesn't
+- "Set up the `AGENTS.md` hierarchy / add a `DEPLOY.md` / lay down wireframes" → triggers (still part of the baseline); "edit the deploy section of `AGENTS.md`" → doesn't (localized edit)
+- Headless tools / libraries → the `docs/wireframes/` skeleton is still laid down and the deletion rule preserved; init won't decide for you whether the project has a UI

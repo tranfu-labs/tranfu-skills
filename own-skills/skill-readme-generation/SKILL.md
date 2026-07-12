@@ -59,15 +59,51 @@ CREATE A TODO LIST FOR THE TASKS BELOW. Keep the list internal unless the user a
    - **什么时候用它**: 从 description 里的"触发于"话术改写成 3-5 段第一人称场景 ("我在做 X, 遇到 Y, 想让 skill 帮我 Z"), 末尾段显式画负向边界 ("不是给 A, 那是 X-skill; 不是给 B, 那是 Y-skill")。
    - **它会产出什么 / 你会看到什么**: 段落式说明主要产出 (落盘的文件 / 终端报告 / PR 等) + 显式点名副作用 (会不会动 git / 改文件 / 发外部通知 / 调 API) + 单独强调反常识点 (例: "默认先出方案、明确说开始写才动代码")。
    - **前置条件 / 边界**: 前置条件 (要什么工具 / 什么目录结构 / 什么权限) + 相邻 skill 分工一句话每条 + 不接的场景 + 微妙边界区分 (如果有)。
-7. **派生 `prompt_examples`**。5-6 条自然口语, 每条一个 `prompt` (15-50 字, 可以直接粘给 Claude / Codex 的那句话) + 一个 `scene` (≤ 12 字, 一行短标签)。**MUST 覆盖至少 4 种不同进场点** (按第 5 步的模式), NEVER 只是同一进场点的近义词轮换。
-8. **组装 README.md**, 逐条套 §硬约束校验: 标点全角 / 无假英文单词 / 无"怎么调用"段 / 无 hero 图 (除非目标目录已有 `workflow.svg`) / 正文 30-80 行 / frontmatter 20-30 行。校验不通过就回步骤 6 重写对应段落。
-9. **术语脱敏, 人话过一遍**——用第 12 条硬约束逐段扫: skill 圈行话 (`slug` / `轴` / `进场点` / `触发对齐` / `解释感` / `hero` / `trajectory` / `catalog` / `frontmatter` 等) 替换成普通中文; 中英夹杂只保留通用专有名词 / 命令 / 文件名 / 路径 / 状态标识符; 直译英文的中式表达 ("XX 感" / "拿 X 当 Y") 改成地道中文。判断法: 逐句读出来, 圈外朋友听不懂 → 重写。发现违规 → 回步骤 6 重写对应段落。
-10. **落盘**。目标路径 = `<skill 目录>/README.md`。若目标已有 `README.md` 且用户没明说要重生成 → 失败路径 F3。
-11. **向用户汇报** (按 §输出格式)。
+7. **派生两份 `prompt_examples`**——英文版 (`README.md`) + 中文版 (`README.zh.md`), 各 5-6 条自然口语。每条一个 `prompt` (英文 15-80 字符 / 中文 15-50 字) + 一个 `scene` (英文 ≤ 20 字符 / 中文 ≤ 12 字)。**MUST 覆盖至少 4 种不同进场点** (按第 5 步的模式), NEVER 只是同一进场点的近义词轮换。两份 prompt_examples 内容对应 (指同一件事), 但按各语言的地道说法组织, NEVER 逐词直译。
+8. **组装两份 README**——英文 (`README.md`, 全英文正文) + 中文 (`README.zh.md`, 全中文正文)。两份文件结构 = frontmatter → 空行 → 语言切换链接 `[English](./README.md) | [中文](./README.zh.md)` → 空行 → H1 → 空行 → elevator pitch → 四段正文。逐条套 §硬约束校验: 中文版标点全角 / 无"怎么调用"段 / 无 hero 图 (除非目标目录已有 `workflow.svg`) / 各版正文 30-80 行 / frontmatter 20-30 行。校验不通过就回步骤 6 重写对应段落。
+9. **术语脱敏, 人话过一遍**——**只针对中文版 (`README.zh.md`)**, 用第 12 条硬约束逐段扫: skill 圈行话 (`slug` / `轴` / `进场点` / `触发对齐` / `解释感` / `hero` / `trajectory` / `catalog` / `frontmatter` 等) 替换成普通中文; 中英夹杂只保留通用专有名词 / 命令 / 文件名 / 路径 / 状态标识符; 直译英文的中式表达 ("XX 感" / "拿 X 当 Y") 改成地道中文。判断法: 逐句读出来, 圈外朋友听不懂 → 重写。发现违规 → 回步骤 6 重写对应段落。英文版 (`README.md`) 本身就是英文, 无需脱敏, 但同样 MUST 用地道英文 (避免中式英文直译, 例: "I want to make X" 而非 "I'm want to be make X"; "how it works" 而非 "how does it work concretely")。
+10. **落盘两份**。目标路径 = `<skill 目录>/README.md` (英文) + `<skill 目录>/README.zh.md` (中文)。若目标已有 `README.md` 或 `README.zh.md` 中任一, 且用户没明说要重生成 → 失败路径 F3。
+11. **向用户汇报** (按 §输出格式)——两份落盘路径都列出。
 
 ## README 骨架规范
 
 这是**产出物的规范**——本 skill 每次调用生成的 README 必须严格符合下面这份规范。
+
+### 双语文件结构
+
+每次调用 MUST 产出**两份文件**:
+
+- `README.md` = **英文版**, 全英文, 用于 GitHub 展示 / 国际读者
+- `README.zh.md` = **中文版**, 全中文, 用于公司自建官网详情页 / 国内读者
+
+**文件顶部顺序** (两份都是):
+
+```
+---
+prompt_examples:
+  - prompt: <本语言的自然口语>
+    scene: <本语言的场景标签>
+  ...
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
+# <slug 或 display_name / display_name_zh>
+
+<elevator pitch>
+
+## <What / 什么时候用它>
+
+... (四段正文按 §硬约束 组织)
+```
+
+**关键**:
+
+- 语言切换链接**紧跟** frontmatter 结束的 `---`, 空一行, 用**相对路径** `./README.md` 与 `./README.zh.md`, 用**竖线** `|` 分隔, NEVER 用 middot / 全角符号 / 外部 URL
+- 英文版所有内容 (frontmatter values / 正文) MUST 全英文 (地道英文, 非中式直译)
+- 中文版所有内容 MUST 全中文 (遵守 §硬约束 12 条含术语脱敏), 技术标识符 (`display_name` / `SKILL.md` / `openspec/`) 除外
+- 两份内容对应 (指同一件事), 但按各自语言的地道说法组织, NEVER 逐句直译
+- frontmatter `prompt_examples` 两份都填, 条数一致 (5-6), scene 对齐 (指同一进场点)
 
 ### Frontmatter shape (唯一字段: `prompt_examples`)
 
@@ -135,6 +171,11 @@ prompt_examples:
     - **中英夹杂**: 只在**通用技术专有名词** (`SEO` / `AI` / `PR` / `commit` / `README` / `SKILL.md` / `MCP` / `Codex`)、**命令 / 文件名 / 路径 / 变量名** (`git push` / `openspec/` / `origin/main`)、**状态标识符** (`plan-written`) 时保留英文。其他 skill 生态圈的英文行话 → 中文。
     - **中式英文语序**: 「拿 X 当 Y」/「XX 感强 / 弱」/「触发对齐」等直译英文的表达 → 改成地道中文。判断法: 一句话读出来, 如果非 skill 圈的朋友听不懂, 就重写。
     发现任一违规 → 回步骤 6 重写对应段落。
+13. **双语一致性**——两份文件 (`README.md` 英文, `README.zh.md` 中文) MUST 满足:
+    - **顶行相对切换链接**: 各文件在 frontmatter 之后、H1 之前放 `[English](./README.md) | [中文](./README.zh.md)`, 相对路径必须 `./`, NEVER 用绝对 URL / middot / 全角符号
+    - **frontmatter 结构一致**: 字段名 (`prompt_examples`) 一致, 条数一致 (5-6 条), scene 对齐 (指同一进场点)
+    - **内容对应但不逐句直译**: 两份说同一件事, 章节结构一致——英文版章节名可 `When to use it` / `What it produces` / `Prerequisites & boundaries`, 中文版继续 `什么时候用它` / `它会产出什么` / `前置条件与边界`; 但各语言按自己的地道说法组织。中文"我在做 X, 让 skill 帮我 Z" ↔ 英文 "When I'm doing X, I want the skill to Z" 就是自然表达, NEVER 逐词对齐。
+    - **语言纯净**: 英文版正文全英文 (地道英文, 非中式直译); 中文版正文全中文 (遵守第 12 条术语脱敏)。技术标识符 (`display_name` / `SKILL.md` / `openspec/`) 在两版都保留原样。
 
 ## 输出格式
 

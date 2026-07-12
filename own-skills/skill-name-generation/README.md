@@ -1,73 +1,75 @@
 ---
 prompt_examples:
-  - prompt: 帮我给这个 skill 起个中英文 display_name，description 我贴给你。
-    scene: 新起单条
-  - prompt: own-skills/ 下这批 skill 都还没 display_name，帮我按同一套规约批量补齐。
-    scene: 存量批量
-  - prompt: 给 skill-content-fit 起个 display_name 和 display_name_zh。
-    scene: 显式指名
-  - prompt: 这个 skill 现有的显示名读起来像解释，帮我重起一组更贴的。
-    scene: 重起
-  - prompt: 英文目录名是 lark-safe-write，主职是「写飞书前的一整套安全检查」，起个中英文显示名。
-    scene: 贴信息起名
-  - prompt: 读 own-skills/xxx/SKILL.md，帮我起个中英文显示名。
-    scene: 读 SKILL.md
+  - prompt: Give me an English + Chinese display_name for this skill — I'll paste the description.
+    scene: New skill
+  - prompt: None of the skills under own-skills/ have display_names yet — backfill the whole batch with the same conventions.
+    scene: Bulk backfill
+  - prompt: Come up with a display_name and display_name_zh for skill-content-fit.
+    scene: Named target
+  - prompt: The current display name for this skill reads like an explanation — propose a tighter set.
+    scene: Regenerate
+  - prompt: Slug is lark-safe-write, its job is "run the full safety check before writing to Lark" — give me paired display names.
+    scene: Info-provided
+  - prompt: Read own-skills/xxx/SKILL.md and propose a paired display name.
+    scene: From SKILL.md
 ---
+
+[English](README.md) | [简体中文](README.zh.md)
 
 # skill-name-generation
 
-给一个已有 skill 起中英文成对显示名, 一次产 1 推荐 + 3 备选, 只出候选文本, 不动任何文件。
+Generate paired English + Chinese display names for an existing skill — 1 recommended + 3 alternates in a single pass, candidates only, no files touched.
 
-## 什么时候用它
+## When to use it
 
-**新起单条**:
+**New skill**:
 
-skill 刚起完英文目录名和 description, 我要在开头元数据里填 `display_name` / `display_name_zh` 两个字段, 想让 skill 一次配对给出候选。
+You just finished the slug and description for a skill and need to fill in `display_name` / `display_name_zh` in its frontmatter — you want paired candidates in one shot.
 
-**存量批量**:
+**Bulk backfill**:
 
-仓库里一批老 skill 只有目录名没显示名, 我要按同一套规约批量回填, 中英文成对不错位。
+A batch of older skills in the repo has slugs but no display names. You want the same conventions applied across the board, English and Chinese paired without drift.
 
-**重起显示名**:
+**Regenerate display names**:
 
-某个 skill 现有的显示名读起来像解释, 不像名字; 或者未来我想找回它时, 脑子里第一反应的词根本没落在名字里, 想看看有没有更贴的候选。
+An existing display name reads like an explanation, not a name; or the word you'd reach for when trying to find this skill later doesn't appear in it. You want to see whether a tighter candidate exists.
 
-**只指路径**:
+**Path-only input**:
 
-我不想复制粘贴目录名和 description, 直接把 `SKILL.md` 路径丢过去, 让 skill 自己从开头元数据摘。
+You don't want to copy-paste the slug and description — hand over a `SKILL.md` path and let the skill pull them from the frontmatter itself.
 
-**不接**:
+**Out of scope**:
 
-起产品 / 功能 / 模块名 → **product-title-generation**; 起 skill 的英文目录名 (小写加连字符) → **skill-domain-framing**; 判断某段内容值不值得沉淀成 skill → **skill-content-fit**; 代码变量 / 函数 / 类命名、广告口号 / 营销文案 / SEO 标题 / 商标合规 → 直接不触发。
+Naming a product / feature / module → **product-title-generation**; naming a skill's slug (lowercase, hyphenated) → **skill-domain-framing**; deciding whether a piece of content is worth crystallizing into a skill → **skill-content-fit**; code variables / functions / classes, ad slogans / marketing copy / SEO titles / trademark clearance → don't trigger.
 
-## 它会产出什么
+## What it produces
 
-**只出候选文本, 绝不动任何文件——写不写、写到哪, 由你自己决定**——最反常识的一点。
+**Candidate text only — never edits any file. Whether and where to write is your call.** This is the most counterintuitive part.
 
-- **一次成对**: 1 推荐 + 3 备选, 每组 = `display_name` (英文, 首字母大写的短语) + `display_name_zh` (中文 4-8 字) + 一句理由 (必须指明核心词从 description 哪个短语抽出)
-- **绝不会做**: 改动目标 skill 的 `SKILL.md` / `agents/openai.yaml` / `index.json` 或任何仓库文件
+- **Paired in one pass**: 1 recommended + 3 alternates. Each set = `display_name` (English, Title Case phrase) + `display_name_zh` (Chinese, 4–8 characters) + one line of rationale (must call out which phrase in the description the core word was pulled from).
+- **Never does**: touch the target skill's `SKILL.md` / `agents/openai.yaml` / `index.json` or any other repo file.
 
-## 前置条件 / 边界
+## Prerequisites & boundaries
 
-**前置**:
+**Prerequisites**:
 
-需要 skill 的英文目录名 + description 两条信息; 也可以只给 `SKILL.md` 路径, 由 skill 自己从开头元数据摘 `name` 和 `description` 两个字段, 不读正文。两者都缺就问一次, 再缺就停。
+Needs two pieces of information — the skill's slug and its description. Alternatively, hand over a `SKILL.md` path and the skill will pull `name` and `description` from the frontmatter itself (body ignored). If both are missing, ask once; if still missing, stop.
 
-**相邻 skill 分工**:
+**Adjacent skills**:
 
-| 动作 | 交给 |
+| Task | Route to |
 |---|---|
-| 起 skill 的英文目录名 (小写加连字符) | **skill-domain-framing** |
-| 起产品 / 功能 / 模块的中文短标题 | **product-title-generation** |
-| 编排 skill 创建的整套流程 | **skill-create-workflow** |
+| Name a skill's slug (lowercase, hyphenated) | **skill-domain-framing** |
+| Name a short Chinese title for a product / feature / module | **product-title-generation** |
+| Orchestrate the full skill creation flow | **skill-create-workflow** |
 
-**不接的场景**:
+**Out of scope**:
 
-- 代码变量 / 函数 / 类命名
-- 广告口号 / 营销文案 / SEO 标题 / 商标合规
-- 从零建 skill 骨架 (那是 **skill-create-workflow**)
+- Code variable / function / class naming
+- Ad slogans / marketing copy / SEO titles / trademark clearance
+- Bootstrapping a skill from scratch (that's **skill-create-workflow**)
 
-**微妙边界**:
+**Subtle edges**:
 
-- 目标 skill 已有 `display_name` → 询问一次「重起还是保留」, 用户不确认就保留现状
-- 英文目录名的后缀 (`-workflow` / `-set` / `-review`) 只作辅信号, 主职判定始终以 description 的首个能力动词为准
+- Target skill already has a `display_name` → ask once "regenerate or keep", default to keep if the user doesn't confirm
+- Slug suffixes (`-workflow` / `-set` / `-review`) are only auxiliary signals; the primary job is always judged by the first capability verb in the description

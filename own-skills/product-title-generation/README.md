@@ -1,84 +1,86 @@
 ---
 prompt_examples:
-  - prompt: 帮我给一个团队 Agent 可观测性平台起个 4-6 字的产品入口标题。
-    scene: 场景描述
-  - prompt: GitHub Learning Lab · 代码库理解驾驶舱, 想要一个短标题。
-    scene: 关键词组
-  - prompt: 给一个日语 30 天冲刺陪练课起个产品名, 要有紧迫感。
-    scene: 品类命名
-  - prompt: 给「团队异构 Agent 的可观测性层」起一个 8 个字的产品标题。
-    scene: 长度指定
-  - prompt: 参考「驾驶舱」、「底座」的路子, 给 AI 基础设施起个中文短标题。
-    scene: 参照命名
-  - prompt: 帮我一次给两个功能起名: 学习陪练课 + Agent 产品发布平台。
-    scene: 多产品并列
+  - prompt: Give me a 4-6 character Chinese product title for a team-level Agent observability platform.
+    scene: scene description
+  - prompt: GitHub Learning Lab · codebase-understanding cockpit — I need a short Chinese title.
+    scene: keyword bundle
+  - prompt: Name a 30-day Japanese sprint coaching course in Chinese — should feel time-pressured.
+    scene: category naming
+  - prompt: Give an 8-character Chinese product title for "observability layer for heterogeneous team agents".
+    scene: length override
+  - prompt: Follow the "cockpit" / "foundation" pattern and name an AI infrastructure product in Chinese.
+    scene: anchor naming
+  - prompt: Name two things at once — a language coaching course and an Agent product launchpad.
+    scene: multi-product batch
 ---
 
-# 产品标题生成
+[English](./README.md) | [中文](./README.zh.md)
 
-给产品、功能、模块、活动主题或品牌短名一次性生成 1 条推荐 + 6 条备选中文标题, 短到能直接贴 UI。
+# Product Title Generation
 
-## 什么时候用它
+Turn a product, feature, module, campaign theme, or brand short name into 1 recommended + 6 alternate Chinese titles in a single pass — short enough to drop straight into the UI.
 
-**场景描述**:
+## When to use it
 
-我要给一个平台 / 模块 / 入口起个中文命名, 描述了它做什么, 想要一批候选让我挑。
+**Scene description**:
 
-**关键词组**:
+I need a Chinese name for a platform / module / entry point. I describe what it does and want a batch of candidates to pick from.
 
-我把英文原名 + 中文描述堆一起 (例: `GitHub Learning Lab · 代码库理解驾驶舱`), 想让 skill 帮我压成 4-6 字的产品标题。
+**Keyword bundle**:
 
-**品类命名**:
+I paste the English source name plus a Chinese description together (e.g., `GitHub Learning Lab · codebase-understanding cockpit`) and want the skill to compress it into a 4-6 character Chinese product title.
 
-我做的是学习陪练 / 技术平台 / 可观测层 / 孵化发布 / 代码理解这类已经有成熟叫法的品类, 想套上对应的命名套路 (陪练 / 底座 / 观测台 / 发布台 / 洞察台)。
+**Category naming**:
 
-**长度指定**:
+My product falls into a category that already has an established Chinese naming pattern — learning coach, tech platform, observability layer, incubation launchpad, code understanding — and I want the skill to apply the matching convention (coach / foundation / observatory / launchpad / insights hub).
 
-默认 4-6 字, 我明确说「要 8 个字」或「给我 10 条备选」, 按我的显式约束覆盖默认。
+**Length override**:
 
-**参照命名**:
+Default is 4-6 characters. When I explicitly say "make it 8 characters" or "give me 10 alternates", my constraint overrides the default.
 
-我甩了一个参考词 (「驾驶舱」、「底座」、「中枢」), 想让 skill 沿同一种命名思路继续起名。
+**Anchor naming**:
 
-**多产品并列**:
+I toss in a reference word ("cockpit", "foundation", "hub") and want the skill to keep naming in the same style.
 
-我一口气丢两三个源概念进来, 想让 skill 每个独立出一整套候选。
+**Multi-product batch**:
 
-**不接**:
+I drop in two or three source concepts at once and want the skill to produce a full candidate set for each, independently.
 
-宣传语 / 广告 / 落地页长文案 → **copywriting workflow**; SEO 标题 / 头条关键词 → **SEO / content workflow**; 商标 / 法务可注册性 → **legal review**; 代码变量 / 类名 / 包名 → **code naming / refactor workflow**; 品牌战略 / 命名架构 / 品牌手册 → **brand strategy workflow**。
+**Not in scope**:
 
-## 它会产出什么
+Marketing copy / ads / long landing-page prose → **copywriting workflow**; SEO titles / headline keywords → **SEO / content workflow**; trademark clearance / legal registrability → **legal review**; code variables / class names / package names → **code naming / refactor workflow**; brand strategy / naming architecture / brand books → **brand strategy workflow**.
 
-**默认交付 1 条推荐 + 6 条备选**——不多不少, 除非你显式指定条数或长度。
+## What it produces
 
-- **输出块**: `推荐标题` / `备选标题 (6 条)` / `推荐理由` 一整段 markdown; 多产品输入会按源概念分块重复
-- **绝不会做**: 改任何文件 / 查商标 / 写广告口号 / 起代码变量名 / 出品牌手册
+**Default delivery: 1 recommended + 6 alternates** — no more, no less, unless you explicitly override the count or length.
 
-## 前置条件 / 边界
+- **Output blocks**: `Recommended title` / `Alternate titles (6)` / `Rationale` as a single markdown segment; multi-product input repeats one block per source concept
+- **Never does**: edit any file / check trademarks / write ad slogans / name code variables / produce a brand book
 
-**前置**:
+## Preconditions & boundaries
 
-给出至少一个可识别的产品对象、功能描述或概念——空输入会被反问一次要求补齐, 绝不硬猜。
+**Precondition**:
 
-**相邻请求分工**:
+Supply at least one recognizable product object, feature description, or concept — empty input is bounced back once with a clarifying question, never guessed at.
 
-| 请求 | 交给 |
+**Adjacent-request routing**:
+
+| Request | Send to |
 |---|---|
-| 宣传语 / 广告 / 落地页文案 | **copywriting workflow** |
-| SEO 标题 / 头条关键词 | **SEO / content workflow** |
-| 商标 / 法务可注册性 | **legal review** |
-| 代码变量 / 类 / 包命名 | **code naming / refactor workflow** |
-| 品牌战略 / 命名架构 | **brand strategy workflow** |
+| Marketing slogans / ads / landing-page copy | **copywriting workflow** |
+| SEO titles / headline keywords | **SEO / content workflow** |
+| Trademark clearance / legal registrability | **legal review** |
+| Code variables / class / package naming | **code naming / refactor workflow** |
+| Brand strategy / naming architecture | **brand strategy workflow** |
 
-**不接的场景**:
+**Out of scope**:
 
-- 长营销文案或幻灯页大字幕 (超过 6 字并含修辞)
-- 需要判定商标 / 法律风险
-- 只有抽象概念、无产品对象 (例: 只丢「未来」、「极致」让起名)
+- Long-form marketing copy or oversized slide headlines (more than 6 characters and rhetorical)
+- Anything requiring a trademark or legal-risk judgment
+- Pure abstractions with no product object (e.g., just "future" or "ultimate")
 
-**微妙边界**:
+**Fine-grained edges**:
 
-- 单一产品对象 + 多种解读 → skill 反问一次让你锁意图, 不硬猜
-- 多产品并列输入 → 每个源概念独立出一整块, 绝不合并成同一份候选
-- 显式指定长度 (例: 8 字) → 覆盖默认 4-6 字规则, 推荐理由里说明
+- Single product object with multiple valid readings → the skill asks once to lock intent, never guesses
+- Multi-product batch input → each source concept gets its own full block; results are never merged into a shared candidate pool
+- Explicit length override (e.g., 8 characters) → replaces the default 4-6 rule, called out in the rationale

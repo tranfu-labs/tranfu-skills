@@ -1,75 +1,87 @@
 ---
 prompt_examples:
-  - prompt: 给这个 skill 加个 README, own-skills/skill-name-generation/
-    scene: 单条新起
-  - prompt: 把 own-skills/ 下还没 README 的都批量补齐一份
-    scene: 存量批量
-  - prompt: 这份 README 太老了, 按新骨架重出一份, 覆盖旧的
-    scene: 覆盖重生成
-  - prompt: own-skills/openspec-driven-development/ 帮我生成 README
-    scene: 指定路径
-  - prompt: 这个 skill 要挂官网了, 先把 README 补齐再上线
-    scene: 官网预发
-  - prompt: 跟 skill-name-generation 一样, 给这个 skill 也做一份 README
-    scene: 跟随已有
+  - prompt: Just finished own-skills/skill-name-generation—generate its companion README too.
+    scene: fresh companion
+  - prompt: Backfill READMEs for every skill under own-skills/ that's missing one.
+    scene: batch backfill
+  - prompt: This README is the old single-language version—regenerate it bilingual, overwrite.
+    scene: regenerate over
+  - prompt: Generate the README for own-skills/openspec-driven-development/.
+    scene: explicit path
+  - prompt: This skill goes live on the catalog soon—get its README ready first.
+    scene: catalog pre-launch
+  - prompt: Same treatment as skill-name-generation—give this skill a README too.
+    scene: parallel to peer
 ---
 
-# Skill README 生成
+[English](./README.md) | [中文](./README.zh.md)
 
-把一个已有 skill 的 `SKILL.md` 派生一份读起来像产品说明的中文 `README.md`, 挂上公司自建官网的 skill 详情页。
+# Skill README Generation
 
-## 什么时候用它
+Turn any existing skill's `SKILL.md` into a bilingual, human-readable pair — English `README.md` plus Chinese `README.zh.md` — ready for the internal skill catalog page.
 
-**单条新起**:
+## When to use it
 
-我刚做完一个 skill, `SKILL.md` 已经写好, 现在要挂上公司官网, 想让 skill 顺手把配套 README 也生成好。
+**Fresh companion**:
 
-**存量批量**:
+I just wrapped up a new skill and its `SKILL.md` is written. Now I want to list it on the internal catalog, so I ask this skill to hand-craft the paired README on the spot.
 
-`own-skills/` 下还有一批老 skill 只有 `SKILL.md`, 一直没配 README——想一次性把还没 README 的都补齐, 每个目录一份独立文件。
+**Batch backfill**:
 
-**覆盖重生成**:
+`own-skills/` still holds a batch of older skills that never got a README. I want every missing one filled in with the same spec — one independent pair per directory, never merged.
 
-某个 skill 的旧 README 是很早以前手写的, 骨架不合当前规范, 想按新骨架整个重出一份, 我明说要覆盖。
+**Regenerate over**:
 
-**官网预发**:
+Some skill's old README was hand-written way back and its shape no longer matches the current spec. I say "regenerate to the new bilingual shape and overwrite" and both files get rewritten.
 
-我要把某个 skill 挂到公司自建官网的详情页, 详情页会读 README 开头的示例提问, 显示成不同场景的用法示范——README 没补齐, 详情页就没内容可显示。
+**Catalog pre-launch**:
 
-**不接**:
+I'm about to publish a skill to the catalog detail page. That page reads the example prompts from the README's top matter and renders them as scene tabs — no README, nothing to show.
 
-只想改现有 README 里的某一段 → 普通编辑就够, 不用 skill; 从零建 `SKILL.md` 或整个 skill → **skill-create-workflow**; 只给 skill 起显示名或目录名 → **skill-name-generation** / **skill-domain-framing**; 判断某段素材值不值得做成 skill → **skill-content-fit**。
+**Parallel to peer**:
 
-## 它会产出什么 / 你会看到什么
+I point at a peer skill that already has a good README and say "give this one the same treatment." The skill mirrors that shape against my target's own SKILL.md.
 
-**只落盘一个文件, 绝不改动其他任何文件**——这是最反常识的一点。
+**Won't take**:
 
-- **落盘**: 目标 skill 目录内的 `README.md`, 由开头一段元数据 (5-6 条示例提问 + 场景标签) 和四段中文说明 (标题句 / 什么时候用它 / 会产出什么 / 前置条件与边界) 组成
-- **绝不会做**: 改动目标 skill 的 `SKILL.md`, 改动仓库其他任何文件, 联网调 API, 自己另起子任务并发跑
+Editing one paragraph of an existing README — plain editing is enough; building a `SKILL.md` or a whole skill from scratch → **skill-create-workflow**; naming a skill (`display_name` / `display_name_zh`) → **skill-name-generation**; picking the English directory slug → **skill-domain-framing**; deciding whether a piece of content deserves to become a skill → **skill-content-fit**; the target's `SKILL.md` is too thin and needs a full review → **skill-improve-workflow**.
 
-## 前置条件 / 边界
+## What it produces
 
-**前置**:
+**One call writes two files — English `README.md` and Chinese `README.zh.md`, matched in structure but never word-for-word translated.**
 
-目标是一个已有的 skill 目录, 里面必须已经有 `SKILL.md`——本 skill 不建 skill 骨架, 只在已有骨架之上派生 README。
+- **Writes**: `<skill dir>/README.md` (English body) plus `<skill dir>/README.zh.md` (Chinese body)
+- **Language switcher**: each file drops `[English](./README.md) | [中文](./README.zh.md)` right below the top matter, above the H1
+- **Top matter**: only field is `prompt_examples` — 5-6 natural spoken lines, covering at least 4 distinct trigger scenes
+- **Four sections**: opening one-liner, when to use it, what it produces, prerequisites & boundaries — each version 30-80 lines
+- **Plain-language pass**: the Chinese version is scanned line by line, insider slang gets rewritten in plain Chinese so a non-author can still read it
+- **Terminal report**: both output paths, line counts, prompt_examples count, covered scenes, and any "not sure about" note
+- **Never touches**: the target's `SKILL.md` or any other file in the repo
 
-**相邻 skill 分工**:
+## Prerequisites & boundaries
 
-| 动作 | 交给 |
+**Prerequisites**:
+
+Target is a skill directory containing `SKILL.md` with complete top matter and a description. No external dependencies — no network, no API calls, no subagent spawns.
+
+**Neighbor skills**:
+
+| Action | Route to |
 |---|---|
-| 起 skill 显示名 (中英文) | **skill-name-generation** |
-| 起 skill 英文名 / 目录名 | **skill-domain-framing** |
-| 从零建 `SKILL.md` 或整个 skill | **skill-create-workflow** |
-| 判断素材值不值得做成 skill | **skill-content-fit** |
-| 整体审查修复已有 skill 质量 | **skill-improve-workflow** |
+| Build a skill from scratch (SKILL.md skeleton included) | **skill-create-workflow** |
+| Name a skill (`display_name` / `display_name_zh`) | **skill-name-generation** |
+| Pick the English directory slug (kebab-case) | **skill-domain-framing** |
+| Decide whether a piece of content deserves a skill | **skill-content-fit** |
+| SKILL.md too thin — needs a full quality review | **skill-improve-workflow** |
 
-**不接的场景**:
+**Won't take**:
 
-- 改现有 README 里的某一段 (普通编辑就够)
-- 给非 skill 的普通项目写 README 或项目文档
-- CI 校验现有 README 开头元数据是否合规 (那是脚本的活)
+- Editing one section of an existing README — plain editing is enough
+- Writing a README for a non-skill project or general docs
+- CI checks on existing README top-matter compliance — that's a script's job
 
-**微妙边界**:
+**Fine-grained boundaries**:
 
-- 目标 `SKILL.md` 太简陋 (缺触发场景 / 主流程) → 停下, 建议先用 **skill-improve-workflow** 把 `SKILL.md` 补齐, 再回来生成 README, 不硬凑一份内容单薄的 README
-- 目标目录已有 `README.md` 且用户没明说要重生成 → 询问一次是否覆盖, 用户不确认就保留现状
+- Target already has `README.md` or `README.zh.md` and the user didn't say "regenerate / overwrite" → ask once, don't clobber
+- Target `SKILL.md` too thin to yield four solid sections → stop and route to **skill-improve-workflow** first, rather than pad with hollow text
+- Target skill has no `display_name` → still generate the README, and flag the routing to **skill-name-generation** in the report

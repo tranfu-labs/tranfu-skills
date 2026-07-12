@@ -1,81 +1,83 @@
 ---
 prompt_examples:
-  - prompt: 帮我看下这篇稿子, 看能不能发。
-    scene: 粘草稿
-  - prompt: 审下 tranfu-site/src/content/posts/踩坑-mcp-调不通.md, 抓一下问题。
-    scene: 指定路径
-  - prompt: 这篇像不像 PR 通稿, 有没有升华金句和藏起来的抒情段, 帮我抓一下。
-    scene: 风格担忧
-  - prompt: 帮我审这篇英文行业长文, 看是不是堆引用的公关腔。
-    scene: 英文体裁
-  - prompt: 我 tag 挂的养成记但只跨了一个月, 你先判体裁再说能不能发。
-    scene: 体裁边界
-  - prompt: tranfu-site/src/content/posts/ 下所有草稿, 逐篇双轨审并汇总。
-    scene: 批量审
+  - prompt: Take a look at this draft and tell me if it's ready to ship.
+    scene: paste draft
+  - prompt: Review tranfu-site/src/content/posts/pitfall-mcp-not-working.md and flag the problems.
+    scene: by path
+  - prompt: Does this read like a PR puff piece? Are there uplift punchlines or buried sentimental turns? Flag them.
+    scene: style worry
+  - prompt: Review this English long-form industry piece — is it citation-stuffed PR-speak?
+    scene: English genre
+  - prompt: I tagged this as a 养成记 but the span is only one month. Judge the genre first before you call it shippable.
+    scene: genre boundary
+  - prompt: Every draft under tranfu-site/src/content/posts/ — run the dual-track review on each and roll them up.
+    scene: batch review
 ---
 
-# 文章可信度审稿
+[English](./README.md) | [中文](./README.zh.md)
 
-审一篇草稿读起来像不像营销号——两轨独立并行诊断, 三态合判 (可发 / 待审查 / 退稿), 只挑问题不改稿。
+# Article Credibility Review
 
-![双轨审稿工作流](./workflow.svg)
+Review a draft for content-mill fluff — two independent parallel tracks diagnose it, a tri-state verdict (ship / needs review / reject) combines them, and the skill only flags problems, never rewrites.
 
-## 什么时候用它
+![Dual-track review workflow](./workflow.svg)
 
-**粘草稿**:
+## When to use it
 
-我写完一篇踩坑记 / 养成记, 发前担心读起来像 PR 通稿 / 公众号水文, 想让 skill 抓一下问题。
+**Paste a draft**:
 
-**指定路径**:
+I finished a 踩坑记 / 养成记 post and before publishing I want the skill to flag anything that reads like PR-speak or a content-mill listicle.
 
-我把稿子放在 `tranfu-site/src/content/posts/` 下, 说「审下这个路径」, 让 skill 自己去读文件。
+**By path**:
 
-**风格担忧**:
+The draft lives under `tranfu-site/src/content/posts/`, I say "review this path," and the skill reads the file itself.
 
-我明确说「像不像营销号 / 有没有升华金句 / 藏起来的抒情段」, 想让 skill 顺着我的怀疑往下抓。
+**Style worry**:
 
-**英文体裁**:
+I explicitly ask "does this read like a PR puff piece / are there uplift punchlines / is there a buried sentimental turn," and I want the skill to chase my suspicion.
 
-我审的是英文行业长文 / 事故复盘 / 研究稿, 想让 skill 走英文分支跑违规扫描。
+**English genre**:
 
-**体裁边界**:
+I'm reviewing an English long-form industry piece / incident postmortem / research write-up and I want the skill to run its violation scan on the English branch.
 
-我 tag 挂了养成记但跨度只有一个月, 想让 skill 先判体裁再决定跑哪套结构核对。
+**Genre boundary**:
 
-**批量审**:
+I tagged it as 养成记 but the timespan is only a month. I want the skill to judge the genre first, then decide which structural checklist applies.
 
-我一次给一批 posts 目录, 想让 skill 逐篇跑双轨、逐篇合判, 一次性把全部问题报回来。
+**Batch review**:
 
-**不接**:
+I hand in a whole posts directory at once and want the skill to run both tracks per file, verdict per file, and report every issue in one pass.
 
-要重写 / 润色 / 扩写 → 那是编辑的活, 本 skill 只诊断; 「全文点评 / 建议从几个维度展开」→ 不接 (点评常滑向鼓励式改稿); 给已发布文章打星级 / 分数 / 排序 → 不接 (读者感受走势是诊断不是评级)。
+**Not for**:
 
-## 它会产出什么 / 你会看到什么
+Rewrite / polish / expand — that's an editor's job; this skill only diagnoses. "Give me an overall critique / suggest a few angles to develop" — not accepted (critique slides into encouragement-flavored rewriting). Star-rating / scoring / ranking published articles — not accepted (reader-trajectory diagnosis is not a rating).
 
-**只诊断, 绝不改稿——skill 是诊断器不是治疗器**, 最反常识的一点。
+## What it produces
 
-- **起两个独立子 agent**: A 轨凭读者直觉扫读, B 轨照反模式清单挨条比对, 两轨互不通气独立判断——不是同一个 agent 跑两遍
-- **A 轨输出**: 一段一段记读者的 耐心 / 信任 怎么变 + 未满足预期清单 + 终局判定 + 一句定性总评
-- **B 轨输出**: 退稿级 / 必改级 / 建议级违规命中列表, 每条带行号 + 原句 + 规则出处
-- **三态合判**: 两轨都通过 → 可发; 两轨都不通过 → 退稿; 一通过一不通过 → 待审查 (附「两轨为何分歧」的人审说明)
-- **打印到终端**: 报告直接落聊天窗口, 0 emoji, 0 分数, 0 软化语——不写「建议进一步打磨」这类
-- **绝不会做**: 改原文一个字符; 打星级 / 排序; 推送到任何地方; 判到严重违规就提前终止 (一次报全)
+**Diagnose only, never rewrite — the skill is a diagnostic instrument, not a treatment.** That's the most counterintuitive part.
 
-## 前置条件 / 边界
+- **Spawns two independent subagents**: Track A skims on reader intuition; Track B walks the anti-pattern catalog item by item. They don't talk to each other and reach verdicts independently — not one agent run twice.
+- **Track A output**: paragraph-by-paragraph notes on how reader 耐心 / 信任 shifts + unmet-expectations list + final verdict + a one-line qualitative summary.
+- **Track B output**: hit list of reject-level / must-fix / suggested violations, each with line number + original sentence + rule citation.
+- **Tri-state verdict**: both tracks pass → ship; both fail → reject; split → needs human review (with a note on why the tracks disagreed).
+- **Prints to the terminal**: the report lands directly in the chat window — 0 emoji, 0 scores, 0 softening language. Nothing like "consider polishing further."
+- **Will never**: change a single character of the original; assign stars / rankings; push anywhere; short-circuit on a severe violation (it always reports the full set in one pass).
 
-**前置**:
+## Prerequisites & boundaries
 
-目标 markdown 路径可读, 用原始路径不复制到 `/tmp`; 审踩坑记 / 养成记需能访问规则源 `tranfu-site/goal-docs/05-design-踩坑记-final.md` 与 `06-design-养成记-final.md`; grep 用 macOS 默认 BSD 版本或 GNU ≥ 2.6, 不依赖 PCRE / `-P` / `\b` / `\d` / `\w`。
+**Prerequisites**:
 
-**不接的场景**:
+The target markdown path must be readable — use the original path, don't copy to `/tmp`. Reviewing 踩坑记 / 养成记 requires access to the rule sources `tranfu-site/goal-docs/05-design-踩坑记-final.md` and `06-design-养成记-final.md`. `grep` uses macOS default BSD or GNU ≥ 2.6 — no reliance on PCRE / `-P` / `\b` / `\d` / `\w`.
 
-- 要重写 / 润色 / 扩写文章
-- 要「全文点评 / 建议从几个维度展开」
-- 给已发布文章打星级 / 分数 / 内容运营排序
+**Won't handle**:
 
-**微妙边界**:
+- Rewrite / polish / expand the article
+- "Overall critique / suggest a few angles to develop"
+- Star-rating / scoring / editorial ranking of already-published pieces
 
-- 问「看下能不能发 / 抓一下问题」→ 触发; 问「给我个 SEO 分」→ 不触发 (那是内容运营)
-- 问「像不像 PR 通稿 / 营销号」→ 触发双轨直觉 + 清单扫描; 问「整体点评一下」→ 不触发 (点评常滑向鼓励式改稿)
-- tag 挂养成记但跨度 < 2 月 → skill 会在 B 轨结构核对里直接判退稿, 不硬凑
-- 非踩坑 / 养成体裁 (资讯 / 事故复盘 / 长文) → B 轨跳过结构核对但仍跑反模式清单, A 轨用通用读者预期
+**Subtle boundaries**:
+
+- "Can this ship / flag the problems" → triggers; "give me an SEO score" → doesn't (that's content ops)
+- "Does this read like a PR puff piece / content-mill piece" → triggers dual-track intuition + catalog scan; "just give it a general critique" → doesn't (critique slides into encouragement-flavored rewriting)
+- Tagged 养成记 but timespan < 2 months → the skill rejects it in Track B's structural check, no forcing
+- Non-踩坑 / non-养成 genre (news / postmortem / long-form) → Track B skips the structural check but still runs the anti-pattern catalog; Track A applies generic reader expectations
