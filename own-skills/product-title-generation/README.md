@@ -8,7 +8,7 @@ prompt_examples:
     scene: 品类命名
   - prompt: 给「团队异构 Agent 的可观测性层」起一个 8 个字的产品标题。
     scene: 长度指定
-  - prompt: 参考「驾驶舱」、「底座」的产品感, 给 AI 基础设施起个中文短标题。
+  - prompt: 参考「驾驶舱」、「底座」的路子, 给 AI 基础设施起个中文短标题。
     scene: 参照命名
   - prompt: 帮我一次给两个功能起名: 学习陪练课 + Agent 产品发布平台。
     scene: 多产品并列
@@ -26,11 +26,11 @@ prompt_examples:
 
 **关键词组**:
 
-我把英文原名 + 中文描述堆一起 (例: `GitHub Learning Lab · 代码库理解驾驶舱`), 想 skill 帮我压成 4-6 字的产品标题。
+我把英文原名 + 中文描述堆一起 (例: `GitHub Learning Lab · 代码库理解驾驶舱`), 想让 skill 帮我压成 4-6 字的产品标题。
 
 **品类命名**:
 
-我做的是学习陪练 / 技术平台 / 可观测层 / 孵化发布 / 代码理解这类已有产品语汇的品类, 想套上对应的命名套路 (陪练 / 底座 / 观测台 / 发布台 / 洞察台)。
+我做的是学习陪练 / 技术平台 / 可观测层 / 孵化发布 / 代码理解这类已经有成熟叫法的品类, 想套上对应的命名套路 (陪练 / 底座 / 观测台 / 发布台 / 洞察台)。
 
 **长度指定**:
 
@@ -38,7 +38,7 @@ prompt_examples:
 
 **参照命名**:
 
-我甩了一个参考词 (「驾驶舱」、「底座」、「中枢」), 想让 skill 沿同一种产品感取名。
+我甩了一个参考词 (「驾驶舱」、「底座」、「中枢」), 想让 skill 沿同一种命名思路继续起名。
 
 **多产品并列**:
 
@@ -46,14 +46,14 @@ prompt_examples:
 
 **不接**:
 
-slogan / 广告 / 落地页长文案 → **copywriting workflow**; SEO 标题 / 头条关键词 → **SEO / content workflow**; 商标 / 法务可注册性 → **legal review**; 代码变量 / 类名 / 包名 → **code naming / refactor workflow**; 品牌战略 / 命名架构 / 品牌手册 → **brand strategy workflow**。
+宣传语 / 广告 / 落地页长文案 → **copywriting workflow**; SEO 标题 / 头条关键词 → **SEO / content workflow**; 商标 / 法务可注册性 → **legal review**; 代码变量 / 类名 / 包名 → **code naming / refactor workflow**; 品牌战略 / 命名架构 / 品牌手册 → **brand strategy workflow**。
 
 ## 它会产出什么
 
 **默认交付 1 条推荐 + 6 条备选**——不多不少, 除非你显式指定条数或长度。
 
 - **输出块**: `推荐标题` / `备选标题 (6 条)` / `推荐理由` 一整段 markdown; 多产品输入会按源概念分块重复
-- **绝不会做**: 改任何文件 / 查商标 / 写 slogan / 起代码变量名 / 出品牌手册
+- **绝不会做**: 改任何文件 / 查商标 / 写广告口号 / 起代码变量名 / 出品牌手册
 
 ## 前置条件 / 边界
 
@@ -65,7 +65,7 @@ slogan / 广告 / 落地页长文案 → **copywriting workflow**; SEO 标题 / 
 
 | 请求 | 交给 |
 |---|---|
-| slogan / 广告 / 落地页文案 | **copywriting workflow** |
+| 宣传语 / 广告 / 落地页文案 | **copywriting workflow** |
 | SEO 标题 / 头条关键词 | **SEO / content workflow** |
 | 商标 / 法务可注册性 | **legal review** |
 | 代码变量 / 类 / 包命名 | **code naming / refactor workflow** |
