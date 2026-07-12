@@ -1,146 +1,146 @@
+[English](./README.md) | [中文](./README.zh.md)
+
 # Lark Safe Write
 
-Lark/Feishu wiki 安全写入流程 Skill。强制遵循「先备份、再写入、后验证」四步闭环，防止 wiki 文档被意外覆盖或写入失败导致数据丢失。
+A safe-write workflow Skill for Lark (Feishu) wiki. Enforces a four-step loop — preflight, backup, write, verify — so a wiki page never gets clobbered or silently fails to update.
 
-## 什么时候用它
+## When to use it
 
-- 需要向飞书知识库创建新 wiki 文档节点
-- 需要更新或覆盖现有 wiki 文档内容
-- 担心直接写入会导致原有内容丢失
-- 需要确保写入后的内容与预期一致
+- Creating a new wiki node under a Lark knowledge space
+- Updating or overwriting an existing wiki page
+- Worried that a direct write will destroy existing content
+- Need to confirm the page really landed the way you intended
 
-## 怎么用 (触发示例)
+## How to trigger it
 
-跟 Claude 说:
-- "用 lark-safe-write 安全写入流程更新这个 wiki"
-- "向飞书知识库写入内容，先备份再验证"
-- "帮我创建一个新的飞书 wiki 文档"
-- "覆盖这个 wiki 页面，记得先备份"
+Say something like:
+- "Use lark-safe-write to update this wiki page"
+- "Write to the Lark wiki, back it up first and then verify"
+- "Create a new Lark wiki doc for me"
+- "Overwrite this wiki page, and make a backup first"
 
-## 你会看到什么
+## What you get back
 
-- 预检结果：bot 权限、token 解析、文档类型检查
-- 备份路径：`.backups/YYYYMMDD-HHMMSS-{token}.md`
-- 写入结果：成功/失败状态、文档 URL
-- 验证报告：标题/首段/关键标记比对结果
-
-> [English Version](README.en.md)
+- Preflight results: bot permissions, token resolution, doc-type check
+- Backup path: `.backups/YYYYMMDD-HHMMSS-{token}.md`
+- Write result: success or failure, plus the doc URL
+- Verification report: title, first paragraph, and key-marker diff
 
 ---
 
-## 解决的问题
+## Problems it solves
 
-在使用 lark-cli 向飞书知识库写入内容时，你可能遇到过这些问题：
+When you write into a Lark wiki through `lark-cli`, these are the traps this Skill closes off:
 
-- **文档被覆盖**：直接用 `update` 命令写入，误删了原有内容且无法恢复
-- **写入失败却以为成功**：API 返回 200，但实际内容并未更新
-- **路径被当内容写入**：用 `--markdown /path/to/file.md` 方式传递文件路径，结果文档里出现的是路径字符串而非文件内容
-- **权限不足反复试错**：没有预检 bot 权限，导致多次调用失败后才发现是权限问题
+- **Page silently clobbered**: A raw `update` wipes existing content and there is no undo.
+- **Success that isn't**: The API returns 200 but the page never actually changes.
+- **Path written as content**: Passing `--markdown /path/to/file.md` ends up storing the literal path string instead of the file's contents.
+- **Permission whack-a-mole**: No preflight, so you burn several failed calls before realizing the bot lacks access.
 
-这个 Skill 通过强制流程约束，把以上问题消灭在发生之前。
+The Skill wraps every write in a mandatory workflow so those failure modes cannot happen in the first place.
 
 ---
 
-## 安装
+## Install
 
 ### Claude Code
 
 ```bash
-# 1. 克隆到本地 skills 目录
+# 1. Clone into the local skills directory
 git clone https://github.com/duo-lark/lark-safe-write.git ~/.claude/skills/lark-safe-write
 
-# 2. 触发 Skill
+# 2. Trigger the Skill
 /lark-safe-write
 ```
 
 ### OpenAI Codex
 
 ```bash
-# 1. 克隆到 Codex skills 目录
+# 1. Clone into the Codex skills directory
 git clone https://github.com/duo-lark/lark-safe-write.git ~/.agents/skills/lark-safe-write
 
-# 2. 重启 Codex 以加载新 Skill
-# 3. 触发方式：在对话中提及 skill 名称，或引用 $lark-safe-write
-使用 lark-safe-write 更新飞书文档
+# 2. Restart Codex so the new Skill is picked up
+# 3. To trigger: mention the skill name in chat, or reference $lark-safe-write
+Use lark-safe-write to update the Lark doc
 ```
 
 ### OpenClaw
 
 ```bash
-# 1. 克隆到 OpenClaw skills 目录
+# 1. Clone into the OpenClaw skills directory
 git clone https://github.com/duo-lark/lark-safe-write.git ~/.openclaw/skills/lark-safe-write
 
-# 2. 触发方式：在任务或对话中引用 skill 名称
-请使用 lark-safe-write 流程写入 wiki
+# 2. To trigger: reference the skill name in a task or chat
+Please use the lark-safe-write flow to write to the wiki
 ```
 
 ### Hermess
 
 ```bash
-# 1. 克隆到 Hermess skills 目录
+# 1. Clone into the Hermess skills directory
 git clone https://github.com/duo-lark/lark-safe-write.git ~/.hermes/skills/lark-safe-write
 
-# 2. 触发方式：在对话中直接请求
-用 lark-safe-write 安全写入流程处理这个 wiki 更新
+# 2. To trigger: just ask in chat
+Use the lark-safe-write safe-write flow for this wiki update
 ```
 
 ### Claude Chat / Claude CoWork
 
-将 `SKILL.md` 文件直接上传到对话中即可使用。
+Upload `SKILL.md` straight into the conversation and it is ready to use.
 
 ---
 
-## 核心流程
+## Core workflow
 
 ```
-预检 → 备份 → 写入 → 验证
+Preflight → Backup → Write → Verify
 ```
 
-### 1. 预检（不可跳过）
+### 1. Preflight (cannot be skipped)
 
-- 确认 `--bot` 身份标志
-- 执行 `lark-cli auth test` 验证 token 有效性
-- 解析 wiki_token / node_token
-- 首次操作该空间时，确认 bot 有访问权限
+- Confirm the `--bot` identity flag is set
+- Run `lark-cli auth test` to check the token is valid
+- Resolve the wiki_token / node_token
+- On first touch of a space, confirm the bot actually has access
 
-### 2. 备份（更新/覆盖时必须）
+### 2. Backup (mandatory on update / overwrite)
 
-- 读取现有文档完整内容
-- 保存到 `.backups/YYYYMMDD-HHMMSS-{token}.md`
-- 向用户报告备份路径
+- Read the full current content of the doc
+- Save it to `.backups/YYYYMMDD-HHMMSS-{token}.md`
+- Report the backup path back to the user
 
-### 3. 写入
+### 3. Write
 
-- **创建新文档**：确定 `parent_node_token`，使用 `lark-cli wiki +node-create`
-- **更新现有文档**：使用 **stdin 管道**方式写入（禁止 `--markdown /path`）
-- 写入后等待 2 秒（飞书异步索引延迟）
+- **New doc**: pin down `parent_node_token`, then use `lark-cli wiki +node-create`
+- **Updating an existing doc**: pipe content via **stdin** (never `--markdown /path`)
+- Wait 2 seconds after the write for Lark's async indexer to catch up
 
-### 4. 验证（不可跳过）
+### 4. Verify (cannot be skipped)
 
-- 重新读取文档
-- 比对标题、首段、关键标记
-- 明确返回验证结果和文档 URL
-
----
-
-## 错误处理策略
-
-| 错误场景 | 处理方式 |
-|---------|---------|
-| `auth test` 失败 | 暂停执行，提示检查环境变量和 bot 权限 |
-| 备份读取失败（文档不存在） | 按「创建新文档」流程继续 |
-| 备份读取失败（权限不足） | 停止执行，提示在 Feishu 控制台补权限 |
-| 写入失败（4xx/5xx） | 停止执行，保留备份，不执行验证 |
-| 验证失败（内容不匹配） | 停止执行，保留备份，不自动重试覆盖 |
+- Re-read the doc
+- Diff title, first paragraph, and key markers against what you wrote
+- Report the verification result and the doc URL explicitly
 
 ---
 
-## 依赖
+## Error handling
 
-- [lark-cli](https://open.larksuite.com/document/mcp_open_tools/feishu-cli-let-ai-actually-do-your-work-in-feishu) — 已配置 bot 身份和权限
+| Scenario | What the Skill does |
+|---|---|
+| `auth test` fails | Halt; prompt user to check env vars and bot permissions |
+| Backup read fails (doc does not exist) | Fall through to the "create new doc" branch |
+| Backup read fails (permission denied) | Halt; ask user to grant permission in the Lark admin console |
+| Write fails (4xx / 5xx) | Halt; keep the backup; do not run verification |
+| Verify fails (content mismatch) | Halt; keep the backup; do not silently retry the overwrite |
 
 ---
 
-## 许可
+## Dependencies
+
+- [lark-cli](https://open.larksuite.com/document/mcp_open_tools/feishu-cli-let-ai-actually-do-your-work-in-feishu) — bot identity and permissions already configured
+
+---
+
+## License
 
 MIT License
