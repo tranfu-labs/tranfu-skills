@@ -1,89 +1,91 @@
 ---
 prompt_examples:
-  - prompt: 帮我加一个「一键导出全系列」的功能，卡片导出那边。
-    scene: 正面写码
-  - prompt: 现在删一个操作员，删除预览里为什么会列出一大串关联的操作员？先讨论清楚再决定动手。
-    scene: bug 讨论
-  - prompt: 你会如何把「用户偏好」从 localStorage 迁到后端？先讨论一下，别急着写码。
-    scene: 咨询讨论
-  - prompt: 实施 openspec/changes/add-export-all，方案已经确认过了。
-    scene: 显式实施
-  - prompt: 方案实施完了，帮我检查代码是否符合 openspec/changes/add-export-all，有没有遗漏。
-    scene: 方案复核
-  - prompt: 给 settings 加一个「导出偏好」按钮，按 openspec 走一遍，停在 plan-written 让我看一眼。
-    scene: 停顿指定
+  - prompt: Add a "bulk export" option to the card export flow.
+    scene: straight coding
+  - prompt: When I delete an operator, why does the delete preview list a whole chain of related operators? Let's talk it through before touching anything.
+    scene: bug discussion
+  - prompt: How would you migrate "user preferences" from localStorage to the backend? Talk it through first — don't start coding yet.
+    scene: consulting-style
+  - prompt: Implement openspec/changes/add-export-all — the plan is already confirmed.
+    scene: explicit implementation
+  - prompt: I've finished implementing — check whether the code matches openspec/changes/add-export-all and flag anything missing.
+    scene: compliance review
+  - prompt: Add an "export preferences" button to settings; run the openspec loop but stop at plan-written so I can take a look.
+    scene: pause on demand
 ---
+
+[English](./README.md) | [中文](./README.zh.md)
 
 # openspec-driven-development
 
-把日常开发跑成「方案 → feature 分支 → spec → 码 → 归档 → PR」的闭环, 让方案、代码、事实源始终对得上。
+Turns day-to-day development into a closed loop — proposal → feature branch → spec → code → archive → PR — so the plan, the code, and the source of truth stay in sync.
 
-## 什么时候用它
+## When to use it
 
-**正面写码**:
+**Straight coding**:
 
-我在 openspec 约定的仓库里加个功能 / 修个 bug / 重构一段代码, 想让它先出方案我点头再动手, 落盘、切分支、开 PR 一条龙。
+I'm adding a feature / fixing a bug / refactoring in a repo that follows the openspec convention, and I want it to draft a plan for me to sign off on before touching code, then handle writing files, cutting the branch, and opening the PR end-to-end.
 
-**咨询开场**:
+**Consulting-style opener**:
 
-我在问「你会怎么改这段」「这个功能做在哪里合适」「为什么这里不对」, 想让它顺势把讨论收敛成方案, 而不是陪我漫无目的地聊。结论若「其实不用改代码」, 它给解释就收工, 绝不硬造 change。
+I'm asking things like "how would you change this," "where should this feature live," or "why isn't this working," and I want it to steer the discussion toward a concrete proposal instead of drifting. If the answer turns out to be "no code change needed," it just explains and stops — never manufactures a change.
 
-**显式实施**:
+**Explicit implementation**:
 
-我已经在别的对话里写好了 `openspec/changes/<X>` 的方案, 直接说「实施这个 change」, 让它跳到写码环节, 别再从采访重头走。
+I already wrote the proposal for `openspec/changes/<X>` in another conversation. When I say "implement this change," it should jump straight to coding — not restart the interview from scratch.
 
-**符合度复核**:
+**Compliance review**:
 
-「实施完了帮我检查代码是否符合方案 / 有无遗漏」——让它以 change 为基准逐条核对, 有偏差就回到写码环节补齐。
+"I'm done implementing — check whether the code matches the plan and whether anything's missing." It walks through the change item by item; if something is off, it drops back to the coding step and fills the gap.
 
-**快车道**:
+**Fast lane**:
 
-一两行的微改动、改个文案、调个默认值, 我不想被完整闭环压得喘不过气——跳过 change 落盘, 但反思、commit、PR 照走。
+A one-or-two-line tweak, a copy change, a default value — I don't want the full loop crushing me. Skip writing the change to disk, but keep the reflection, commit, and PR.
 
-**停顿指定**:
+**Pause on demand**:
 
-「按 openspec 走一遍, 停在 `plan-written` 让我看一眼」——推进计划里指定停点, 方案落盘后老实等我发话再写码。
+"Run the openspec loop but stop at `plan-written` so I can look" — it respects the requested pause point and waits patiently after writing the plan.
 
-**不接**:
+**Won't take**:
 
-冷启动搭 `openspec/` 骨架 → **project-init-docs**; 打 tag / 写 changelog / 定版本号 → **release**; 「项目整体是否符合规范 / 标准」这类脱离具体改动的合规审计 → 不触发; 纯查询 / 查资料 / 跑一条不改代码的命令 → 不触发。
+Cold-start scaffolding of `openspec/` → **project-init-docs**; tagging / writing changelogs / picking version numbers → **release**; abstract "is this whole project compliant?" audits with no concrete change → doesn't trigger; pure lookup / research / running a command that doesn't touch code → doesn't trigger.
 
-## 它会产出什么 / 你会看到什么
+## What it produces / what you'll see
 
-**默认先出方案, 除非推进计划本身没要求在 `plan-written` 停下, 否则得你明确说「开始写代码」它才动代码**——最反常识的一点, 别指望它一上来就闷头写。
+**Plan first by default. Unless the progress plan skips the `plan-written` stop, it won't touch code until you explicitly say "start coding"** — the most counterintuitive part; don't expect it to hammer out code the moment you show up.
 
-- **推进计划**: 一进来就把 `interviewing → interview-confirmed → plan-written → code-written → code-verified → pr-opened` 亮出来, 让你指定停点或加事; 这是你最初一次「在哪儿停 / 在哪儿加事」的机会
-- **采访诊断**: 采访阶段天然停下等你回答, 最后一问固定「还有要补充的吗？」——它不会替你答、不会跳过
-- **聊天框方案**: 先在对话里出方案 (改页面附字符图; 含可测逻辑或单文件 diff > 200 行附单测和 AI 验证用例), 自己复查通过才落盘
-- **切分支**: `git fetch` 后从最新 `origin/main` 切 feature 分支, 绝不动 `main` / `master`; 已有本 change 的 feature 分支则复用
-- **落盘 change**: `openspec/changes/<change-id>/` 下写 proposal / design / tasks / spec-delta; 改页面时另加 `wireframes.md` (绝不塞进 `design.md`)
-- **按 spec 写码**: 落地方案里定义的测试用例, 跑单测或 AI 验证流程 (playwright 截图 / 跑命令看输出 / 手动一遍)
-- **归档三步**: change 目录移到 `openspec/changes/archive/<日期>-<id>/`; spec-delta 合进 `openspec/specs/<domain>/`; 字符图回流到 `docs/wireframes/pages/<page>.md` 与 `flow.md`
-- **收尾 PR**: 更新 `AGENTS.md` + commit 到 feature 分支; 有 remote 就 `git push -u` + `gh pr create` (body 直接粘 `proposal.md`; 上下文出现过 issue 编号首行加 `Closes #<编号>`), 把 PR URL 报给你
-- **绝不会做**: 自己合并 PR; 在 `main` / `master` 上直接落盘或 commit; 替你答采访问题; 在没有 `openspec/` 的仓库里擅自搭骨架; 从归档里翻出旧 proposal 冒充新方案
+- **Progress plan**: On entry it lays out `interviewing → interview-confirmed → plan-written → code-written → code-verified → pr-opened` so you can name a stop point or add items; this is your one chance up front to say "stop here" or "also do this."
+- **Interview & diagnosis**: The interview stage naturally pauses for your answers; the closing question is always "anything to add?" — it never answers for you and never skips.
+- **In-chat proposal**: The plan appears in chat first (ASCII wireframes for page changes; unit tests and AI-validation cases when there's testable logic or a single-file diff over 200 lines), and only lands on disk after it passes its own self-review.
+- **Cut the branch**: After `git fetch`, it cuts a feature branch off the latest `origin/main` — never touches `main` / `master`. Reuses an existing feature branch for the same change if one is around.
+- **Write the change**: Under `openspec/changes/<change-id>/`, drops proposal / design / tasks / spec-delta. Page changes get a separate `wireframes.md` — never crammed into `design.md`.
+- **Code to spec**: Implements the test cases the plan defined; runs unit tests or the AI validation flow (playwright screenshots / running a command and reading the output / a manual walk-through).
+- **Archive in three moves**: The change directory moves to `openspec/changes/archive/<date>-<id>/`; the spec-delta merges into `openspec/specs/<domain>/`; wireframes flow back to `docs/wireframes/pages/<page>.md` and `flow.md`.
+- **Close with a PR**: Updates `AGENTS.md`, commits to the feature branch; with a remote, runs `git push -u` and `gh pr create` (body is the `proposal.md`; if an issue number showed up in the conversation, `Closes #<n>` goes on the first line), then reports the PR URL to you.
+- **Never**: Merges its own PR; writes or commits directly on `main` / `master`; answers interview questions on your behalf; scaffolds `openspec/` into a repo that doesn't have it; recycles an archived proposal as a fresh plan.
 
-## 前置条件 / 边界
+## Prerequisites & boundaries
 
-**前置**:
+**Prerequisites**:
 
-仓库根有 `openspec/` 目录 (`openspec/specs/` + `openspec/changes/`); 能跑 `git`, 有 remote 且想开 PR 时需要 `gh` (或 `glab mr create` 之类的等价物)。
+The repo root has an `openspec/` directory (`openspec/specs/` + `openspec/changes/`); `git` is runnable; opening a PR against a remote needs `gh` (or an equivalent like `glab mr create`).
 
-**相邻 skill 分工**:
+**Neighbor skill split**:
 
-| 动作 | 交给 |
+| Action | Hand off to |
 |---|---|
-| 冷启动搭 `AGENTS.md` + `openspec/` 骨架 | **project-init-docs** |
-| 打 tag / 写 changelog / 定版本号策略 | **release** |
-| 判断素材值不值得沉淀成 skill / spec | 内容判定链, 与本 skill 无关 |
+| Cold-start scaffolding of `AGENTS.md` + `openspec/` skeleton | **project-init-docs** |
+| Tagging / writing changelogs / version-number policy | **release** |
+| Judging whether raw material is worth cementing into a skill / spec | Content-fit chain — not this skill's job |
 
-**不接的场景**:
+**Scenarios it declines**:
 
-- 纯查询 / 查资料 / 跑一条不改代码的命令
-- 与具体改动无关的合规审计
-- 往已归档 `archive/<日期>-<id>/` 里追加改动——要重新起一个新 change
+- Pure lookup / research / running a command that doesn't touch code
+- Compliance audits with no concrete change attached
+- Amending an already-archived `archive/<date>-<id>/` — start a fresh change instead
 
-**微妙边界**:
+**Subtle edges**:
 
-- 问「代码是否符合方案 / 某个 change」→ 触发符合度复核; 问「项目整体是否符合规范 / 标准」→ 不触发 (脱离改动的合规审计)
-- 「实施 openspec/changes/<X>」显式句式 → 直接进写码, 前提是方案完整; 残缺 → 退回采访, 绝不硬撑着实现
-- 微改动快车道 → 跳过 change 落盘, 但仍走反思 + PR; 动手中发现改动其实不小 (碰可测逻辑 / 多文件 / 远超几行) → 立即退回采访阶段走完整流程
+- "Does the code match the plan / a specific change?" → triggers the compliance review; "is the whole project compliant?" → does not trigger (that's an audit detached from any change)
+- The explicit "implement openspec/changes/<X>" phrasing goes straight to coding — as long as the plan is complete. If it's incomplete, it drops back to the interview instead of muscling through.
+- The fast lane skips writing the change to disk but still runs the reflection and PR steps; if the tweak turns out non-trivial mid-way (testable logic, multiple files, well past a few lines), it immediately returns to the interview and runs the full loop.

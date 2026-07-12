@@ -1,75 +1,77 @@
 ---
 prompt_examples:
-  - prompt: 这是我公众号文章的正文, 帮我做几张配图。
-    scene: 公众号正文配图
-  - prompt: 小红书新笔记帮我做一组封面 + 4 张正文, 主打前后对比。
-    scene: 小红书组图
-  - prompt: 用 wechat-doodle 风格给这篇文章画 3 张概念图。
-    scene: 指定风格
-  - prompt: 这段流程要一张分解图, 那段要一张常见错误图, 再来一张对比图。
-    scene: 按段落点单
-  - prompt: 上一张 01-cover 帮我贴一下品牌 logo, 别重新画。
-    scene: 续做叠 logo
-  - prompt: 不用品牌 logo, 出图就好, 我自己后期加水印。
-    scene: 关闭品牌
+  - prompt: Here's the body of my WeChat article — put together a few illustrations for it.
+    scene: WeChat article illustrations
+  - prompt: For this new Xiaohongshu post, make me a cover plus four body slides, built around a before/after comparison.
+    scene: Xiaohongshu carousel set
+  - prompt: Use the wechat-doodle style to draw 3 concept illustrations for this piece.
+    scene: Explicit style pick
+  - prompt: This paragraph needs a process breakdown, that one needs a common-mistakes diagram, and add a side-by-side comparison too.
+    scene: Per-paragraph ordering
+  - prompt: For the earlier 01-cover, just apply the brand logo — don't redraw it.
+    scene: Follow-up logo overlay
+  - prompt: Skip the brand logo, just give me the raw images — I'll add a watermark myself later.
+    scene: Brand overlay off
 ---
 
-# 文章配图生成
+English | [中文](./README.zh.md)
 
-给公众号 / 小红书 / 知乎文章一次配齐整套插图, 从读懂正文到分镜再到 QA 全程兜底。
+# Post Illustration Images
 
-## 什么时候用它
+Generates a full illustration set for a WeChat / Xiaohongshu / Zhihu post in one pass — reading the body, storyboarding, shot-by-shot generation, and QA all handled end-to-end.
 
-**公众号正文配图**:
+## When to use it
 
-我写完一篇公众号推文, 粘上正文说「帮我做几张配图」, 想让 skill 读全文, 按方法 / 流程 / 对比 / 清单等表达类型选定风格, 一张一张出。
+**WeChat article illustrations**:
 
-**小红书组图**:
+I've finished a WeChat post, paste in the body, and say "make me a few illustrations." I want the skill to read the whole piece, pick a style based on what the article is doing (method walk-through, process, comparison, checklist), and generate one image at a time.
 
-要一组封面 + 正文轮播, 希望整套视觉统一、每张只承载一个核心含义, 按内容锚点排出分镜再逐张出图。
+**Xiaohongshu carousel set**:
 
-**指定风格**:
+I need a cover plus a body carousel that read as a single visual set — each slide carrying exactly one point — with the shot list derived from anchors in the text before anything is drawn.
 
-我点名 `wechat-doodle` / `xhs-explainer-notebook` / `zhihu-tech`, skill 直接省掉挑风格的问询, 按对应的 `style_file` 与 `style_spec` 出图。
+**Explicit style pick**:
 
-**按段落点单**:
+I name `wechat-doodle` / `xhs-explainer-notebook` / `zhihu-tech` up front, so the skill skips the style-selection prompt and generates directly against that `style_file` and `style_spec`.
 
-我按段落说「这段要一张流程分解图, 那段要一张常见错误图」, skill 按内容锚点排分镜, 一图一意, 数量不够也不硬凑。
+**Per-paragraph ordering**:
 
-**续做与补 logo**:
+I go paragraph by paragraph — "this one needs a process breakdown, that one needs a common-mistakes diagram" — and the skill builds the shot list from content anchors, one idea per image, without padding the count to hit a number.
 
-上次跑完的图想补 logo / 加一张 / 单张重跑, 只动指定的那一张, 不重跑整套。
+**Follow-ups and logo overlay**:
 
-**不接**:
+For images from a previous run, I want to add the logo / append one more shot / re-run a single image — only the specified one changes, the whole set is not regenerated.
 
-纯摄影 / 人像修图 / 产品渲染 / 写实品牌大片 → 不触发; 图内要放整段精确长文 → 不触发 (原生图模型画不稳); 明确点名走另一个图像 skill → 让那个 skill 接。
+**Not in scope**:
 
-## 它会产出什么 / 你会看到什么
+Pure photography / portrait retouching / product renders / photorealistic brand hero shots — won't trigger; long precise paragraphs baked into the image — won't trigger (native image models can't render them reliably); explicit routing to a different image skill — hand it off.
 
-**默认一次只生成一张图, 整套统一风格靠 `style_spec` 兜底, 品牌 logo / 页码 / 占位框绝不由图像模型画**——这三点最反常识。
+## What it produces
 
-- **落盘位置**: `post-illustration-output/<正文短名>/` 落到项目根目录, 绝不写进 skill 目录
-- **每次产出**: `shot-list.md` (分镜) + `prompts/*.md` (每张一份 prompt) + `manifest.md` (整套元数据 YAML)
-- **图片路径**: `images/unbranded/*.png` (未叠 logo 的原图) + `images/branded/*.png` (叠完 logo 的成图); 品牌关闭时只出 `images/*.png`
-- **叠加副作用**: 会跑 `scripts/apply-brand-overlay.mjs` 做 logo 叠加, 依赖机器上的 `rsvg-convert`; 首次缺依赖会问一次要不要装, 拒装则回落到无品牌交付
-- **QA 循环**: 单张失败最多重跑 2 次, 仍不过则退回内容锚点调整, 或征得你同意后留 `residual_risk` 交付
-- **绝不会做**: 让图像模型画 logo / TF / 水印 / 页码框; 一次生成整套轮播; 复制 `style_reference` 的画面语义
+**By default, one image is generated at a time, series consistency is carried by the `style_spec`, and brand logos / page numbers / placeholder frames are never drawn by the image model** — these three defaults are the counter-intuitive ones.
 
-## 前置条件 / 边界
+- **Output location**: `post-illustration-output/<article-slug>/` under the project root — never written inside the skill directory
+- **Every run produces**: `shot-list.md` (storyboard) + `prompts/*.md` (one prompt file per shot) + `manifest.md` (set-level metadata in YAML)
+- **Image paths**: `images/unbranded/*.png` (originals before logo overlay) + `images/branded/*.png` (logo applied); with branding off, only `images/*.png`
+- **Overlay side effect**: runs `scripts/apply-brand-overlay.mjs` for the logo overlay, which depends on `rsvg-convert` on the machine; on first missing dependency you're asked once whether to install — declining falls back to an unbranded delivery
+- **QA loop**: a failing image is retried up to 2 times; still failing, it either falls back to a content-anchor tweak or, with your consent, ships with a `residual_risk` note
+- **Never does**: ask the image model to draw the logo / TF / watermark / page-number frame; generate the whole carousel in one shot; copy the visual semantics of a `style_reference`
 
-**前置**:
+## Prerequisites and boundaries
 
-Codex / OpenAI 原生图像生成能力可用; 目标平台是公众号 / 小红书 / 知乎; 启用品牌叠加时机器上要有 `rsvg-convert` (脚本会先检测, 拒装可回落到无品牌)。
+**Prerequisites**:
 
-**不接的场景**:
+Codex / OpenAI native image generation is available; the target platform is WeChat / Xiaohongshu / Zhihu; if the brand overlay is enabled, `rsvg-convert` must be present on the machine (the script checks first, and declining install falls back to unbranded).
 
-- 摄影 / 人像修图 / 产品渲染 / 写实品牌大片
-- 图内必须精确放整段长文 (原生图模型不稳)
-- 显式要求路由到另一个图像生成 skill
+**Not accepted**:
 
-**微妙边界**:
+- Photography / portrait retouching / product renders / photorealistic brand hero shots
+- Images that must carry a long, exact block of prose (native image models aren't stable at that)
+- Explicit routing to a different image-generation skill
 
-- 你说「给我做 5 张」: 5 是**上限而非配额**, 内容锚点不够宁可少交也不硬塞凑数图
-- `style_reference` 是 QA 用的**长期基线图**, 绝不作为生成输入, 也不复制其画面语义
-- 品牌是否叠加三档判断: 用户显式关 > `style_spec` 未开槽位 > 默认关; 任一命中即不叠加
-- 续做单张: 只动指定图, 不重跑整套; 无原图作底时会问你是否接受在成图上重复贴 logo 的风险
+**Subtle boundaries**:
+
+- "Make me 5" — the 5 is an **upper bound, not a quota**; if the content anchors don't support 5, fewer are delivered instead of padding
+- `style_reference` is a **long-lived QA baseline**; it is never fed in as generation input, nor is its visual semantics copied
+- Whether branding is applied is decided by three tiers: explicit user opt-out > `style_spec` slot not enabled > default off; any one hit means no overlay
+- Single-image re-run: only the named image is touched, the whole set is not regenerated; when the pre-overlay original is missing, you're asked whether to accept the risk of re-applying the logo on top of an already-branded image
