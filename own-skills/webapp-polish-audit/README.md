@@ -1,46 +1,60 @@
-# webapp-polish-audit 管线总览
+---
+prompt_examples:
+  - prompt: Audit https://practice.example.com and flag anything that reads demo-like, not real product.
+    scene: single-page taste
+  - prompt: Start from https://app.example.com, walk the child-page tree, then run the polish audit on each representative page.
+    scene: multi-page from seed
+  - prompt: The dashboard looks fine at 1440px but collapses on mobile. Run the viewport comparison audit.
+    scene: responsive comparison
+  - prompt: A new form modal shipped at /settings/team. Audit empty, loading, error and success states.
+    scene: state audit
+  - prompt: Does this landing page read like a real product or still like a demo? Judge it.
+    scene: real-product feel
+  - prompt: Pricing page just went live. Give it a completion-quality check before we announce.
+    scene: pre-launch polish
+---
 
-只读审查浏览器渲染的 Web UI。核心设计：**主 Agent 只调度，永不亲自看图判断**——判断者每次只面对一张截图和一小份筛选后的维度文档，看图的注意力不被整套协议稀释。执行细则全部在 `SKILL.md` 与 `references/`，本文件只给地图。
+[English](./README.md) | [中文](./README.zh.md)
 
-## 路线图（线框）
+# Webapp Polish Audit
 
-```text
-主 Agent（只调度）                SubAgent（执行）                      runDir = /tmp/webapp-polish-audit/{时间戳}-{run}/
-─────────────────                ────────────────                     ─────────────────────────────────────
-意图闸门 single / multi
-    │
-阶段 1 验收 ◄──────────────────  发现者（仅多页）
-    │                            渲染链接 → 页面树
-    │
-阶段 2 验收 ◄──────────────────  维度选择者（单页同样要走）
-    │                            页面盘点 → 每页一份 md 数组
-    │
-阶段 3 验收（ls 抽查）◄────────  探索者 · 每页一个  ────────────────►  截图 *.png / 盘点 *.json
-    │                            00 探寻 + 截图落盘 → manifest                │
-    │                                                                        │
-阶段 4 派发（TODO：一图一条）──►  判断者 · 每图一个  ◄─────────────────────────┘
-    │                            新鲜眼遍 → 规则遍 → YAML
-    │
-聚合：去重 · class 合并 · 目录外发现保留 · Browser 最终锚定
-    │
-审查报告（含 gaps）
-```
+Read-only audit of user-visible, browser-rendered web UI. Each judge looks at one screenshot with a filtered slice of rubric; the main agent only orchestrates and never judges from screenshots itself; one screenshot, one TODO, one judge.
 
-## 各阶段速查
+## When to use it
 
-| 阶段 | 执行者 | 输入 | 输出 | 任务文档 |
-| --- | --- | --- | --- | --- |
-| 1 发现 | 发现者 SubAgent（仅多页） | seed URL | 纯文本页面树 | `references/pipeline/14-child-page-tree-discovery.md` |
-| 2 选维度 | 选择者 SubAgent（单页/多页都走） | 页面树分支（单页 = 单页分支） | 页面 → `md` 数组 YAML | `references/pipeline/15-page-audit-dispatch-and-reference-selection.md` |
-| 3 探索 | 探索者 SubAgent · 每页一个 | 页面 + `md` 数组 + `runDir` | 落盘截图/盘点 + manifest YAML | `references/pipeline/16-page-exploration-and-capture.md`（探寻机制在 `references/page-flow/00-inspection-procedure.md`） |
-| 4 判断 | 判断者 SubAgent · 每张截图一个 | 截图文件路径 + 筛选后 `md` | 截图级判断 YAML | `references/pipeline/17-screenshot-judgement-dispatch.md` |
-| 聚合 | 主 Agent | 全部判断 YAML | 页面级 `class_coverage` + 报告 | 聚合规则在 `17` |
+**Single-page taste**: I hand over a page URL and want the skill to flag whatever reads demo-like versus real-product — whitespace, type scale, state coverage, edge cases, copy-paste smell.
 
-## 不变量（违反任何一条都视为偏航）
+**Multi-page from seed**: I hand over an entry URL and want the skill to discover the child-page tree first, then audit one representative per page type, then roll up a cross-page report.
 
-- **判断永不留在主会话**。单页任务也走完整管线，只是跳过阶段 1；无 SubAgent 机制时的 `local sequential fallback` 也必须先探索落盘、后逐张判断、一次只判一张。
-- **一图一 TODO 一判断者**。阶段 4 派发前建 TODO 清单，manifest 每张截图一条（对比组每组一条），绝不合批；TODO 即派发对账。
-- **新鲜眼兜底无条件**。判断者先看图后读规则；筛选后 `md` 为空的截图也必须派发，判断者只做新鲜眼遍。目录罩不住的发现进 `uncatalogued`，绝不丢弃。
-- **多图比对走对比组**。`02` 主题对、`11` 视口对、`04` 状态前后对，单图判不了的不硬判。
-- **只读**。任何阶段都不读项目源码、不改项目文件、不提交表单；唯一产物例外是 `/tmp/webapp-polish-audit/` 下带时间戳的运行目录（`{YYYYMMDD-HHMMSS}-{run-name}/`，每次运行唯一）。
-- **缺口诚实**。没截到、没翻到、被副作用挡住的，进 `gaps`，绝不静默当全清。
+**Responsive comparison**: Desktop looks fine, mobile or tablet collapses. I want the skill to walk the viewport comparison group (rubric 11) and catch what breaks.
+
+**State audit**: Forms, modals, flows have empty, loading, error, success, disabled states that need a sweep. I want the skill to use the state-before/after comparison group (rubric 04) to capture and judge each state.
+
+**Real-product feel**: I explicitly worry the page reads demo-like and want the skill to trigger on "not demo-like / real product / completion quality / refined / good taste" cues for an overall taste pass.
+
+**Pre-launch polish**: A page is about to ship or just shipped. I want a completion-quality checkup before we announce, catching visible bugs and polish gaps.
+
+**Not for**: Pure backend / CLI / database / API-only tasks. Product strategy, user research, information architecture or copy-only tasks without a UI surface. Wholesale redesign (only audit the proposed / current design). Code-level polish or any task that requires an implementation diff.
+
+## What it produces
+
+**Diagnose only, never change — the strictest lock**:
+
+- **Four-stage pipeline**: Stage 1 child-page discovery (multi-page only); Stage 2 per-page rubric selection with evidence; Stage 3 exploration + screenshot capture; Stage 4 per-screenshot judgement + page-level `class_coverage` aggregation. Single-page tasks skip Stage 1 and run the rest.
+- **All artifacts land in /tmp**: All screenshots, inventory JSON, manifests, `raw-urls.txt`, progress files write to `/tmp/webapp-polish-audit/{YYYYMMDD-HHMMSS}-{run-name}/`. Not a single byte lands in the project directory.
+- **Judges stay out of the main session**: The main agent only dispatches. Each screenshot goes to one read-only judge SubAgent that first does a rubric-free fresh-eye pass, then compares against the filtered rubric slice. Findings the catalog cannot cover go into `uncatalogued`, never dropped.
+- **Multi-image comparisons use comparison groups**: Theme pair (rubric 02), viewport pair (rubric 11), state before/after pair (rubric 04). What a single image cannot judge is never force-judged.
+- **Gaps are honest**: What was not captured, not clicked, or blocked by side effects lands in `gaps`. Nothing is silently declared clean. The final report is findings plus gaps together.
+- **Will never**: Read project source, edit files, submit forms, trigger external side effects, produce an implementation diff, or perform pixel-level redesign.
+
+## Prerequisites & boundaries
+
+**Prerequisites**: The target must be a browser-reachable rendered web UI (public or local dev server). The runtime must expose a Browser tool and a SubAgent / Task mechanism (without SubAgents, fall back to `local sequential fallback`, but still capture first and judge second). `/tmp/webapp-polish-audit/` must be writable.
+
+**Won't handle**: Code-level review (use code-review). Pure API / data / backend / CLI / infrastructure tasks. Wholesale redesign (only audit existing or proposed designs). Any task that requires shipping an implementation diff.
+
+**Subtle boundaries**:
+
+- If the user says "optimize / fix / improve / polish / make it real", interpret it as an audit request: emit findings and recommended fixes only, never implement.
+- Browser interaction is inspection-only: no form submissions, no create / update / delete on data, no permission changes, no file uploads, no external side effects.
+- Single-page tasks still walk the full pipeline (skipping Stage 1); judgement never stays in the main session.

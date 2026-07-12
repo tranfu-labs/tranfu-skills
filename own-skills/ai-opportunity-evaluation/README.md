@@ -1,66 +1,79 @@
-# ai-opportunity-evaluation
+---
+name: ai-opportunity-evaluation
+display_name: AI Opportunity Evaluation
+display_name_zh: AI 机会立项判断
+description: A go/no-go gate for TranFu product ideas before PRD or development. Runs a 2-3 round short-question triage on a one-liner idea and outputs a one-screen decision card (Go / Refine first / Don't do).
+prompt_examples:
+  - prompt: "Evaluate this idea: a WeChat article formatter"
+    scene: Single product idea go/no-go triage
+  - prompt: "Run a go/no-go check on this internal tool: personal attention dashboard"
+    scene: Gate before an internal tool enters PRD
+  - prompt: "Is this direction worth pursuing: AI intelligence subscription platform"
+    scene: Judge whether a new direction deserves investment
+  - prompt: "Is this product idea worth building: VPN smart routing platform"
+    scene: Value judgment on a one-liner idea
+  - prompt: "Use the AI Opportunity Evaluation skill to analyze this project"
+    scene: Explicit skill invocation
+  - prompt: "Can this idea be distilled into a TranFu skill or agent"
+    scene: Judge capability-precipitation value
+---
 
-帮助 TranFu 团队在开发前判断一个产品想法是否值得立项。它会先短问关键问题，再输出一屏以内的立项判断卡，避免一句话想法直接变成低质 Demo。
+[English](./README.md) | [中文](./README.zh.md)
 
-## 什么时候用它
+# AI Opportunity Evaluation
 
-- 团队成员只有一个产品名或一句话想法，需要判断值不值得做。
-- 内部工具准备进入 PRD 或开发前，需要确认真实问题和验证目标。
-- 想判断一个项目能否沉淀成 TranFu 的 Skill、Agent、SOP、官网产品或对外案例。
+Triages a one-liner product idea before PRD or development. Asks 2-3 short questions, then outputs a one-screen decision card so a raw idea does not slide straight into a low-quality demo.
 
-## 同类 Skill 对比
+## When to use it
 
-> 由 tranfu-publish 起草, 作者 / 推荐者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
+- A teammate has only a product name or a one-liner idea and needs a quick worth-doing verdict.
+- An internal tool is about to enter PRD or development, and the real problem and validation goal must be confirmed first.
+- You want to judge whether a project can be distilled into a TranFu skill, agent, SOP, website product, or external case study.
 
-### 公司库内
+## Sibling skill comparison
 
-- [project-scoring](../project-scoring/SKILL.md) — 对 AI 工作流项目做量化评分和决策 memo；**本 skill 区别**: 先做一屏以内的立项门禁，不输出复杂分数。
-- [ai-startup-feasibility-check](../ai-startup-feasibility-check/SKILL.md) — 对 AI 创业方向做可行性自检；**本 skill 区别**: 聚焦 TranFu 内部产品立项、能力验证和品牌风险。
-- [strategy-first-development](../strategy-first-development/SKILL.md) — 开发前确定战略、产品形态和技术方案；**本 skill 区别**: 在技术规划之前先判断项目是否值得进入 PRD。
+> Drafted by tranfu-publish, signed off by author / recommender. Helps a reader pick across siblings or jump to a better fit.
 
-### 外部世界
+### Inside the company library
 
-- 暂无
+- [project-scoring](../project-scoring/SKILL.md) — Quantitative scoring and decision memo for AI-workflow projects; **this skill differs**: it is a one-screen upstream gate, not a full scoring report.
+- [ai-startup-feasibility-check](../ai-startup-feasibility-check/SKILL.md) — Feasibility self-check for AI startup directions; **this skill differs**: it focuses on TranFu internal projects, capability validation, and brand risk.
+- [strategy-first-development](../strategy-first-development/SKILL.md) — Locks strategy, product shape, and tech plan before development; **this skill differs**: it runs even earlier — deciding whether the project should reach PRD at all.
 
-### 本 skill 独特价值
+### Outside the company
 
-- 第二阶段立项门禁。
-- 一屏以内判断卡。
-- 能否沉淀 TranFu 能力。
+- None known.
 
-## 使用技巧
+### Unique value of this skill
 
-> 由 tranfu-publish 引导起草 (作者 / 推荐者答, AI 整合, 推荐者签字).
-> 帮助阅读者纵向上手 — tacit knowledge 在此. 横向同类对比见上方 §同类 Skill 对比.
+- Phase-two go/no-go gate.
+- One-screen decision card.
+- Explicit check on TranFu capability precipitation.
 
-### 材料方案
+## Usage tips
 
-- 先给项目名和一句话想法。
-- 补充谁会用、现在怎么解决。
-- 说明验证流程、Skill 或 SOP。
+> Drafted through tranfu-publish (author / recommender answers, AI integrates, recommender signs off).
+> Helps readers ramp up vertically — tacit knowledge lives here. See §Sibling skill comparison above for horizontal choice.
 
-### 推荐用法
+### What to feed in
 
-- 一次只判断一个项目想法。
-- 接受 2-3 个短追问。
-- 通过立项后再进 PRD。
+- Start with the project name and a one-liner idea.
+- Add who will use it and how it is solved today.
+- State the validation flow, skill, or SOP you want to prove.
 
-### 已知限制
+### Recommended usage
 
-- 不替代商业尽调或投资评估。
-- 不直接生成 PRD 或开发方案。
-- 信息太少时置信度较低。
+- Evaluate one project idea per session.
+- Accept 2-3 short follow-up questions.
+- Only enter PRD after the verdict is Go.
 
-## 怎么用 (触发示例)
+### Known limits
 
-跟 Claude 说:
+- Not a substitute for commercial due diligence or investment review.
+- Does not directly produce a PRD or development plan.
+- Confidence is low when input information is thin.
 
-- "判断这个项目怎么样：微信公众号排版工具"
-- "帮我做个立项判断：个人注意力看板"
-- "这个方向能不能做：AI 情报订阅平台"
-- "用 AI机会立项判断 Skill，帮我分析这个项目"
+## What you will get
 
-## 你会看到什么
-
-- 明确结论：建议做、优化后再做、暂不建议做。
-- 一张短卡片：核心理由、真实问题、验证目标、首版范围、风险提醒和下一步。
+- A definite verdict: Go / Refine first / Don't do.
+- A short card: core reasons, real problem, validation goal, v1 scope, risk flags, and next step.
