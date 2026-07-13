@@ -1,17 +1,17 @@
 ---
 prompt_examples:
-  - scene: Evaluate a concrete AI project idea
-    text: "Check whether 'AI agents for SMB customer support' is worth pursuing"
-  - scene: Decide if an AI category is worth entering
-    text: "Run a feasibility check on the AI video generation space"
-  - scene: Screen against the prohibition list
-    text: "Score my project against the 13-item AI startup prohibition list"
-  - scene: Structural risk of an existing AI company
-    text: "Analyze the structural death risk of AI writing tools like Jasper"
-  - scene: Paired with market research
-    text: "Do a market report on the AI coding space and attach a feasibility appendix"
-  - scene: Three-axis scoring
-    text: "Score this AI project on substitution risk, leverage direction, and unit economics"
+  - prompt: "Check whether 'AI agents for SMB customer support' is worth pursuing"
+    scene: Evaluate a startup idea
+  - prompt: "Run a feasibility check on the AI video generation space"
+    scene: Assess an AI market
+  - prompt: "Score my project against the 13-item AI startup prohibition list"
+    scene: Check major red flags
+  - prompt: "Analyze the structural death risk of AI writing tools like Jasper"
+    scene: Review an existing company
+  - prompt: "Do a market report on the AI coding space and attach a feasibility appendix"
+    scene: Add to market research
+  - prompt: "Score this AI project on substitution risk, leverage direction, and unit economics"
+    scene: Score the key risks
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

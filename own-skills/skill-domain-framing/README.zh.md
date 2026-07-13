@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 这段事故复盘, 帮我在动 SKILL.md 之前先框一下容器名。
-    scene: 事故复盘
+    scene: 根据事故复盘命名
   - prompt: issue 里讨论出来的规则, 应该沉淀成什么 skill 容器?
-    scene: issue 素材
+    scene: 根据问题讨论命名
   - prompt: 我想叫 cache-debug-fix, 帮我打分挑战一下再决定。
-    scene: 显式指名
+    scene: 检查候选名称
   - prompt: 这段 PR 讨论, 别拿我用的名词直接命名, 抬出对的容器给我。
-    scene: PR 素材
+    scene: 根据 PR 讨论命名
   - prompt: skill-content-fit 判过通过, 先帮我定容器名, 再交给 skill-create-workflow。
-    scene: 承接判定
+    scene: 接着上一步命名
   - prompt: docs/postmortems/ 下每份复盘扫一遍, 有素材的就框个容器。
-    scene: 批量
+    scene: 批量确定目录名
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -30,7 +30,7 @@ prompt_examples:
 
 「这个该做成什么 skill」/「先帮我定一下范围」——想在动 SKILL.md 之前, 先把边界、成功信号和抽象方向锚清楚。
 
-**显式指名**:
+**检查候选名称**:
 
 我已经想好叫 X, 想让评分表挑战一下——名字扛得住就用, 冒出更高分的候选就说服我换。
 

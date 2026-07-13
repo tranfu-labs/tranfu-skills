@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: I want to crystallize this postmortem into a skill — is it good enough?
-    scene: Postmortem
+    scene: Learn from an incident
   - prompt: I hit a snag on this project and wrote a summary — is it worth turning into a skill?
-    scene: Lesson learned
+    scene: Capture a lesson
   - prompt: This user-preference block in AGENTS.md — can it be crystallized into a skill?
-    scene: Doc snippet
+    scene: Review a document excerpt
   - prompt: Can this material be turned into a capability? I'm not sure — judge it first.
-    scene: Explicit doubt
+    scene: Decide if it deserves a skill
   - prompt: Run every postmortem under docs/postmortems/ through the check and pick the ones worth skilling.
-    scene: Batch triage
+    scene: Screen several ideas
   - prompt: The rule from this issue thread — should it be a skill? Just give me pass or reject.
-    scene: Issue crystallization
+    scene: Turn a discussion into rules
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -34,7 +34,7 @@ The project hit a snag, I've written up a summary — I want a plain answer on w
 
 A chunk of project docs / `AGENTS.md` / an issue discussion feels like it could be crystallized into a capability, but I'm not sure — I'd rather run the acceptance check first than jump straight into writing.
 
-**Batch triage**:
+**Screen several ideas**:
 
 I have a pile of incident notes / feedback / lesson fragments and I want the skill to filter which ones deserve crystallization, so the rest can just be archived.
 

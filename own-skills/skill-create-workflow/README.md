@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Turn docs/postmortem.md into a project-level skill.
-    scene: source file
+    scene: Build from a source file
   - prompt: Yeah, make that a skill.
-    scene: follow-up yes
+    scene: Continue from earlier context
   - prompt: Let's skill-ify the release checklist we just talked about.
-    scene: idea conversion
+    scene: Turn an idea into a skill
   - prompt: Package this daily-report workflow as a new skill under own-skills/.
-    scene: workflow to skill
+    scene: Turn a workflow into a skill
   - prompt: Create a company skill from my brand-voice notes and publish it.
-    scene: create and publish
+    scene: Create and publish
   - prompt: Wrap that agent's system prompt into a Codex skill.
-    scene: prompt to skill
+    scene: Turn a prompt into a skill
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

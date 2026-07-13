@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Take a look at this draft and tell me if it's ready to ship.
-    scene: paste draft
+    scene: Review a pasted draft
   - prompt: Review tranfu-site/src/content/posts/pitfall-mcp-not-working.md and flag the problems.
-    scene: by path
+    scene: Review a file
   - prompt: Does this read like a PR puff piece? Are there uplift punchlines or buried sentimental turns? Flag them.
-    scene: style worry
+    scene: Check the writing style
   - prompt: Review this English long-form industry piece — is it citation-stuffed PR-speak?
-    scene: English genre
+    scene: Review English content
   - prompt: I tagged this as a 养成记 but the span is only one month. Judge the genre first before you call it shippable.
-    scene: genre boundary
+    scene: Confirm the article type
   - prompt: Every draft under tranfu-site/src/content/posts/ — run the dual-track review on each and roll them up.
-    scene: batch review
+    scene: Review multiple drafts
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -28,23 +28,23 @@ Review a draft for content-mill fluff — two independent parallel tracks diagno
 
 I finished a 踩坑记 / 养成记 post and before publishing I want the skill to flag anything that reads like PR-speak or a content-mill listicle.
 
-**By path**:
+**Review a file**:
 
 The draft lives under `tranfu-site/src/content/posts/`, I say "review this path," and the skill reads the file itself.
 
-**Style worry**:
+**Check the writing style**:
 
 I explicitly ask "does this read like a PR puff piece / are there uplift punchlines / is there a buried sentimental turn," and I want the skill to chase my suspicion.
 
-**English genre**:
+**Review English content**:
 
 I'm reviewing an English long-form industry piece / incident postmortem / research write-up and I want the skill to run its violation scan on the English branch.
 
-**Genre boundary**:
+**Confirm the article type**:
 
 I tagged it as 养成记 but the timespan is only a month. I want the skill to judge the genre first, then decide which structural checklist applies.
 
-**Batch review**:
+**Review multiple drafts**:
 
 I hand in a whole posts directory at once and want the skill to run both tracks per file, verdict per file, and report every issue in one pass.
 

@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: OpenAI cut prices again. Is this a trigger for infra startups? Walk the chain.
-    scene: Catalyst check
+    scene: Check a market change
   - prompt: Building an AI compliance monitor for mid-market SaaS. Run the four kill gates.
-    scene: Shovel test
+    scene: Test a startup idea
   - prompt: I paste product data across 5 platforms daily. Is this a real opportunity?
-    scene: Personal friction
+    scene: Start from daily friction
   - prompt: List 3 dirty-work directions in unsexy industries with your four grounds.
-    scene: Brainstorm
+    scene: Explore possible ideas
   - prompt: Big players give away agent platforms free. Does this kill my tool startup?
-    scene: Big-player kill
+    scene: Assess large competitors
   - prompt: I have 4 candidate ideas. Run all through the kill gates. Keep survivors.
-    scene: Backlog cull
+    scene: Compare existing ideas
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

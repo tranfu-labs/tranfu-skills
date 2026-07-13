@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: I want to build a college-major picking web app for gaokao students — no code yet, run the strategy consensus and land the default control-plane docs.
-    scene: Greenfield MVP
+    scene: Plan a new MVP
   - prompt: Don't hand-roll anything — first search mature GitHub projects and ecosystem defaults, tell me what to adopt / absorb / reject, then draft the stack doc.
-    scene: Avoid reinvention
+    scene: Reuse existing tools
   - prompt: After we agree on the strategy, land AGENTS.md, strategy.md, north-star.md, technical-stack.md and roadmap.md for this repo.
-    scene: Materialize control plane
+    scene: Write the project plan
   - prompt: No files yet — just walk me through the strategic goal, product shape and non-goals over a few rounds and stop at consensus checkpoints.
-    scene: Discuss only
+    scene: Discuss before building
   - prompt: This existing repo has drifted — reset the strategy, re-search mature projects, and update the technical-stack doc without touching production code.
-    scene: Stack reset
+    scene: Revisit the architecture
   - prompt: Help me pick the provider, model and deployment target grounded in strategic goal and constraints — decision packet only, no code.
-    scene: Provider decision
+    scene: Choose a service provider
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

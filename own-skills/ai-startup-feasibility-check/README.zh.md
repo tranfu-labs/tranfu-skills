@@ -1,17 +1,17 @@
 ---
 prompt_examples:
-  - scene: 评估具体 AI 项目值不值得启动
-    text: "帮我评估一下'用 AI Agent 做中小企业客服'这个方向能不能做"
-  - scene: AI 赛道值得进入判断
-    text: "AI 视频生成这个赛道值得进入吗，做一下可行性自检"
-  - scene: 禁止清单命中筛查
-    text: "用 13 条 AI 创业禁止清单评估我这个项目"
-  - scene: 已存在 AI 公司结构性风险
-    text: "分析一下 Jasper 这类 AI 写作工具的结构性死亡风险"
-  - scene: 与市场研究联合触发
-    text: "做一份 AI Coding 赛道的市场研报，附带可行性自检"
-  - scene: 三维评分对照
-    text: "帮我用替代风险/杠杆方向/单位经济给这个 AI 项目打分"
+  - prompt: "帮我评估一下'用 AI Agent 做中小企业客服'这个方向能不能做"
+    scene: 评估创业想法
+  - prompt: "AI 视频生成这个赛道值得进入吗，做一下可行性自检"
+    scene: 判断 AI 赛道
+  - prompt: "用 13 条 AI 创业禁止清单评估我这个项目"
+    scene: 排查高风险项
+  - prompt: "分析一下 Jasper 这类 AI 写作工具的结构性死亡风险"
+    scene: 分析现有公司
+  - prompt: "做一份 AI Coding 赛道的市场研报，附带可行性自检"
+    scene: 配合市场研究
+  - prompt: "帮我用替代风险/杠杆方向/单位经济给这个 AI 项目打分"
+    scene: 评估关键风险
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

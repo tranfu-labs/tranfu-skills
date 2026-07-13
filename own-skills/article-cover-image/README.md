@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Make a cover for "AI Agents Are Rewriting the Interface".
-    scene: title only
+    scene: Start from a title
   - prompt: Here's my article draft — give me one horizontal cover for it.
-    scene: title + article
+    scene: Use the full article
   - prompt: I need a 16:9 thumbnail for my YouTube video, here's the title.
-    scene: video thumbnail
+    scene: Make a video thumbnail
   - prompt: Don't generate the image, just give me the prompt to run elsewhere.
-    scene: prompt only
+    scene: Return a prompt only
   - prompt: Text-free please, leave a clean safe area — I'll add the title myself.
-    scene: text-free
+    scene: Create without text
   - prompt: Editorial magazine feel this time, not another dark tech look.
-    scene: style hint
+    scene: Try another style
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

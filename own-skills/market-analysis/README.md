@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Analyze the AI customer service SaaS market.
-    scene: Specific market
+    scene: Analyze a specific market
   - prompt: Do market research on the online education industry.
-    scene: Industry research
+    scene: Research an industry
   - prompt: "Competitive landscape analysis: EV market."
-    scene: Competitive landscape
+    scene: Map the competitors
   - prompt: Where are the opportunities in the AI healthcare market?
-    scene: Opportunity hunt
+    scene: Find market opportunities
   - prompt: Deep dive into the cross-border e-commerce market.
-    scene: Deep mode
+    scene: Run a deep analysis
   - prompt: Quick look at the short video market size.
-    scene: Lite mode
+    scene: Get a quick overview
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

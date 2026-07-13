@@ -48,20 +48,20 @@ CREATE A TODO LIST FOR THE TASKS BELOW. Keep the list internal unless the user a
    - **meta 型**: 作用于其他 skill / 其他 prompt (例: 本 skill、`skill-name-generation`、`skill-create-workflow`)。
    - **普通生成型**: 主职是"生成 X 内容", X 是文本 / 配图 / 命名 / 标题等 (例: `product-title-generation`)。
    - 判不出 → 失败路径 F4。
-5. **按类型选进场点覆盖模式**, 定 `prompt_examples` 的 5-6 条:
-   - 写码闭环型 → 正面写码 / bug 讨论 / 咨询讨论 / 显式实施 / 方案复核 / 停顿指定。
-   - 内容审查型 → 粘草稿 / 指定路径 / 中英文体裁 / 特定风格担忧 / 批量审。
-   - 视觉设计型 → 风格描述 / 参考图 / 品牌语汇 / 目标场景 / 尺寸约束。
-   - meta 型 → 新想法首次沉淀 / 已有素材补 skill / 存量批量补齐 / 单条 vs 批量 / 显式指名。
-   - 普通生成型 → 场景描述 / 关键词组 / 品类 / 参照对象 / 数量或格式指定。
+5. **按类型选择示例覆盖面**, 定 `prompt_examples` 的 5-6 条。下面只规定要覆盖哪些用户请求, **不是可直接复制的 `scene` 文案**:
+   - 写码闭环型 → 开发新功能 / 排查问题 / 先讨论方案 / 实施已定方案 / 检查落实情况 / 写完方案暂停。
+   - 内容审查型 → 粘贴内容 / 指定文件 / 不同语言或体裁 / 检查特定风格 / 批量检查。
+   - 视觉设计型 → 说明用途 / 提供参考图 / 遵循品牌规范 / 指定输出场景 / 指定尺寸。
+   - meta 型 → 从新想法开始 / 从已有素材开始 / 批量处理 / 单条处理 / 点名具体目标。
+   - 普通生成型 → 说明用途 / 提供关键词 / 指定品类 / 提供参考对象 / 指定数量或格式。
 6. **提炼四段正文**:
    - **elevator pitch** (≤ 60 字): 从 description 的主职动词 + 独有价值凝一句。
    - **什么时候用它**: 从 description 里的"触发于"话术改写成 3-5 段第一人称场景 ("我在做 X, 遇到 Y, 想让 skill 帮我 Z"), 末尾段显式画负向边界 ("不是给 A, 那是 X-skill; 不是给 B, 那是 Y-skill")。
    - **它会产出什么 / 你会看到什么**: 段落式说明主要产出 (落盘的文件 / 终端报告 / PR 等) + 显式点名副作用 (会不会动 git / 改文件 / 发外部通知 / 调 API) + 单独强调反常识点 (例: "默认先出方案、明确说开始写才动代码")。
    - **前置条件 / 边界**: 前置条件 (要什么工具 / 什么目录结构 / 什么权限) + 相邻 skill 分工一句话每条 + 不接的场景 + 微妙边界区分 (如果有)。
-7. **派生两份 `prompt_examples`**——英文版 (`README.md`) + 中文版 (`README.zh.md`), 各 5-6 条自然口语。每条一个 `prompt` (英文 15-80 字符 / 中文 15-50 字) + 一个 `scene` (英文 ≤ 20 字符 / 中文 ≤ 12 字)。**MUST 覆盖至少 4 种不同进场点** (按第 5 步的模式), NEVER 只是同一进场点的近义词轮换。两份 prompt_examples 内容对应 (指同一件事), 但按各语言的地道说法组织, NEVER 逐词直译。
+7. **派生两份 `prompt_examples`**——英文版 (`README.md`) + 中文版 (`README.zh.md`), 各 5-6 条自然口语。每条 MUST 有一个 `prompt` (英文 15-80 字符 / 中文 15-50 字) 和一个 `scene`。`scene` 是官网直接展示的标签, MUST 用普通用户看得懂的任务或处境概括 prompt: 中文通常 4-10 个汉字, `Skill` / `README` 等必要专有名词不计入汉字数, 整行最多 16 个字符; 英文建议 2-5 个自然单词、最多 32 个字符。**MUST 覆盖至少 4 种不同用户请求** (按第 5 步的覆盖面), NEVER 只是同一请求的近义词轮换。两份内容对应 (指同一件事), 但各自按母语重写, NEVER 逐词直译。
 8. **组装两份 README**——英文 (`README.md`, 全英文正文) + 中文 (`README.zh.md`, 全中文正文)。两份文件结构 = frontmatter → 空行 → 语言切换链接 `[English](./README.md) | [中文](./README.zh.md)` → 空行 → H1 → 空行 → elevator pitch → 四段正文。逐条套 §硬约束校验: 中文版标点全角 / 无"怎么调用"段 / 无 hero 图 (除非目标目录已有 `workflow.svg`) / 各版正文 30-80 行 / frontmatter 20-30 行。校验不通过就回步骤 6 重写对应段落。
-9. **术语脱敏, 人话过一遍**——**只针对中文版 (`README.zh.md`)**, 用第 12 条硬约束逐段扫: skill 圈行话 (`slug` / `轴` / `进场点` / `触发对齐` / `解释感` / `hero` / `trajectory` / `catalog` / `frontmatter` 等) 替换成普通中文; 中英夹杂只保留通用专有名词 / 命令 / 文件名 / 路径 / 状态标识符; 直译英文的中式表达 ("XX 感" / "拿 X 当 Y") 改成地道中文。判断法: 逐句读出来, 圈外朋友听不懂 → 重写。发现违规 → 回步骤 6 重写对应段落。英文版 (`README.md`) 本身就是英文, 无需脱敏, 但同样 MUST 用地道英文 (避免中式英文直译, 例: "I want to make X" 而非 "I'm want to be make X"; "how it works" 而非 "how does it work concretely")。
+9. **术语脱敏, 人话过一遍**——**中文版 (`README.zh.md`) 的 frontmatter 与正文都要扫**, 用第 12、14 条硬约束检查: skill 圈行话 (`slug` / `轴` / `进场点` / `触发对齐` / `解释感` / `hero` / `trajectory` / `catalog` / `frontmatter` 等) 替换成普通中文; 中英夹杂只保留通用专有名词 / 命令 / 文件名 / 路径 / 状态标识符; 直译英文的中式表达 ("XX 感" / "拿 X 当 Y") 改成地道中文。判断法: 逐句读出来, 圈外朋友听不懂 → 重写。英文版的 `scene` 与正文也 MUST 用地道英文, 不能为了压短而拼出 `single-page taste` / `regenerate over` 一类不自然短语。发现违规 → 回步骤 6 重写对应内容。
 10. **落盘两份**。目标路径 = `<skill 目录>/README.md` (英文) + `<skill 目录>/README.zh.md` (中文)。若目标已有 `README.md` 或 `README.zh.md` 中任一, 且用户没明说要重生成 → 失败路径 F3。
 11. **向用户汇报** (按 §输出格式)——两份落盘路径都列出。
 
@@ -103,7 +103,7 @@ prompt_examples:
 - 英文版所有内容 (frontmatter values / 正文) MUST 全英文 (地道英文, 非中式直译)
 - 中文版所有内容 MUST 全中文 (遵守 §硬约束 12 条含术语脱敏), 技术标识符 (`display_name` / `SKILL.md` / `openspec/`) 除外
 - 两份内容对应 (指同一件事), 但按各自语言的地道说法组织, NEVER 逐句直译
-- frontmatter `prompt_examples` 两份都填, 条数一致 (5-6), scene 对齐 (指同一进场点)
+- frontmatter `prompt_examples` 两份都填, 条数一致 (5-6), scene 对齐 (指同一个用户请求), 但各自使用自然母语
 
 ### Frontmatter shape (唯一字段: `prompt_examples`)
 
@@ -111,15 +111,15 @@ prompt_examples:
 ---
 prompt_examples:
   - prompt: <一句可以直接粘给 Claude / Codex 的中文自然语言, 15-50 字>
-    scene: <一行短标签, ≤ 12 字, 可选但强烈建议填>
+    scene: <普通用户看得懂的任务标签, 中文通常 4-10 个汉字>
   - prompt: ...
     scene: ...
 ---
 ```
 
 - `prompt` MUST 是字符串, 必填。是"用户对 Claude / Codex 说的那句话", NEVER 是关键词堆叠。
-- `scene` 是字符串, 可选但强烈建议填。给官网做场景切换 tab / 分组标签。
-- MUST 5-6 条, 覆盖至少 4 种不同进场点 (按 §主流程 第 5 步的类型模式)。
+- `scene` 是字符串, MUST 填。它会直接显示为官网的场景切换 tab / 分组标签, 脱离 prompt 单独出现时也要基本看懂。
+- MUST 5-6 条, 覆盖至少 4 种不同用户请求 (按 §主流程 第 5 步的覆盖面)。
 
 ### 正文四段 (严格顺序, 总长 30-80 行)
 
@@ -132,7 +132,7 @@ prompt_examples:
 
 ## 什么时候用它
 
-3-5 段第一人称场景, 每段格式 = **粗体行首标签** (≤ 6 字, 例: **正面写码 / 咨询开场 / 显式实施 / 快车道 / 停顿指定**) 独立一行 + 空行 + 1-3 句叙事段落——key 与 value 换行分开, 让眼睛能扫锚点。段末用独立 **不接** 段 (同样 key 换行 + 空行 + value) 收拢负向边界。
+3-5 段第一人称场景, 每段格式 = **普通用户看得懂的粗体行首标签** (建议 4-8 字, 例: **开发新功能 / 先讨论方案 / 实施已定方案 / 快速修改 / 写完方案暂停**) 独立一行 + 空行 + 1-3 句叙事段落——key 与 value 换行分开, 让眼睛能扫锚点。若正文场景与 frontmatter 的某个示例对应, MUST 复用同一标签。段末用独立 **不接** 段 (同样 key 换行 + 空行 + value) 收拢负向边界。
 
 ## 它会产出什么 / 你会看到什么
 
@@ -153,7 +153,7 @@ prompt_examples:
 
 ## 硬约束
 
-本 skill 生成 README 时必须逐条遵守下面 8 条硬约束——校验不过就返工重写, NEVER 出违规产物。
+本 skill 生成 README 时必须逐条遵守下面全部硬约束——校验不过就返工重写, NEVER 出违规产物。
 
 1. **全中文散文**。禁止在正文里出现 `census` / `loud` / `quiet` 这类明显不是英文专有名词的英文单词。
 2. **散文里的强调副词一律中文**。`NEVER` → 绝不; `ALWAYS` → 一定 / 始终; `MUST` → 必须。
@@ -176,6 +176,11 @@ prompt_examples:
     - **frontmatter 结构一致**: 字段名 (`prompt_examples`) 一致, 条数一致 (5-6 条), scene 对齐 (指同一进场点)
     - **内容对应但不逐句直译**: 两份说同一件事, 章节结构一致——英文版章节名可 `When to use it` / `What it produces` / `Prerequisites & boundaries`, 中文版继续 `什么时候用它` / `它会产出什么` / `前置条件与边界`; 但各语言按自己的地道说法组织。中文"我在做 X, 让 skill 帮我 Z" ↔ 英文 "When I'm doing X, I want the skill to Z" 就是自然表达, NEVER 逐词对齐。
     - **语言纯净**: 英文版正文全英文 (地道英文, 非中式直译); 中文版正文全中文 (遵守第 12 条术语脱敏)。技术标识符 (`display_name` / `SKILL.md` / `openspec/`) 在两版都保留原样。
+14. **场景标签说人话**——每条 `scene` MUST 通过两项检查:
+    - **单独可懂**: 把 prompt 隐藏, 只看 tab 标签, 普通用户仍能大致知道自己要做什么或遇到了什么。优先使用「开发新功能 / 检查页面状态 / 更新飞书文档」这类动宾短语, 不用「显式实施 / 停顿指定 / 承接判定」等内部流程分类。
+    - **母语自然**: 中英文分别重写, 只要求意思对应。NEVER 把 `single-page taste` 逐字压成「单页品味」, 也 NEVER 为追求短而写 `multi-page from seed` / `regenerate over` 等英语母语者不会使用的组合。
+    - **同组一致**: 同一个 skill 的 5-6 个标签尽量保持相近句法, 不要混用「输入类型 / 内部阶段 / 输出名称 / 营销口号」四套分类。
+    - **正文同步**: `什么时候用它` 里若使用相同场景作粗体标题, MUST 与 frontmatter 的 `scene` 逐字一致。
 
 ## 输出格式
 
@@ -210,24 +215,24 @@ Judgement:
 - skill 类型 = **写码闭环型**。SKILL.md description 主职 = "把开发任务跑成识别路由 → 采访诊断 → 出方案 → 切分支 → 落 openspec/changes → 反思 → 写码 → 反思符合度 → 归档 → 更新 AGENTS.md → commit → PR 闭环"。
 - 关键副作用: 动 git (fetch / 切 feature 分支 / commit / push); 落盘 `openspec/changes/<id>/`; 归档时移目录 + 合 spec-delta + 回流 wireframes; 有 remote 则开 PR。
 - 反常识点: **默认先出方案、明确说「开始写代码」才动代码**。
-- 进场点覆盖模式 (写码闭环型): 正面写码 / bug 讨论 / 咨询讨论 / 显式实施 / 方案复核 / 停顿指定。
+- 示例覆盖面 (写码闭环型): 开发新功能 / 排查程序问题 / 先讨论方案 / 实施已定方案 / 检查方案落实 / 写完方案暂停。
 
 Output (`own-skills/openspec-driven-development/README.md`, 关键片段):
 
     ---
     prompt_examples:
       - prompt: 帮我加一个「一键导出全系列」的功能，卡片导出那边。
-        scene: 正面写码
+        scene: 开发新功能
       - prompt: 现在删一个操作员，删除预览里为什么会列出一大串关联的操作员？先讨论清楚再决定动手。
-        scene: bug 讨论
+        scene: 排查程序问题
       - prompt: 你会如何把「用户偏好」从 localStorage 迁到后端？先讨论一下，别急着写码。
-        scene: 咨询讨论
+        scene: 先讨论方案
       - prompt: 实施 openspec/changes/add-export-all，方案已经确认过了。
-        scene: 显式实施
+        scene: 实施已定方案
       - prompt: 方案实施完了，帮我检查代码是否符合 openspec/changes/add-export-all，有没有遗漏。
-        scene: 方案复核
+        scene: 检查方案落实
       - prompt: 给 settings 加一个「导出偏好」按钮，按 openspec 走一遍，停在 plan-written 让我看一眼。
-        scene: 停顿指定
+        scene: 写完方案暂停
     ---
 
     # openspec-driven-development
@@ -236,7 +241,7 @@ Output (`own-skills/openspec-driven-development/README.md`, 关键片段):
 
     ## 什么时候用它
 
-    **正面写码**:
+    **开发新功能**:
 
     我在 openspec 约定的仓库里加个功能 / 修个 bug, 想 skill 先出方案我点头再动手。
 
@@ -244,7 +249,7 @@ Output (`own-skills/openspec-driven-development/README.md`, 关键片段):
 
     我在问「你会怎么改这段」「为什么这里不对」, 想让 skill 顺势收敛成方案。
 
-    **显式实施**:
+    **实施已定方案**:
 
     我已经写好 `openspec/changes/<X>`, 说「实施这个 change」直接跳到写码。
 
@@ -252,7 +257,7 @@ Output (`own-skills/openspec-driven-development/README.md`, 关键片段):
 
     一两行的微改动, 我不想被完整闭环压得喘不过气——跳过 change 落盘, commit 和 PR 照走。
 
-    **停顿指定**:
+    **写完方案暂停**:
 
     「按 openspec 走一遍, 停在 `plan-written` 让我看一眼」——推进计划里指定停点。
 
@@ -298,7 +303,7 @@ Output (`own-skills/openspec-driven-development/README.md`, 关键片段):
     落盘: /Users/wing/Develop/goal-claude/claude-skills/own-skills/openspec-driven-development/README.md
     总行数: 48
     主要章节: elevator pitch / 什么时候用它 / 它会产出什么 / 前置条件与边界
-    prompt_examples: 6 条, 覆盖场景: 正面写码, bug 讨论, 咨询讨论, 显式实施, 方案复核, 停顿指定
+    prompt_examples: 6 条, 覆盖场景: 开发新功能, 排查程序问题, 先讨论方案, 实施已定方案, 检查方案落实, 写完方案暂停
     拿不准之处: 无
 </example>
 
@@ -370,7 +375,7 @@ prompt_examples:
     scene: 加功能
 ```
 
-Reason: 违反 §README 骨架规范 (MUST 5-6 条, 覆盖至少 4 种不同进场点)。三条同属"正面写码"进场点的近义词轮换, 缺 bug 讨论 / 咨询讨论 / 显式实施 / 方案复核 / 停顿指定这些真实存在的进场点——官网 tab 切换无从分组, 用户读了也感受不到 skill 的独有价值。合规改法: 参考 §Examples 里 `openspec-driven-development` 的六条覆盖。
+Reason: 违反 §README 骨架规范 (MUST 5-6 条, 覆盖至少 4 种不同用户请求)。三条都只是「开发新功能」的近义词轮换, 缺少排查程序问题 / 先讨论方案 / 实施已定方案 / 检查方案落实 / 方案后暂停这些真实请求——官网 tab 切换无从分组, 用户读了也感受不到 skill 的独有价值。合规改法: 参考 §Examples 里 `openspec-driven-development` 的六条覆盖。
 </bad-example>
 
 ## Runtime Tool Notes

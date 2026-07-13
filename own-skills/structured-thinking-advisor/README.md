@@ -1,16 +1,16 @@
 ---
 prompt_examples:
-  - scene: Full-document review
+  - scene: Review a full document
     prompt: Review this document for me — what is it actually solving, and where does the logic break?
-  - scene: Structure breakdown
+  - scene: Break down the structure
     prompt: Break down the structure of this piece — modules, hierarchy, logical flow.
-  - scene: Passage close-reading
+  - scene: Explain one passage
     prompt: What does this paragraph mean? Explain it with a clear analogy.
-  - scene: Logic check
+  - scene: Check the logic
     prompt: Is the logic in this section sound, or is there a causal reversal?
-  - scene: Rewrite co-creation
+  - scene: Rewrite together
     prompt: Give me 2-3 optimized versions — one grounded, one with product-launch polish.
-  - scene: Concept abstraction
+  - scene: Build a model
     prompt: Can you distill these scattered points into a methodology or model?
 ---
 

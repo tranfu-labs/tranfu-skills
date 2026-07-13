@@ -1,14 +1,14 @@
 ---
 prompt_examples:
-  - scene: 结构化 JSON 一键出图
+  - scene: 生成单份日报
     prompt: 把 report.json 渲染成 TranFu 日报图，默认走 research + iceblue 样式
-  - scene: 批量样式对比
+  - scene: 对比全部样式
     prompt: 用 --all-variants 把所有风格和配色跑一遍，方便挑选
-  - scene: 暗色情报仪表盘
+  - scene: 制作暗色看板
     prompt: 换成 dark + steelblue 样式，做出情报仪表盘的感觉
-  - scene: 科技媒体信息卡
+  - scene: 制作媒体卡片
     prompt: 用 verge + iceblue 出一版科技媒体信息卡样式
-  - scene: 公开发布净化
+  - scene: 准备公开发布
     prompt: 关掉 QR、URL 和低语境项目名，只留标题和编号新闻，适合朋友圈发布
 ---
 

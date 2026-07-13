@@ -1,3 +1,17 @@
+---
+prompt_examples:
+  - prompt: Create a new page in this Lark knowledge base.
+    scene: Create a wiki page
+  - prompt: Update this Lark wiki page without losing the existing content.
+    scene: Update a wiki page
+  - prompt: Back up this page before writing the new content.
+    scene: Back up before writing
+  - prompt: Verify that the title and first paragraph were written correctly.
+    scene: Verify after writing
+  - prompt: Safely replace the existing page with this new Markdown content.
+    scene: Replace existing content
+---
+
 [English](./README.md) | [中文](./README.zh.md)
 
 # Lark Safe Write

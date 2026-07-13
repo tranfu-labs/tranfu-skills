@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Turn this Xiaohongshu draft into a preview card in the claude-code-quick-reference series.
-    scene: Preview from copy
+    scene: Preview from text
   - prompt: Arrange these paragraphs into a Xiaohongshu card set, series named claude-code-quick-reference.
-    scene: New series intake
+    scene: Start a new series
   - prompt: Append a /compact card at the end of the claude-code-quick-reference series.
-    scene: Append a card
+    scene: Add one card
   - prompt: Export the claude-code-quick-reference series as final Xiaohongshu images.
-    scene: Export series
+    scene: Export a finished series
   - prompt: Batch-export both these series to lossless WebP.
-    scene: Batch export
+    scene: Export several series
   - prompt: Move the /clear card to position 3 in the series.
-    scene: Reorder cards
+    scene: Reorder the cards
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,23 +22,23 @@ Turn a Xiaohongshu draft into finished 1080×1440 cards — one pipeline coverin
 
 ## When to use it
 
-**Preview from copy**:
+**Preview from text**:
 
 I paste a Xiaohongshu draft and say "generate a preview from this doc" — I want the skill to fill the template, create the card folder, and update `pages.json`.
 
-**New series intake**:
+**Start a new series**:
 
 I have several drafts to arrange as one Xiaohongshu series — pick a series slug, produce one preview card at a time, order tracked in `pages.json`.
 
-**Append a card**:
+**Add one card**:
 
 An existing series needs one more card at the end — the skill only adds the card folder and a new `pages.json` entry; the series shell and other cards stay untouched.
 
-**Export series**:
+**Export a finished series**:
 
 I say "export" / "screenshot" / "cut to size" — the skill runs playwright and drops 1080×1440 lossless WebPs into `dist/<series>/snapshot/`.
 
-**Batch export**:
+**Export several series**:
 
 Several series exported in one call, each respecting its own `pages.json` order.
 

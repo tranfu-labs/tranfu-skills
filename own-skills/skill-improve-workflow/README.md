@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Improve the own-skills/daily-report skill
-    scene: improve existing
+    scene: Improve an existing skill
   - prompt: Does own-skills/foo still qualify as a skill?
-    scene: qualification doubt
+    scene: Check whether it should stay
   - prompt: Health check own-skills/bar before I merge, fix what fits
-    scene: pre-merge health
+    scene: Check before merging
   - prompt: Run a review pass over the whole own-skills/ directory
-    scene: batch dir audit
+    scene: Review several skills
   - prompt: Just review this skill, don't touch files yet
-    scene: review only
+    scene: Review without editing
   - prompt: How is own-skills/xxx written? Worth rebuilding?
-    scene: rebuild assessment
+    scene: Decide whether to rebuild
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

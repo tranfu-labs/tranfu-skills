@@ -1,15 +1,15 @@
 ---
 prompt_examples:
   - prompt: 把这个项目推到 GitHub 主分支。
-    scene: 常规交付
+    scene: 准备常规交付
   - prompt: 这个产品首次提交, 帮我建仓库、补 README、推主分支。
-    scene: 新建仓库
+    scene: 新建代码仓库
   - prompt: 已有仓库, 帮我补 README 部署说明、本地验证后推送。
-    scene: 更新仓库
+    scene: 更新代码仓库
   - prompt: 帮我检查这个项目能不能安装、构建、启动和验证。
-    scene: 交付前自检
+    scene: 交付前检查
   - prompt: 帮我整理成技术能直接部署的项目, 部署配置写清。
-    scene: 交付给技术
+    scene: 交给技术团队
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -20,23 +20,23 @@ prompt_examples:
 
 ## 什么时候用它
 
-**常规交付**:
+**准备常规交付**:
 
 产品代码基本完成, 我想让 skill 直接把它推到 GitHub 主分支, 而不是先开 PR 再合并。
 
-**新建仓库**:
+**新建代码仓库**:
 
 这个产品第一次进 GitHub, 我要它建仓库、按 tranfu 命名规范起名 (小写 + 连字符 + `-app`)、生成生产链接、补 README 再推主分支。
 
-**更新仓库**:
+**更新代码仓库**:
 
 已有 GitHub remote, 我只想让它对齐 README 部署说明、跑本地验证, 然后把最新改动推到主分支。
 
-**交付前自检**:
+**交付前检查**:
 
 我要它跑真实命令验证项目能装、能建、能启、能跑 (Node 装依赖跑 build/test, Web 起 server 打 HTTP, Docker 起 compose), 不做纯静态扫描。
 
-**交付给技术**:
+**交给技术团队**:
 
 技术同学要拿这个项目部署, 我要它输出 GitHub 交付卡, 把环境变量字段名和目标位置列清楚, 真实值走私密渠道。
 

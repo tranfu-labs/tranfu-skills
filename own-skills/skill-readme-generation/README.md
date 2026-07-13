@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Just finished own-skills/skill-name-generation—generate its companion README too.
-    scene: fresh companion
+    scene: Document a new skill
   - prompt: Backfill READMEs for every skill under own-skills/ that's missing one.
-    scene: batch backfill
+    scene: Add missing READMEs
   - prompt: This README is the old single-language version—regenerate it bilingual, overwrite.
-    scene: regenerate over
+    scene: Replace an old README
   - prompt: Generate the README for own-skills/openspec-driven-development/.
-    scene: explicit path
+    scene: Document a specific skill
   - prompt: This skill goes live on the catalog soon—get its README ready first.
-    scene: catalog pre-launch
+    scene: Prepare for publishing
   - prompt: Same treatment as skill-name-generation—give this skill a README too.
-    scene: parallel to peer
+    scene: Follow another README
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,23 +22,23 @@ Turn any existing skill's `SKILL.md` into a bilingual, human-readable pair — E
 
 ## When to use it
 
-**Fresh companion**:
+**Document a new skill**:
 
 I just wrapped up a new skill and its `SKILL.md` is written. Now I want to list it on the internal catalog, so I ask this skill to hand-craft the paired README on the spot.
 
-**Batch backfill**:
+**Add missing READMEs**:
 
 `own-skills/` still holds a batch of older skills that never got a README. I want every missing one filled in with the same spec — one independent pair per directory, never merged.
 
-**Regenerate over**:
+**Replace an old README**:
 
 Some skill's old README was hand-written way back and its shape no longer matches the current spec. I say "regenerate to the new bilingual shape and overwrite" and both files get rewritten.
 
-**Catalog pre-launch**:
+**Prepare for publishing**:
 
 I'm about to publish a skill to the catalog detail page. That page reads the example prompts from the README's top matter and renders them as scene tabs — no README, nothing to show.
 
-**Parallel to peer**:
+**Follow another README**:
 
 I point at a peer skill that already has a good README and say "give this one the same treatment." The skill mirrors that shape against my target's own SKILL.md.
 

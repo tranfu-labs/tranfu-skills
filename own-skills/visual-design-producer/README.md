@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Use this Visual DNA to make an HTML landing page for an AI notebook.
-    scene: DNA-driven page
+    scene: Build from visual references
   - prompt: Design a Xiaohongshu card set for an autumn citywalk guide — cover plus inner pages, HTML.
-    scene: Xiaohongshu card
+    scene: Create a Xiaohongshu card
   - prompt: Here is the Producer Handoff for a dashboard — produce the HTML directly from it.
-    scene: Handoff-driven
+    scene: Build from a handoff
   - prompt: Blend this Visual DNA with our brand — color and logo attached below.
-    scene: Brand blend
+    scene: Apply brand guidelines
   - prompt: Give me an HTML deck plus a slide outline and CSS variables.
-    scene: HTML deck
+    scene: Create an HTML deck
   - prompt: No DNA, no handoff — just make a poster for a job listing, clean minimal.
-    scene: Standalone brief
+    scene: Start from a short brief
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -30,15 +30,15 @@ I already have a Visual DNA (or JSON tokens) and want the skill to produce an HT
 
 I explicitly say "make a Xiaohongshu card," "design a job-fair poster," "give me a WeChat article cover" — I want the skill to pick the right output route (card / poster / page / deck) on its own.
 
-**Handoff-driven**:
+**Build from a handoff**:
 
 Upstream (the design strategy layer) already wrote a Producer Handoff. I drop it in and let the skill produce HTML from it, without re-interviewing the target.
 
-**Brand blend**:
+**Apply brand guidelines**:
 
 The artifact has to carry our brand color / logo / typography. I attach the brand guide in the prompt and want the skill to flip from default `brandless` to `brand-on`.
 
-**Standalone brief**:
+**Start from a short brief**:
 
 No DNA, no Handoff — one line ("make a poster in X style for Y") and I want the skill to run production from that brief alone.
 

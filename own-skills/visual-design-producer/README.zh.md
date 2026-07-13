@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 用这份 Visual DNA 帮我做一个 AI 笔记的落地页，出 HTML 就行。
-    scene: DNA 直出
+    scene: 根据视觉参考制作
   - prompt: 出一张小红书卡，主题「秋日 citywalk 攻略」，封面加内页，HTML 版。
-    scene: 小红书卡
+    scene: 制作小红书卡片
   - prompt: 这份 Producer Handoff 是给 dashboard 的，按它直接出 HTML。
-    scene: Handoff 直出
+    scene: 根据交付说明制作
   - prompt: 用这份 Visual DNA 但把我们的品牌色和 logo 也融进去，品牌手册在下面。
-    scene: 品牌融合
+    scene: 融合品牌规范
   - prompt: 给我出一份 HTML deck，顺便附一份幻灯片大纲和 CSS 变量。
-    scene: HTML deck
+    scene: 制作 HTML 演示稿
   - prompt: 没 DNA 也没 handoff，一句话：出一张秋招海报，风格清冷极简。
-    scene: 独立命题
+    scene: 根据简短需求制作
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,7 +22,7 @@ prompt_examples:
 
 ## 什么时候用它
 
-**DNA 直出**:
+**根据视觉参考制作**:
 
 我手上有一份 Visual DNA (或 JSON tokens), 想让 skill 按它的风格直接出一张 HTML 落地页 / 数据面板 / 幻灯片, 不用再采访我的风格偏好。
 
@@ -30,7 +30,7 @@ prompt_examples:
 
 我明确说「出一张小红书卡」「做一版秋招海报」「给我一份微信文章封面」, 想让 skill 自动挑对应的输出结构 (卡片 / 海报 / 页面 / 幻灯片)。
 
-**Handoff 直出**:
+**根据交付说明制作**:
 
 上游 (设计策略层) 已经写好了 Producer Handoff, 我把它丢进来, 让 skill 按 handoff 直接出 HTML, 不再重新采访目标。
 
@@ -38,7 +38,7 @@ prompt_examples:
 
 我要出的稿子必须挂公司品牌色 / logo / 字体, 品牌手册我附在提示里, 想让 skill 从默认的 brandless 切到 brand-on。
 
-**独立命题**:
+**根据简短需求制作**:
 
 我没有 Visual DNA、也没有 Handoff, 就一句话「做一张什么风格的什么」, 想让 skill 接住这句话直接出稿。
 

@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: "评估这个 AI 产品的商业可行性: <产品描述>"
-    scene: 新概念评估
+    scene: 评估新想法
   - prompt: 帮我跑一份完整的商业分析报告
-    scene: 全量报告
+    scene: 生成完整报告
   - prompt: 两个 AI 创业方向, 用同一套体系横向对比一下
-    scene: 方向对比
+    scene: 对比多个方向
   - prompt: 投资尽调一下这个项目, 决策前先摸底
-    scene: 投资尽调
+    scene: 开展投资尽调
   - prompt: PEST + 波特五力 + SWOT + BMC 一次跑齐, 各模块之间要交叉引用
-    scene: 框架组合
+    scene: 组合分析框架
   - prompt: 只出机会矩阵和执行摘要, 深度分析先不用
-    scene: 轻量模式
+    scene: 快速评估
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

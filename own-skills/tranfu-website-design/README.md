@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Add a new "customer stories" section to the TranFu homepage, following the site's brand look.
-    scene: create section
+    scene: Create a page section
   - prompt: Change this CTA button to TranFu brand red — but keep the surface neutral, don't paint a red background.
-    scene: modify component
+    scene: Update a component
   - prompt: Review src/app/components/Hero.tsx against the TranFu website design rules — findings only, don't edit.
-    scene: design review
+    scene: Review the design
   - prompt: Run visual QA on the pricing page — desktop and mobile viewport, flag overflow, overlap, or brand-red misuse.
-    scene: visual QA
+    scene: Check visual details
   - prompt: I need the TranFu favicon and header lockup — use the bundled logo assets, don't grab one from the old deployed site.
-    scene: logo assets
+    scene: Update logo assets
   - prompt: Refactor this card component but keep the TranFu radii, shadow, and typography intact.
-    scene: refactor safely
+    scene: Refactor without visual changes
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -30,11 +30,11 @@ I'm adding a new section or page on the TranFu site and I want the skill to alig
 
 I'm tweaking a button, card, or hero and I want the skill to catch brand-red misuse or a font-family drift before it lands.
 
-**Design review**:
+**Review the design**:
 
 I hand over the changed files or screenshots and I want a review — every finding cites a rule and a location, and the skill edits zero files.
 
-**Visual QA**:
+**Check visual details**:
 
 I want the skill to check one desktop and one mobile viewport for overflow, overlap, missing responsive framing, or brand red used as a large background.
 

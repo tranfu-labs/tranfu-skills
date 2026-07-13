@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 分析 AI 客服 SaaS 市场
-    scene: 具体市场
+    scene: 分析具体市场
   - prompt: 帮我做在线教育行业市场调研
-    scene: 行业调研
+    scene: 调研一个行业
   - prompt: "竞争格局分析: 新能源汽车赛道"
-    scene: 竞争格局
+    scene: 分析竞争格局
   - prompt: AI 医疗市场的机会在哪里
-    scene: 机会挖掘
+    scene: 寻找市场机会
   - prompt: 深入研究跨境电商赛道
-    scene: 深度模式
+    scene: 开展深度分析
   - prompt: 快速看看短视频市场规模
-    scene: 轻量模式
+    scene: 快速了解市场
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

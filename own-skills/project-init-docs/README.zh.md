@@ -1,15 +1,15 @@
 ---
 prompt_examples:
   - prompt: 初始化。
-    scene: 仓库根初始化
+    scene: 初始化项目文档
   - prompt: 这个老项目还没 AGENTS.md, 帮我按真实事实把项目文档一次沉下来。
-    scene: 存量补齐
+    scene: 为现有代码补文档
   - prompt: 帮我把项目文档初始化一下, 把结构、命令、业务域一起沉下来。
-    scene: AI 冷启动
+    scene: 准备 AI 协作
   - prompt: 给这个项目加线框图, 每页把版式画清楚。
-    scene: 加线框图
+    scene: 补充页面线框图
   - prompt: 帮我搭 DEPLOY.md, 把部署到哪、怎么建、怎么退写清楚。
-    scene: 部署源初始化
+    scene: 记录部署信息
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -24,11 +24,11 @@ prompt_examples:
 
 我在一个已经能跑的仓库根说「初始化」, 想 skill 扫真实栈与目录、把 AI 协作基线一次铺好, 而不是拷空白模板。
 
-**存量补齐**:
+**为现有代码补文档**:
 
 老项目代码在、文档欠账——没 `AGENTS.md`、没 `module-map.md`、没 `DEPLOY.md`, 想让 skill 按真实事实一次性补齐, 命令抄真实脚本、模块抄真实目录。
 
-**AI 冷启动**:
+**准备 AI 协作**:
 
 我想让后续任何 AI 拿到仓库就能干活——`AGENTS.md` 知禁区、`DEPLOY.md` 知部署、`module-map.md` 知依赖、`openspec/` 与 `docs/wireframes/` 知契约与版式事实。
 

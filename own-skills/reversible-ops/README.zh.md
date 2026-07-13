@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 我能跑 `docker compose down -v` 吗？
-    scene: 命令粘贴
+    scene: 检查粘贴的命令
   - prompt: 帮我把 /var/log/nginx/ 下旧的 access.log 清一下。
-    scene: 口语清理
+    scene: 检查清理操作
   - prompt: 我写了个 Python 清缓存脚本, 跑之前你先逐条审。
-    scene: 脚本审查
+    scene: 检查运行脚本
   - prompt: 把 Coolify 上 8f3a-staging-uuid 这个 app 摘掉, 加了 --force。
-    scene: Coolify 删除
+    scene: 检查 Coolify 删除
   - prompt: 帮我改一下 service abc-uuid 的 DATABASE_URL 环境变量。
-    scene: 改环境变量
+    scene: 检查环境变量修改
   - prompt: 用 `git reset --hard origin/main` 把我这个 feature 分支拉回主线。
-    scene: git 危险
+    scene: 检查危险 Git 操作
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,7 +22,7 @@ prompt_examples:
 
 ## 什么时候用它
 
-**命令粘贴**:
+**检查粘贴的命令**:
 
 我要跑一条 `rm` / `docker rm` / `git reset --hard` / `coolify app delete`, 想先让 skill 判它能不能撤回再决定。
 
@@ -30,7 +30,7 @@ prompt_examples:
 
 我说「帮我删一下 logs」「清掉这些旧镜像」, 想让 skill 把口语翻成可以恢复的具体命令。
 
-**脚本审查**:
+**检查运行脚本**:
 
 我写了个 Python 或 shell 脚本要跑, 想让 skill 逐条按四条铁律审一遍, 有问题的段落改写。
 

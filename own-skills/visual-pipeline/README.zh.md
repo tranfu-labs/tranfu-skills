@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮我设计一下内部评审工具的设置页。
-    scene: 从零设计新页面
+    scene: 设计全新页面
   - prompt: 评审页的头部感觉不对, 帮我改一下。
-    scene: 改已有设计
+    scene: 改进现有设计
   - prompt: 新产品的仪表盘 / 列表 / 详情三个页面, 一个一个做过来。
-    scene: 多页面项目
+    scene: 设计多个页面
   - prompt: 字段和用户场景都定了, 直接推进到高保真。
-    scene: 输入已锁, 进风格段
+    scene: 直接进入视觉设计
   - prompt: 整体调性不对, 想要杂志感, 别再是仪表盘那味了。
-    scene: 换风格
+    scene: 更换视觉风格
   - prompt: 先把线框搞出来, 别急着上色, 我想先看骨架。
-    scene: 骨架优先
+    scene: 先确认页面布局
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

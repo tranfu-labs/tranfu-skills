@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Should we use agents here, or is a plain workflow enough?
-    scene: consultation
+    scene: Decide whether to use agents
   - prompt: Do we need LangGraph, or would a normal deterministic workflow work?
-    scene: framework tradeoff
+    scene: Choose a framework
   - prompt: Based on the project vision and current stack, recommend an agentic architecture.
-    scene: blueprint
+    scene: Plan the architecture
   - prompt: Review this multi-agent design — is it justified, or could a simpler shape do the job?
-    scene: design review
+    scene: Review the design
   - prompt: The packet is confirmed. Materialize the docs into architecture/ and product-control/.
-    scene: materialize docs
+    scene: Write the architecture docs
   - prompt: Packet is approved — implement the first slice bounded by the verification matrix.
-    scene: implement slice
+    scene: Build the first stage
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,27 +22,27 @@ Decide whether the project actually needs agents, and if so, design the simplest
 
 ## When to use it
 
-**Consultation**:
+**Decide whether to use agents**:
 
 I'm sitting on a feature idea and can't tell whether agents are worth it. I want it to weigh deterministic workflow, RAG, and single-agent-loop options against a full agentic setup, recommend one, and name the missing baseline that would prove the call either way.
 
-**Framework tradeoff**:
+**Choose a framework**:
 
 I'm choosing between LangGraph, CrewAI, OpenAI Agents SDK, PydanticAI, or none of them. I want it to compare against my current stack, flag conflicts, and tell me what to keep / add / defer / reject.
 
-**Blueprint**:
+**Plan the architecture**:
 
 I want a complete packet — recommended shape, state model, tool model, orchestration, evaluation gates, and a Now / Next / Later roadmap — grounded in the actual project vision and existing modules, not a generic reference.
 
-**Design review**:
+**Review the design**:
 
 I already have a multi-agent design (mine or one I inherited). I want it to sanity-check whether the complexity is justified, spot missing state or evaluation gates, and name the simpler shape I could fall back to.
 
-**Materialize docs**:
+**Write the architecture docs**:
 
 The packet's been through discussion and I've signed off. I want it to update the architecture / product-control / roadmap docs to match — only after I explicitly authorize the write scope.
 
-**Implement slice**:
+**Build the first stage**:
 
 The packet is complete and I've authorized implementation. I want it to run the Implementation Gate first, then build a bounded first slice with a verification matrix — not a full-stack rollout.
 

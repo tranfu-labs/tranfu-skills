@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮我给这个 skill 起个中英文 display_name，description 我贴给你。
-    scene: 新起单条
+    scene: 为单个 Skill 起名
   - prompt: own-skills/ 下这批 skill 都还没 display_name，帮我按同一套规约批量补齐。
-    scene: 存量批量
+    scene: 批量为 Skill 起名
   - prompt: 给 skill-content-fit 起个 display_name 和 display_name_zh。
-    scene: 显式指名
+    scene: 为指定 Skill 起名
   - prompt: 这个 skill 现有的显示名读起来像解释，帮我重起一组更贴的。
-    scene: 重起
+    scene: 重新命名
   - prompt: 英文目录名是 lark-safe-write，主职是「写飞书前的一整套安全检查」，起个中英文显示名。
-    scene: 贴信息起名
+    scene: 根据信息起名
   - prompt: 读 own-skills/xxx/SKILL.md，帮我起个中英文显示名。
-    scene: 读 SKILL.md
+    scene: 根据 SKILL.md 起名
 ---
 
 [English](README.md) | [简体中文](README.zh.md)
@@ -22,11 +22,11 @@ prompt_examples:
 
 ## 什么时候用它
 
-**新起单条**:
+**为单个 Skill 起名**:
 
 skill 刚起完英文目录名和 description, 我要在开头元数据里填 `display_name` / `display_name_zh` 两个字段, 想让 skill 一次配对给出候选。
 
-**存量批量**:
+**批量为 Skill 起名**:
 
 仓库里一批老 skill 只有目录名没显示名, 我要按同一套规约批量回填, 中英文成对不错位。
 

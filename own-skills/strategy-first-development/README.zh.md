@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 想做一个高考出分后帮学生选校选专业的网页——先别写代码, 跑一遍战略共识再把 5 个控制面文档落进来。
-    scene: 全新 MVP
+    scene: 规划全新 MVP
   - prompt: 不要重复造轮子, 先搜 GitHub 成熟项目和官方生态默认方案, 告诉我 adopt / absorb / reject 之后再定技术栈。
-    scene: 避免造轮子
+    scene: 优先复用现有工具
   - prompt: 战略共识达成后, 帮我把 AGENTS.md / strategy.md / north-star.md / technical-stack.md / roadmap.md 落进这个仓库。
-    scene: 落地控制面
+    scene: 生成项目方案
   - prompt: 先别写任何文件, 只跟我多轮讨论战略目标、产品形态和非目标, 出共识节点就停。
-    scene: 只讨论
+    scene: 先讨论再开发
   - prompt: 这个老仓库最近方向漂了, 帮我复位战略、重搜成熟项目、更新 technical-stack 文档, 不要动生产代码。
-    scene: 架构复位
+    scene: 重新评估架构
   - prompt: provider、模型、部署目标怎么选, 我要基于战略目标和约束的决策包, 不要写代码。
-    scene: provider 选型
+    scene: 选择服务商
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

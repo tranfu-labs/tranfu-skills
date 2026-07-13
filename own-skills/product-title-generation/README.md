@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Give me a 4-6 character Chinese product title for a team-level Agent observability platform.
-    scene: scene description
+    scene: Name from a use case
   - prompt: GitHub Learning Lab · codebase-understanding cockpit — I need a short Chinese title.
-    scene: keyword bundle
+    scene: Name from keywords
   - prompt: Name a 30-day Japanese sprint coaching course in Chinese — should feel time-pressured.
-    scene: category naming
+    scene: Name a product category
   - prompt: Give an 8-character Chinese product title for "observability layer for heterogeneous team agents".
-    scene: length override
+    scene: Follow a length limit
   - prompt: Follow the "cockpit" / "foundation" pattern and name an AI infrastructure product in Chinese.
-    scene: anchor naming
+    scene: Follow a reference style
   - prompt: Name two things at once — a language coaching course and an Agent product launchpad.
-    scene: multi-product batch
+    scene: Name multiple products
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,27 +22,27 @@ Turn a product, feature, module, campaign theme, or brand short name into 1 reco
 
 ## When to use it
 
-**Scene description**:
+**Name from a use case**:
 
 I need a Chinese name for a platform / module / entry point. I describe what it does and want a batch of candidates to pick from.
 
-**Keyword bundle**:
+**Name from keywords**:
 
 I paste the English source name plus a Chinese description together (e.g., `GitHub Learning Lab · codebase-understanding cockpit`) and want the skill to compress it into a 4-6 character Chinese product title.
 
-**Category naming**:
+**Name a product category**:
 
 My product falls into a category that already has an established Chinese naming pattern — learning coach, tech platform, observability layer, incubation launchpad, code understanding — and I want the skill to apply the matching convention (coach / foundation / observatory / launchpad / insights hub).
 
-**Length override**:
+**Follow a length limit**:
 
 Default is 4-6 characters. When I explicitly say "make it 8 characters" or "give me 10 alternates", my constraint overrides the default.
 
-**Anchor naming**:
+**Follow a reference style**:
 
 I toss in a reference word ("cockpit", "foundation", "hub") and want the skill to keep naming in the same style.
 
-**Multi-product batch**:
+**Name multiple products**:
 
 I drop in two or three source concepts at once and want the skill to produce a full candidate set for each, independently.
 

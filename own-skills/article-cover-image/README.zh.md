@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮我给「AI Agent 重构入口」配张封面。
-    scene: 只有标题
+    scene: 根据标题出图
   - prompt: 这是标题加正文, 出一张公众号封面。
-    scene: 标题加正文
+    scene: 根据全文出图
   - prompt: 我这条视频要 16:9 的封面, 标题在这。
-    scene: 视频封面
+    scene: 制作视频封面
   - prompt: 别出图, 只给我封面的 prompt, 我拿去别的模型跑。
-    scene: 只要 prompt
+    scene: 只要提示词
   - prompt: 先来无字图, 留个安全区, 标题我自己上。
-    scene: 无字图
+    scene: 制作无字封面
   - prompt: 换个杂志风, 别老是深蓝科技感。
-    scene: 换风格
+    scene: 更换视觉风格
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

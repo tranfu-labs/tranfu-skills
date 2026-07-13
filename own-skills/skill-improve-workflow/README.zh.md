@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮我提升下 own-skills/daily-report 这个 skill
-    scene: 存量 skill 提升
+    scene: 改进现有 Skill
   - prompt: 这个 skill 还够格当 skill 吗? own-skills/foo
-    scene: 资格质疑
+    scene: 判断是否值得保留
   - prompt: 合入前给 own-skills/bar 做次体检, 能改的顺手改
-    scene: 合入前体检
+    scene: 合并前检查
   - prompt: 把 own-skills/ 整个目录过一遍审查
-    scene: 批量目录审查
+    scene: 批量检查 Skill
   - prompt: 帮我审一下这个 skill, 只出报告先别改文件
-    scene: 只审不改
+    scene: 只检查不修改
   - prompt: own-skills/xxx 写得怎么样? 值不值得重构
-    scene: 重构评估
+    scene: 判断是否需要重做
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

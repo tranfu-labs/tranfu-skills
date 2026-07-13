@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Pull the visual DNA out of stripe.com — keep the calm premium feel, drop the brand.
-    scene: URL reference
+    scene: Analyze a reference website
   - prompt: Distill a design system from this landing-page screenshot, no brand names.
-    scene: Screenshot in hand
+    scene: Analyze a screenshot
   - prompt: Three landing pages attached — synthesize one main DNA or tell me they clash.
-    scene: Multi-sample
+    scene: Combine several references
   - prompt: Extract tokens from this Figma frame and give me a prompt I can hand to ui-ux-pro-max.
-    scene: Downstream handoff
+    scene: Prepare for another designer
   - prompt: Analyze the editorial rhythm of this app UI, ignore the icon system.
-    scene: Style leaning
+    scene: Choose between styles
   - prompt: Turn this dashboard screenshot into transferable color roles and type scales, save to docs/visual-dna/finance.md.
-    scene: Named path save
+    scene: Save to a chosen path
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -26,7 +26,7 @@ Extract a de-branded, reusable visual DNA — palette, type, layout rhythm, mate
 
 I saw a site, screenshot, poster, deck, or app UI whose vibe I like, and I want that vibe abstracted into portable tokens without the original brand attached.
 
-**Multi-sample**:
+**Combine several references**:
 
 I dropped in several samples at once — let the skill synthesize one main DNA, or tell me they clash and split them into parallel systems.
 
