@@ -1,53 +1,73 @@
+---
+prompt_examples:
+  - prompt: "Check whether 'AI agents for SMB customer support' is worth pursuing"
+    scene: Evaluate a startup idea
+  - prompt: "Run a feasibility check on the AI video generation space"
+    scene: Assess an AI market
+  - prompt: "Score my project against the 13-item AI startup prohibition list"
+    scene: Check major red flags
+  - prompt: "Analyze the structural death risk of AI writing tools like Jasper"
+    scene: Review an existing company
+  - prompt: "Do a market report on the AI coding space and attach a feasibility appendix"
+    scene: Add to market research
+  - prompt: "Score this AI project on substitution risk, leverage direction, and unit economics"
+    scene: Score the key risks
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
 # ai-startup-feasibility-check
-用 13 条 AI 创业禁止清单 + 三维评分（替代风险/杠杆方向/单位经济）+ 10 题自检表，对 AI 创业方向做结构化可行性筛查，输出红/黄/绿灯诊断报告。
 
-## 什么时候用它
-- 评估一个 AI 创业方向是否值得启动
-- 判断一个 AI 项目的结构性死亡风险
-- 与 elite-market-researcher / market-analysis 配合，给研报加"可行性自检"附录
+Structural feasibility screening for AI startup directions: 13-item AI startup prohibition list, three-axis scoring (substitution risk / leverage direction / unit economics), and a 10-question self-check. Delivers a red / yellow / green diagnostic report.
 
-## 怎么用 (触发示例)
-跟 Claude 说:
-- "评估这个 AI 项目能不能做"
-- "这个 AI 赛道值得进入吗"
-- "帮我做 AI 创业方向可行性自检"
-- "用禁止清单评估 XX 项目"
+## When to use it
 
-## 你会看到什么
-一份 4 模块结构化诊断报告：禁止清单命中检查（13 条逐条对照）→ 三维评分（替代风险/杠杆方向/单位经济，±2 打分）→ 10 题自检表 → 综合判定与建议（含事前验尸）。附带红/黄/绿灯结论和可执行的下一步动作。
+- Deciding whether a specific AI startup direction is worth pursuing
+- Judging the structural death risk of an AI project
+- Adding a "feasibility self-check" appendix to reports produced by elite-market-researcher / market-analysis
 
-## 同类 Skill 对比
+## What you get
 
-> 由 tranfu-publish 起草, 作者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
+A four-module structured diagnostic report: prohibition-list hit check (13 items, line by line) → three-axis scoring (substitution risk / leverage direction / unit economics, scored on ±2) → 10-question self-check → verdict and recommendations (with a pre-mortem). Comes with a red / yellow / green traffic light and concrete next actions.
 
-### 公司库内
-- [elite-market-researcher](../own-skills/elite-market-researcher/SKILL.md) — 复合研究员心智做深度赛道研究; **本 skill 区别**: ai-startup-feasibility-check 专注 AI 创业方向的结构性死亡风险筛查（禁止清单+三维评分），不做全景市场研究，两者设计为配合使用
-- [business-analysis-pipeline](../own-skills/business-analysis-pipeline/SKILL.md) — 7 步 pipeline 出 120 分制商业可行性报告; **本 skill 区别**: 本 skill 聚焦 AI 特有的平台风险（模型替代/杠杆方向/单一 API 依赖），business-analysis-pipeline 做通用商业分析
-- [market-analysis](../own-skills/market-analysis/SKILL.md) — 12 维度并行搜索做全景市场分析; **本 skill 区别**: market-analysis 负责搜索和报告结构，本 skill 负责对搜索结果做 AI 创业可行性判定
+## Compared to similar skills
 
-### 外部世界
-- [/validate (e2larsen)](https://medium.com/@e2larsen/i-built-a-claude-skill-to-validate-startup-ideas-then-i-used-it-on-my-own-project-53d79656b738) — 搜索 Reddit/App Store/Google Trends 验证创业想法; **本 skill 区别**: 本 skill 不做数据搜索验证，而是用 AI 创业禁止清单做结构性死亡风险筛查
+> Drafted via tranfu-publish, signed off by the author. Helps readers pick horizontally between similar skills.
 
-### 本 skill 独特价值
-- 13 条 AI 创业禁止清单（Tier 1/2/3 分级）+ 三维评分体系
-- 内置 6 个典型案例对照（反面: UUMit/Jasper/You.com，正面: Cursor/Mercor/LangSmith）
-- 与 elite-market-researcher/market-analysis 组成 AI 赛道研究三件套
+### Inside the company library
 
-## 使用技巧
+- [elite-market-researcher](../own-skills/elite-market-researcher/SKILL.md) — deep sector research through a composite-analyst persona; **difference**: ai-startup-feasibility-check focuses on structural death-risk screening for AI startups (prohibition list + three-axis scoring), does no panoramic market research, and is designed to pair with the researcher rather than replace it
+- [business-analysis-pipeline](../own-skills/business-analysis-pipeline/SKILL.md) — 7-step pipeline yielding a 120-point business feasibility report; **difference**: this skill zeroes in on AI-specific platform risks (foundation-model substitution / leverage direction / single-API dependency), whereas business-analysis-pipeline handles generic business analysis
+- [market-analysis](../own-skills/market-analysis/SKILL.md) — 12-dimension parallel search producing panoramic market analysis; **difference**: market-analysis owns the search and report structure, this skill turns those findings into an AI-startup feasibility verdict
 
-> 由 tranfu-publish 引导起草. 帮助阅读者纵向上手.
+### Outside the company library
 
-### 材料方案
-- 准备好待评估的 AI 项目/方向描述（越具体越好：做什么、卖给谁、怎么收费）
-- 如有 elite-market-researcher 和 market-analysis 先装好，可组合使用
-- 先跑 market-analysis 做市场搜索，再用本 skill 做可行性判定效果最佳
+- [/validate (e2larsen)](https://medium.com/@e2larsen/i-built-a-claude-skill-to-validate-startup-ideas-then-i-used-it-on-my-own-project-53d79656b738) — validates startup ideas by searching Reddit / App Store / Google Trends; **difference**: this skill does no data-driven search validation, instead applying the AI startup prohibition list as a structural death-risk screen
 
-### 推荐用法
-- 给明确的项目描述（如"用 AI Agent 做中小企业客服"），不要只给赛道名
-- 重点看"禁止清单命中"和"三维评分"两个模块
-- 对照 references/ 下的案例库找最相似的反面/正面案例
+### What makes this skill unique
 
-### 已知限制
-- 禁止清单聚焦 AI 创业方向，非 AI 项目不适用
-- 不做实时数据搜索，依赖用户提供或其他 skill 搜索的信息
-- 案例库以 2024-2026 年为主，需定期更新
+- 13-item AI startup prohibition list (tiered 1/2/3) plus a three-axis scoring system
+- Six built-in reference cases (negative: UUMit / Jasper / You.com, positive: Cursor / Mercor / LangSmith)
+- Forms the AI-sector research trio together with elite-market-researcher / market-analysis
+
+## Working with it
+
+> Drafted with tranfu-publish guidance. Helps readers ramp up vertically.
+
+### What to prepare
+
+- A concrete description of the AI project / direction under review (the more specific the better: what it does, who buys it, how it charges)
+- Install elite-market-researcher and market-analysis alongside if you plan to combine them
+- Best results come from running market-analysis first for search, then this skill for the feasibility verdict
+
+### Recommended use
+
+- Feed in a concrete project description (e.g. "AI agents for SMB customer support"), not just a category label
+- The two modules to focus on are "prohibition-list hits" and "three-axis scoring"
+- Cross-check against the case library under references/ for the closest negative / positive analog
+
+### Known limits
+
+- The prohibition list is scoped to AI startup directions and does not apply to non-AI projects
+- No real-time data search; the skill relies on inputs from the user or on results piped in from other skills
+- The case library is anchored in 2024-2026 examples and needs periodic refresh

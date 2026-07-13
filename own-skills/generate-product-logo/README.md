@@ -1,66 +1,84 @@
+---
+prompt_examples:
+  - prompt: Explore three logo directions for an AI meeting assistant.
+    scene: Explore a logo direction
+  - prompt: Turn this product logo into an app icon that still reads clearly at 64px.
+    scene: Create an app icon
+  - prompt: Create a simple favicon for this developer tool.
+    scene: Create a favicon
+  - prompt: Use our brand colors and avoid gradients while exploring the logo.
+    scene: Follow brand guidelines
+  - prompt: Generate several distinct logo concepts so I can compare them side by side.
+    scene: Compare several concepts
+  - prompt: Check whether the final mark stays clear at 32px.
+    scene: Check small-size clarity
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
 # generate-product-logo
 
-为产品先整理 Logo 设计规范和视觉风格方向，再生成一组可比较的 Logo / app icon / favicon 候选。它不绑定固定风格，重点是把产品定位、用户、使用场景和小尺寸识别要求变成可执行的视觉规则。
+Nails down a product's logo design brief and visual direction first, then generates a comparable set of logo / app icon / favicon candidates. It doesn't lock you into a fixed style — the point is translating product positioning, users, use context, and small-size legibility requirements into executable visual rules.
 
-## 什么时候用它
+## When to use it
 
-- 要给一个已经有基本定位的产品探索 Logo 方向。
-- 要做浏览器图标、app icon、社交预览标志或品牌标记。
-- 需要先定 Logo 的设计规范、风格约束和候选方向。
-- 需要先补齐产品信息，再生成可横向比较的候选图。
+- You want to explore logo directions for a product that already has a basic positioning.
+- You need a browser favicon, app icon, social preview mark, or brand emblem.
+- You want to settle the logo's design spec, style constraints, and candidate directions upfront.
+- You need to fill in missing product info before generating candidates that can be compared side by side.
 
-## 同类 Skill 对比
+## Compared to sibling skills
 
-> 由 tranfu-publish 起草, 作者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
+> Drafted by tranfu-publish, signed off by the author. Helps readers decide which one to install / when to jump to a better-fit sibling.
 
-### 公司库内
-- [visual-pipeline](../visual-pipeline/SKILL.md) — 把已收敛页面方案推进到高保真页面; **本 skill 区别**: 本 skill 只做产品 Logo / icon 候选，不做整页 UI。
-- [daily-report](../daily-report/SKILL.md) — 把 AI 日报素材渲染成 TranFu 发布图片; **本 skill 区别**: 本 skill 不渲染长图，专注品牌标志和小尺寸识别。
-- [tranfu-website-design](../tranfu-website-design/SKILL.md) — 维护 TranFu 官网视觉规范和页面一致性; **本 skill 区别**: 本 skill 用于新产品 Logo 探索，不改官网组件。
+### Inside the company library
+- [visual-pipeline](../visual-pipeline/SKILL.md) — Pushes a converged page spec into a hi-fi page; **this skill differs**: this skill only produces product logo / icon candidates, not full-page UI.
+- [daily-report](../daily-report/SKILL.md) — Renders AI daily-brief material into TranFu publish images; **this skill differs**: this skill doesn't render long-form images — it focuses on brand marks and small-size legibility.
+- [tranfu-website-design](../tranfu-website-design/SKILL.md) — Maintains the TranFu website's visual system and page consistency; **this skill differs**: this skill is for greenfield product logo exploration, not editing the official site's components.
 
-### 外部世界
-- [logo-designer-skill](https://github.com/neonwatty/logo-designer-skill) — Claude Code SVG Logo 设计流程; **本 skill 区别**: 本 skill 先整理产品 Logo 设计规范，再生成候选并做 32px 预览检查。
-- [logo-generator-skill](https://github.com/op7418/logo-generator-skill) — 生成多版 SVG Logo 和展示图; **本 skill 区别**: 本 skill 先明确产品语义、风格约束和小尺寸识别标准，再进入图像探索。
-- [claude-design-skill](https://github.com/jiji262/claude-design-skill) — 生成落地页、幻灯片、原型等 HTML 设计制品; **本 skill 区别**: 本 skill 范围更窄，只处理 Logo / icon。
+### Out in the wild
+- [logo-designer-skill](https://github.com/neonwatty/logo-designer-skill) — A Claude Code SVG logo design workflow; **this skill differs**: this skill nails the product logo design brief first, then generates candidates and runs a 32px preview check.
+- [logo-generator-skill](https://github.com/op7418/logo-generator-skill) — Generates multiple SVG logo variants and showcase images; **this skill differs**: this skill locks in product semantics, style constraints, and small-size legibility standards before entering image exploration.
+- [claude-design-skill](https://github.com/jiji262/claude-design-skill) — Generates landing pages, slides, prototypes, and other HTML design artifacts; **this skill differs**: this skill has a narrower scope — only logo / icon.
 
-### 本 skill 独特价值
-- 先生成 Logo 设计规范。
-- 风格随产品定位推导。
-- 每轮都检查 32px 识别。
+### What makes this skill unique
+- Generates a logo design spec first.
+- Style is derived from product positioning.
+- Every round runs a 32px legibility check.
 
-## 使用技巧
+## How to use it well
 
-> 由 tranfu-publish 引导起草. 帮助阅读者纵向上手.
+> Drafted with tranfu-publish's guidance. Helps readers get productive quickly.
 
-### 材料方案
-- 准备产品名、功能、用户、核心动作。
-- 说明用途: favicon / app icon / 官网。
-- 给品牌色、参考图或禁用符号。
+### What to bring
+- Prepare the product name, function, users, and core action.
+- Say where it'll be used: favicon / app icon / official site.
+- Provide brand colors, reference images, or symbols to avoid.
 
-### 推荐用法
-- 第一次跑先要 3-4 个方向。
-- 选中一版后只改一个轴。
-- 最后再导出 favicon / 社交图。
+### Recommended usage
+- First run, ask for 3-4 directions.
+- After picking one, only change a single axis per iteration.
+- Export favicons / social images at the very end.
 
-### 已知限制
-- 不是商标法律审查。
-- 默认产物不是矢量终稿。
-- 不适合纯文案或整页 UI。
+### Known limitations
+- Not a legal trademark review.
+- Default output isn't a final vector master.
+- Not for pure copywriting or full-page UI.
 
-## 怎么用
+## How to invoke it
 
-可以这样说：
+You can say something like:
 
 ```text
-用 generate-product-logo 给 VpnHub 做 4 个 Logo 方向。它是 VPN 智能路由平台，给运维和管理者使用，核心动作是路由 / 分发 / 稳定连接，主要用于浏览器图标和官网页头。
+Use generate-product-logo to produce 4 logo directions for VpnHub. It's a VPN smart-routing platform used by ops staff and administrators, the core actions are routing / distribution / stable connections, and it'll mainly show up as a browser favicon and in the site's header.
 ```
 
-如果产品信息不完整，它会先问一个补充问题，不会直接生成。
+If product info is incomplete, it will ask one follow-up question first rather than generate right away.
 
-## 你会看到什么
+## What you'll get
 
-- 一份 Logo 设计规范和风格方向。
-- 3-4 个基于规范生成的 Logo 方向。
-- 正方形候选图，适合 icon-first 场景。
-- 一张对比图和 32px 小尺寸预览。
-- 一个推荐选项，以及下一步可做的 favicon、app icon 或社交预览导出。
+- A logo design spec and style direction.
+- 3-4 logo directions generated against that spec.
+- Square candidate images, tuned for icon-first contexts.
+- A comparison sheet plus a 32px small-size preview.
+- One recommended option, along with the next steps for favicon, app icon, or social preview exports.

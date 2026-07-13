@@ -1,51 +1,57 @@
+---
+prompt_examples:
+  - prompt: Analyze the AI code review market for me.
+    scene: Assess a market
+  - prompt: What's happening in the AI agent middleware space right now?
+    scene: Map the competitors
+  - prompt: Evaluate this startup direction from a VC angle — should I write the check?
+    scene: Support an investment decision
+  - prompt: Give me a deep industry report on synthetic biology — long form is fine.
+    scene: Write a deep report
+  - prompt: Quick read on the vector database market — condensed version is fine.
+    scene: Run a quick market scan
+  - prompt: I'm going to build a vertical AI agent — research it for me from an operator's seat.
+    scene: Find startup opportunities
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
 # elite-market-researcher
-用复合研究员心智（咨询合伙人 + 投行首席 + VC 合伙人 + 行业操盘手）做市场/赛道/行业深度研究，输出含反共识洞察和事前验尸的完整报告。
 
-## 什么时候用它
-- 要对一个赛道/行业做严肃的方向评估或投资判断
-- 需要超越"框架填空"的深度市场研究报告
-- 做创业方向评估、竞争格局分析、行业研报
+A market / track / industry research skill that runs on a composite mindset — McKinsey partner + investment bank chief analyst + top-tier VC partner + industry operator — and produces a full report with contrarian insights and pre-mortem risk audit. Built for founders, investors, and strategists making eight- or nine-figure calls.
 
-## 怎么用 (触发示例)
-跟 Claude 说:
-- "分析 AI 代码审查赛道"
-- "帮我看看 Agent 中间件市场"
-- "以 VC 视角评估这个创业方向"
-- "做一份 XX 行业的深度研报"
+## When to use it
 
-## 你会看到什么
-一份 10 章结构化报告：执行摘要 → 研究边界 → 赛道全景（含拐点信号）→ 竞争格局（含 unit economics）→ 用户洞察 → 投融资与政策 → 机会洞察 → 反共识观点 → 脆弱性审计（事前验尸）→ 战略建议。每个关键数字有来源+时间，每个判断标注事实/推断/观点层次。
+- You need a **serious directional read** on a track / industry — investment or founding decision, not casual browsing
+- You want a research report that goes **past framework-fill-in-the-blank** — with a stance, real numbers, and a point of view
+- You're sizing up a startup direction, competitive landscape, or industry thesis where the decision carries real stakes
+- You want a read with **3–5 years of forward vision** — contrarian takes and vulnerability audit included
 
-## 同类 Skill 对比
+## How to trigger it
 
-> 由 tranfu-publish 起草, 作者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
+Say things like:
 
-### 公司库内
-- [business-analysis-pipeline](../own-skills/business-analysis-pipeline/SKILL.md) — AI 产品商业可行性评估/投资尽调/出商业分析报告; **本 skill 区别**: elite-market-researcher 专注市场研究心智（角色加载+反共识思维+六大原则），不做财务建模和可行性打分
+- "Analyze the AI code review market"
+- "What's the landscape in agent middleware?"
+- "Evaluate this startup direction from a VC angle"
+- "Give me a deep industry report on <industry>"
 
-### 外部世界
-- [market-research (affaan-m)](https://claudemarketplaces.com/skills/affaan-m/everything-claude-code/market-research) — 竞争分析、市场规模测算、投资尽调; **本 skill 区别**: 内置复合角色切换（咨询+投行+VC+操盘手四视角）和 10 关质量闸门自检，输出含反共识章节+事前验尸
+Handy things to include up front: **target track / industry name** + **decision context** (investment / founding / strategic entry) — required; geographic scope, time window, depth preference — optional (the skill picks a mode by default).
 
-### 本 skill 独特价值
-- 复合身份加载：McKinsey+投行+VC+操盘手四视角融合
-- 六大思维原则驱动分析，含反共识洞察章节
-- 10 关质量闸门自检，防止泛泛框架输出
+## What you'll see
 
-## 使用技巧
+- **10-chapter structured report**: executive summary → research boundaries → track landscape (with inflection signals) → competitive landscape (with unit economics) → user insights → funding & policy → opportunity map → contrarian takes → vulnerability audit (pre-mortem) → strategic recommendations
+- **Every key number carries source + date**, every judgment is **three-layer tagged** (fact / inference / opinion) — no "adjective analysis" allowed
+- **Contrarian chapter + pre-mortem** is the differentiated deliverable — at minimum 3 inflection signals, 2 non-consensus calls, and explicit "I'd change my mind if…" triggers per risk
+- Passes a **10-gate quality checklist** before delivery — non-passing chapters get sent back, not quietly downgraded
 
-> 由 tranfu-publish 引导起草. 帮助阅读者纵向上手.
+## Adjacent skills
 
-### 材料方案
-- 准备好目标行业/赛道名称和关注的决策场景（投资/创业/战略）
-- 如有配套 market-analysis skill 先装好，可联动 12 维度并行搜索
-- 给具体决策问题（如"评估 AI 代码审查的创业机会"）比"了解一下市场"效果好
+| Task | Go with |
+|---|---|
+| AI product commercial viability / investment DD / full business analysis pipeline | **business-analysis-pipeline** |
+| 12-dimension parallel search + standard market report (no contrarian mindset) | **market-analysis** |
+| Fast feasibility read on an AI startup direction (no deep research) | **ai-startup-feasibility-check** |
+| Hunting or ranking opportunities inside a track | **opportunity-hunter** / **ai-opportunity-evaluation** |
 
-### 推荐用法
-- 第一次跑给明确赛道 + 决策场景，让 skill 自动选模式
-- 跑完重点看"反共识观点"和"脆弱性审计"两章
-- 用"VC 视角""创业视角"等关键词切换侧重点
-
-### 已知限制
-- 依赖 web search 获取实时数据，离线环境效果打折
-- 完整报告输出较长（3000+ 字），短对话场景不适合
-- references/ 目录下参考文档需手动更新
+**Not this skill**: one-shot searches to answer a single narrow question (regular chat is enough); writing the actual pitch deck or business plan (that's downstream authoring); tracking KPIs on a live product (that's operational analytics, not market research); "just want to know a bit about this market" — the depth and length here will overshoot, use **market-analysis** instead.

@@ -1,52 +1,53 @@
+---
+prompt_examples:
+  - prompt: Analyze the AI customer service SaaS market.
+    scene: Analyze a specific market
+  - prompt: Do market research on the online education industry.
+    scene: Research an industry
+  - prompt: "Competitive landscape analysis: EV market."
+    scene: Map the competitors
+  - prompt: Where are the opportunities in the AI healthcare market?
+    scene: Find market opportunities
+  - prompt: Deep dive into the cross-border e-commerce market.
+    scene: Run a deep analysis
+  - prompt: Quick look at the short video market size.
+    scene: Get a quick overview
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
 # market-analysis
-通过 12 维度并行搜索（赛道规模/拐点/TAM/机会信号/竞争格局/用户痛点/投融资/政策），输出含非对称机会矩阵和脆弱性审计的全景市场分析报告。
 
-## 什么时候用它
-- 要对一个市场/行业/赛道做系统性分析
-- 需要多维度搜索覆盖（规模、竞争、用户、资本、政策）
-- 做竞争格局分析、机会点挖掘、TAM/SAM/SOM 测算
+A skill that runs a market / industry / track through **12 parallel search dimensions + AI-native analysis framework + asymmetric opportunity matrix + vulnerability audit** and produces a structured full-picture market analysis report — built for founders, PMs, and analysts sizing up a market.
 
-## 怎么用 (触发示例)
-跟 Claude 说:
-- "分析 AI 客服市场"
-- "帮我做 XX 行业市场调研"
-- "竞争格局分析：在线教育赛道"
-- "market analysis for XX"
+## When to use it
 
-## 你会看到什么
-一份 8 章结构化报告：执行摘要 → 赛道全景（含拐点信号+TAM/SAM/SOM+非对称机会矩阵）→ 竞争格局（含量化五力+竞品价值链拆解）→ 用户需求洞察（含 Top 5 痛点+蓝海需求）→ 投融资与政策 → 机会洞察（3-5 个具体机会含 MVP 路径）→ 脆弱性审计 → 战略建议。每个关键数据标注来源和时间。
+- You want a **systematic full-picture read** on a market / industry / track, not scattered facts stitched together
+- You need **multi-dimension coverage** across market size, competition, users, capital, and policy — in one pass
+- You need **competitive landscape analysis**, opportunity mining, or TAM / SAM / SOM sizing
+- You want a report structured enough to lift straight into a decision brief or investment memo
 
-## 同类 Skill 对比
+## How to trigger it
 
-> 由 tranfu-publish 起草, 作者签字. 帮助阅读者横向决定要装哪个 / 跳到更合适的同类.
+Say things like:
 
-### 公司库内
-- [elite-market-researcher](../own-skills/elite-market-researcher/SKILL.md) — 复合研究员心智做深度赛道研究，输出含反共识洞察的研究报告; **本 skill 区别**: market-analysis 专注搜索流程和报告结构（12 维度并行搜索+AI 原生分析框架），elite-market-researcher 专注研究心智（角色加载+反共识思维+质量闸门），两者设计为配合使用
-- [business-analysis-pipeline](../own-skills/business-analysis-pipeline/SKILL.md) — AI 产品商业可行性评估，走 PEST→五力→SWOT→BMC 7 步 pipeline 出 120 分制报告; **本 skill 区别**: market-analysis 覆盖全景市场分析（12 维度搜索+用户舆情+投融资），不做财务建模和可行性打分
+- "Analyze the AI customer service market"
+- "Do market research on the online education industry"
+- "Competitive landscape analysis: EV market"
+- "Market analysis for XX"
 
-### 外部世界
-- [competitive-analyst (VoltAgent)](https://github.com/VoltAgent/awesome-claude-code-subagents/blob/main/categories/10-research-analysis/competitive-analyst.md) — 竞品情报收集与 SWOT 分析; **本 skill 区别**: 本 skill 覆盖完整市场分析（赛道+竞争+用户+资本+政策 5 大模块），不仅限竞品对比
+Handy things to include up front: **market / industry keyword and region**. Say **"quick look"** to run lite mode (6–8 searches), say **"deep dive"** to run deep mode (20+ searches). Standard depth (12–16 searches) is the default. Giving a specific name ("AI customer service SaaS") beats a broad term ("AI market").
 
-### 本 skill 独特价值
-- 12 维度并行搜索覆盖赛道/竞争/用户/资本/政策
-- AI 原生分析框架（非对称机会矩阵+量化五力+痛点转化链）
-- 与 elite-market-researcher 互补：搜索流程 vs 研究心智
+## What you'll see
 
-## 使用技巧
+An 8-chapter structured report: executive summary → market landscape (with inflection signals + TAM / SAM / SOM + asymmetric opportunity matrix) → competitive landscape (with quantified Five Forces + competitor value-chain teardown) → user demand insights (with Top 5 pain points + blue-ocean needs) → funding and policy → opportunity insights (3–5 concrete opportunities with MVP paths) → vulnerability audit → strategic recommendations. Every key data point cites source and time. Depends on web search — offline results will be thinner.
 
-> 由 tranfu-publish 引导起草. 帮助阅读者纵向上手.
+## Adjacent skills
 
-### 材料方案
-- 准备好目标市场/行业关键词和地域范围
-- 如有 elite-market-researcher skill 先装好，可获得反共识洞察和质量闸门加持
-- 给具体市场名称（如"AI 客服 SaaS"）比泛词（如"AI 市场"）效果好
+| Task | Go with |
+|---|---|
+| Deep track research with contrarian insights and quality gates | **elite-market-researcher** (designed to pair with this skill: search flow vs. research mindset) |
+| Full AI product commercial viability scoring (PEST → Five Forces → SWOT → BMC, 120-point rubric) | **business-analysis-pipeline** |
+| Only competitor intel + SWOT, not full market analysis | competitive-analyst (VoltAgent, external) |
 
-### 推荐用法
-- 第一次跑给明确市场名 + 默认标准深度即可
-- 说"快速看看"切 6-8 次搜索精简版，说"深入研究"切 20+ 次搜索完整版
-- 重点看"非对称机会矩阵"和"脆弱性审计"两章
-
-### 已知限制
-- 依赖 web search 获取实时数据，离线环境效果打折
-- 完整报告输出较长（2000+ 字），短对话场景不适合
-- 搜索词模板以中文市场为主，纯英文市场需微调关键词
+**Not this skill**: financial modeling and feasibility grading (use business-analysis-pipeline); pure competitor SWOT with no market sizing (lighter tools work); English-only markets with no China angle — search templates lean Chinese and may need keyword tweaks.

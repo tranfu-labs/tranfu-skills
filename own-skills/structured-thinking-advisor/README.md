@@ -1,26 +1,44 @@
+---
+prompt_examples:
+  - scene: Review a full document
+    prompt: Review this document for me — what is it actually solving, and where does the logic break?
+  - scene: Break down the structure
+    prompt: Break down the structure of this piece — modules, hierarchy, logical flow.
+  - scene: Explain one passage
+    prompt: What does this paragraph mean? Explain it with a clear analogy.
+  - scene: Check the logic
+    prompt: Is the logic in this section sound, or is there a causal reversal?
+  - scene: Rewrite together
+    prompt: Give me 2-3 optimized versions — one grounded, one with product-launch polish.
+  - scene: Build a model
+    prompt: Can you distill these scattered points into a methodology or model?
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
 # structured-thinking-advisor
 
-一个把 Claude 切换为"结构化思考与系统设计顾问"模式的 skill — 让它做共创伙伴, 而不是解释型助手.
+A skill that switches Claude into "structured-thinking and system-design advisor" mode — a co-creation partner, not an explaining assistant.
 
-## 什么时候用它
+## When to use it
 
-- 拿到一份文档/想法, 想做**结构拆解 + 逻辑校验**, 不只是"看完了"
-- 想优化某段表达, 要"清晰落地版 + 高级质感版"两条路对比
-- 想把零散观点**抽象成方法论 / 模型 / SOP**
-- 想要一个会主动指出问题、给替代方案的伙伴, 而不是"嗯嗯有道理"的复读机
+- You have a document or idea and want **structural breakdown + logic check**, not just "I read it"
+- You want two paths to rewrite a passage: **grounded, ready-to-ship** and **launch-keynote polish**
+- You want to abstract scattered points into a **methodology / model / SOP**
+- You want a partner that flags problems and offers alternatives — not an "uh-huh, makes sense" parrot
 
-## 怎么用 (触发示例)
+## How to trigger it
 
-跟 Claude 说:
+Say things like:
 
-- "帮我审视这份文档"
-- "这一段逻辑对吗, 用类比讲清楚"
-- "给我两版优化, 一版落地一版高级"
-- "把这堆观点抽象成一个方法论"
+- "Review this document for me"
+- "Is the logic in this paragraph sound? Explain with an analogy"
+- "Give me two versions — one grounded, one polished"
+- "Distill these points into a methodology"
 
-## 你会看到什么
+## What you get
 
-- **全文输入**: 结构拆解 + 核心问题 + 5 条以内观点 + 指出跳跃/冗余 + 标记关键/可优化
-- **精读问答**: 类比降维 + 因果/歧义/落地三点逻辑校验
-- **优化共创**: 2-3 版不同维度的版本（A 落地版 / B 质感版 / ...）, 禁爹味管理学词汇
-- **结构升级**: 主动提出重构 / 抽象 / 产品化转化建议
+- **Full-document input**: structure breakdown + core question + up to 5 key points + flagged jumps and redundancy + marked critical / optimize-first sections
+- **Close reading and Q&A**: analogy-driven explanation + causality / ambiguity / groundedness logic check
+- **Rewrite co-creation**: 2-3 differently-angled versions (A grounded / B polished / ...), with the "dad-boss management jargon" ban
+- **Structure upgrade**: proactive suggestions to restructure, abstract, or productize

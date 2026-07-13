@@ -1,105 +1,48 @@
-# daily-report
+---
+prompt_examples:
+  - scene: Render one report
+    prompt: Render report.json into a TranFu daily image using the default research + iceblue style
+  - scene: Compare all styles
+    prompt: Run --all-variants once to preview every bundled style and palette side by side
+  - scene: Create a dark dashboard
+    prompt: Switch to dark + steelblue for an intelligence-dashboard feel
+  - scene: Create a media card
+    prompt: Produce a verge + iceblue variant that reads like a tech-media info card
+  - scene: Prepare for public sharing
+    prompt: Strip the QR, URLs, and low-context project badges so the image is safe to share on WeChat Moments
+---
 
-把结构化 AI 新闻素材渲染成 TranFu 品牌日报图片，默认输出适合朋友圈、公众号正文和公开社群传播的 `1080x1440` HTML 截图。
+[English](./README.md) | [中文](./README.zh.md)
+
+# AI Daily Report
+
+Render structured AI news material into TranFu-branded daily-report images. The default output is a `1080x1440` HTML screenshot tuned for WeChat Moments, public accounts, and open community feeds.
+
+## Purpose
+
+- Convert a curated AI news JSON into a ready-to-publish daily image
+- Keep the TranFu intelligence community on a consistent daily card format
+- Generate several style and palette variants in one run so you can pick the one that fits the day
+- Reuse a single layout to avoid the font, spacing, and color drift that manual design introduces
+
+Not a fit for: plain-text digests, article rewriting, generic image generation, non-AI posters, or cover art that needs custom illustration.
 
 ## Install
 
-在公司 skill 仓库中，本 skill 位于：
+The skill lives at `own-skills/daily-report/` in the company repository. Install, search, and upgrade go through the company `tfs` workflow, so there is no need to copy the directory by hand. A natural-language request is enough, for example "search company skills about daily report images" or "install daily-report at user level".
 
-```text
-own-skills/daily-report/
-```
-
-日常安装、搜索和更新请使用公司 `tfs` 工作流，不需要手工复制仓库目录：
-
-```text
-搜公司 skill 关于 日报图片
-装 daily-report 到 user 级
-```
+Runtime requirements: Python 3.10 or newer, plus Google Chrome or Chromium for automated PNG screenshots. If only Python is available the script still writes HTML and manifest files and simply skips the screenshot step.
 
 ## Usage
 
-Prepare a report JSON file, then run:
+The daily loop has three stages. First, shape the news material into a JSON that matches `references/report-schema.md`, keeping each `importance` short enough to read at a glance on mobile. Second, invoke `scripts/render_daily_report.py` with `--input` pointing at the JSON and `--out-dir` pointing at the day's output folder. Third, sanity-check the result against the publishing rules below.
 
-```bash
-python3 scripts/render_daily_report.py \
-  --input /path/to/report.json \
-  --out-dir /path/to/output
-```
-
-Default output uses:
-
-```text
-style: research
-palette: iceblue
-size: 1080x1440
-show_qr: false
-```
-
-Render all bundled styles and palettes:
-
-```bash
-python3 scripts/render_daily_report.py \
-  --input /path/to/report.json \
-  --out-dir /path/to/output \
-  --all-variants
-```
-
-The renderer emphasizes fast visual scanning: TranFu brand mark, date, strong
-headline hierarchy, and numbered story summaries. It does not
-show low-context project/company badges by default because those labels often
-look like noise to public readers. QR is hidden by default because some
-publishing platforms restrict QR images. Set `show_qr: true` only for platforms
-where QR is allowed.
-
-## Requirements
-
-- Python 3.10+
-- Google Chrome or Chromium for PNG screenshots
-
-If Chrome/Chromium is unavailable, the script still writes HTML and manifest
-files, but PNG screenshot output is skipped.
+The default pairing is `research + iceblue`: a light research-note layout with pale blue accents, tuned for public reading. Switch to `dark` when the story deserves a stronger intelligence tone, or to `verge + iceblue` when you want a tech-media info card. When in doubt, add `--all-variants` to render every bundled style and palette in one pass and choose the strongest one.
 
 ## Output
 
-```text
-render-<style>-<palette>.html
-tranfu-daily-<style>-<palette>-1080x1440.png
-manifest.json
-```
+Each run writes a rendered HTML file, a `tranfu-daily-<style>-<palette>-1080x1440.png` screenshot, and a `manifest.json` that records the inputs and file paths. The latest `verge` example sits under `examples/verge-iceblue/` at `1080x1350`, while `research` and `dark` references are available as `examples/research-*.png` and `examples/dark-*.png` for direct preview.
 
-## Examples
+## Publishing rules
 
-默认推荐使用 `research + iceblue`。如果需要更强的情报感，可切换到 `dark` 风格；如果需要更接近科技媒体信息卡的视觉，可以参考 `verge + iceblue` 示例。
-
-默认案例使用公开读者版：标题后直接进入 `01`、`02` 编号新闻摘要，不展示顶部总结、标签或低语境项目/公司小标签。
-
-### Verge iceblue
-
-最新 Verge 版本示例位于 `examples/verge-iceblue/`，包含可预览 HTML、PNG 成图和 manifest：
-
-![verge iceblue example](examples/verge-iceblue/tranfu-daily-verge-iceblue-1080x1350.png)
-
-### Research iceblue
-
-![research iceblue example](examples/research-iceblue.png)
-
-### Research iceblue 10 items
-
-![research iceblue 10 items example](examples/research-iceblue-10-items.png)
-
-### Research skyblue
-
-![research skyblue example](examples/research-skyblue.png)
-
-### Dark iceblue
-
-![dark iceblue example](examples/dark-iceblue.png)
-
-### Dark aqua
-
-![dark aqua example](examples/dark-aqua.png)
-
-## Notes
-
-图片是静态公开发布物。不要把点击提示、原始 URL、内部流程、追溯信息、提示词、文件路径、渲染说明或空的非 AI 板块显示到图片里。默认不显示 Crypto 内容，除非用户明确要求并提供可验证素材。
+Treat the image as a static public artifact rather than a webpage. By default it must not display the QR, raw source URLs, internal workflow notes, traceability strings, prompt text, file paths, or render commentary. Low-context project and company badges are also excluded and should be rewritten as public-readable categories such as "low-code tooling" or "enterprise identity and access". Crypto content is off by default and only appears when the user explicitly requests it and supplies verifiable material. The QR is opt-in and should only be enabled when the target platform actually allows it.

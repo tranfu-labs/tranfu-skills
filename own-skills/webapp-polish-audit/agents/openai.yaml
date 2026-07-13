@@ -1,0 +1,4 @@
+interface:
+  display_name: "Webapp Polish Audit"
+  short_description: "给 Web 应用界面做只读打磨审计: 主题、状态、布局稳定和交互完成度"
+  default_prompt: "Use $webapp-polish-audit to run a read-only polish audit on this web UI before calling it done."

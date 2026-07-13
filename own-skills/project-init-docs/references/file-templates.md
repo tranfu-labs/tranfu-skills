@@ -127,7 +127,34 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 
 首条 ADR，记录"本项目采用 ADR 记录架构决策"这一决策本身，并作为后续 ADR 的格式样例。小节：`## 状态` / `## 背景` / `## 决策` / `## 后果`。
 
-## 7. docs/wireframes/ —— 字符图线框（默认生成）
+## 7. 根 DEPLOY.md 【repo-fact · AI 填正文】
+
+后续 AI / 高级程序员的**部署事实源**。脚本铺好下列 7 节骨架（每节 `TODO: 需人工确认`），正文由 AI 按小节契约填**真实仓库事实**。粒度：让读者一眼看清「部署到哪、怎么建、怎么发、怎么退、怎么验」，NEVER 展开成手把手教程。
+
+**探测来源清单**（探测不到就留 `TODO`，绝不编造）：
+
+- `Dockerfile` / `Dockerfile.*` / `.dockerignore`
+- `docker-compose*.yml` / `compose.yml`
+- `.github/workflows/*.yml`（尤其含 `deploy` / `release` / `publish` 名字的）
+- `.gitlab-ci.yml` / `Jenkinsfile` / `.circleci/config.yml`
+- 平台配置：`vercel.json` / `netlify.toml` / `fly.toml` / `render.yaml` / `railway.toml` / `app.yaml` / `serverless.yml` / `Procfile`
+- K8s：`k8s/` / `kubernetes/` / `helm/` / `deploy/`
+- 运行时锁定：`.nvmrc` / `.tool-versions` / `.python-version` / `package.json` 的 `engines` / `go.mod` 的 `go` 行
+- 环境变量样例：`.env.example` / `.env.sample` / `config/*.example.*` / CI 里引用的 `${{ secrets.* }}` / Dockerfile 里的 `ENV` `ARG`
+
+**小节契约**：
+
+- `## 部署目标`：这个项目部署到什么平台或形态（VPS / Docker Compose / K8s / Vercel / Netlify / Fly / Render / Cloudflare / AWS ECS / AWS Lambda / 自建服务器 / …）。一句话点明形态 + 指向对应的真实配置文件路径。
+- `## 环境要求`：运行时版本（node/python/go/…）+ 依赖服务（数据库 / Redis / MQ / 对象存储 / 外部 API）。版本来自真实锁定文件；依赖服务来自 `docker-compose.yml` 的其它 service 段、CI 里 `services:` 段、或代码里的连接字符串配置。
+- `## 环境变量`：关键变量清单，一行一条，`名字 — 一句话用途`。**NEVER 落盘真实值或密钥**；来源限定于 `.env.example` / config 样例 / CI 的 secrets 引用 / Dockerfile 的 `ENV` `ARG`。
+- `## 构建与部署命令`：真实命令（`npm run build` / `docker build …` / `make deploy` / `kubectl apply -f …`），来自真实 scripts / Makefile / Dockerfile 的 CMD / CI workflow 的 `run:` 步骤。NEVER 用 `npm run <command>` 这类占位符。
+- `## 部署流程`：CI/CD 触发条件（哪个分支/tag 推到哪个环境）+ 手动步骤（如需）。来源就是 CI workflow 文件路径 + 触发条件段。手动部署场景写出真实命令序列。
+- `## 回滚`：怎么退回上一版（`git revert` + 重跑 CI / 平台面板 rollback / `kubectl rollout undo` / 切镜像 tag / …）。多数项目探测不到具体流程，此节可标 `TODO: 需人工确认`。
+- `## 健康检查`：部署后怎么确认活着（health endpoint URL、smoke test 命令、监控/日志面板入口）。来源：代码里的 `/health` `/healthz` 路由、CI 里的 smoke step、K8s 的 `readinessProbe`。
+
+**非可部署项目**（纯库 / SDK / 工具包 / CLI）：`## 部署目标` 填成「发布到 npm / PyPI / crates.io / …（发布不是部署）」并指向发布配置（如 `.github/workflows/publish.yml`、`.npmrc`），其余节按能探测到的填、探测不到的留 `TODO`。**不要因为不是 web 应用就跳过 DEPLOY.md**——发布流程本身也值得对 AI 说清楚。
+
+## 8. docs/wireframes/ —— 字符图线框（默认生成）
 
 随基线**默认生成**，不做 UI 判定。用等宽字符快速对齐每个页面"有哪些信息块、整体框架、谁在什么位置"，**只表达信息架构与版式，不表达视觉样式/控件状态变体**。
 

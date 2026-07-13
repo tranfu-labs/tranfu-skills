@@ -1,50 +1,86 @@
-# tranfu-website-design
+---
+prompt_examples:
+  - prompt: Add a new "customer stories" section to the TranFu homepage, following the site's brand look.
+    scene: Create a page section
+  - prompt: Change this CTA button to TranFu brand red — but keep the surface neutral, don't paint a red background.
+    scene: Update a component
+  - prompt: Review src/app/components/Hero.tsx against the TranFu website design rules — findings only, don't edit.
+    scene: Review the design
+  - prompt: Run visual QA on the pricing page — desktop and mobile viewport, flag overflow, overlap, or brand-red misuse.
+    scene: Check visual details
+  - prompt: I need the TranFu favicon and header lockup — use the bundled logo assets, don't grab one from the old deployed site.
+    scene: Update logo assets
+  - prompt: Refactor this card component but keep the TranFu radii, shadow, and typography intact.
+    scene: Refactor without visual changes
+---
 
-为 TranFu React/Vite 官网和产品 UI 提供品牌、组件、响应式实现、设计评审与 Visual QA 工作流。
+[English](./README.md) | [中文](./README.zh.md)
 
-## 什么时候用它
+# TranFu Website Design
 
-- 创建、修改或重构 TranFu 官网、应用外壳、操作台、数据页和组件。
-- 检查 TranFu UI 是否符合品牌、Token、组件、响应式和可访问性规范。
-- 不用于其他品牌、纯文案、Logo 重设计或无视觉影响的代码任务。
+A rule set that keeps the TranFu website visually consistent — apply the brand system when building UI, or run review / visual QA without touching a line of code.
 
-## 同类 Skill 对比
+## When to use it
 
-> 由 tranfu-publish 起草，帮助阅读者横向决定使用哪个 Skill。
+**Create a section**:
 
-### 公司库内
+I'm adding a new section or page on the TranFu site and I want the skill to align brand red, neutral surfaces, type hierarchy, and radii before I write the component.
 
-- [tranfu-layout-systems](../tranfu-layout-systems/SKILL.md) — 负责页面结构和布局决策；**本 Skill 区别**：消费其产物并完成视觉实现和 QA。
-- [tranfu-website-design-system](../tranfu-website-design-system/SKILL.md) — 提供官网响应式设计系统总览；**本 Skill 区别**：同时覆盖产品 UI、模块化组件规则和实现验证。
-- [visual-pipeline](../visual-pipeline/SKILL.md) — 推进页面视觉方案选择；**本 Skill 区别**：直接约束 TranFu 代码实现、评审和视口验证。
+**Modify a component**:
 
-### 外部世界
+I'm tweaking a button, card, or hero and I want the skill to catch brand-red misuse or a font-family drift before it lands.
 
-- 暂无。
+**Review the design**:
 
-### 本 skill 独特价值
+I hand over the changed files or screenshots and I want a review — every finding cites a rule and a location, and the skill edits zero files.
 
-- 权威边界拆分到四份按需参考。
-- 页面任务自动衔接布局 Skill。
-- Reicon 与视口结果均可验证。
+**Check visual details**:
 
-## 使用技巧
+I want the skill to check one desktop and one mobile viewport for overflow, overlap, missing responsive framing, or brand red used as a large background.
 
-> 由 tranfu-publish 根据本次验证整理，横向定位见上方同类对比。
+**Logo & assets**:
 
-### 材料方案
+I'm placing the favicon, header lockup, or app icon and I want the skill to use the bundled SVG assets under `assets/`, not fetch an old version from a deployed site or `Downloads`.
 
-- 品牌总览、Token、组件和响应式分层。
-- 品牌资源随 Skill 一起交付。
+**Not for**:
 
-### 推荐用法
+Non-TranFu sites → **ui-ux-pro-max**; pure copy edits with no UI or brand impact; redrawing the TranFu logo from scratch; a standalone brand book; one-off code changes where visual consistency is irrelevant.
 
-- 页面任务与布局 Skill 配合使用。
-- 提供可运行目标以完成 Visual QA。
-- 图标变更先确认目标包版本。
+## What it produces
 
-### 已知限制
+**Reads `references/design-spec.md` first — if it's missing or unreadable, reports `BLOCKER: missing design spec` and exits.** The most counterintuitive part.
 
-- 仅适用于 TranFu 品牌产品。
-- 浏览器不可用时标记未验证。
-- 图标实现依赖已安装的 Reicon。
+- **`create` / `modify` / `refactor`**: Edits the target files inside the relevant boundary, prints `TRANFU_UI_CHANGE_REPORT` (changed files, design rules used, intentional deviations, desktop and mobile viewport results, command results).
+- **`review`**: Findings only, no edits — `TRANFU_DESIGN_REVIEW` with `severity`, rule citation, `location` (file:line / screenshot / UI area), `fix`, and `verification` per finding.
+- **`visual QA`**: Inspects one desktop and one mobile viewport, prints `TRANFU_VISUAL_QA_REPORT` with per-viewport `passed | failed | not_run:<reason>`.
+- **Ambiguity gate**: If the intent is unclear between implementation and review, the skill asks one concise question before editing.
+- **Will never**: redesign unrelated sections, redraw / recolor / stretch the logo, reference `/Users/.../Downloads` paths for logo assets, use brand red `#E63A46` as a large decorative background, or claim a viewport passed when it was never inspected.
+
+## Prerequisites & boundaries
+
+**Prerequisites**:
+
+A TranFu React/Vite project — or at least a target component file, screenshot, or UI area. `references/design-spec.md` must be readable. Bundled logo assets under `assets/` are the source of truth; copy the required one into the project's `public/brand/` before referencing it.
+
+**Adjacent skills**:
+
+| Action | Owner |
+|---|---|
+| Responsive system across `1920` / `1440` / `1280` / `756` / `375` breakpoints | **tranfu-website-design-system** |
+| Non-TranFu brand or generic design system work | **ui-ux-pro-max** |
+| Technical / architecture diagrams (not brand UI) | **fireworks-tech-graph** |
+
+**Won't handle**:
+
+- Non-TranFu sites or generic landing pages
+- Pure copywriting review with no TranFu UI or brand-design impact
+- Redrawing the TranFu logo from scratch
+- A standalone brand book detached from the current React/Vite site
+- Replacing the existing TranFu visual direction unless the user explicitly asks for a redesign
+
+**Subtle boundaries**:
+
+- No edit authorization → switches to `suggest patch`, keeps the report schema but changes zero files
+- No target implementation found for a code-changing task → reports `BLOCKER: target implementation not found` and stops
+- Screenshot and code evidence disagree → cites both sources and marks verification as `deferred_with_user_visible_risk`
+- Command, dev server, browser, or viewport unavailable → records `not_run:<reason>`, never claims that item passed

@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Ecosystem"
+  short_description: "Recommend and use UI ecosystem tools after frontend selection"
+  default_prompt: "Use ui-ecosystem to recommend, install when authorized, and apply MCPs, plugins, skills, component libraries, design systems, templates, and official examples that match the completed frontend technical/design selection and improve UI beauty without hand-rolling everything."

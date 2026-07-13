@@ -1,28 +1,57 @@
+---
+prompt_examples:
+  - prompt: "Evaluate the commercial viability of this AI product: <product description>."
+    scene: Evaluate a new idea
+  - prompt: Give me a full business analysis report on this idea.
+    scene: Request a full report
+  - prompt: Score these two AI startup directions side by side using the same rubric.
+    scene: Compare several directions
+  - prompt: Investment due-diligence pass on this project before I write a check.
+    scene: Prepare due diligence
+  - prompt: Run PEST + Porter's Five Forces + SWOT + BMC in one go, with findings cross-referenced across modules.
+    scene: Combine analysis frameworks
+  - prompt: Just the opportunity matrix plus the executive summary — skip the deep-dive modules.
+    scene: Run a quick review
+---
+
+[English](./README.md) | [中文](./README.zh.md)
+
 # business-analysis-pipeline
 
-一个把 AI 产品/创业方向放进 **7 步 pipeline + 120 分制 + KF 编号交叉引用**, 跑出结构化商业分析报告的 skill — 适合 PM / 创业者 / 投资分析师评估新方向.
+A skill that puts an AI product or startup direction through a **7-step pipeline + 120-point rubric + KF-numbered cross-references** and produces a structured business analysis report — built for PMs, founders, and investment analysts sizing up a new direction.
 
-## 什么时候用它
+## When to use it
 
-- 想给一个 AI 产品概念做**系统化商业可行性评估**, 不只是拍脑袋打分
-- 需要 **PEST + 波特五力 + SWOT + BMC + 机会矩阵** 这几把刀一次跑齐, 各模块发现互相引用
-- 想要一份能直接拿去**汇报 / 决策 / 投递**的结构化 markdown 报告 (含 S/A/B/C/D 五级评级)
-- 想横向对比**多个产品概念**, 用同一套评分体系
+- You want a **systematic commercial-viability read** on an AI product concept, not a gut-feel score
+- You need **PEST + Porter's Five Forces + SWOT + Business Model Canvas + opportunity matrix** run in one pass, with findings cited across modules by number
+- You want a structured markdown report you can drop straight into a **review / decision memo / pitch** — S/A/B/C/D grade attached
+- You need to compare **several product concepts** head-to-head under a single scoring system
 
-## 怎么用 (触发示例)
+## How to trigger it
 
-跟 Claude 说:
+Say things like:
 
-- "评估这个 AI 产品的商业可行性: <产品描述>"
-- "帮我跑一份商业分析报告"
-- "出一份 AI 创业方向评估"
-- "投资尽调一下这个项目"
+- "Evaluate the commercial viability of this AI product: <description>"
+- "Give me a full business analysis report"
+- "Score this AI startup direction end to end"
+- "Do an investment due-diligence pass on this project"
 
-提交时最好附上: 产品名称 / 概念描述 / 核心功能 (必填); 目标用户 / 商业模式 / 已知竞品 / 团队优势 / 目标市场 / 分析深度 (选填).
+Handy things to include up front: **product name / concept description / core features** (required); target users, business model, known competitors, team strengths, target market, analysis depth (optional — the skill will fill sensible defaults).
 
-## 你会看到什么
+## What you'll see
 
-- **7 步分模块产出**, 每步带 🟢🟡🔴 标记 + 3 条编号关键发现 (P-KF / F-KF / S-KF / B-KF)
-- **120 分制综合评分**, 给出 S/A/B/C/D 五级评级 + 一句话决策建议
-- **执行摘要** (400-600 字), 可直接拿去汇报
-- 全程中文, markdown 表格 + 标记, 不输出"后续步骤建议"等冗余内容
+- **Seven pipeline steps, produced module by module**, each tagged 🟢🟡🔴 plus three numbered key findings — **P-KF** for PEST, **F-KF** for Five Forces, **S-KF** for SWOT, **B-KF** for the Business Model Canvas — so later modules can cite earlier findings by ID instead of restating them
+- **120-point composite score** rolling up to an S/A/B/C/D grade with a one-line go / hold / kill call
+- **Executive summary** of 400–600 words, ready to lift straight into a review deck
+- Chinese output by default, markdown tables and tags throughout, no filler "next-step suggestions" section tacked onto the end
+
+## Adjacent skills
+
+| Task | Go with |
+|---|---|
+| Market sizing, TAM/SAM/SOM, competitive landscape only | **market-analysis** / **elite-market-researcher** |
+| Quick feasibility read on an AI startup direction (no full pipeline) | **ai-startup-feasibility-check** |
+| Spotting or ranking AI opportunities across a space | **opportunity-hunter** / **ai-opportunity-evaluation** |
+| Scoring a single project on execution readiness (not commercial viability) | **project-scoring** |
+
+**Not this skill**: writing the actual pitch deck or business plan document (that's downstream authoring); running a single framework in isolation with no cross-references (use a lighter market-analysis pass); tracking KPIs for a shipped product (that's operational analytics, not a viability read).
