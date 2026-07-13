@@ -1,0 +1,8 @@
+interface:
+  display_name: "TranFu 布局系统"
+  short_description: "选择、评审并输出 TranFu 页面布局系统与结构规则。"
+  brand_color: "#E63A46"
+  default_prompt: "使用 $tranfu-layout-systems 判断当前页面类型，并推荐符合 TranFu 规范的布局结构。"
+
+policy:
+  allow_implicit_invocation: true
