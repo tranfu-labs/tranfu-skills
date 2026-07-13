@@ -1,3 +1,19 @@
+---
+prompt_examples:
+  - prompt: 检查这段提示词有哪些工程问题。
+    scene: 检查提示词
+  - prompt: 检查 own-skills/example/SKILL.md，给我一份可执行的问题清单。
+    scene: 检查 Skill
+  - prompt: 检查这个 Agent 定义里有没有互相冲突的指令。
+    scene: 检查 Agent
+  - prompt: 检查我下面粘贴的提示词，不要修改任何文件。
+    scene: 检查粘贴文本
+  - prompt: 批量检查这个目录里的提示词文件，并汇总问题。
+    scene: 批量检查文件
+  - prompt: 只给我具体的修改建议，先不要落盘。
+    scene: 只要修改建议
+---
+
 [English](./README.md) | [中文](./README.zh.md)
 
 # prompt-review

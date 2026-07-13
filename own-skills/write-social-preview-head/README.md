@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Add the full social-preview head to this new landing page for Lark and Slack sharing.
-    scene: new page
+    scene: Set up a new page
   - prompt: The link shared to Lark shows no card image — check what's missing in my head.
-    scene: broken preview
+    scene: Fix a missing preview image
   - prompt: New logo but platforms keep the old cache — how do I rotate by swapping file names?
-    scene: cache refresh
+    scene: Refresh cached images
   - prompt: The main page head is too tangled — build me a minimal social-preview probe page.
-    scene: probe page
+    scene: Test on a probe page
   - prompt: Head is done — run the curl header check and image encoding check before I ship.
-    scene: ship check
+    scene: Check before launch
   - prompt: Swap favicon, apple-touch-icon, manifest icons, and JSON-LD logo as one set — list every path.
-    scene: icon suite sync
+    scene: Replace all icon files
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,27 +22,27 @@ Add the full social-preview head — OG, Twitter, icons, manifest — so Lark, S
 
 ## When to use it
 
-**New page**:
+**Set up a new page**:
 
 I'm building a new landing or share page and want Lark and Slack link previews to show the title, description, card image, and icon reliably from day one.
 
-**Broken preview**:
+**Fix a missing preview image**:
 
 A link shared to Lark or Slack has no card image, or shows the old image or old icon, and I want the head fixed so the preview renders correctly.
 
-**Cache refresh**:
+**Refresh cached images**:
 
 I swapped the brand logo or OG image, but the platform keeps serving the stale cache. I want to bust it by renaming the actual files, not by tacking on `?v=`.
 
-**Probe page**:
+**Test on a probe page**:
 
 The main page head is too tangled to debug. I want a minimal isolated social-preview probe page to check whether the platform can even recognize the tags.
 
-**Ship check**:
+**Check before launch**:
 
 The head is written and I want to run `curl` header checks plus image encoding checks so the live MIME type, dimensions, and bit depth all pass.
 
-**Icon suite sync**:
+**Replace all icon files**:
 
 The favicon still shows the old logo. I want to swap the whole set — favicon, apple-touch-icon, manifest icons, JSON-LD Organization logo — in one coordinated push with no stragglers.
 

@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 刚做完 own-skills/skill-name-generation, 顺手把配套 README 也生成一下
-    scene: 新建配套
+    scene: 为新 Skill 写说明
   - prompt: 把 own-skills/ 下还没 README 的都批量补齐一份
-    scene: 存量批量
+    scene: 批量补充 README
   - prompt: 这份 README 是旧版单语中文, 按最新双语规范重生成, 覆盖旧的
-    scene: 重生成覆盖
+    scene: 更新旧版 README
   - prompt: own-skills/openspec-driven-development/ 帮我生成 README
-    scene: 指定路径
+    scene: 为指定目录写说明
   - prompt: 这个 skill 要挂官网了, 先把 README 补齐再上线
-    scene: 官网预发
+    scene: 发布前补说明
   - prompt: 跟 skill-name-generation 一样, 给这个 skill 也做一份 README
-    scene: 类比拉动
+    scene: 参考现有 README
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,23 +22,23 @@ prompt_examples:
 
 ## 什么时候用它
 
-**新建配套**:
+**为新 Skill 写说明**:
 
 我刚做完一个新 skill, `SKILL.md` 已经写好, 现在要挂到公司官网详情页, 想让 skill 顺手把配套 README 也生成好, 我不用一段段口述。
 
-**存量批量**:
+**批量补充 README**:
 
 `own-skills/` 下还有一批老 skill 只有 `SKILL.md`, 一直没配 README——想按同一套规范一次性补齐, 每个目录一份独立文件, 绝不合并。
 
-**重生成覆盖**:
+**更新旧版 README**:
 
 某个 skill 的旧 README 是单语中文, 或骨架不合当前规范, 我明说「按最新双语规范重生成」, 就直接覆盖两份文件。
 
-**官网预发**:
+**发布前补说明**:
 
 我要把某个 skill 挂到公司自建官网的详情页, 详情页会读 README 开头的示例提问, 显示成不同场景的用法示范——README 没补齐, 详情页就没内容可显示。
 
-**类比拉动**:
+**参考现有 README**:
 
 参照另一个已有好 README 的 skill, 说「跟 `skill-name-generation` 一样, 给这个 skill 也做一份」——skill 会照那份的骨架, 落到目标 skill 自己的 `SKILL.md` 上。
 

@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Write a PRD for SSO support in our platform.
-    scene: feature name
+    scene: Start from a feature name
   - prompt: Enterprise customers keep asking for centralized auth — turn that into a spec.
-    scene: problem statement
+    scene: Start from a problem
   - prompt: Users want to export their data as CSV. Spec it end-to-end.
-    scene: user request
+    scene: Start from a user request
   - prompt: We should do something about onboarding drop-off — help me scope a first version.
-    scene: vague idea
+    scene: Clarify a rough idea
   - prompt: This SSO scope is too big for one release — break it into phased specs.
-    scene: phased spec
+    scene: Plan in phases
   - prompt: For the CSV export spec, tighten the non-goals so scope creep does not blow us up.
-    scene: non-goals focus
+    scene: Define what is out of scope
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,27 +22,27 @@ Turn a vague idea, problem statement, or user request into a structured PRD — 
 
 ## When to use it
 
-**Feature name**:
+**Start from a feature name**:
 
 I have a one-word feature ("SSO support", "CSV export") and want the skill to interview me and expand it into a full PRD.
 
-**Problem statement**:
+**Start from a problem**:
 
 I describe a pain users hit ("enterprise keeps asking for centralized auth") and want the skill to reframe it as a spec that leads with the user problem.
 
-**User request**:
+**Start from a user request**:
 
 A specific ask came in from users ("export data as CSV") and I want a spec that ties requirements back to the ask, with acceptance criteria eng can build against.
 
-**Vague idea**:
+**Clarify a rough idea**:
 
 I have a hunch ("onboarding drop-off feels bad") and want the skill to tighten it into a shippable v1 with explicit non-goals.
 
-**Phased spec**:
+**Plan in phases**:
 
 The feature is too big for one release. I want the skill to break it into phase 1 / phase 2 specs, keeping the same problem statement but slicing scope.
 
-**Non-goals focus**:
+**Define what is out of scope**:
 
 I already have a draft spec and want the skill to sharpen the non-goals section to prevent scope creep during implementation.
 

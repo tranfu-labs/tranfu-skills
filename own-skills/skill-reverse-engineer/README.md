@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Take a quick look at this SKILL.md and tell me what it's really doing.
-    scene: Quick diagnosis
+    scene: Diagnose a skill quickly
   - prompt: Reverse-engineer this skill top to bottom — I want the full structural report.
-    scene: Full reverse engineering
+    scene: Analyze a skill in depth
   - prompt: The trigger on this SKILL.md reads too vague — rewrite it for me.
-    scene: Improvement audit
+    scene: Find improvement areas
   - prompt: Generate a trigger benchmark so I can tell whether this skill fires on the requests I care about.
-    scene: Trigger test
+    scene: Test when it triggers
   - prompt: Compare these three skills and extract the shared creation formula.
-    scene: Comparison
+    scene: Compare two skills
   - prompt: Package this prompt workflow into a marketplace-ready skill.
-    scene: Marketplace package
+    scene: Prepare for publishing
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,27 +22,27 @@ Treat any visible skill artifact as a designed system — read out its trigger l
 
 ## When to use it
 
-**Quick diagnosis**:
+**Diagnose a skill quickly**:
 
 You're staring at a SKILL.md and want a fast read on what it's really doing, why it triggers where it triggers, and whether it's any good — no oversized report.
 
-**Full reverse engineering**:
+**Analyze a skill in depth**:
 
 You want to understand end to end how a skill was built — trigger mechanism, workflow steps, reused design patterns, and the creation formula behind it.
 
-**Improvement audit**:
+**Find improvement areas**:
 
 The skill is weak — vague trigger, missing output contract, overlong body — and you want a targeted patch list or a fully rewritten SKILL.md.
 
-**Trigger test**:
+**Test when it triggers**:
 
 You want to know whether the skill actually fires on the requests you care about — should-trigger / should-not / ambiguous / edge queries with reasons.
 
-**Comparison**:
+**Compare two skills**:
 
 You hand over multiple skills and want the shared formula, the differences, and a reusable template extracted.
 
-**Marketplace package**:
+**Prepare for publishing**:
 
 Turn a raw prompt workflow into a marketplace-ready skill — positioning, folder structure, SKILL.md, tests, release checklist.
 

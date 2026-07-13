@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Build a new skill card list page in the TranFu website style.
-    scene: create page
+    scene: Create a website page
   - prompt: Here's a Figma node screenshot — implement it as a React component per the design spec.
-    scene: figma to code
+    scene: Build from Figma
   - prompt: Review the tranfu-site homepage against the TranFu design system and give me a findings report.
-    scene: spec review
+    scene: Review against the system
   - prompt: This page breaks at 375 and 1440 — run a visual QA pass per the spec at every breakpoint.
-    scene: responsive QA
+    scene: Check responsive layouts
   - prompt: This hero uses too much red decoration — refactor it to respect the restrained brand-red rule.
-    scene: brand voice
+    scene: Adjust the brand style
   - prompt: Give me a copyable prompt for building the product center page in TranFu style.
-    scene: prompt guide
+    scene: Generate a build prompt
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -26,7 +26,7 @@ Keep the TranFu official website visually consistent — pull any starting point
 
 I'm building a new TranFu website page — skill card list, detail page, product center — and I want it to land on the design system from the start.
 
-**Figma to code**:
+**Build from Figma**:
 
 I have a Figma node or screenshot, and I want a React implementation that matches color, type, spacing, radius, and responsive rules exactly.
 

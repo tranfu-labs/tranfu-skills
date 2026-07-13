@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: This postmortem — help me frame what kind of skill it should become before I write SKILL.md.
-    scene: Postmortem
+    scene: Name from a postmortem
   - prompt: A rule fell out of this issue thread — what container should this crystallize into?
-    scene: Issue material
+    scene: Name from an issue
   - prompt: I want to call it cache-debug-fix — score my name against alternatives before I commit.
-    scene: Proposed name
+    scene: Review a proposed name
   - prompt: PR discussion attached — lift the right skill container out of it, don't just pick the noun I already used.
-    scene: PR material
+    scene: Name from a pull request
   - prompt: skill-content-fit passed this postmortem — frame the container so skill-create-workflow can pick it up.
-    scene: After fit-check
+    scene: Continue after fit review
   - prompt: Skim docs/postmortems/ and frame a container for each one that has enough signal.
-    scene: Batch
+    scene: Name several skills
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,7 +22,7 @@ Frame the container for a not-yet-created skill from raw material (postmortem / 
 
 ## When to use it
 
-**Postmortem**:
+**Name from a postmortem**:
 
 I have a postmortem in hand and want to crystallize the corrective pattern into a skill, but I don't yet know what to call the container — and I don't want the incident's cache / vendor / file names to hijack the name.
 
@@ -30,7 +30,7 @@ I have a postmortem in hand and want to crystallize the corrective pattern into 
 
 "What kind of skill should this become?" — I want the scope, the boundary, and the success signal locked before I open a SKILL.md scaffold.
 
-**Proposed name**:
+**Review a proposed name**:
 
 I already have a container name in mind. I want the score table to challenge it — if it survives, great; if a higher-scoring alternative shows up, argue me out of the one I brought.
 

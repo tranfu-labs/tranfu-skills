@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮我加一个「一键导出全系列」的功能，卡片导出那边。
-    scene: 正面写码
+    scene: 开发新功能
   - prompt: 现在删一个操作员，删除预览里为什么会列出一大串关联的操作员？先讨论清楚再决定动手。
-    scene: bug 讨论
+    scene: 排查程序问题
   - prompt: 你会如何把「用户偏好」从 localStorage 迁到后端？先讨论一下，别急着写码。
-    scene: 咨询讨论
+    scene: 先讨论方案
   - prompt: 实施 openspec/changes/add-export-all，方案已经确认过了。
-    scene: 显式实施
+    scene: 实施已定方案
   - prompt: 方案实施完了，帮我检查代码是否符合 openspec/changes/add-export-all，有没有遗漏。
-    scene: 方案复核
+    scene: 检查方案落实
   - prompt: 给 settings 加一个「导出偏好」按钮，按 openspec 走一遍，停在 plan-written 让我看一眼。
-    scene: 停顿指定
+    scene: 写完方案暂停
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,7 +22,7 @@ prompt_examples:
 
 ## 什么时候用它
 
-**正面写码**:
+**开发新功能**:
 
 我在 openspec 约定的仓库里加个功能 / 修个 bug / 重构一段代码, 想让它先出方案我点头再动手, 落盘、切分支、开 PR 一条龙。
 
@@ -30,7 +30,7 @@ prompt_examples:
 
 我在问「你会怎么改这段」「这个功能做在哪里合适」「为什么这里不对」, 想让它顺势把讨论收敛成方案, 而不是陪我漫无目的地聊。结论若「其实不用改代码」, 它给解释就收工, 绝不硬造 change。
 
-**显式实施**:
+**实施已定方案**:
 
 我已经在别的对话里写好了 `openspec/changes/<X>` 的方案, 直接说「实施这个 change」, 让它跳到写码环节, 别再从采访重头走。
 
@@ -42,7 +42,7 @@ prompt_examples:
 
 一两行的微改动、改个文案、调个默认值, 我不想被完整闭环压得喘不过气——跳过 change 落盘, 但反思、commit、PR 照走。
 
-**停顿指定**:
+**写完方案暂停**:
 
 「按 openspec 走一遍, 停在 `plan-written` 让我看一眼」——推进计划里指定停点, 方案落盘后老实等我发话再写码。
 

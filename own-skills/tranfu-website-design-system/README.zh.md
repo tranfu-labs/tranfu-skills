@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 按 TranFu 官网风格做一个新的 skill 卡片列表页。
-    scene: 新建页面
+    scene: 新建官网页面
   - prompt: 这是 Figma 节点截图, 帮我按官网设计规范落成 React 组件。
-    scene: Figma 落地
+    scene: 根据 Figma 开发
   - prompt: 检查 tranfu-site 首页是否符合官网设计规范, 给我一份结构化的问题清单。
-    scene: 规范评审
+    scene: 检查设计规范
   - prompt: 这个页面在 375 和 1440 断点显示错位, 帮我按 spec 走一遍视觉走查。
-    scene: 响应式走查
+    scene: 检查响应式布局
   - prompt: 这个 hero 红色装饰太多了, 帮我按品牌红克制的规则重构一下。
-    scene: 品牌语汇
+    scene: 调整品牌风格
   - prompt: 帮我出一份可以直接给 Codex 用的产品中心页构建提示词。
-    scene: 提示词生成
+    scene: 生成开发提示词
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,11 +22,11 @@ prompt_examples:
 
 ## 什么时候用它
 
-**新建页面**:
+**新建官网页面**:
 
 我在做一个新的 TranFu 官网页面——skill 卡片列表 / 详情页 / 产品中心——想一开始就落在设计规范上。
 
-**Figma 落地**:
+**根据 Figma 开发**:
 
 我有 Figma 节点或截图, 想按颜色 / 字体 / 间距 / 圆角 / 响应式规则精确实现出 React 代码。
 
@@ -38,7 +38,7 @@ prompt_examples:
 
 想拿规范逐条对着现有页面, 在文档规定的断点 (1920 / 1440 / 1280 / 756 / 375) 都走一遍, 输出结构化的问题清单。
 
-**提示词生成**:
+**生成开发提示词**:
 
 想拿一份可以直接粘给别的 agent 的官网风格提示词, 让它按 TranFu 规范去搭页面。
 

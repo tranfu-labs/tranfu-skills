@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮我按这份文案给 claude-code-quick-reference 系列出一张预览卡片。
-    scene: 粘文案出预览
+    scene: 根据文案预览
   - prompt: 这几段文案排成一组小红书卡片, 系列英文名叫 claude-code-quick-reference。
-    scene: 组织新系列
+    scene: 新建卡片系列
   - prompt: 在 claude-code-quick-reference 系列后面再加一张 /compact 的卡片。
-    scene: 补一张卡片
+    scene: 补充一张卡片
   - prompt: 把 claude-code-quick-reference 系列导出成小红书成品配图。
-    scene: 导出成品
+    scene: 导出完整系列
   - prompt: 这两个系列都按尺寸导成 webp。
-    scene: 批量导出
+    scene: 批量导出系列
   - prompt: 把 /clear 那张挪到第 3 位。
-    scene: 调整顺序
+    scene: 调整卡片顺序
 ---
 
 [English](./README.md) | 中文
@@ -22,23 +22,23 @@ prompt_examples:
 
 ## 什么时候用它
 
-**粘文案出预览**:
+**根据文案预览**:
 
 我有一段小红书文案, 粘给 skill 说「按这份文档生成预览」, 想让它填模板、建卡片目录、更新 `pages.json`。
 
-**组织新系列**:
+**新建卡片系列**:
 
 我有几段文案, 想排成一组小红书卡片, 系列英文名定好, skill 逐张出预览, 顺序落到 `pages.json`。
 
-**补一张卡片**:
+**补充一张卡片**:
 
 已有系列后面加一张, skill 只加卡片目录和 `pages.json` 一条, 不动系列外壳和其他卡片。
 
-**导出成品**:
+**导出完整系列**:
 
 我说「导出」「截图」「按尺寸出图」, skill 跑 playwright 出 1080×1440 无损 WebP 到 `dist/<系列>/snapshot/`。
 
-**批量导出**:
+**批量导出系列**:
 
 好几个系列一次导出, 每个系列各自按 `pages.json` 顺序。
 

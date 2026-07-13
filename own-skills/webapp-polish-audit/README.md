@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Audit https://practice.example.com and flag anything that reads demo-like, not real product.
-    scene: single-page taste
+    scene: Audit one page
   - prompt: Start from https://app.example.com, walk the child-page tree, then run the polish audit on each representative page.
-    scene: multi-page from seed
+    scene: Audit several pages
   - prompt: The dashboard looks fine at 1440px but collapses on mobile. Run the viewport comparison audit.
-    scene: responsive comparison
+    scene: Check responsive layouts
   - prompt: A new form modal shipped at /settings/team. Audit empty, loading, error and success states.
-    scene: state audit
+    scene: Check all UI states
   - prompt: Does this landing page read like a real product or still like a demo? Judge it.
-    scene: real-product feel
+    scene: Assess product readiness
   - prompt: Pricing page just went live. Give it a completion-quality check before we announce.
-    scene: pre-launch polish
+    scene: Check before launch
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,17 +22,17 @@ Read-only audit of user-visible, browser-rendered web UI. Each judge looks at on
 
 ## When to use it
 
-**Single-page taste**: I hand over a page URL and want the skill to flag whatever reads demo-like versus real-product — whitespace, type scale, state coverage, edge cases, copy-paste smell.
+**Audit one page**: I hand over a page URL and want the skill to flag whatever reads demo-like versus real-product — whitespace, type scale, state coverage, edge cases, copy-paste smell.
 
-**Multi-page from seed**: I hand over an entry URL and want the skill to discover the child-page tree first, then audit one representative per page type, then roll up a cross-page report.
+**Audit several pages**: I hand over an entry URL and want the skill to discover the child-page tree first, then audit one representative per page type, then roll up a cross-page report.
 
-**Responsive comparison**: Desktop looks fine, mobile or tablet collapses. I want the skill to walk the viewport comparison group (rubric 11) and catch what breaks.
+**Check responsive layouts**: Desktop looks fine, mobile or tablet collapses. I want the skill to walk the viewport comparison group (rubric 11) and catch what breaks.
 
-**State audit**: Forms, modals, flows have empty, loading, error, success, disabled states that need a sweep. I want the skill to use the state-before/after comparison group (rubric 04) to capture and judge each state.
+**Check all UI states**: Forms, modals, flows have empty, loading, error, success, disabled states that need a sweep. I want the skill to use the state-before/after comparison group (rubric 04) to capture and judge each state.
 
-**Real-product feel**: I explicitly worry the page reads demo-like and want the skill to trigger on "not demo-like / real product / completion quality / refined / good taste" cues for an overall taste pass.
+**Assess product readiness**: I explicitly worry the page reads demo-like and want the skill to trigger on "not demo-like / real product / completion quality / refined / good taste" cues for an overall taste pass.
 
-**Pre-launch polish**: A page is about to ship or just shipped. I want a completion-quality checkup before we announce, catching visible bugs and polish gaps.
+**Check before launch**: A page is about to ship or just shipped. I want a completion-quality checkup before we announce, catching visible bugs and polish gaps.
 
 **Not for**: Pure backend / CLI / database / API-only tasks. Product strategy, user research, information architecture or copy-only tasks without a UI surface. Wholesale redesign (only audit the proposed / current design). Code-level polish or any task that requires an implementation diff.
 

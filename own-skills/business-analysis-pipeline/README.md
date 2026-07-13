@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: "Evaluate the commercial viability of this AI product: <product description>."
-    scene: New concept eval
+    scene: Evaluate a new idea
   - prompt: Give me a full business analysis report on this idea.
-    scene: Full report ask
+    scene: Request a full report
   - prompt: Score these two AI startup directions side by side using the same rubric.
-    scene: Compare directions
+    scene: Compare several directions
   - prompt: Investment due-diligence pass on this project before I write a check.
-    scene: Investment DD
+    scene: Prepare due diligence
   - prompt: Run PEST + Porter's Five Forces + SWOT + BMC in one go, with findings cross-referenced across modules.
-    scene: Framework combo
+    scene: Combine analysis frameworks
   - prompt: Just the opportunity matrix plus the executive summary — skip the deep-dive modules.
-    scene: Lite mode
+    scene: Run a quick review
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

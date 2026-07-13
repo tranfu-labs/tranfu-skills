@@ -1,15 +1,15 @@
 ---
 prompt_examples:
   - prompt: Push this project to the GitHub main branch.
-    scene: standard delivery
+    scene: Prepare a delivery
   - prompt: This is the product's first commit — create the repo, complete the README, push to main.
-    scene: new repository
+    scene: Create a repository
   - prompt: We already have a repo; complete the README deployment section, verify locally, then push.
-    scene: update repository
+    scene: Update a repository
   - prompt: Check whether this project can install, build, start, and be verified.
-    scene: pre-delivery check
+    scene: Check before delivery
   - prompt: Prepare this project so engineers can deploy it directly — spell out the deployment config.
-    scene: hand off to engineers
+    scene: Hand off to engineers
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -20,19 +20,19 @@ Turns a product project into a deployable, hand-offable, trackable GitHub delive
 
 ## When to use it
 
-**Standard delivery**:
+**Prepare a delivery**:
 
 The product code is largely finished and I want the skill to push it straight to the GitHub main branch instead of opening a PR to merge later.
 
-**New repository**:
+**Create a repository**:
 
 This product is landing on GitHub for the first time. I want the skill to create the repo, name it under the tranfu convention (lowercase + hyphens + `-app`), derive the production URL, complete the README, and push to main.
 
-**Update repository**:
+**Update a repository**:
 
 There's already a GitHub remote. I just want the skill to align the README deployment section, run local verification, and push the latest changes to main.
 
-**Pre-delivery check**:
+**Check before delivery**:
 
 I want it to run real commands to prove the project can install, build, start, and be exercised (Node install + build/test, Web serve + HTTP hit, Docker build/compose) — not static inspection only.
 

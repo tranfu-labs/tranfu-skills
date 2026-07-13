@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Add a "bulk export" option to the card export flow.
-    scene: straight coding
+    scene: Build a new feature
   - prompt: When I delete an operator, why does the delete preview list a whole chain of related operators? Let's talk it through before touching anything.
-    scene: bug discussion
+    scene: Investigate a bug
   - prompt: How would you migrate "user preferences" from localStorage to the backend? Talk it through first — don't start coding yet.
-    scene: consulting-style
+    scene: Discuss an approach
   - prompt: Implement openspec/changes/add-export-all — the plan is already confirmed.
-    scene: explicit implementation
+    scene: Implement an approved plan
   - prompt: I've finished implementing — check whether the code matches openspec/changes/add-export-all and flag anything missing.
-    scene: compliance review
+    scene: Check against the plan
   - prompt: Add an "export preferences" button to settings; run the openspec loop but stop at plan-written so I can take a look.
-    scene: pause on demand
+    scene: Pause after planning
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,7 +22,7 @@ Turns day-to-day development into a closed loop — proposal → feature branch 
 
 ## When to use it
 
-**Straight coding**:
+**Build a new feature**:
 
 I'm adding a feature / fixing a bug / refactoring in a repo that follows the openspec convention, and I want it to draft a plan for me to sign off on before touching code, then handle writing files, cutting the branch, and opening the PR end-to-end.
 
@@ -30,11 +30,11 @@ I'm adding a feature / fixing a bug / refactoring in a repo that follows the ope
 
 I'm asking things like "how would you change this," "where should this feature live," or "why isn't this working," and I want it to steer the discussion toward a concrete proposal instead of drifting. If the answer turns out to be "no code change needed," it just explains and stops — never manufactures a change.
 
-**Explicit implementation**:
+**Implement an approved plan**:
 
 I already wrote the proposal for `openspec/changes/<X>` in another conversation. When I say "implement this change," it should jump straight to coding — not restart the interview from scratch.
 
-**Compliance review**:
+**Check against the plan**:
 
 "I'm done implementing — check whether the code matches the plan and whether anything's missing." It walks through the change item by item; if something is off, it drops back to the coding step and fills the gap.
 
@@ -42,7 +42,7 @@ I already wrote the proposal for `openspec/changes/<X>` in another conversation.
 
 A one-or-two-line tweak, a copy change, a default value — I don't want the full loop crushing me. Skip writing the change to disk, but keep the reflection, commit, and PR.
 
-**Pause on demand**:
+**Pause after planning**:
 
 "Run the openspec loop but stop at `plan-written` so I can look" — it respects the requested pause point and waits patiently after writing the plan.
 

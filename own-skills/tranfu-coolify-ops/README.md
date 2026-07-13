@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Deploy https://github.com/tranfu-labs/markdown-kits-app to Coolify.
-    scene: first deploy
+    scene: Deploy for the first time
   - prompt: Redeploy markdown-kits-app.
-    scene: redeploy
+    scene: Deploy a new version
   - prompt: Move markdown-kits-app domain to board.tranfu.com.
-    scene: domain change
+    scene: Change the domain
   - prompt: Add DATABASE_URL=postgres://... to markdown-kits-app env.
-    scene: env change
+    scene: Change environment variables
   - prompt: Add a redis service to markdown-kits-app compose.
-    scene: source change
+    scene: Deploy source changes
   - prompt: markdown-kits-app deploy is broken — take a look.
-    scene: triage
+    scene: Troubleshoot a deployment
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,11 +22,11 @@ End-to-end deploy / config change / triage for `tranfu-labs/<x>-app` repos on th
 
 ## When to use it
 
-**First deploy**:
+**Deploy for the first time**:
 
 I hand a `tranfu-labs/<x>-app` GitHub URL and want the skill to run the whole path — clone, generate the four-piece kit (Dockerfile / .dockerignore / compose.yml / deploy.yml), create the Coolify project + Application, wire GitHub secrets and env, push the commit, and hold until the public URL returns 2xx.
 
-**Redeploy**:
+**Deploy a new version**:
 
 I flipped an env or want a rolling refresh — "redeploy / restart / 重新部署" fires a single Coolify deploy API call, no source reconciliation, no extra edits.
 
@@ -34,11 +34,11 @@ I flipped an env or want a rolling refresh — "redeploy / restart / 重新部�
 
 I want the domain moved to `board.tranfu.com` or a new `DATABASE_URL` env — skill PATCHes the Coolify API directly, env changes auto-trigger a redeploy, and sensitive values never appear in the transcript (key + hash only).
 
-**Source change**:
+**Deploy source changes**:
 
 I need to touch `compose.yml` or `Dockerfile` — skill spins up a `mktemp -d` clone, spawns a subagent to edit per `references/file-generation-rules.md`, and autonomously commits + pushes without touching my working directory.
 
-**Triage**:
+**Troubleshoot a deployment**:
 
 I say "the deploy is broken / Coolify is unreachable" — skill refuses to guess, and asks whether to (a) pull a GHA + Coolify status diagnostic, (b) fire a redeploy, or (c) change a specific config.
 

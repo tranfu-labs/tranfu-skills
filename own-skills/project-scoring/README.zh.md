@@ -5,17 +5,17 @@ display_name_zh: AI 项目评分
 description: 面向 AI 工作流点子的克制式立项审核 — 先追问 3-5 个澄清问题, 再产出一份带加权 10 维评分、硬门槛、证据台账、风险、7 天验证实验和唯一下一步的决策备忘. 用在验证、内部投资、可复用 skill 开发、公开案例开发或共创之前. 不是通用的产品待办列表排序器 (RICE / ICE / WSJF 更适合那件事).
 prompt_examples:
   - prompt: "用 project-scoring 帮我审这个内部 AI 项目: <一句话点子、目标用户、当前替代方案>"
-    scene: 内部 AI 项目立项审核
+    scene: 评估内部 AI 项目
   - prompt: "帮我判断这个 Tranfu skill idea 是否值得小步立项: <用途、用户、证据等级>"
-    scene: Tranfu 可复用 skill 立项判断
+    scene: 评估可复用 Skill
   - prompt: "对这个 demo 概念做立项审核, 信息不足先问我问题"
-    scene: 公开 demo 概念立项审核
+    scene: 评估公开演示项目
   - prompt: "用 project-scoring 评估这个商业化 AI 工作流产品: <产品名、用户、付费证据>"
-    scene: 商业化 AI 产品评分
+    scene: 评估商业化产品
   - prompt: "比较这三个 AI 工作流候选项目并排序: <A、B、C>"
-    scene: 多候选项目优先级排序
+    scene: 排定项目优先级
   - prompt: "点子信息很稀薄 — 先问 3-5 个澄清问题再评分, 输出低置信度评审"
-    scene: 强制走澄清门的稀薄输入
+    scene: 先澄清再评分
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

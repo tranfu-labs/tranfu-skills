@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮我看下这篇稿子, 看能不能发。
-    scene: 粘草稿
+    scene: 审查粘贴草稿
   - prompt: 审下 tranfu-site/src/content/posts/踩坑-mcp-调不通.md, 抓一下问题。
-    scene: 指定路径
+    scene: 审查指定文件
   - prompt: 这篇像不像 PR 通稿, 有没有升华金句和藏起来的抒情段, 帮我抓一下。
-    scene: 风格担忧
+    scene: 检查写作风格
   - prompt: 帮我审这篇英文行业长文, 看是不是堆引用的公关腔。
-    scene: 英文体裁
+    scene: 审查英文文章
   - prompt: 我 tag 挂的养成记但只跨了一个月, 你先判体裁再说能不能发。
-    scene: 体裁边界
+    scene: 确认文章类型
   - prompt: tranfu-site/src/content/posts/ 下所有草稿, 逐篇双轨审并汇总。
-    scene: 批量审
+    scene: 批量审查草稿
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -24,27 +24,27 @@ prompt_examples:
 
 ## 什么时候用它
 
-**粘草稿**:
+**审查粘贴草稿**:
 
 我写完一篇踩坑记 / 养成记, 发前担心读起来像 PR 通稿 / 公众号水文, 想让 skill 抓一下问题。
 
-**指定路径**:
+**审查指定文件**:
 
 我把稿子放在 `tranfu-site/src/content/posts/` 下, 说「审下这个路径」, 让 skill 自己去读文件。
 
-**风格担忧**:
+**检查写作风格**:
 
 我明确说「像不像营销号 / 有没有升华金句 / 藏起来的抒情段」, 想让 skill 顺着我的怀疑往下抓。
 
-**英文体裁**:
+**审查英文文章**:
 
 我审的是英文行业长文 / 事故复盘 / 研究稿, 想让 skill 走英文分支跑违规扫描。
 
-**体裁边界**:
+**确认文章类型**:
 
 我 tag 挂了养成记但跨度只有一个月, 想让 skill 先判体裁再决定跑哪套结构核对。
 
-**批量审**:
+**批量审查草稿**:
 
 我一次给一批 posts 目录, 想让 skill 逐篇跑双轨、逐篇合判, 一次性把全部问题报回来。
 

@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Make me a minimalist black-and-white icon for AI workflow — abstract.
-    scene: Concept theme
+    scene: Draw from a concept
   - prompt: Need an empty-state icon for the notifications page — clean line, no color.
-    scene: Empty state
+    scene: Create an empty-state icon
   - prompt: Give me a UI entry icon for goal decomposition, readable at 32px.
-    scene: UI entry
+    scene: Make a UI icon
   - prompt: Just the generation prompt for a prompt-review icon — no image needed.
-    scene: Prompt only
+    scene: Return a prompt only
   - prompt: Logo-like mark for our AI review module, not a formal brand logo.
-    scene: Logo-like mark
+    scene: Create a supporting mark
   - prompt: Icon for multi-round prompt review — cycle arrows, feedback loop feel.
-    scene: Cycle concept
+    scene: Show a cycle
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,19 +22,19 @@ Ask for a minimalist black-and-white line icon — transparent background, thick
 
 ## When to use it
 
-**Concept theme**:
+**Draw from a concept**:
 
 I have a theme in my head — AI workflow, goal decomposition, review loop, data analysis — and I want a single abstract symbol that stands for the whole thing.
 
-**UI entry**:
+**Make a UI icon**:
 
 I'm laying out a product page and need a feature entry icon, an empty-state icon, or a small auxiliary mark that still reads at 24-48px.
 
-**Logo-like mark**:
+**Create a supporting mark**:
 
 I want something that reads as a module badge or auxiliary graphic — logo-adjacent — without committing to full brand identity work.
 
-**Prompt only**:
+**Return a prompt only**:
 
 I want the generation prompt itself (Chinese, English, or with the negative list) to paste elsewhere. Say "only the prompt / just the prompt / don't generate" and the skill stops at text.
 

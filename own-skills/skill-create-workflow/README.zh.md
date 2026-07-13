@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 把 docs/postmortem.md 沉淀成一个项目内 skill
-    scene: 源文件转型
+    scene: 从文件创建 Skill
   - prompt: 好, 那就做成 skill 吧
-    scene: 承接确认
+    scene: 接着上文创建
   - prompt: 把刚才聊的发布检查清单封装成 skill
-    scene: 想法首次沉淀
+    scene: 把想法做成 Skill
   - prompt: 把这套日报流程做成一个 own-skills/ 下的新 skill
-    scene: 工作流转 skill
+    scene: 把流程做成 Skill
   - prompt: 从我的品牌口吻笔记做一个公司 skill 并发布
-    scene: 建完就发布
+    scene: 创建后直接发布
   - prompt: 把那个 agent 的系统提示词包成一个 Codex skill
-    scene: 提示词转 skill
+    scene: 把提示词做成 Skill
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -26,7 +26,7 @@ prompt_examples:
 
 我脑子里或项目文档里有一段值得复用的东西 (事故复盘 / 检查清单 / 团队规约 / agent 的系统提示词), 想第一次把它做成 skill, 让未来的自己一句话就能触发。
 
-**承接确认**:
+**接着讨论继续创建**:
 
 上一轮聊天已经在讨论「这段东西是不是值得做成 skill」, 我给一个"好 / 行 / 那就 / 做吧"式的回复, 让流程顺势往下走完创建, 不用再重复贴一遍源材料在哪。
 

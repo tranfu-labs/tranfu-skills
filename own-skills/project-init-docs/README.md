@@ -1,15 +1,15 @@
 ---
 prompt_examples:
   - prompt: Init this repo.
-    scene: Repo root init
+    scene: Set up project docs
   - prompt: This legacy project still has no AGENTS.md — pin down the project docs in one pass, grounded in real facts.
-    scene: Backfill for existing code
+    scene: Document existing code
   - prompt: Init the project docs and pin down the structure, commands, and business domains in one go.
-    scene: AI cold-start
+    scene: Prepare for AI work
   - prompt: Add wireframes to this project, one clear layout per page.
-    scene: Add wireframes
+    scene: Add page wireframes
   - prompt: Set up a DEPLOY.md that spells out where we deploy, how we build, and how to roll back.
-    scene: Deploy source-of-truth init
+    scene: Record deployment sources
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -28,7 +28,7 @@ I'm at the root of a repo that already runs, and I say "init" — I want the ski
 
 The code is there but the docs never caught up — no `AGENTS.md`, no `module-map.md`, no `DEPLOY.md`. I want the skill to backfill everything from real facts: commands lifted from actual scripts, modules from actual directories.
 
-**AI cold-start**:
+**Prepare for AI work**:
 
 I want any future AI to be productive the moment it clones the repo — `AGENTS.md` for the do-not-touch list, `DEPLOY.md` for how to ship, `module-map.md` for dependencies, `openspec/` and `docs/wireframes/` for the contract and layout facts.
 

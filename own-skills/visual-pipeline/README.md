@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Design the settings page for our internal review tool.
-    scene: new page from scratch
+    scene: Design a new page
   - prompt: The header on the review page doesn't feel right, help me fix it.
-    scene: modify an existing design
+    scene: Improve an existing design
   - prompt: Take the dashboard, list, and detail pages of the new product through the pipeline one by one.
-    scene: multi-page project
+    scene: Design several pages
   - prompt: Fields and user scenario are already locked, push it straight to high-fidelity.
-    scene: input locked, into style stage
+    scene: Start the visual design
   - prompt: The overall vibe is off, I want a magazine feel instead of a dashboard feel.
-    scene: style re-selection
+    scene: Change the visual style
   - prompt: Get the wireframe out first, don't jump to color yet — I want to see the skeleton before pixels.
-    scene: skeleton before style
+    scene: Review the layout first
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

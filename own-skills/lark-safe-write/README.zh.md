@@ -1,3 +1,17 @@
+---
+prompt_examples:
+  - prompt: 在这个飞书知识库里新建一个页面。
+    scene: 新建飞书文档
+  - prompt: 更新这个飞书页面，不要丢失原有内容。
+    scene: 更新飞书文档
+  - prompt: 写入新内容之前，先把当前页面备份下来。
+    scene: 写入前先备份
+  - prompt: 检查标题和第一段是否已经正确写入。
+    scene: 写入后检查
+  - prompt: 用这份 Markdown 内容安全覆盖现有页面。
+    scene: 安全覆盖内容
+---
+
 [English](./README.md) | [中文](./README.zh.md)
 
 # Lark Safe Write

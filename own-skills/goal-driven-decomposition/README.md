@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Help me build a Monte Carlo simulation website — plan it end to end.
-    scene: cold start
+    scene: Plan a new project
   - prompt: Thinking of a small budgeting tool. How would you design it? Talk it through first.
-    scene: open discussion
+    scene: Discuss an idea first
   - prompt: The homepage card list drifted — please fix it. goal-docs/ is already there.
-    scene: iteration fix
+    scene: Fix an existing project
   - prompt: Add a favorites feature to the site, continuing from the existing goal-docs/.
-    scene: iteration add
+    scene: Add a new feature
   - prompt: The audience is now complete middle-school beginners. The old persona no longer fits.
-    scene: persona shift
+    scene: Change the target users
   - prompt: We stopped at slice 2 last time — pick it up from there.
-    scene: resume run
+    scene: Continue previous work
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,23 +22,23 @@ Take "build X" goals from a one-liner to a real artifact — commit to the most 
 
 ## When to use it
 
-**Cold start**:
+**Plan a new project**:
 
 I drop a one-liner like "make a Monte Carlo site" or "build a tool" and there's no `goal-docs/` yet. I want it to prior-weight the most probable shape, propose a one-layer-deeper true goal, and only proceed after I nod.
 
-**Open discussion**:
+**Discuss an idea first**:
 
 I'm asking "how would you design X" or "let's talk it through first" — I haven't committed to building. I want it to still open a persona and dimensions so I can see the shape before I decide.
 
-**Iteration fix**:
+**Fix an existing project**:
 
 I say "X drifted" or "the homepage is off" with `goal-docs/` already in place. I want it to skip re-design and drop the mismatch straight into the validation-fix loop.
 
-**Iteration add**:
+**Add a new feature**:
 
 I say "add Y" or "also support Z". I want it to re-run only the affected dimensions, not drag the rest through again.
 
-**Persona shift**:
+**Change the target users**:
 
 I say "the audience is now Z" — the old persona is basically void. I want it to stop and ask me: redo all, redo selectively, or start a fresh `goal-docs/` as a new project.
 

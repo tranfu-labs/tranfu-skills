@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Give me 4 dashboard icons — settings, analytics, notifications, users.
-    scene: UI companion
+    scene: Add icons to a UI
   - prompt: Draw 4 minimal linear UI icons for a payment app.
-    scene: Scene brief
+    scene: Describe the product area
   - prompt: I need a 64×64 icon set, soft pastel backing, 6px stroke, four colors.
-    scene: Style spec
-  - prompt: My app already uses this linear icon style — extend it with 4 more: cloud, share, upload, download.
-    scene: Style carry-over
-  - prompt: Two colors only, blue and green — 4 messaging icons: DM, group, mute, notification.
-    scene: Color lock
+    scene: Set the visual style
+  - prompt: "My app already uses this linear icon style — extend it with 4 more: cloud, share, upload, download."
+    scene: Extend an icon set
+  - prompt: "Two colors only, blue and green — 4 messaging icons: DM, group, mute, notification."
+    scene: Limit the colors
   - prompt: Design 4 minimal calendar icons, square backing, 6px rounded stroke.
-    scene: Size constraint
+    scene: Set size and stroke
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,23 +22,23 @@ Have AI hand you four style-consistent 64×64 minimal linear UI icons that drop 
 
 ## When to use it
 
-**UI companion**:
+**Add icons to a UI**:
 
 I'm building a web dashboard or an app screen and need a set of feature icons with a shared visual language — I want AI to give me four candidates in one go.
 
-**Scene brief**:
+**Describe the product area**:
 
 I describe the domain in one sentence (payments / cloud storage / messaging / calendar) and let AI pick the right graphic metaphor for each icon, so I don't have to spell out shapes one by one.
 
-**Style carry-over**:
+**Extend an icon set**:
 
 My interface already uses a soft-pastel + 6px rounded-stroke icon style; new icons must extend that language rather than shift to a different look.
 
-**Color lock**:
+**Limit the colors**:
 
 I want only two colors — say, blue and green — or only warm tones. The whole set should stay within the palette I dictate.
 
-**Size constraint**:
+**Set size and stroke**:
 
 I've already committed to a 64×64 square backing. Any other canvas size is off-scope.
 

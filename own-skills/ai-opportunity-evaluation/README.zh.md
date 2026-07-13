@@ -5,17 +5,17 @@ display_name_zh: AI 机会立项判断
 description: 在 TranFu 团队进入 PRD 或开发前，对一句话产品想法做立项会诊，短问 2-3 轮后输出一屏以内的立项判断卡（建议做 / 优化后再做 / 暂不建议做）。
 prompt_examples:
   - prompt: "判断这个项目怎么样：微信公众号排版工具"
-    scene: 单个产品想法立项会诊
+    scene: 评估产品想法
   - prompt: "帮我做个立项判断：个人注意力看板"
-    scene: 内部工具进 PRD 前的门禁
+    scene: 审核内部工具
   - prompt: "这个方向能不能做：AI 情报订阅平台"
-    scene: 判断新方向是否值得投入
+    scene: 判断新方向
   - prompt: "这个产品想法值不值得做：VPN 智能路由平台"
-    scene: 一句话想法的价值判断
+    scene: 评估初步想法
   - prompt: "用 AI 机会立项判断 Skill 帮我分析这个项目"
-    scene: 显式召唤 skill
+    scene: 点名这个工具
   - prompt: "这个想法能不能沉淀成 TranFu 的 Skill 或 Agent"
-    scene: 判断能力沉淀价值
+    scene: 判断复用价值
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

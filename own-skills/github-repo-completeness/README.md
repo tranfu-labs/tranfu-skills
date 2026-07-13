@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Check what this project is missing before I open source it.
-    scene: Open source prep
+    scene: Prepare for open source
   - prompt: Scan the repo for completeness and give me a P0-P3 checklist first.
-    scene: Full audit
+    scene: Audit the repository
   - prompt: This repo has no CI or issue templates — add them.
     scene: Add CI templates
   - prompt: Getting the repo ready for GitHub — fill in README and LICENSE.
-    scene: GitHub-ready
+    scene: Publish on GitHub
   - prompt: Short on time — do all P0 items with defaults, review at the end.
-    scene: Fast batch
+    scene: Check multiple repositories
   - prompt: My .gitignore feels off — check if anything's missing.
-    scene: Single check
+    scene: Check one project
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,7 +22,7 @@ Scans an existing GitHub repo, produces a P0-P3 missing-item checklist, then wal
 
 ## When to use it
 
-**Open source prep**:
+**Prepare for open source**:
 
 I'm getting the repo ready for GitHub or open source. I want the skill to scan first, hand me a checklist, and let me pick what to fix.
 
@@ -34,7 +34,7 @@ I already know something's missing — README / LICENSE / CI / issue templates �
 
 The project has been running for a while. I want a quick audit to see if the structure is still complete or has drifted to WEAK.
 
-**Fast batch**:
+**Check multiple repositories**:
 
 I'm short on time. I say "all defaults", the skill runs the whole set, and I review at the end.
 

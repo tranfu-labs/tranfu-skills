@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 给这个新落地页加上飞书 / Slack 分享用的完整 head, 别漏标签。
-    scene: 新页面
+    scene: 为新页面补分享信息
   - prompt: 链接发到飞书没有卡片图, 帮我看下 head 哪里漏了。
-    scene: 飞书没图
+    scene: 修复分享卡片没图
   - prompt: 换了新 logo, 平台一直返回旧缓存, 怎么按「换实体文件名」刷一遍?
-    scene: 换图刷缓存
+    scene: 更新分享图缓存
   - prompt: 主页 head 太乱查不出来, 帮我做个最小社交预览探针页孤立验证。
-    scene: 探针页排查
+    scene: 用测试页排查
   - prompt: head 写完了, 帮我跑一遍 curl 头 + 图片编码检查, 上线前确认。
-    scene: 上线前验证
+    scene: 上线前检查
   - prompt: favicon / apple-touch-icon / manifest icon / JSON-LD logo 想一次成组换新, 列全清单。
-    scene: icon 成组换名
+    scene: 批量更换图标文件
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -26,23 +26,23 @@ prompt_examples:
 
 我在做一个新落地页 / 分享页, 想让飞书、Slack 里发出去的链接从第一天起就能稳定显示标题、描述、卡片图和 icon。
 
-**飞书没图**:
+**修复分享卡片没图**:
 
 链接发到飞书 / Slack 之后卡片没图, 或者显示的是旧图 / 旧 icon, 想修 head 让它显示对。
 
-**换图刷缓存**:
+**更新分享图缓存**:
 
 换了新品牌 logo 或 OG 图, 平台一直返回旧缓存, 想按「换实体文件名」的路子刷一遍, 而不是靠 `?v=YYYYMMDD` 蒙混。
 
-**探针页排查**:
+**用测试页排查**:
 
 主页 head 太复杂查不出问题, 想做一个最小社交预览探针页孤立验证, 看看平台到底能不能识别到这些标签。
 
-**上线前验证**:
+**上线前检查**:
 
 head 写完了, 想跑 curl 头检查 + 图片元数据检查, 上线前确认线上返回的 MIME 类型、分辨率、位深都对得上。
 
-**icon 成组换名**:
+**批量更换图标文件**:
 
 favicon 还挂着旧 logo, 想把 favicon、apple-touch-icon、manifest icon、JSON-LD logo 一次成组换新, 不留旧资源。
 

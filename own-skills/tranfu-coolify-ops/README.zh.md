@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 帮忙确认并部署 https://github.com/tranfu-labs/markdown-kits-app
-    scene: 首次部署
+    scene: 首次部署项目
   - prompt: markdown-kits-app 重新部署一下。
-    scene: 重新部署
+    scene: 发布新版本
   - prompt: markdown-kits-app 改域名到 board.tranfu.com。
-    scene: 改域名
+    scene: 修改访问域名
   - prompt: markdown-kits-app 加个 env DATABASE_URL=postgres://xxx。
-    scene: 改 env
+    scene: 修改环境变量
   - prompt: markdown-kits-app 的 compose 加个 redis service。
-    scene: 改源码
+    scene: 部署代码更新
   - prompt: markdown-kits-app 部署挂了, 帮我看下。
-    scene: 部署排障
+    scene: 排查部署问题
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,11 +22,11 @@ prompt_examples:
 
 ## 什么时候用它
 
-**首次部署**:
+**首次部署项目**:
 
 我拿到一个 `tranfu-labs/<x>-app` 仓库, 想让它一口气跑完 clone、补齐 Docker 四件套 (Dockerfile / .dockerignore / compose.yml / deploy.yml)、建 Coolify 项目和 Application、配 GitHub secrets 与 env、推 commit, 一路盯到公网 2xx 才收尾。
 
-**重新部署**:
+**发布新版本**:
 
 我改了个 env 或者只想验证一次滚动更新, 直接说「重新部署 / redeploy / 重启」, 它只调一次 Coolify deploy API, 不主动核对源码, 不多改一个字。
 
@@ -34,11 +34,11 @@ prompt_examples:
 
 我要把域名切到 `board.tranfu.com`, 或者补一条 `DATABASE_URL`, 它直接调 Coolify HTTP API 改, env 改完自动重新部署, 全程只显示 key 与哈希, 不 echo 敏感值。
 
-**改源码**:
+**部署代码更新**:
 
 我要动 `compose.yml` 或 `Dockerfile`——它自己 `mktemp -d` 临时目录 clone、派子 agent 按 `references/file-generation-rules.md` 改、自动 `git add / commit / git push -u`, 不用我先 `cd` 到仓库, 也不污染我的工作目录。
 
-**部署排障**:
+**排查部署问题**:
 
 我说「部署挂了 / Coolify 访问不了」, 它不默认重新部署, 先反问要走 (a) 拉一份 GHA + Coolify status 诊断 (b) 直接重新部署试一次 (c) 改某个具体配置, 三选一。
 

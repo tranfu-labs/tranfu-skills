@@ -1,14 +1,14 @@
 ---
 prompt_examples:
-  - scene: One-shot render from JSON
+  - scene: Render one report
     prompt: Render report.json into a TranFu daily image using the default research + iceblue style
-  - scene: Batch style comparison
+  - scene: Compare all styles
     prompt: Run --all-variants once to preview every bundled style and palette side by side
-  - scene: Dark intelligence dashboard
+  - scene: Create a dark dashboard
     prompt: Switch to dark + steelblue for an intelligence-dashboard feel
-  - scene: Tech-media info card
+  - scene: Create a media card
     prompt: Produce a verge + iceblue variant that reads like a tech-media info card
-  - scene: Public-safe cleanup
+  - scene: Prepare for public sharing
     prompt: Strip the QR, URLs, and low-context project badges so the image is safe to share on WeChat Moments
 ---
 

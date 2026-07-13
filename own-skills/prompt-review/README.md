@@ -1,3 +1,19 @@
+---
+prompt_examples:
+  - prompt: Review this prompt and point out the engineering problems.
+    scene: Review a prompt
+  - prompt: Review own-skills/example/SKILL.md and give me actionable findings.
+    scene: Review a skill
+  - prompt: Check whether this agent definition has conflicting instructions.
+    scene: Review an agent
+  - prompt: Review the prompt text I pasted below without editing any files.
+    scene: Review pasted text
+  - prompt: Review every prompt file in this directory and summarize the issues.
+    scene: Review several files
+  - prompt: Give me concrete rewrite suggestions, but do not apply them yet.
+    scene: Suggest changes only
+---
+
 [English](./README.md) | [中文](./README.zh.md)
 
 # prompt-review

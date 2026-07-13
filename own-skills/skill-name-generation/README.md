@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Give me an English + Chinese display_name for this skill — I'll paste the description.
-    scene: New skill
+    scene: Name one skill
   - prompt: None of the skills under own-skills/ have display_names yet — backfill the whole batch with the same conventions.
-    scene: Bulk backfill
+    scene: Name several skills
   - prompt: Come up with a display_name and display_name_zh for skill-content-fit.
-    scene: Named target
+    scene: Name a specific skill
   - prompt: The current display name for this skill reads like an explanation — propose a tighter set.
-    scene: Regenerate
+    scene: Replace an existing name
   - prompt: Slug is lark-safe-write, its job is "run the full safety check before writing to Lark" — give me paired display names.
-    scene: Info-provided
+    scene: Name from supplied details
   - prompt: Read own-skills/xxx/SKILL.md and propose a paired display name.
-    scene: From SKILL.md
+    scene: Name from SKILL.md
 ---
 
 [English](README.md) | [简体中文](README.zh.md)
@@ -22,11 +22,11 @@ Generate paired English + Chinese display names for an existing skill — 1 reco
 
 ## When to use it
 
-**New skill**:
+**Name one skill**:
 
 You just finished the slug and description for a skill and need to fill in `display_name` / `display_name_zh` in its frontmatter — you want paired candidates in one shot.
 
-**Bulk backfill**:
+**Name several skills**:
 
 A batch of older skills in the repo has slugs but no display names. You want the same conventions applied across the board, English and Chinese paired without drift.
 

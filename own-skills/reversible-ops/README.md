@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Can I run `docker compose down -v` on this stack right now?
-    scene: command paste
+    scene: Review a pasted command
   - prompt: Clean up the old .log files under /var/log/nginx/ for me.
-    scene: casual cleanup
+    scene: Review a cleanup request
   - prompt: Here's a Python cleanup script — walk it line by line before I run it.
-    scene: script review
+    scene: Review a script
   - prompt: Take this app off Coolify — `coolify app delete 8f3a-staging-uuid --force`.
-    scene: coolify delete
+    scene: Review a Coolify deletion
   - prompt: Update DATABASE_URL on service abc-uuid to the new endpoint.
-    scene: env change
+    scene: Review an environment change
   - prompt: Run `git reset --hard origin/main` to sync my feature branch.
-    scene: git destructive
+    scene: Review a risky Git command
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -22,7 +22,7 @@ A review-only safety gate for ops commands — I never execute writes for you, I
 
 ## When to use it
 
-**Command paste**:
+**Review a pasted command**:
 
 I'm about to run something like `rm`, `docker rm`, `git reset --hard`, or `coolify app delete` and I want the skill to judge reversibility before I commit.
 
@@ -30,7 +30,7 @@ I'm about to run something like `rm`, `docker rm`, `git reset --hard`, or `cooli
 
 I say "clean up these old logs" or "kill those stale images" — I want the skill to translate colloquial intent into concrete, reversible commands.
 
-**Script review**:
+**Review a script**:
 
 I wrote a Python or shell script; before I run it, I want the skill to walk each line through the four ironclad rules and rewrite the risky parts.
 

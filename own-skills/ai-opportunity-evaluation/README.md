@@ -5,17 +5,17 @@ display_name_zh: AI 机会立项判断
 description: A go/no-go gate for TranFu product ideas before PRD or development. Runs a 2-3 round short-question triage on a one-liner idea and outputs a one-screen decision card (Go / Refine first / Don't do).
 prompt_examples:
   - prompt: "Evaluate this idea: a WeChat article formatter"
-    scene: Single product idea go/no-go triage
+    scene: Evaluate a product idea
   - prompt: "Run a go/no-go check on this internal tool: personal attention dashboard"
-    scene: Gate before an internal tool enters PRD
+    scene: Review an internal tool
   - prompt: "Is this direction worth pursuing: AI intelligence subscription platform"
-    scene: Judge whether a new direction deserves investment
+    scene: Assess a new direction
   - prompt: "Is this product idea worth building: VPN smart routing platform"
-    scene: Value judgment on a one-liner idea
+    scene: Check an early idea
   - prompt: "Use the AI Opportunity Evaluation skill to analyze this project"
-    scene: Explicit skill invocation
+    scene: Use the skill by name
   - prompt: "Can this idea be distilled into a TranFu skill or agent"
-    scene: Judge capability-precipitation value
+    scene: Assess reuse potential
 ---
 
 [English](./README.md) | [中文](./README.zh.md)

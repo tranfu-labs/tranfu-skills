@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: Here's the body of my WeChat article — put together a few illustrations for it.
-    scene: WeChat article illustrations
+    scene: Illustrate a WeChat article
   - prompt: For this new Xiaohongshu post, make me a cover plus four body slides, built around a before/after comparison.
-    scene: Xiaohongshu carousel set
+    scene: Create a Xiaohongshu set
   - prompt: Use the wechat-doodle style to draw 3 concept illustrations for this piece.
-    scene: Explicit style pick
+    scene: Follow a chosen style
   - prompt: This paragraph needs a process breakdown, that one needs a common-mistakes diagram, and add a side-by-side comparison too.
-    scene: Per-paragraph ordering
+    scene: Plan images by paragraph
   - prompt: For the earlier 01-cover, just apply the brand logo — don't redraw it.
-    scene: Follow-up logo overlay
+    scene: Add a logo afterward
   - prompt: Skip the brand logo, just give me the raw images — I'll add a watermark myself later.
-    scene: Brand overlay off
+    scene: Remove brand elements
 ---
 
 English | [中文](./README.zh.md)
@@ -22,19 +22,19 @@ Generates a full illustration set for a WeChat / Xiaohongshu / Zhihu post in one
 
 ## When to use it
 
-**WeChat article illustrations**:
+**Illustrate a WeChat article**:
 
 I've finished a WeChat post, paste in the body, and say "make me a few illustrations." I want the skill to read the whole piece, pick a style based on what the article is doing (method walk-through, process, comparison, checklist), and generate one image at a time.
 
-**Xiaohongshu carousel set**:
+**Create a Xiaohongshu set**:
 
 I need a cover plus a body carousel that read as a single visual set — each slide carrying exactly one point — with the shot list derived from anchors in the text before anything is drawn.
 
-**Explicit style pick**:
+**Follow a chosen style**:
 
 I name `wechat-doodle` / `xhs-explainer-notebook` / `zhihu-tech` up front, so the skill skips the style-selection prompt and generates directly against that `style_file` and `style_spec`.
 
-**Per-paragraph ordering**:
+**Plan images by paragraph**:
 
 I go paragraph by paragraph — "this one needs a process breakdown, that one needs a common-mistakes diagram" — and the skill builds the shot list from content anchors, one idea per image, without padding the count to hit a number.
 

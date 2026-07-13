@@ -1,17 +1,17 @@
 ---
 prompt_examples:
   - prompt: 提取 stripe.com 的视觉风格, 保留克制的高级感, 别抄 logo。
-    scene: 参考网址
+    scene: 分析参考网站
   - prompt: 从这张落地页截图里抽套设计系统, 不要带原品牌名。
-    scene: 参考截图
+    scene: 分析参考截图
   - prompt: 我发了三张落地页截图, 帮我合成一套主 DNA, 或者告诉我风格打架。
-    scene: 多样本合成
+    scene: 融合多个参考
   - prompt: 从这个 Figma 提取 tokens, 顺手给我一段可以粘给 ui-ux-pro-max 的 prompt。
-    scene: 下游衔接
+    scene: 交给后续设计使用
   - prompt: 分析这个 app UI 的编辑节奏, 图标语言不用管。
-    scene: 风格取舍
+    scene: 比较不同风格
   - prompt: 把这个 dashboard 截图抽成可迁移的色板与字号阶梯, 存到 docs/visual-dna/finance.md。
-    scene: 指定路径落盘
+    scene: 保存到指定位置
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
@@ -26,7 +26,7 @@ prompt_examples:
 
 我看到一个网站、一张截图、一张海报、一份幻灯或一个 app UI, 喜欢它的气质, 想让 skill 把风格抽成可复用的 tokens 与原则, 不带原品牌痕迹。
 
-**多样本合成**:
+**融合多个参考**:
 
 我一次贴了几张样本, 让 skill 帮我合成一套主 DNA, 或者告诉我风格打架、拆成几套并列输出。
 
