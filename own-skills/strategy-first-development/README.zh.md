@@ -1,79 +1,111 @@
 ---
 prompt_examples:
-  - prompt: 想做一个高考出分后帮学生选校选专业的网页——先别写代码, 跑一遍战略共识再把 5 个控制面文档落进来。
-    scene: 规划全新 MVP
-  - prompt: 不要重复造轮子, 先搜 GitHub 成熟项目和官方生态默认方案, 告诉我 adopt / absorb / reject 之后再定技术栈。
-    scene: 优先复用现有工具
-  - prompt: 战略共识达成后, 帮我把 AGENTS.md / strategy.md / north-star.md / technical-stack.md / roadmap.md 落进这个仓库。
-    scene: 生成项目方案
-  - prompt: 先别写任何文件, 只跟我多轮讨论战略目标、产品形态和非目标, 出共识节点就停。
-    scene: 先讨论再开发
-  - prompt: 这个老仓库最近方向漂了, 帮我复位战略、重搜成熟项目、更新 technical-stack 文档, 不要动生产代码。
-    scene: 重新评估架构
-  - prompt: provider、模型、部署目标怎么选, 我要基于战略目标和约束的决策包, 不要写代码。
-    scene: 选择服务商
+  - prompt: "我要做一个新的 AI Web 产品，先讨论战略、盘点所有技术积木、广泛比较候选，不要直接写代码。"
+    scene: "规划全新产品"
+  - prompt: "第一次选技术栈，每个 Tier A/B/C 积木都要基于当前一手证据建立候选池再收敛。"
+    scene: "运行首次技术选型"
+  - prompt: "现有技术栈和 ADR 已接受，只评估新增搜索模块，不要重新选择全栈。"
+    scene: "局部技术变更"
+  - prompt: "共识已达成，只落地 AGENTS.md、strategy、north-star、technical-stack 和 roadmap，不动生产代码。"
+    scene: "生成项目控制面"
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
 
 # 战略先行开发流程
 
-在动代码之前, 把模糊或高影响力的产品/工程请求变成项目的公共控制面——多轮达成战略共识、搜索成熟项目、选定技术栈、切分路线图、落地默认控制面文档。
+在实施前，把高影响力产品或工程请求变成项目公共控制面：战略共识、成熟参考项目调研、逐能力技术选型、路线图关卡和标准项目文档。
 
 ## 什么时候用它
 
-**新项目 / 新 MVP, 战略还没锁**:
+- 新产品或 MVP 尚无已接受的战略与技术栈。
+- 主运行时、数据库、鉴权、编排、部署或状态所有者需要首次选择或替换。
+- provider、模型、UI、数据、搜索、任务或可观测性需要基于证据选型。
+- 团队希望先把战略和技术决策沉淀，再进入代码实施。
 
-目标用户、主工作流、北极星和非目标都还漂着——你想要 agent 先讨论方向、共识达成后再写文档, 而不是二话不说 Next.js + Tailwind 起手就干。
-
-**避免重复造成熟引擎**:
-
-在选栈之前, 想让 agent 先搜 GitHub、官方文档、包管理器和生态默认方案, 再把结论分成 `adopt` / `absorb` / `reject` / `inspect_later`——必须保留自研的部分要写清战略理由。
-
-**落地项目控制面**:
-
-想让 5 份标准战略文档——`AGENTS.md`、`docs/product/strategy.md`、`docs/product/north-star.md`、`docs/architecture/technical-stack.md`、`docs/product/roadmap.md`——原地创建或更新, 已有标准文档优先更新而不是重复建。
-
-**provider / 部署 / 架构升级决策**:
-
-问题不是"写不写代码", 而是"选哪个模型 / provider / 部署目标 / 模块边界", 想让决策紧扣战略需求和成熟项目调研, 而不是个人品味。
-
-**只讨论, 不动文件**: 有时你只想跑多轮共识和一份战略包 (STRATEGY_PACKET), `may_write_docs: false`——agent 停在共识节点上。
-
-**不接**: 单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review、发版 / 发布, 以及创建 / 审查 skill 的元任务——都走各自对应的工作流。
+不要用于 skill/prompt 元任务、小文案、翻译、已明确范围的 bug 修复、纯代码 review，或无需重新选架构的既有项目部署。
 
 ## 它会产出什么
 
-**只落文档产物——战略落地阶段绝不动生产代码、依赖清单或部署文件。**
+- `STRATEGY_PACKET` 和 `CONSENSUS_GATE`。
+- 成熟产品与架构参考调研，使用 `adopt / absorb / spike / defer / reject` 决策。
+- `CAPABILITY_BLOCK_INVENTORY`、冻结的 decision brief、候选记录、短名单、spike 和 `STACK_SELECTION_GATE`。
+- 覆盖运行时、职责所有权、安全、部署、运维和退出路径的整栈一致性复核。
+- `Now / Next / Later / Not Doing` 路线图。
+- 在允许写文档的模式下，创建或更新 `AGENTS.md`、strategy、north-star、technical-stack 和 roadmap。
 
-- **共识节点 (checkpoint)**: 每轮记录 `已达成 / 仍开放 / 默认建议 / 需要用户决策`——不发一份长问卷, 拆成多轮短问答。
-- **战略包 (STRATEGY_PACKET)**: 战略目标、目标用户、产品形态、主工作流、非目标、约束、风险、开放问题——固定 YAML 结构。
-- **成熟项目调研**: 至少几个候选, 含来源、成熟度、战略契合、可复用部分、可吸收内容、风险, 每条配一个 `adopt` / `absorb` / `reject` / `inspect_later` 决定。
-- **技术栈方向**: 选定栈、采用的库、吸收的模式、拒绝的替代方案、必须自研的部分及战略理由、临时选择及其退出条件。
-- **路线图**: `Now` / `Next` / `Later` / `Not Doing`, 每片配一道关卡或证据要求。
-- **默认产物**: 5 份控制面文档, 默认标记 `draft` 直至用户显式接受, 假设与开放问题始终可见。
-- **验证汇报**: 目标文件已存在、标准文档未被重复、生产代码未被改动、成熟项目调研状态可见。
+战略落地阶段只写文档，不安装依赖、不搭运行时模块、不改部署文件，也不把文档完成冒充实现完成。
 
-## 前置条件 / 边界
+## 首次选型默认门槛
 
-**前置**:
+| Tier | 典型影响 | 最少发现 | 最少可信 | 最少解法原型 | E2 深读 |
+|---|---|---:|---:|---:|---:|
+| A | 状态/安全/拓扑所有者，迁移昂贵 | 7 | 5 | 3 | 3 |
+| B | 重要生产子系统 | 5 | 3 | 3 | 2 |
+| C | 局部、低风险、容易替换 | 3 | 2 | 2 | 1 |
 
-agent 能读取的工作区, 以及一个愿意跑几轮短共识的用户。做成熟项目调研需要联网——不能联网时会标记 `incomplete_with_reason`, 技术栈也不会作为「完全经过验证」呈现。
+数量只是最低覆盖，不是凑数目标。同引擎 wrapper、玩具项目、不兼容方案和只有搜索摘要的候选不能计数。Tier A 要标记 accepted，默认还需同约束 spike；只有同主版本、同部署形态、同负载和同关键约束的近期等价证据才能豁免。
 
-**相邻 skill 分工**:
+## 选型收敛漏斗
 
-| 动作 | 交给 |
-|---|---|
-| 战略定完后写 PRD / 功能 spec | **write-spec** |
-| 评估某 AI 工作流值不值得投入 | **project-scoring** |
-| 审 / 清理老项目的架构漂移 | **architecture-hygiene** |
-| 给现有仓库加 AGENTS.md 和 AI 协作基础文档 | **project-init-docs** |
-| 创建 / 审查 / 改进 skill 或 SKILL.md | **skill-create-workflow** / **skill-improve-workflow** / **prompt-review** |
+1. 检查现有代码、文档、manifest、ADR 和职责所有权。
+2. 盘点所有适用的决策级能力积木。
+3. 在评分前冻结 must-have、硬门槛、权重和候选下限。
+4. 跨不同解法原型和来源类别发现候选。
+5. 核验当前版本、许可、生命周期、兼容性、安全和维护状态。
+6. 先硬淘汰，再评分。
+7. 深读短名单，做敏感性分析，并定义或执行必要 spike。
+8. 逐积木选择后，再做整栈一致性复核。
+9. 未解决的决定保持 provisional；只有 gate 通过才能 accepted。
 
-**不接的场景**: 创建 / 审查 / 更新 skill 的元任务; 单行命令、小编辑、翻译、已明确范围的 bug 修复; 覆盖标准文档里用户手写的内容; 只改了文档就宣称实现完成; 无写下理由地手写成熟引擎 (auth / 支付 / 图表 / 富文本 / 媒体 / 调度 / 搜索 / 队列 / 模型客户端)。
+完整协议见 [`references/technology-selection-protocol.md`](./references/technology-selection-protocol.md)。
 
-**微妙边界**:
+## 边界
 
-- 用户显式授权生成默认文件, 覆盖范围只有文档编辑, 不含生产代码
-- 成熟项目调研无法完成时, 草稿文档可以先落, 但 `technical-stack.md` 必须写清调研缺口
-- 已有标准文档原地更新; 遇到路径冲突要先摆出来问, 不能直接建第二份
+- `discuss-only` 和 `strategy-packet` 不写文件。
+- `targeted_change` 默认冻结已接受 ADR，除非新证据证明其失效。
+- 网络缺失、证据过期、候选覆盖不足或 Tier A spike 未解决时，技术栈只能 provisional。
+- 面向用户的产品必须定义 agent 角色、权限、隐藏内部细节和角色质量标准。
+- `AGENTS.md` 是事实源；`CLAUDE.md`、`CODEX.md` 只做指针或差异覆盖，不复制整份战略。
+
+## 同类 Skill 对比
+
+> 由 tranfu-publish 起草，作者 `griffithkk3-del` 签字。
+
+### 公司库内
+
+- [项目文档初始化](../project-init-docs/SKILL.md) — 为现有仓库搭文档底座；**本 skill 区别**：先完成战略和选型共识。
+- [Agent 架构决策](../agent-architecture-decision/SKILL.md) — 决定 agent workflow；**本 skill 区别**：治理整个产品与技术栈。
+- [AI 项目评分](../project-scoring/SKILL.md) — 判断是否值得投入；**本 skill 区别**：规划已接受项目如何交付。
+
+### 外部世界
+
+- 暂无
+
+### 本 skill 独特价值
+
+- 逐能力积木建立候选池
+- 用证据和 gate 逐步收敛
+- 先形成战略文档再写代码
+
+## 使用技巧
+
+> 由 tranfu-publish 引导起草，作者 `griffithkk3-del` 签字。
+
+### 材料方案
+
+- 从 canonical docs 和 ADR 开始。
+- 动态事实回到一手来源核验。
+- 每个候选池保留原生基线。
+
+### 推荐用法
+
+- 方向不清时先跑 `discuss-only`。
+- 绿地项目走 `wide_first_selection`。
+- 已接受技术栈走 `targeted_change`。
+
+### 已知限制
+
+- 首次广泛选型需要较长时间。
+- 离线证据只能保持 provisional。
+- Tier A 通常需要授权 spike。

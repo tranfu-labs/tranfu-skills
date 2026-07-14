@@ -3,56 +3,53 @@ name: strategy-first-development
 display_name: Strategy-First Development
 display_name_zh: 战略先行开发流程
 description: >
-  复杂项目开发前的战略共识、成熟项目调研、技术栈选择、路线图规划和项目控制面文档落地 workflow。Always trigger for: 新产品/MVP、多页面 web app、AI 产品、前后端系统、provider/deployment 选择、架构升级、复杂开发、用户要求先定战略/北极星/路线图/技术栈/参考项目或避免重复造轮子。Do NOT trigger when: 创建/更新/审查 skill 的元任务、单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review、仅安装/部署已有项目且无需重选产品技术路线。
-version: 0.2.0
+  复杂项目开发前的战略共识、成熟项目调研、逐能力积木的广候选池技术选型、路线图规划和项目控制面文档落地 workflow。Always trigger for: 新产品/MVP、多页面 web app、AI 产品、前后端系统、首次技术栈选型、provider/deployment 选择、架构升级、复杂开发，或用户要求先定战略/北极星/路线图/参考项目并避免重复造轮子。Do NOT trigger when: 创建/更新/审查 skill 的元任务、单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review，或仅安装/部署已有项目且无需重选产品技术路线。
+version: 0.3.0
 author: griffithkk3-del
-updated_at: 2026-07-10
+updated_at: 2026-07-14
 origin: own
 ---
 
 # Strategy First Development
 
-Use this skill to turn a vague or high-impact product/engineering request into a shared project control plane before coding. The goal is to stop agents from wandering through random features, arbitrary stacks, one-off UI, duplicate infrastructure, or fragile custom logic when strategic consensus and mature projects should guide the work.
+Turn a vague or high-impact product/engineering request into a shared control plane before coding. Prevent arbitrary stacks, one-off UI, duplicate infrastructure, and custom engines chosen from memory instead of evidence.
 
 This skill is a development workflow, not a skill-creation or prompt-review workflow. For skill creation, skill review, prompt review, or agent-definition review, route to the relevant skill-specific workflow instead.
 
 ## Core Contract
 
-CRITICAL: After enough strategic discussion and mature-project research, this skill MUST create or update the default project strategy artifacts unless the user explicitly requests discussion only:
+CRITICAL: Complete strategic consensus, reference-project research, and the applicable technology-selection gate before presenting a stack as settled or starting implementation.
 
-- `AGENTS.md`
-- `docs/product/strategy.md`
-- `docs/product/north-star.md`
-- `docs/architecture/technical-stack.md`
-- `docs/product/roadmap.md`
+When technology selection is in scope, MUST read [Technology Selection Protocol](references/technology-selection-protocol.md) completely and run its `SELECT_STACK` procedure. Mature-product research and per-capability library selection are separate evidence layers; completing one does not satisfy the other.
 
-These artifacts are the project control plane for future harness/agent development. Their purpose is to make later work strategy-aligned, stack-consistent, roadmap-aware, evidence-backed, and resistant to random generation or repeated reinvention.
+Only `materialize-strategy` and the strategy phase of `plan-then-implement` may create or update the default artifacts:
+
+`AGENTS.md`, `docs/product/strategy.md`, `docs/product/north-star.md`, `docs/architecture/technical-stack.md`, and `docs/product/roadmap.md`.
+
+`discuss-only` and `strategy-packet` MUST NOT write files. All modes may surface assumptions, gaps, and provisional decisions.
 
 CRITICAL: Strategy artifact materialization may create or update documentation artifacts only. It MUST NOT modify production app code, install dependencies, scaffold runtime modules, change deployment files, run destructive operations, or claim implementation completion unless a later implementation gate is explicitly passed.
 
-## When To Use
+For user-facing products, MUST define the project-specific AI/agent role and user-visible experience. Shipped UI MUST NOT expose planning notes, prompts, chain-of-thought, provider/model names, debug text, TODOs, or implementation workflow labels unless the product is explicitly a developer or observability tool.
 
-Use this skill when the user says or implies:
+## Routing Boundaries
 
-- 先和 AI 多轮讨论战略目标、项目形态、产品形态、北极星、路线图;
-- 新产品、新 MVP、复杂功能、架构升级、AI 产品、前后端系统、provider/deployment 选择;
-- 给 agent 看预期截图、参考产品、竞品页面，或让 agent 生成预期页面方向;
-- 先搜索 GitHub 成熟项目、官方框架、生态默认方案，再确定技术栈;
-- 优化架构、模块、工作流程，避免重复造轮子;
-- 让项目有战略、技术栈、路线图和后续 harness/agent 可遵循的控制面文档。
-
-Do NOT trigger this skill for one-line commands, small copy edits, simple translations, already-scoped bug fixes, pure code review, release/publish work, or skill/prompt/agent meta-work unless the user explicitly asks to rethink product strategy, technology direction, or roadmap.
+- Use this workflow for product direction, initial or reopened stack selection, architecture scope, roadmap, and strategy artifacts.
+- Route deep similar-project discovery to `similar-project-reference`, AI/agent architecture to `agentic`, post-stack UI ecosystem work to `ui-ecosystem`, and evaluation-system implementation to `eval` when those skills exist.
+- Treat an accepted ADR or canonical stack as a constraint. Reopen it only for an explicit architecture revisit, a broken hard constraint, or new evidence that invalidates the accepted decision.
 
 ## Run Modes
 
-The agent MUST choose one mode before acting:
+Choose one mode before acting:
 
-- `discuss-only`: use when the user wants conversation, analysis, or options only. Output consensus checkpoints and stop without writing files.
-- `strategy-packet`: use only when the user explicitly asks for a complete strategy plan without writing files. Output `STRATEGY_PACKET`, `CONSENSUS_GATE`, and next decisions.
-- `materialize-strategy`: use when the user asks to generate, initialize, or land strategy files. Complete the consensus and mature-project gates, show or infer the artifact plan, then create/update the default artifacts.
-- `plan-then-implement`: use when the user explicitly asks to proceed with implementation after planning. First complete the strategy/materialization gates; only then produce an implementation plan and verification matrix before code changes.
+| Mode | Strategy docs | Production code | Required result |
+|---|---|---|---|
+| `discuss-only` | MUST NOT write | MUST NOT write | consensus checkpoints and evidence-backed options |
+| `strategy-packet` | MUST NOT write | MUST NOT write | `STRATEGY_PACKET`, gates, and next decisions |
+| `materialize-strategy` | MAY write after gates | MUST NOT write | updated canonical strategy artifacts |
+| `plan-then-implement` | MAY write after gates | MAY write only when explicitly requested and the Implementation Gate passes | strategy artifacts, implementation plan, verification matrix, then bounded implementation |
 
-If the mode is ambiguous, ask one focused question or offer 2-3 concrete mode choices. If the user explicitly says to generate the default strategy files, that is sufficient authorization for documentation edits, but not for production code edits.
+If mode is ambiguous, ask one focused question or offer 2-3 concrete choices. Authorization to generate strategy files is not authorization to change production code.
 
 ## Critical Gates
 
@@ -60,8 +57,10 @@ If the mode is ambiguous, ask one focused question or offer 2-3 concrete mode ch
 - MUST inspect existing repo docs and structure before proposing paths or creating files in an existing project.
 - MUST prefer updating canonical existing docs over creating duplicate docs.
 - MUST ask focused questions across multiple rounds until the consensus gate is satisfied, unless the user explicitly accepts visible assumptions.
-- MUST search and analyze mature GitHub projects, official frameworks, package registries, ecosystem defaults, and primary docs before choosing the technical stack when network access is available.
-- MUST record what to `adopt`, what to `absorb`, what to `reject`, and what remains custom because it is strategic differentiation.
+- MUST separate mature product/architecture references from per-capability frameworks, libraries, services, platforms, and native/no-dependency baselines.
+- For first selection, MUST inventory every applicable decision-worthy capability and compare each against the candidate floor in the Technology Selection Protocol before naming a preferred stack.
+- MUST record current primary-source evidence, hard rejects, weighted trade-offs, shortlists, required spikes, cross-stack coherence, smallest integration, verification gate, and exit condition.
+- MUST record reference-project dispositions as `adopt|absorb|spike|defer|reject` and technology dispositions as `keep|adopt|spike|defer|reject`.
 - MUST NOT hand-roll established engines such as auth, payments, charts, rich text, media processing, scraping, scheduling, search, forms, queues, workflow orchestration, parsing, game/physics rules, or model/provider clients without a written reason.
 - MUST define verification before editing and report verification results before handoff.
 - NEVER claim completion from code edits or doc edits alone when verification failed, was skipped, or was impossible.
@@ -70,35 +69,37 @@ CREATE A TODO LIST FOR THE TASKS BELOW before running this workflow. Use `update
 
 ## Executable Procedure
 
-1. Read the user request and current workspace. If the request is skill/prompt/agent meta-work -> route to the relevant workflow and end.
-2. Classify the request. If it is trivial, one-line, or an already-scoped bug fix with no strategy/stack/roadmap question -> do not use this skill; explain the route and end.
-3. Select run mode: `discuss-only`, `strategy-packet`, `materialize-strategy`, or `plan-then-implement`. If no mode can be inferred -> ask one focused question and end.
-4. Inspect existing repo docs before path decisions. If the repo cannot be read -> report a blocker and end.
-5. Run consensus rounds. If a required consensus field is open -> ask 1-3 focused questions or offer 2-3 concrete options; stop until answered unless the user accepts assumptions.
-6. Produce a `STRATEGY_PACKET` with strategic goal, product shape, primary workflow, non-goals, constraints, risks, and open questions.
-7. Run mature-project search before stack choice. If network is unavailable -> mark search `incomplete_with_reason`, use local evidence and known ecosystem defaults, and do not present the stack as fully validated.
-8. Produce mature-project findings with `adopt` / `absorb` / `reject` / `inspect_later` decisions.
-9. Produce a technical stack direction tied to strategic requirements and mature-project findings.
-10. Produce roadmap slices: `Now`, `Next`, `Later`, and `Not Doing`, each with gates or evidence requirements.
-11. Fill `CONSENSUS_GATE`. If any hard-required field is `open` -> stop, show the gap, and ask one focused question.
-12. Build `ARTIFACT_PLAN`. If the user explicitly requested no file writes -> show the plan and stop without editing.
-13. If mode is `materialize-strategy` or the user confirmed file generation -> create/update the default artifacts only; otherwise output the packet and end.
-14. Verify documentation edits: intended files exist, existing canonical docs were not duplicated, generated docs have status/source/open-question sections, and no production code/deployment files changed.
-15. If mode is `plan-then-implement`, continue only after the implementation gate is visible and passes; otherwise stop with handoff notes.
-16. Output final handoff with changed/created files, research/search status, verification commands/results, assumptions, open risks, and next recommended action. End.
+1. Read the request and workspace. If it is skill/prompt/agent meta-work -> route to the relevant workflow and end.
+2. Classify the request. If it is trivial or already scoped with no strategy/stack/roadmap decision -> explain the route and end.
+3. Select a run mode. If none can be inferred -> ask one focused question and end.
+4. Inspect canonical docs, manifests, runtime/deployment files, tests, accepted ADRs, and uncommitted work before proposing paths or choices. If unreadable -> report a blocker and end.
+5. Run consensus rounds. If a hard-required field is open -> ask 1-3 focused questions and stop unless the user accepts visible assumptions.
+6. Produce `STRATEGY_PACKET` as the canonical in-memory result.
+7. Search mature product and architecture references; record search date, queries, evidence depth, and `adopt|absorb|spike|defer|reject` decisions.
+8. Determine `technology_selection.scope`. If stack selection is not applicable -> mark it `not_applicable` with reason and continue. Otherwise -> read the Technology Selection Protocol and run `SELECT_STACK` to produce `STACK_SELECTION_PACKET`.
+9. Produce `Now`, `Next`, `Later`, and `Not Doing`, each with evidence gates.
+10. Fill `CONSENSUS_GATE` and the applicable `STACK_SELECTION_GATE`. If a hard gate is open/fail -> stop or keep the stack provisional; NEVER label it settled.
+11. Build `ARTIFACT_PLAN`. If the mode forbids writes -> output the packet and end.
+12. For an authorized materialization mode, update canonical strategy docs only; preserve user-authored content and avoid duplicates.
+13. Verify documentation scope, required sections, research status, references, and that no code/deployment/dependency files changed.
+14. For `plan-then-implement`, continue only after a visible implementation plan, verification matrix, explicit code authorization, and the Implementation Gate pass.
+15. Output the final handoff with decisions, evidence status, changed files, commands/results, assumptions, open risks, and next action. End.
 
 Failure exits:
 
 - Existing repo unreadable -> report blocker; do not make architecture claims.
-- Network unavailable -> mark mature-project search incomplete; do not present stack as fully validated.
+- Network unavailable -> use local evidence only, mark research `incomplete_with_reason`, keep stack `provisional_pending_spike`, and do not claim current versions or maintenance status.
 - Private reference projects unavailable -> ask for links, screenshots, package names, or file trees; do not pretend they were inspected.
 - Strategic disagreement remains -> do not write artifacts as accepted; ask focused questions or write only draft assumptions if the user explicitly accepts that.
+- Candidate floor cannot be met after documented saturation -> mark `pool_exhausted_with_evidence`; do not pad with weak candidates or silently pass the gate.
+- No candidate passes hard constraints -> revise requirements, keep the current/native baseline, spike, or defer; NEVER choose the least-bad failing candidate.
+- Primary evidence conflicts or a critical unknown remains -> require a spike or keep the decision provisional.
 - Artifact path conflict -> update canonical docs or ask before creating duplicates.
 - User requests implementation before gates pass -> run the compressed gates first; if hard-required fields remain open, stop before code.
 
 ## Consensus Rounds
 
-Use multiple short rounds instead of one long questionnaire. Each round should ask only the highest-leverage missing questions and end with a checkpoint.
+Use multiple short rounds instead of one long questionnaire. Each round MUST ask only the highest-leverage missing questions and end with a checkpoint.
 
 ### Round 1: Strategic Goal
 
@@ -115,6 +116,7 @@ Infer or ask:
 - What is the first high-value user action or API/agent call?
 - Is the product a web app, API, CLI, MCP server, agent workflow, dashboard, browser extension, plugin, data pipeline, internal tool, or platform?
 - Which tempting features are explicitly out of scope for the first slice?
+- For user-facing products, what role should the AI/agent appear to play, what authority does it have, what internal details must stay hidden, and what role-specific quality bar applies?
 
 ### Round 3: Constraints
 
@@ -123,37 +125,31 @@ Infer or ask:
 - What data, provider, model, deployment, budget, license, privacy, or compliance constraints matter?
 - Which logic must be deterministic, and which can be AI-assisted?
 - What existing repo, team, runtime, or hosting choices must be respected?
+- Is this a first stack selection, a bounded addition to an accepted stack, or a deliberate architecture revisit?
 
-### Round 4: Mature Project Search
+### Round 4: Mature Product And Architecture References
 
 Search based on the agreed strategy, not generic taste. Include mature boring defaults as well as close reference projects.
 
-Required sources when available:
-
-- GitHub repositories;
-- official documentation;
-- package registries;
-- release notes;
-- issue trackers/discussions when maturity risk matters;
-- ecosystem boring defaults.
+Required sources when available: GitHub repositories, official documentation, package registries, release notes, issue trackers/discussions when maturity risk matters, and ecosystem boring defaults.
 
 Required decision vocabulary:
 
 - `adopt`: directly use the framework/library/project.
 - `absorb`: do not directly depend on it, but reuse its architecture, UI workflow, data model, API shape, module boundary, or operating pattern.
 - `reject`: do not use it, with reason.
-- `inspect_later`: promising but insufficient evidence for this gate.
+- `spike`: promising but a named uncertainty must be tested.
+- `defer`: not needed now; record the revisit trigger.
 
-### Round 5: Stack And Absorption Plan
+### Round 5: Technology Building Blocks And Stack
 
-Choose the stack only after strategy and mature-project search. Record:
+Run the Technology Selection Protocol. Record:
 
-- strategic requirements served by the stack;
-- adopted libraries/frameworks;
-- absorbed patterns from mature projects;
-- rejected alternatives and reasons;
-- custom-build surface and why it is strategic differentiation;
-- temporary choices and exit conditions.
+- the complete applicable `CAPABILITY_BLOCK_INVENTORY`;
+- per-block candidate pools and coverage floors;
+- frozen hard constraints and weights;
+- current primary-source evidence, rejections, shortlists, and spikes;
+- selected smallest integrations, custom-build surface, coherence conflicts, verification gates, and exit conditions.
 
 ### Round 6: Roadmap And Artifact Plan
 
@@ -165,7 +161,7 @@ Define:
 - `Not Doing`: attractive but intentionally deferred or rejected work.
 - default artifacts to create/update/skip and why.
 
-Each round should output:
+Each round MUST output:
 
 ```markdown
 **Consensus Checkpoint**
@@ -175,31 +171,80 @@ Each round should output:
 - Need Your Decision:
 ```
 
+## Wide Technology Selection Contract
+
+Use these selection scopes:
+
+| Scope | Use when | Search behavior |
+|---|---|---|
+| `wide_first_selection` | greenfield, no accepted stack, core state/process/topology owner is new, or user explicitly requests a broad rethink | inventory all applicable decision-worthy blocks and apply full floors |
+| `targeted_change` | add/replace one bounded capability inside an accepted stack | keep accepted choices fixed; compare the current/native baseline and credible compatible alternatives for affected blocks |
+| `revalidate_existing` | architecture remains accepted but evidence may be stale or a constraint changed | recheck current evidence, risks, versions, and exit conditions; reopen only failed blocks |
+
+For `wide_first_selection`, these are default minimums, not targets to pad:
+
+| Tier | Typical consequence | Discovered | Credible after basic verification | Distinct solution archetypes | E2 deep-read candidates | Spike |
+|---|---|---:|---:|---:|---:|---|
+| `A` | high lock-in, state/security/topology owner, expensive migration | 7 | 5 | 3 | 3 | required unless equivalent current evidence exists; test top 1-2 |
+| `B` | meaningful production subsystem, reversible with planned work | 5 | 3 | 3 | 2 | when critical evidence is unknown or ranking is fragile |
+| `C` | local, low-risk, easily replaceable utility | 3 | 2 | 2 | 1 | normally not required |
+
+Rules:
+
+- Candidate archetypes include the ecosystem default, mature boring default, focused specialist, managed service, self-hosted option, and current/native/no-new-dependency baseline when each is genuinely viable.
+- Forks, wrappers around the same engine, toy projects, incompatible options, or candidates with only search-summary evidence do not count toward the credible floor.
+- If the market is smaller, record queries, source classes, rejected candidates, and discovery saturation as `pool_exhausted_with_evidence`; NEVER invent weak candidates to meet a number.
+- Keep `research_status: pool_exhausted_with_evidence`. `candidate_pool_coverage` may become `pass` only with a schema-valid `CANDIDATE_FLOOR_WAIVER` that names the owner, exhausted evidence, rejected candidates, current/native baseline, accepted residual risk, expiration, and exit path; otherwise it remains `provisional`.
+- Freeze must-have constraints, hard filters, and weights before scoring. Hard failures in capability, runtime, license, security/privacy/compliance, data/process ownership, deployment, budget, or explicit non-goals cannot be offset by a weighted score.
+- Use `E0 discovered`, `E1 verified`, `E2 deep_read`, and `E3 spiked`. A formal `keep|adopt` decision requires E2. Tier A acceptance requires E3 unless the project has recent evidence for the same major version, deployment shape, workload, and critical constraints.
+- Score only eligible candidates. Weights MUST total 100; every score needs evidence; `unknown` is not a neutral score. Run sensitivity analysis for Tier A and spike when the winner changes under reasonable weights or the top two differ by less than 5/100.
+- Select per block, then run a whole-stack coherence review for overlapping responsibility, runtime/version compatibility, process and state ownership, auth flow, retry/idempotency, observability/audit, testing, deployment, license, operational burden, and exit paths.
+- A candidate can be individually strong yet make the stack fail. `stack_coherence: fail` blocks a settled stack.
+
+Read the reference protocol for the capability baseline, query/source rules, schemas, multi-agent research timetable, spike triggers, convergence rules, and failure exits.
+
 ## Consensus Gate
 
 Before writing default artifacts, fill this gate:
 
 ```yaml
+GATE_RESULT:
+  status: pass|provisional|open|fail|not_applicable
+  evidence_or_reason:
+  owner:
+  next_gate:
 CONSENSUS_GATE:
-  strategic_goal: pass|open
-  target_user: pass|open
-  primary_workflow: pass|open
-  product_shape: pass|open
-  non_goals: pass|open
-  north_star_direction: pass|open
-  technical_constraints: pass|open
-  mature_project_search: pass|incomplete_with_reason|open
-  stack_direction: pass|open
-  roadmap_slice: pass|open
-  artifact_plan: pass|open
+  strategic_goal: GATE_RESULT
+  target_user: GATE_RESULT
+  primary_workflow: GATE_RESULT
+  product_shape: GATE_RESULT
+  non_goals: GATE_RESULT
+  north_star_direction: GATE_RESULT
+  agent_positioning: GATE_RESULT
+  user_visible_experience: GATE_RESULT
+  technical_constraints: GATE_RESULT
+  reference_project_search: GATE_RESULT
+  technology_selection_scope: GATE_RESULT
+  capability_inventory: GATE_RESULT
+  candidate_pool_coverage: GATE_RESULT
+  current_primary_evidence: GATE_RESULT
+  required_spikes: GATE_RESULT
+  stack_coherence: GATE_RESULT
+  stack_direction: GATE_RESULT
+  roadmap_slice: GATE_RESULT
+  artifact_plan: GATE_RESULT
 ```
 
 Gate rules:
 
-- If `strategic_goal`, `target_user`, `primary_workflow`, `product_shape`, or `roadmap_slice` is `open`, MUST ask more questions and MUST NOT write files.
-- If `mature_project_search` is `open`, MUST search before writing `docs/architecture/technical-stack.md`.
-- If `mature_project_search` is `incomplete_with_reason`, MAY write draft files, but MUST mark the research gap inside `technical-stack.md`.
-- If `stack_direction` is `open`, MAY write product strategy and roadmap as draft, but MUST NOT present `technical-stack.md` as settled.
+- `pass` requires an explicit user decision or canonical source/packet evidence that satisfies the field predicate and has no material conflict; agent inference alone cannot pass.
+- `provisional` means a visible unaccepted assumption, waiver, or unresolved spike with owner and next gate. `open` means required input is missing/ambiguous. `fail` means evidence demonstrates a hard conflict. `not_applicable` requires a reason.
+- Strategic/product/role fields pass only when populated and accepted by the user or canonical docs. Selection fields pass only through the applicable research protocol. `roadmap_slice` needs a bounded `Now` outcome and evidence gate; `artifact_plan` needs explicit actions and mode-compatible permissions.
+- If `strategic_goal`, `target_user`, `primary_workflow`, `product_shape`, or `roadmap_slice` is `open|fail`, MUST ask more questions and MUST NOT materialize accepted artifacts.
+- For a user-facing product, `agent_positioning` and `user_visible_experience` MUST be `pass` before accepted artifacts or UI implementation.
+- If technology selection is applicable, `capability_inventory`, `candidate_pool_coverage`, `current_primary_evidence`, `required_spikes`, `stack_coherence`, and `stack_direction` MUST all be `pass` before the stack is called settled.
+- `provisional` MAY be documented in draft artifacts with the exact gap and next gate, but MUST NOT be presented as accepted.
+- `fail` blocks the dependent decision; `not_applicable` requires a reason.
 - If `artifact_plan` is `open`, MUST show proposed file actions and wait unless the user explicitly requested default file generation now.
 
 ## Strategy Packet
@@ -208,8 +253,12 @@ Use this stable schema before materialization:
 
 ```yaml
 STRATEGY_PACKET:
+  schema_version: 0.3
   mode: discuss-only|strategy-packet|materialize-strategy|plan-then-implement
   request_class: greenfield|existing-repo|feature|refactor|deployment|provider-choice|architecture-upgrade
+  status_vocabulary:
+    research_status: not_applicable|open|in_progress|pass|incomplete_with_reason|pool_exhausted_with_evidence|blocked
+    block_decision: accepted|provisional_pending_spike|deferred|rejected
   strategic_goal:
     objective:
     target_user:
@@ -219,6 +268,14 @@ STRATEGY_PACKET:
     product_form:
     project_form:
     primary_workflow:
+  agent_positioning:
+    product_role:
+    user_visible_role:
+    internal_role:
+    authority_boundary:
+    hidden_internal_details:
+    role_specific_quality_bar:
+    failure_behavior:
   north_star:
     candidate_metric:
     input_metrics:
@@ -230,24 +287,33 @@ STRATEGY_PACKET:
     provider:
     deployment:
     compliance_or_safety:
-  mature_project_findings:
-    search_status: complete|incomplete_with_reason|skipped_with_reason
+  reference_project_findings:
+    research_status:
+    search_date:
+    queries:
     candidates:
       - name:
         source:
+        evidence_depth:
         maturity:
         strategic_fit:
         reusable_parts:
         what_to_absorb:
         risks:
-        decision: adopt|absorb|reject|inspect_later
-  stack_decision:
-    chosen_stack:
-    adopted_projects:
-    absorbed_patterns:
-    rejected_options:
+        decision: adopt|absorb|spike|defer|reject
+  technology_selection:
+    scope: wide_first_selection|targeted_change|revalidate_existing|not_applicable
+    scope_reason:
+    research_status:
+    capability_inventory_ref_or_inline:
+    decision_briefs_ref_or_inline:
+    candidate_register_ref_or_inline:
+    block_decisions:
+    stack_coherence_review:
     custom_build_surface:
+    smallest_integrations:
     temporary_choices_and_exit_conditions:
+    stack_selection_gate:
   roadmap:
     now:
     next:
@@ -259,7 +325,7 @@ STRATEGY_PACKET:
 
 ## Default Artifact Contract
 
-Default artifacts MUST be created or updated after consensus and research:
+Create or update these only in a write-enabled mode after the applicable gates:
 
 ```text
 AGENTS.md
@@ -273,14 +339,12 @@ If the project already has canonical equivalents, update those instead of creati
 
 Optional artifacts MAY be proposed when the user gives richer information:
 
-- `docs/product/vision.md`: only when long-term company/product vision is clear enough to deserve its own file.
-- `docs/product/non-goals.md`: when non-goals are numerous or high-risk.
-- `docs/architecture/system-overview.md`: when the project crosses frontend, backend, AI, data, and deployment.
-- `docs/architecture/module-map.md`: when an existing repo has enough structure that agents need module ownership boundaries.
-- `docs/architecture/verification-strategy.md`: when verification needs dedicated treatment.
+- `docs/research/technology-selection.md`: when there are more than 8 applicable blocks, more than 20 credible candidates, or the evidence matrix would obscure the canonical stack summary.
 - `docs/research/reference-projects.md`: when mature-project research is too large for `technical-stack.md`.
-- `docs/research/open-questions.md`: when unresolved questions are numerous.
-- `docs/decisions/0001-*.md`: when a decision should be tracked as an ADR.
+- `docs/product/agent-positioning.md` or `docs/product/experience-contract.md`: when user-facing role, authority, or hidden-detail rules need dedicated governance.
+- `docs/product/vision.md`, `docs/product/non-goals.md`, `docs/architecture/system-overview.md`, `docs/architecture/module-map.md`, `docs/quality/verification-strategy.md`, or `docs/research/open-questions.md`: only when their content is substantial and no canonical equivalent exists.
+- `docs/decisions/NNNN-*.md`: REQUIRED for a Tier A accepted decision that changes orchestration, state/data ownership, primary runtime/framework, auth, deployment topology, or another expensive-to-reverse boundary.
+- `CLAUDE.md` and `CODEX.md`: optional pointer/overlay files only. Keep `AGENTS.md` canonical; do not duplicate the complete strategy into tool-specific files.
 
 ## Artifact Plan
 
@@ -312,179 +376,31 @@ ARTIFACT_PLAN:
   may_write_code: false
 ```
 
-## Artifact Templates
+## Artifact Content Requirements
 
-All generated strategy artifacts MUST include a draft status, source basis, assumptions, open questions, and a change policy unless the existing project format clearly uses another equivalent structure.
+Generated strategy docs MUST expose status, source basis, assumptions, open questions, and change policy, unless an established project format provides equivalent fields. `draft` is the default until the project owner accepts the decision.
 
-### `AGENTS.md`
+| Artifact | Required content |
+|---|---|
+| `AGENTS.md` | project mission; canonical docs; project agent positioning; user-visible experience and hidden details; before-editing rules; architecture/development rules; verification; safety; handoff |
+| `docs/product/strategy.md` | status/source basis; vision; strategic goal; users; primary workflow; product shape; differentiation; non-goals; agent role/experience; assumptions; questions; change policy |
+| `docs/product/north-star.md` | status/source basis; metric; value rationale; inputs; guardrails; anti-metrics; measurement; assumptions/unknowns; review cadence; change policy |
+| `docs/architecture/technical-stack.md` | status/source basis; selection scope/date; strategic constraints; capability inventory; search method/query log; reference findings; hard filters/weights; per-block candidate summaries; deep shortlists/spikes; stack coherence; accepted/provisional/deferred/rejected choices; smallest integrations; custom surface; versions checked; verification gates; exit/revalidation triggers; assumptions/questions/change policy |
+| `docs/product/roadmap.md` | status/source basis; Now/Next/Later/Not Doing; phase gates; stack spikes and provisional decisions; risks; assumptions/questions; change policy |
 
-```markdown
-# Project Agent Guide
-
-## Project Mission
-
-## Canonical Docs
-
-- Strategy: `docs/product/strategy.md`
-- North Star: `docs/product/north-star.md`
-- Roadmap: `docs/product/roadmap.md`
-- Technical Stack: `docs/architecture/technical-stack.md`
-
-## Before Editing
-
-## Development Rules
-
-## Verification
-
-## Safety Boundaries
-
-## Handoff Requirements
-```
-
-### `docs/product/strategy.md`
-
-```markdown
----
-status: draft
-created_by: strategy-first-development
----
-
-# Product Strategy
-
-## Vision
-
-## Strategic Goal
-
-## Target Users
-
-## Primary Use Case
-
-## Product Shape
-
-## Core Workflow
-
-## Differentiation
-
-## Non-Goals
-
-## Assumptions
-
-## Open Questions
-
-## Change Policy
-```
-
-### `docs/product/north-star.md`
-
-```markdown
----
-status: draft
-created_by: strategy-first-development
----
-
-# North Star
-
-## North Star Metric
-
-## Why This Metric Represents Core Value
-
-## Input Metrics
-
-## Guardrail Metrics
-
-## Anti-Metrics
-
-## Measurement Plan
-
-## Current Unknowns
-
-## Review Cadence
-```
-
-### `docs/architecture/technical-stack.md`
-
-```markdown
----
-status: draft
-created_by: strategy-first-development
----
-
-# Technical Stack
-
-## Strategic Requirements
-
-## Existing Constraints
-
-## Mature Project Research Summary
-
-| Candidate | Source | Maturity | Strategic Fit | Reusable Parts | What To Absorb | Risks | Decision |
-|---|---|---|---|---|---|---|---|
-
-## Chosen Stack
-
-- Frontend:
-- Backend:
-- Data / Storage:
-- AI / Model / Agent:
-- Auth:
-- Jobs / Queue:
-- Search:
-- Deployment:
-- Observability:
-- Testing:
-
-## What We Adopt
-
-## What We Absorb
-
-## What We Reject
-
-## Custom-Build Surface
-
-## Temporary Choices And Exit Conditions
-
-## Change Policy
-```
-
-### `docs/product/roadmap.md`
-
-```markdown
----
-status: draft
-created_by: strategy-first-development
----
-
-# Roadmap
-
-## Now
-
-## Next
-
-## Later
-
-## Not Doing
-
-## Phase Gates
-
-## Risks
-
-## Open Questions
-```
+If detailed selection evidence is split into `docs/research/technology-selection.md`, `technical-stack.md` MUST remain the canonical summary and link to it. Do not create one file per capability block.
 
 ## Implementation Gate
 
-Only start coding after producing a compact implementation plan with:
+Only start coding when all are visible:
 
-- strategic goal;
-- chosen product/project shape;
-- expected experience artifact or description;
-- mature project/library findings;
-- chosen stack and rejected alternatives;
-- architecture/module plan;
-- verification matrix;
-- status of default strategy artifacts.
+- strategic goal, product shape, primary workflow, project agent role, and expected user experience;
+- reference-project findings and `STACK_SELECTION_PACKET` for every applicable `Now`/P0 block;
+- every `Now`/P0 block is `accepted`; a `provisional_pending_spike` block authorizes only the named spike, not production implementation;
+- architecture/module ownership, smallest integration points, custom-build surface, and accepted ADRs;
+- implementation plan, verification matrix, rollback/exit conditions, artifact status, and explicit code authorization.
 
-For urgent tasks, this can be compressed, but strategy, mature-project search/stack, roadmap, architecture, and verification must still be visible.
+Urgency may compress presentation, never skip hard constraints, current evidence, candidate coverage, coherence, or verification.
 
 ## Verification And Handoff
 
@@ -493,8 +409,8 @@ For documentation materialization, verify:
 - intended files exist in the intended locations;
 - existing canonical docs were updated rather than duplicated;
 - generated docs are marked `draft` unless the user explicitly accepted them;
-- assumptions and open questions are visible;
-- mature-project search status is visible in `technical-stack.md`;
+- source basis, assumptions, open questions, research status, block decisions, and revalidation triggers are visible;
+- every selected technology maps to one capability block and every applicable block has a decision or explicit deferral;
 - production app code, dependency manifests, deployment files, and runtime modules were not changed during strategy materialization.
 
 For later code implementation, verify in layers:
@@ -507,8 +423,8 @@ For later code implementation, verify in layers:
 Final handoff must say:
 
 - what was discussed, decided, created, or changed;
-- which strategic choice the work implements;
-- what mature projects/frameworks were adopted or absorbed;
+- which strategic choice and capability blocks the work covers;
+- what references were adopted/absorbed and what technologies were kept/adopted/spiked/deferred/rejected;
 - verification commands and results;
 - remaining risks, assumptions, or follow-up decisions.
 
@@ -516,101 +432,68 @@ Final handoff must say:
 
 Stop and reset if the agent is about to:
 
-- write strategy artifacts before strategic goal, target user, product shape, roadmap slice, and mature-project search are clear or explicitly assumed;
+- write accepted artifacts before strategic goal, target user, product shape, roadmap slice, and applicable gates are clear;
 - code before understanding the target user, product shape, and roadmap;
 - invent a custom framework when mature libraries exist;
-- choose a stack before searching mature projects and official defaults;
-- build UI without references, mockups, or expected states;
+- choose a stack from familiar names before inventorying capability blocks;
+- count same-engine wrappers, weak/incompatible projects, or search snippets as credible breadth;
+- score a candidate that failed a hard constraint or treat `unknown` as a neutral score;
+- call a provisional decision settled, or omit the runner-up, rejection reason, smallest integration, verification gate, or exit condition;
+- build UI without references, expected states, agent positioning, or a hidden-internal-details contract;
 - add provider/API integrations without reading current docs or local config;
 - mix unrelated refactors with strategy materialization;
 - overwrite existing canonical docs without preserving user-authored content;
 - claim completion without running checks;
-- treat "I know a stack" as a substitute for mature-project search;
-- let multiple agents independently choose incompatible stacks or edit overlapping files.
+- let parallel researchers change frozen criteria or independently choose incompatible stacks; the primary agent owns scoring and whole-stack coherence.
 
-## Output Template
+## Output Contract
 
-For a new project or major feature, use this concise structure:
+Render the canonical schemas; do not invent a second incompatible output shape:
 
-```markdown
-**Mode**
-...
-
-**Consensus Checkpoint**
-- Agreed:
-- Still Open:
-- Proposed Default:
-- Need Your Decision:
-
-**Mature Project Findings**
-| Candidate | Source | Maturity | Strategic Fit | Reusable Parts | What To Absorb | Risks | Decision |
-|---|---|---|---|---|---|---|---|
-
-**Stack Direction**
-...
-
-**Roadmap**
-- Now:
-- Next:
-- Later:
-- Not Doing:
-
-**Artifact Plan**
-- `AGENTS.md`: create/update/skip because ...
-- `docs/product/strategy.md`: create/update/skip because ...
-- `docs/product/north-star.md`: create/update/skip because ...
-- `docs/architecture/technical-stack.md`: create/update/skip because ...
-- `docs/product/roadmap.md`: create/update/skip because ...
-
-**Next Action**
-...
-```
+- `STRATEGY_PACKET` is canonical; `CONSENSUS_GATE` and `STACK_SELECTION_GATE` control status and permissions.
+- `STACK_SELECTION_PACKET` contains auditable capability/candidate decisions; `ARTIFACT_PLAN` controls file actions.
+- Human-readable summaries MUST preserve canonical statuses, gaps, and next gates.
 
 ## Examples
 
 <example>
-User: 我想做一个高考生知道分数后准备选学校和专业的网页，先充分讨论并落地战略文件。
+User: 这是新项目，先广泛比较技术栈，不要写代码。
 
-Good response shape:
+Good result fragment:
 
-```markdown
-**Mode**
-materialize-strategy
-
-**Consensus Checkpoint**
-- Agreed: target user is gaokao students/families after score release; first workflow is province/score/rank -> comparable school/major shortlist.
-- Still Open: data source and target province/year.
-- Proposed Default: use public fixture data for strategy docs, mark official data integration open.
-- Need Your Decision: start with one province or national multi-province support?
+```yaml
+technology_selection:
+  scope: wide_first_selection
+  block_decisions:
+    - block_id: identity-auth
+      tier: A
+      pool: {discovered: 7, credible: 5, archetypes: 3, gate: pass}
+      shortlist: ["candidate-a:E2", "candidate-b:E2", "candidate-c:E2"]
+      spike: {required: true, reason: session-and-tenant-boundary-unknown}
+      decision_status: provisional_pending_spike
+    - block_id: date-formatting
+      tier: C
+      pool: {discovered: 3, credible: 2, archetypes: 2, gate: pass}
+      shortlist: ["native-baseline:E2"]
+      decision_status: accepted
+  stack_coherence_review: provisional
 ```
-
-After consensus and mature-project search, create/update the default artifact set. `technical-stack.md` records table/form/chart libraries to adopt, admissions-project patterns to absorb, and generic education portals to reject.
 </example>
 
 <bad-example>
-User: 做一个高考出分后选学校和专业的网页。
+WRONG: "我搜索了 Next.js、Supabase 和 LangChain，所以技术栈调研完成。"
 
-Bad response:
-
-```markdown
-我直接用 Next.js + Tailwind 开始写。页面包括首页、推荐页、详情页。
-```
-
-Why bad: it skips strategic consensus, target user evidence, expected workflow, mature-project search, stack reasoning, roadmap, default strategy artifacts, and verification.
+Why bad: no capability inventory, per-block pool, native baseline, hard filters, evidence depth, shortlist/spike, or whole-stack coherence review.
 </bad-example>
 
 ## Related Workflows
 
-- `write-spec`: feature PRD/spec generation after strategy and product direction are clear.
-- `project-scoring`: evaluates whether an AI workflow is worth investing in.
-- `architecture-hygiene`: audits and cleans architecture drift after or during development.
-- `project-init-docs`: initializes broader AI collaboration docs for an existing repo.
-- `skill-create-workflow`, `skill-domain-framing`, `skill-content-fit`, `prompt-review`: skill meta-work. This skill does not handle skill creation/review tasks.
+- `similar-project-reference` handles deep reference discovery; `agentic`, `ui-ecosystem`, and `eval` handle domain architecture or post-selection execution.
+- `write-spec`, `project-init-docs`, and `architecture-hygiene` handle later specification, project-control, and drift work.
+- `skill-creator`, `skill-create-workflow`, `skill-domain-framing`, `skill-content-fit`, and `prompt-review`: skill meta-work; this workflow does not handle skill creation/review.
 
 ## Known Limits
 
-- This skill does not replace the user's final strategic judgment.
-- It does not prove a business model or product-market fit.
-- Private domains require user-provided material.
-- Network failure can only produce draft stack recommendations with visible research gaps.
-- Strategy artifacts are baselines, not immutable specs; update them when evidence changes.
+- This skill neither replaces final strategic judgment nor proves product-market fit; private domains require user-provided material.
+- Network failure permits only provisional stack recommendations with visible research gaps.
+- Strategy artifacts are revisable baselines; update them when evidence changes.
