@@ -1,6 +1,6 @@
 interface:
-  display_name: "Strategy First Development"
-  short_description: "Builds strategy docs, stack, roadmap, and mature-project guidance before coding."
-  default_prompt: "Use $strategy-first-development before coding a complex product or engineering task: run multi-round strategic consensus, search mature GitHub/framework options, choose what to adopt/absorb/reject, and create or update AGENTS.md plus strategy, north-star, technical-stack, and roadmap docs before implementation."
+  display_name: "Strategy-First Development"
+  short_description: "Plans strategy and broad, evidence-backed stack choices."
+  default_prompt: "Use $strategy-first-development to align product strategy, inventory every decision-worthy capability, compare broad current candidate pools per block, converge through hard gates and spikes, and materialize strategy docs before coding."
 policy:
   allow_implicit_invocation: true
