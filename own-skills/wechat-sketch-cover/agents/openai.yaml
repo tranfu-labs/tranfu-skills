@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Sketch Cover"
+  short_description: "Generate fixed warm hand-drawn WeChat Official Account article covers"
+  default_prompt: "Use $wechat-sketch-cover to create a warm hand-drawn WeChat article cover from my exact Chinese or Chinese-mixed title; article text or a summary is optional, or provide one Markdown article."

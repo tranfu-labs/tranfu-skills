@@ -1,0 +1,12 @@
+wechat-sketch-cover
+
+Derived from JimLiu/baoyu-skills, baoyu-cover-image, source commit
+6b7a2e417500561a5ecdd0b168332f4142584617, under the MIT License.
+
+This Skill fixes the upstream warm hand-drawn guidance to one WeChat cover
+workflow, one left-title/right-illustration composition, backend-agnostic
+candidate generation, and a final PNG size of 1923 x 818.
+
+The bundled OfferPilot cover image was supplied by the repository owner with
+permission for public redistribution under this repository's MIT License. It
+is QA-only and must never be passed to image generation.
