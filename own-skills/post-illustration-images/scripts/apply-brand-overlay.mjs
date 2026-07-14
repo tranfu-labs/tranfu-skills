@@ -95,12 +95,45 @@ function aspectRatioMatches(size, canvas, tolerance) {
   return Math.abs(size.width / size.height - canvas.width / canvas.height) <= tolerance;
 }
 
-function renderOne({ input, output, spec, brandSvg }) {
+function validateBrandGeometry(spec) {
   const canvas = spec.canvas;
+  const reserved = spec.layout?.brandReservedArea;
   const slot = spec.fixedComponents?.brandSlot;
+
+  if (!Number.isFinite(canvas?.width) || !Number.isFinite(canvas?.height) || canvas.width <= 0 || canvas.height <= 0) {
+    throw new Error(`Style Spec ${spec.id} has invalid canvas dimensions`);
+  }
   if (!slot?.enabled) {
     throw new Error(`Style Spec ${spec.id} has no enabled brandSlot`);
   }
+  if (slot.anchor !== "top-right") {
+    throw new Error(`Style Spec ${spec.id} brandSlot must use the top-right anchor`);
+  }
+  if (spec.generationConstraints?.keepBrandReservedAreaClear !== true) {
+    throw new Error(`Style Spec ${spec.id} must keep its brandReservedArea clear`);
+  }
+
+  for (const [name, rect] of [["brandReservedArea", reserved], ["brandSlot", slot]]) {
+    if (!rect || ![rect.x, rect.y, rect.width, rect.height].every(Number.isFinite) || rect.width <= 0 || rect.height <= 0) {
+      throw new Error(`Style Spec ${spec.id} has invalid ${name} geometry`);
+    }
+  }
+
+  if (reserved.x < 0 || reserved.y < 0 || reserved.x + reserved.width > canvas.width || reserved.y + reserved.height > canvas.height) {
+    throw new Error(`Style Spec ${spec.id} brandReservedArea must stay inside the canvas`);
+  }
+  if (slot.x < reserved.x || slot.y < reserved.y || slot.x + slot.width > reserved.x + reserved.width || slot.y + slot.height > reserved.y + reserved.height) {
+    throw new Error(`Style Spec ${spec.id} brandSlot must stay inside brandReservedArea`);
+  }
+  if (reserved.x < canvas.width / 2 || reserved.y + reserved.height > canvas.height / 2) {
+    throw new Error(`Style Spec ${spec.id} brandReservedArea must be in the top-right quadrant`);
+  }
+
+  return { canvas, slot };
+}
+
+function renderOne({ input, output, spec, brandSvg }) {
+  const { canvas, slot } = validateBrandGeometry(spec);
 
   ensureRsvgConvert();
 

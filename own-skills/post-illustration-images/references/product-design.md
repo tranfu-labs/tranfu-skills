@@ -15,7 +15,7 @@ content analysis
 -> per-image structure
 -> per-image metaphor
 -> native Codex generation
--> optional Brand Plugin overlay
+-> default Brand Plugin overlay
 -> QA
 -> saved assets
 ```
@@ -34,8 +34,8 @@ content analysis
 3. Style Reference images are QA baselines, not generation inputs.
    - Long-lived reference images live in `assets/style-references/`.
    - Each routed style must have exactly one reference image.
-   - Specs should record the reference under `styleReference.image`; styles without a machine spec must list it in `references/style-index.md`.
-   - Reference images are used for style drift review and prompt correction only. Ignore their semantic content.
+   - Every production Style Spec records its reference under `styleReference.image`; production styles without a machine spec are incomplete.
+   - Reference images are used for style drift review and prompt correction only. Ignore their semantic content and any brand watermark presence or position.
    - Canvas size, geometry, slots, and palette values still come from the Style Spec, not from the reference image.
 
 4. Shot list is mandatory.
@@ -46,16 +46,19 @@ content analysis
    - Structure organizes information relationships.
    - Metaphor turns abstract content into a concrete scene.
 
-6. Brand Plugin is optional and slot-bound.
+6. Brand Plugin is default-on, user-disableable, and slot-bound.
    - Brand enablement and assets live in `references/brand.md`.
    - Brand assets live in `assets/brand/`.
    - The selected Style Spec controls brand placement and size.
+   - Every production Style Spec defines an enabled top-right brand slot and matching reserved area.
+   - Missing overlay capability blocks branded delivery unless the user explicitly disables branding.
    - Native image generation must not draw brand logos.
 
 7. Native Codex image generation is the primary generation path.
    - Other image skills are not part of the default route.
    - HTML/CSS rendering is not the main path for this skill.
    - Deterministic overlay scripts may be used for fixed components after generation.
+   - `scripts/apply-brand-overlay.mjs` validates the enabled top-right slot, reserved-area containment, canvas bounds, top-right quadrant, and clear-area constraint before rendering.
    - `scripts/apply-brand-overlay.mjs` requires `rsvg-convert` and no npm package.
    - `scripts/check-rsvg-convert.mjs` verifies that dependency and provides install guidance before Brand Plugin overlay work.
    - If `rsvg-convert` is still unavailable after two recorded install checks, stop branded delivery and provide manual install instructions.
@@ -89,9 +92,14 @@ post-illustration-images/
     styles/
       wechat-style-doodle.md
       wechat-style-doodle.spec.json
+      xhs-style-cream-paper.md
+      xhs-style-cream-paper.spec.json
       xhs-style-explainer-notebook.md
       xhs-style-explainer-notebook.spec.json
+      xhs-style-orange-card.md
+      xhs-style-orange-card.spec.json
       zhihu-style-title.md
+      zhihu-style-title.spec.json
 ```
 
 ## Default Output Contract
@@ -114,14 +122,14 @@ post-illustration-output/<content-slug>/
   manifest.md
 ```
 
-When Brand Plugin is disabled, `images/` may contain the final PNG files directly.
+When the user explicitly disables Brand Plugin, `images/` may contain the final PNG files directly. Otherwise the branded PNG is the production deliverable and the unbranded PNG is retained as its source.
 
 `manifest.md` records:
 
 - File
 - Platform
 - Style Spec
-- Machine Spec path, if any
+- Machine Spec path
 - Brand Plugin enabled/disabled
 - Shot list path
 - Prompt path
@@ -132,6 +140,7 @@ When Brand Plugin is disabled, `images/` may contain the final PNG files directl
 - Content QA status
 - Style Spec QA status
 - Brand Plugin QA status, if enabled
+- Brand overlay status; `applied` by default or `disabled-by-user` only after an explicit opt-out
 
 ## Extension Rules
 
@@ -140,9 +149,10 @@ To add a new visual style:
 1. Add the full style prompt to `references/styles/<style-id>.md`.
 2. Add a row to `references/style-index.md`.
 3. Add one long-lived style reference image to `assets/style-references/<style-id>.png`.
-4. Include platform, default use, routing hints, Style Reference path, and machine-readable Style Spec when scripts need fixed geometry.
-5. If a machine spec exists, add `styleReference.image`, `styleReference.usage`, `styleReference.contentPolicy`, and `styleReference.isGenerationInput`.
-6. Do not copy the full style prompt into `SKILL.md`.
+4. Include platform, default use, routing hints, Style Reference path, and a machine-readable Style Spec; it is required for default brand-overlay geometry.
+5. Add `styleReference.image`, `styleReference.usage`, `styleReference.contentPolicy`, and `styleReference.isGenerationInput` to the machine spec.
+6. Add an enabled top-right `fixedComponents.brandSlot`, a matching `layout.brandReservedArea`, and `generationConstraints.keepBrandReservedAreaClear: true`.
+7. Do not copy the full style prompt into `SKILL.md`.
 
 To change brand behavior:
 
@@ -170,6 +180,7 @@ The skill is working when a fresh agent can:
 - Save `shot-list.md` and `prompts/*.md` before generation.
 - Keep the image set visually consistent.
 - Keep model-drawn brand and page-number badges out of generated images.
-- Apply Brand Plugin overlays only when enabled and only through the selected Style Spec's slot.
+- Apply the Brand Plugin overlay to every production image unless the user explicitly disables it, and only through the selected Style Spec's top-right slot.
+- Ignore Style Reference watermark presence and position when deciding production branding.
 - Save outputs with a manifest.
 - Explain QA results and fallback decisions.

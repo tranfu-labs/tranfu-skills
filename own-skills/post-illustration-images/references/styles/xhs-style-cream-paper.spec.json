@@ -16,6 +16,7 @@
     "accent.coral": "#F26D5B",
     "accent.skyBlue": "#B9D7FF",
     "accent.yellow": "#FFD966",
+    "brand.red": "#E63A46",
     "surface.pastelTint": "#F5F1E8",
     "shadow.warmGray": "#D8CFC3"
   },
@@ -32,24 +33,29 @@
       "width": 920,
       "height": 1248
     },
-    "brandReservedArea": null
+    "brandReservedArea": {
+      "x": 842,
+      "y": 44,
+      "width": 208,
+      "height": 90
+    }
   },
   "fixedComponents": {
     "pageNumberBadge": false,
     "brandSlot": {
-      "enabled": false,
-      "anchor": null,
-      "x": null,
-      "y": null,
-      "width": null,
-      "height": null,
+      "enabled": true,
+      "anchor": "top-right",
+      "x": 872,
+      "y": 64,
+      "width": 148,
+      "height": 40,
       "assetFit": "contain"
     }
   },
   "generationConstraints": {
     "forbidModelDrawnBrand": true,
     "forbidPageNumberBadge": false,
-    "keepBrandReservedAreaClear": false,
+    "keepBrandReservedAreaClear": true,
     "forbidPhotorealisticImagery": true,
     "forbidRealAppScreenshots": true,
     "forbidGlossy3D": true,
@@ -59,7 +65,7 @@
   "styleReference": {
     "image": "assets/style-references/xhs-cream-paper.png",
     "usage": "QA and failure review only; do not use as generation input or copy its content.",
-    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and fixed-component treatment.",
+    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and non-brand fixed-component treatment. Ignore whether the reference image contains a brand watermark and ignore its brand position; production branding is controlled only by fixedComponents.brandSlot.",
     "isGenerationInput": false
   }
 }

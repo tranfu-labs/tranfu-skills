@@ -136,9 +136,9 @@
 
 注意：系列顺序通过文件名和 manifest 记录，不在画面中绘制页码。
 
-### 5.2 右上角功能标签
+### 5.2 顶部靠右功能标签（品牌区左侧）
 
-位置：右上角。  
+位置：顶部靠右，使用 `x=590, y=68, w=240, h=56`，位于右上角品牌预留区左侧，不得与水印重叠。
 组成：
 
 - 三个小圆点：黄 / 橙 / 红
@@ -146,6 +146,13 @@
 - 小星星或线条装饰
 
 作用：提升系列感和笔记封面感。
+
+### 5.2.1 右上角品牌水印
+
+- 所有生产图片默认启用 Brand Plugin；只有用户明确要求无水印、无 logo 或禁用 Tranfu 品牌时才关闭。
+- 右上角品牌预留区为 `x=842, y=44, w=208, h=90`，实际水印槽为 `x=872, y=64, w=148, h=40`。
+- 图像模型必须让该区域保持自然米白纸张/背景状态，不放文字、标签、圆点、卡片、图标或装饰，也不能绘制占位框或槽位标记。
+- 真实 `TF + Tranfu` SVG 在图像生成后确定性叠加；参考图是否含水印不影响这条生产规则。
 
 ### 5.3 副标题胶囊
 
@@ -276,7 +283,7 @@
 结构：
 
 ```text
-左上角自然留白          Quick Guide 标签
+左上角自然留白      Quick Guide 标签      品牌预留区
 
 大标题
 副标题胶囊
@@ -451,7 +458,8 @@
 
 - 背景
 - 色彩
-- 右上角标签
+- 顶部靠右、位于品牌区左侧的功能标签
+- 右上角真实品牌水印位置
 - 圆角卡片
 - 虚线描边
 - 高亮方式
@@ -550,8 +558,10 @@ Warm orange outer border, cream torn-paper inner canvas, subtle grid-paper backg
 
 Fixed components:
 - No page number badge; keep the top-left area naturally open or lightly decorated
-- Top-right small sticker label: Quick Guide
-- Three small colored dots near the top-right
+- Small sticker label `Quick Guide` in the top header immediately left of the brand reserved area
+- Three small colored dots beside the Quick Guide label, outside the brand reserved area
+- Keep the top-right brand reserved area naturally clear; do not draw a logo, TF mark, Tranfu text, watermark, brand sticker, placeholder frame, or visible brand-slot marker
+- After generation, overlay the real `TF + Tranfu` SVG in the top-right by default unless the user explicitly disabled branding
 - Main title: [MAIN_TITLE]
 - Subtitle pill: [SUBTITLE]
 - Bottom Key Point strip with one main takeaway and one smaller supporting line
@@ -683,6 +693,7 @@ Bottom Key Point: [FINAL_TAKEAWAY]
 - 像企业 PPT 模板
 - 像网页落地页
 - 像硬核技术架构图
+- 模型生成的 logo、TF、Tranfu、水印、品牌贴纸、品牌槽占位框或可见引导标记
 
 ---
 
@@ -696,7 +707,9 @@ Bottom Key Point: [FINAL_TAKEAWAY]
 - 是否保留米白纸张和撕纸边？
 - 是否有浅网格背景？
 - 是否没有页码徽章、编号贴纸或分页标签？
-- 右上角标签是否统一？
+- 顶部靠右的 Quick Guide 标签是否位于品牌区左侧且不与其重叠？
+- 右上角品牌预留区是否自然干净，没有正文、标签、圆点、图标或装饰？
+- 用户未明确禁用品牌时，是否已叠加真实 `TF + Tranfu` SVG？
 - 底部 Key Point 是否统一？
 - 图标风格是否统一？
 
@@ -731,4 +744,4 @@ Bottom Key Point: [FINAL_TAKEAWAY]
 
 给任何作图 AI / Agent 的一句话版本：
 
-> 使用暖橙外框、米白撕纸网格背景、粗黑标题、橙色胶囊副标题、圆角虚线卡片、绿色/橙色信息模块、黄色高亮笔刷、统一图标贴纸、底部 Key Point 条和右下角友好表情，生成小红书知识笔记风格的竖版 3:4 系列图；具体内容全部由当前主题注入，不要复用旧案例或旧文案。
+> 使用暖橙外框、米白撕纸网格背景、粗黑标题、橙色胶囊副标题、圆角虚线卡片、绿色/橙色信息模块、黄色高亮笔刷、统一图标贴纸、底部 Key Point 条和右下角友好表情，生成小红书知识笔记风格的竖版 3:4 系列图；右上角保持自然留白并在生成后默认叠加真实 `TF + Tranfu` SVG，Quick Guide 标签放在品牌区左侧；具体内容全部由当前主题注入，不要复用旧案例或旧文案。

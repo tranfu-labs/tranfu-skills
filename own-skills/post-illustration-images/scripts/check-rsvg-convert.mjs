@@ -55,7 +55,7 @@ function main() {
 
   const attempts = Number(state.attempts || 0);
   if (attempts >= maxAttempts) {
-    console.log(`rsvg-convert is still missing after ${maxAttempts} install checks. Stop here and install it manually: ${installCommand()}. After it succeeds, rerun this check or call the skill again.`);
+    console.log(`rsvg-convert is still missing after ${maxAttempts} install checks. Default production branding cannot continue. Install it manually: ${installCommand()}. After it succeeds, rerun this check or call the skill again; otherwise the user must explicitly disable branding.`);
     process.exitCode = 2;
     return;
   }
@@ -68,13 +68,13 @@ function main() {
   });
 
   if (nextAttempts >= maxAttempts) {
-    console.log(`rsvg-convert is still missing after ${maxAttempts} install checks. Stop here and install it manually: ${installCommand()}. After it succeeds, rerun this check or call the skill again.`);
+    console.log(`rsvg-convert is still missing after ${maxAttempts} install checks. Default production branding cannot continue. Install it manually: ${installCommand()}. After it succeeds, rerun this check or call the skill again; otherwise the user must explicitly disable branding.`);
     process.exitCode = 2;
     return;
   }
 
   const remaining = maxAttempts - nextAttempts;
-  console.log(`rsvg-convert is not installed. It is required for brand overlay styles such as wechat-doodle, xhs-explainer-notebook, and zhihu-tech. Install command: ${installCommand()}`);
+  console.log(`rsvg-convert is not installed. It is required for the default brand overlay on every production style. Install command: ${installCommand()}`);
   console.log(`After installation, rerun: node scripts/check-rsvg-convert.mjs --record-attempt. Remaining install checks before stopping: ${remaining}.`);
   process.exitCode = 1;
 }
