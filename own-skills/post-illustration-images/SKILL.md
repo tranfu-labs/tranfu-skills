@@ -1,13 +1,11 @@
 ---
 name: post-illustration-images
-display_name: Post Illustration Generation
-display_name_zh: 文章配图生成
 version: 0.1.0
 author: BruceL017
-updated_at: 2026-07-10
+updated_at: "2026-07-01"
 origin: own
 allow_exec: true
-description: Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, and Zhihu posts. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or the user explicitly names another image-generation skill. Safety boundaries: one suite style, one image per generation, no model-drawn logos or page badges.
+description: "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, and Zhihu posts. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or the user explicitly names another image-generation skill. Safety boundaries: one suite style, one image per generation, no model-drawn logos or page badges."
 ---
 
 # Post Illustration Images
@@ -357,15 +355,16 @@ If `brand_enabled` is true and the selected `style_spec` defines an enabled bran
 - Overlay the asset after image generation. Do not ask the image model to redraw the logo.
 - Use the selected `style_spec` slot, size, and safe-area rules.
 - Keep the unbranded generated image unless the user explicitly asks to replace it.
-- Run from the skill root so script and spec paths are stable:
+- Convert the project output folder to an absolute path before changing directories. Run from the skill root so script and spec paths are stable while `--input` and `--output` still point outside the skill folder:
 
 ```bash
+PROJECT_OUTPUT_DIR="$(cd <project-output-dir> && pwd)"
 cd <skill-root>
 node scripts/apply-brand-overlay.mjs \
   --style-spec <selected_style_bundle.style_spec> \
   --brand-svg assets/brand/tranfu-logo-reference.svg \
-  --input <project-output-dir>/images/unbranded/01-cover.png \
-  --output <project-output-dir>/images/branded/01-cover.png
+  --input "$PROJECT_OUTPUT_DIR/images/unbranded/01-cover.png" \
+  --output "$PROJECT_OUTPUT_DIR/images/branded/01-cover.png"
 ```
 
 - The overlay command is generic for every brand-enabled `style_spec`, including `wechat-doodle`, `xhs-explainer-notebook`, and `zhihu-tech`.
