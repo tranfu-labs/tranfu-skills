@@ -59,7 +59,7 @@
   "styleReference": {
     "image": "assets/style-references/wechat-doodle.png",
     "usage": "QA and failure review only; do not use as generation input or copy its content.",
-    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and fixed-component treatment.",
+    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and non-brand fixed-component treatment. Ignore whether the reference image contains a brand watermark and ignore its brand position; production branding is controlled only by fixedComponents.brandSlot.",
     "isGenerationInput": false
   }
 }

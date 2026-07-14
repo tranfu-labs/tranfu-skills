@@ -4,6 +4,8 @@ Compile one prompt per image. The selected Style Spec remains the suite-level vi
 
 Do not ask the image model to create fixed brand components. Logos, `TF`, `Tranfu`, watermarks, and page-number badges are not part of native image generation.
 
+Brand Plugin is enabled for every production image by default and disabled only by an explicit user request. The selected Style Spec's top-right `brandSlot`, not the Style Reference, controls the reservation and deterministic overlay.
+
 Some style files may be written as "generate a whole set" prompts. Use those passages to infer default count, sequence logic, and set consistency, but never pass a batch-generation instruction into a single image prompt.
 
 Save each compiled single-image prompt under the output folder's `prompts/` directory before image generation, using the same sequence prefix as the target image filename.
@@ -16,7 +18,7 @@ Save each compiled single-image prompt under the output folder's `prompts/` dire
 4. Content expression structure.
 5. Visual metaphor and physical action.
 6. Required page text or short labels.
-7. Brand Plugin status and the selected Style Spec's brand-slot reservation, if enabled.
+7. Brand Plugin status and the selected Style Spec's top-right brand-slot reservation; enabled by default unless the user explicitly disabled it.
 8. Negative constraints.
 9. Single-image generation instruction.
 
@@ -50,8 +52,10 @@ Short labels:
 <short Chinese labels only; avoid long paragraphs>
 
 Brand Plugin:
-<enabled/disabled>
-If enabled: keep the selected Style Spec's brand slot free of important content. Do not draw any logo, TF mark, Tranfu text, watermark, brand sticker, page-number badge, placeholder frame, reserve box, outline, empty label, or visible brand-slot marker. The real brand SVG will be overlaid after generation.
+<enabled by default / disabled by explicit user request>
+Always: do not draw any logo, TF mark, Tranfu text, watermark, brand sticker, page-number badge, placeholder frame, reserve box, outline, empty label, or visible brand-slot marker.
+If enabled: keep the selected Style Spec's top-right brand slot naturally free of important content. The real brand SVG will be overlaid after generation.
+If disabled by explicit user request: omit the reservation and overlay instructions, but keep the no-logo/no-watermark constraint.
 
 Constraints:
 - Generate only this one image, not a collage and not the whole set.
@@ -96,6 +100,8 @@ Keep these out of the image model unless a selected Style Spec explicitly says o
 - Template-level overlays that must be pixel-stable.
 
 If the model draws any of these by accident, regenerate with stronger negative constraints before applying overlays.
+
+Do not use Style Reference watermark presence, absence, or position to enable, disable, or place the production brand overlay.
 
 ## Text Handling
 

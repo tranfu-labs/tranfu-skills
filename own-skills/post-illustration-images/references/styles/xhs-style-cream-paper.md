@@ -26,6 +26,7 @@ Composition:
 - Vertical 3:4 poster ratio.
 - Clear top-to-bottom reading flow.
 - Generous margins and whitespace.
+- Keep the top-right brand reserved area (`x=842, y=44, w=208, h=90`) naturally clear of titles, labels, icons, and decorations.
 - Modular layout using visual blocks, ribbons, labels, cards, strips, badges, or sticky-note areas.
 - Every visual section should feel aligned and intentionally spaced.
 - Use visual rhythm from large headline area, highlighted separators, grouped modules, and a compact footer area.
@@ -67,6 +68,7 @@ Quality requirements:
 - No realistic screenshots.
 - No stock-photo feeling.
 - No excessive decoration.
+- Do not let the image model draw a logo, TF mark, Tranfu text, watermark, brand sticker, placeholder frame, or visible brand-slot marker. A real `TF + Tranfu` SVG is overlaid in the top-right after generation by default.
 ```
 
 ## 中文版提示词
@@ -88,6 +90,7 @@ Quality requirements:
 - 竖版 3:4 比例。
 - 阅读路径从上到下清楚流动。
 - 保留充足留白和边距。
+- 右上角品牌预留区 `x=842, y=44, w=208, h=90` 保持自然留白，不放标题、标签、图标或装饰。
 - 使用模块化区域组织画面，例如标题区、高亮条、信息卡、横向提示条、底部标签区。
 - 所有视觉区域要对齐清楚，间距稳定。
 - 画面节奏由大标题、分隔高亮、模块组、底部小标签共同形成。
@@ -129,6 +132,7 @@ Quality requirements:
 - 不要真实截图感。
 - 不要图库照片感。
 - 装饰克制，不喧宾夺主。
+- 图像模型不生成 logo、TF、Tranfu、水印、品牌贴纸、占位框或可见槽位标记；生产图片默认在生成后叠加右上角真实 `TF + Tranfu` SVG。
 ```
 
 ## 可复用视觉组件
@@ -197,7 +201,16 @@ card_radius: soft rounded corners
 border_style: imperfect hand-drawn marker line
 depth_style: low paper layering
 footer_style: compact pill or badge area
+brand_reserved_area: top-right, x=842, y=44, w=208, h=90
+brand_slot: top-right, x=872, y=64, w=148, h=40
 ```
+
+## 品牌叠加规则
+
+- 所有生产图片默认启用 Brand Plugin；只有用户明确要求无水印、无 logo 或禁用 Tranfu 品牌时才关闭。
+- 图像模型只负责保持右上角品牌预留区自然干净，不得绘制、标记或模拟品牌槽位。
+- 真实 `TF + Tranfu` SVG 在图像生成后叠加到 `x=872, y=64, w=148, h=40`。
+- 参考图是否包含水印不影响生产规则；实际品牌状态和位置只以本风格的 Style Spec 为准。
 
 ## 禁用项
 
@@ -213,6 +226,7 @@ Do not use overly decorative backgrounds.
 Do not make the image dominated by one color family.
 Do not mix multiple unrelated illustration styles.
 Do not use brand-specific icons unless supplied separately as content input.
+Do not let the image model draw logos, TF, Tranfu, watermarks, brand stickers, placeholder frames, or visible brand-slot markers.
 ```
 
 ## 生成前检查
@@ -227,10 +241,12 @@ Are icons hand-drawn and visually consistent?
 Is the layout modular and spacious?
 Are decorations restrained?
 Does the image avoid realistic screenshots and stock-photo feeling?
+Is the top-right brand reserved area naturally clear for the deterministic overlay?
+Is the production image scheduled to receive the real `TF + Tranfu` SVG unless the user explicitly disabled branding?
 ```
 
 ## 一句话压缩版
 
 ```text
-Warm cream-paper Xiaohongshu infographic, hand-drawn marker typography, pastel brush highlights, rounded doodle cards, thick-outline cartoon icons, subtle notebook grid texture, clean mobile-first hierarchy, spacious modular layout, friendly educational tone, no photorealism, no screenshots, no dark tech style.
+Warm cream-paper Xiaohongshu infographic, hand-drawn marker typography, pastel brush highlights, rounded doodle cards, thick-outline cartoon icons, subtle notebook grid texture, clean mobile-first hierarchy, spacious modular layout, friendly educational tone, keep the top-right brand slot naturally clear for the default post-generation `TF + Tranfu` SVG overlay, no model-drawn logos, no photorealism, no screenshots, no dark tech style.
 ```

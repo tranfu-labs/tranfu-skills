@@ -2,10 +2,10 @@
 name: post-illustration-images
 version: 0.1.0
 author: BruceL017
-updated_at: "2026-07-01"
+updated_at: "2026-07-14"
 origin: own
 allow_exec: true
-description: "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, and Zhihu posts. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or the user explicitly names another image-generation skill. Safety boundaries: one suite style, one image per generation, no model-drawn logos or page badges."
+description: "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, and Zhihu posts. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or the user explicitly names another image-generation skill. Safety boundaries: one suite style, one image per generation, no model-drawn logos or page badges, and a real top-right brand overlay on production images by default."
 ---
 
 # Post Illustration Images
@@ -23,10 +23,10 @@ content analysis
 -> per-image content structure
 -> per-image visual metaphor
 -> selected visual style constraints
--> brand slot reservation when Brand Plugin is enabled
+-> top-right brand slot reservation unless the user explicitly disables branding
 -> single-image prompt without model-drawn brand or page badge
 -> native Codex image generation
--> optional Brand Plugin overlay using the selected style_spec slot
+-> default Brand Plugin overlay using the selected style_spec slot
 -> QA and fallback
 -> saved assets and delivery notes
 ```
@@ -43,17 +43,17 @@ Terminology:
 
 - `style_id`: the stable ID from `references/style-index.md`, for example `wechat-doodle`.
 - `style_file`: the selected human-readable Markdown style file under `references/styles/`.
-- `style_spec`: the selected machine-readable `.spec.json`, if present.
+- `style_spec`: the selected machine-readable `.spec.json`; required for every supported production style because it owns the default brand geometry.
 - `style_reference`: the QA-only reference image listed in `references/style-index.md`.
-- `selected_style_bundle`: `{ style_id, platform, style_file, style_spec?, style_reference?, brand_slot_enabled }`.
+- `selected_style_bundle`: `{ style_id, platform, style_file, style_spec, style_reference?, brand_slot_enabled }`.
 
 ## Architecture Boundary
 
 `style_spec` is the authority for each platform visual template. It controls canvas size, aspect ratio, fixed color values, layout, safe areas, negative constraints, and any fixed component slots such as a brand slot.
 
-`style_reference` images are long-lived QA baselines for failure review. They show the expected visual presentation of a style, but they are not generation inputs and their semantic content must never be copied into new images.
+`style_reference` images are long-lived QA baselines for failure review. They show the expected visual presentation of a style, but they are not generation inputs and their semantic content must never be copied into new images. Whether a reference image contains a watermark, and where that watermark appears, never controls production branding.
 
-Brand Plugin is optional and pluggable. It only decides whether a brand is enabled and which brand asset to use. It MUST NOT decide canvas size, color palette, coordinates, or platform layout. Priority: user-explicit-disable > selected `style_spec` brand slot presence > default disabled. Brand Plugin runs only when the user has not disabled it and the selected `style_spec` defines an enabled brand slot.
+Brand Plugin is default-on and user-disableable. It decides whether the user explicitly disabled branding and which brand asset to use. It MUST NOT decide canvas size, color palette, coordinates, or platform layout. Priority: user-explicit-disable > default enabled. Every production `style_spec` MUST define an enabled top-right `brandSlot`; when branding is not explicitly disabled, a missing or disabled slot is a blocking configuration error rather than permission to deliver an unbranded image.
 
 The image model MUST NOT draw logos, `TF`, `Tranfu`, watermarks, page-number badges, placeholder frames, reserve boxes, or other fixed brand components. Those are either omitted or added after generation by a deterministic overlay step. If the user explicitly requests model-drawn brand text or inline logo simulation, state the QA risk and ask for confirmation before proceeding.
 
@@ -95,7 +95,7 @@ Resolve `references/`, `assets/`, and `scripts/` from the skill root. User sourc
 
 ## Workflow
 
-MUST create and update a task list for the tasks below: Intake, Content Analysis, Select Suite-Level Style Spec, Select Anchors, Build Shot List, Compile Prompts, Generate One Image At A Time, Continue Existing Assets when used, Apply Brand Plugin Overlay when used, QA And Fallback, Save And Deliver.
+MUST create and update a task list for the tasks below: Intake, Content Analysis, Select Suite-Level Style Spec, Select Anchors, Build Shot List, Compile Prompts, Generate One Image At A Time, Continue Existing Assets when used, Apply Default Brand Plugin Overlay unless explicitly disabled, QA And Fallback, Save And Deliver.
 
 ### 1. Intake
 
@@ -106,7 +106,7 @@ MUST create and update a task list for the tasks below: Intake, Content Analysis
    - `style_id`: explicit style ID or `null`.
    - `count`: positive integer or `null`.
    - `output_dir`: user-provided path or default `post-illustration-output/<content-slug>/`.
-   - `brand_disabled`: boolean.
+   - `brand_disabled`: boolean, default `false`; set it to `true` only when the user explicitly requests no watermark, no logo, or no Tranfu branding.
 
 2. If `source_content` is missing, ask for the article/note/post content and stop this run until it is provided.
 
@@ -120,7 +120,7 @@ Exit when:
 
 - `platform` is in `{wechat, xhs, zhihu}`.
 - `source_content` is non-empty or references an existing readable file path.
-- `output_dir`, `requested_output`, `style_id`, `count`, and `brand_disabled` are explicitly set to a value or `null`.
+- `output_dir`, `requested_output`, `style_id`, and `count` are explicitly set to a value or `null`, and `brand_disabled` is explicitly set to `true` or `false`.
 
 ### 2. Content Analysis
 
@@ -151,16 +151,17 @@ Exit when `AnalysisSummary.main_line`, `core_claim`, `audience_value`, `expressi
 2. If the user provided `style_id` and it is not listed, show available candidates for the platform and ask the user to choose or approve automatic selection.
 3. If no style is specified, select the best `style_id` for `platform` and `AnalysisSummary.expression_need`.
 4. Read the selected `style_file` completely.
-5. If the selected row has `style_spec`, read it before building the shot list. If `style_file` or required `style_spec` is missing or unreadable, stop before Section 4 and report the missing path.
-6. Set `selected_style_bundle = { style_id, platform, style_file, style_spec?, style_reference?, brand_slot_enabled }`.
-7. Compute `brand_enabled = !brand_disabled && selected_style_bundle.brand_slot_enabled`.
-8. Happy path order is: select and read `style_file`/`style_spec` -> determine `brand_enabled` -> run `rsvg-convert` checks only when `brand_enabled` is true.
-9. If `brand_enabled` is true, run `cd <skill-root> && node scripts/check-rsvg-convert.mjs`:
+5. Read the selected `style_spec` before building the shot list. If `style_file` or `style_spec` is missing or unreadable, stop before Section 4 and report the missing path.
+6. Set `selected_style_bundle = { style_id, platform, style_file, style_spec, style_reference?, brand_slot_enabled }`.
+7. If `brand_disabled` is false, validate that the selected `style_spec` defines an enabled top-right `brandSlot`. If it does not, stop as `BLOCKER: required production brand slot unavailable`.
+8. Compute `brand_enabled = !brand_disabled`. Production branding does not depend on whether the Style Reference contains a watermark.
+9. Happy path order is: select and read `style_file`/`style_spec` -> validate the default brand slot -> determine `brand_enabled` -> run `rsvg-convert` checks only when `brand_enabled` is true.
+10. If `brand_enabled` is true, run `cd <skill-root> && node scripts/check-rsvg-convert.mjs`:
    - If installed, continue.
    - If missing, ask whether to install the command shown by the script. Do not install without approval.
-   - If the user declines or does not answer, set `brand_enabled = false`, continue unbranded, and record this in `manifest.md`.
+   - If the user declines or does not approve installation, deliver unbranded only when they explicitly disable branding; otherwise stop as `BLOCKER: required brand overlay unavailable`.
    - After an approved install attempt, run `cd <skill-root> && node scripts/check-rsvg-convert.mjs --record-attempt`.
-   - If the second recorded check still fails, set `brand_enabled = false`, show the manual install command, and continue unbranded.
+   - If the second recorded check still fails, show the manual install command and stop as `BLOCKER: required brand overlay unavailable`, unless the user explicitly disables branding.
 
 Rules:
 
@@ -190,7 +191,7 @@ Exit when each selected anchor has `{ anchor_id, source_excerpt, rationale, prio
 
 ### 5. Build Shot List
 
-The shot list is mandatory. If `style_spec` has not been read when present, return to Section 3 before writing the shot list. `shot-list.md` MUST use this markdown bullet order for each image:
+The shot list is mandatory. If `style_spec` has not been read, return to Section 3 before writing the shot list. `shot-list.md` MUST use this markdown bullet order for each image:
 
 - Placement or sequence
 - Topic
@@ -200,7 +201,7 @@ The shot list is mandatory. If `style_spec` has not been read when present, retu
 - Main actor/object action
 - Suggested elements
 - Short labels
-- Fixed component reservations from the selected `style_spec`, if any
+- Fixed component reservations from the selected `style_spec`, including the default top-right brand slot unless explicitly disabled
 - QA risk
 
 Each image MUST express exactly one core idea. If one image contains multiple ideas, split or delete. Save the finalized shot list to `shot-list.md` in the output folder before generating images.
@@ -216,7 +217,7 @@ GOOD:
 - Main actor/object action: A hand moves one highlighted note into a clean frame.
 - Suggested elements: notes, frame, arrow, small checklist marks
 - Short labels: "before", "anchor", "image"
-- Fixed component reservations from the selected `style_spec`, if any: bottom-right brand slot from selected `style_spec`, no important content there
+- Fixed component reservations from the selected `style_spec`: top-right brand slot from selected `style_spec`, no important content there
 - QA risk: model may add extra labels or draw a fake logo
 ```
 
@@ -273,7 +274,7 @@ Reason: `style_reference` is QA-only; semantic content from reference images mus
 WRONG:
 
 ```text
-Draw an empty dashed rectangle labeled "logo area" in the bottom-right corner.
+Draw an empty dashed rectangle labeled "logo area" in the top-right corner.
 ```
 
 Reason: visible brand-slot markers and reserve boxes are fixed components, not image-model content.
@@ -304,7 +305,7 @@ MUST use native Codex/OpenAI image generation only. NEVER invoke other image ski
 
 Dispatch generation mode:
 
-- New suite: generate one image per prompt, then run Section 7.5 if `brand_enabled`.
+- New suite: generate one image per prompt, then MUST run Section 7.5 when `brand_enabled` (the default).
 - Continue existing assets: use Section 7.1.
 - Overlay-only request: use Section 7.5 without regenerating source images.
 - Otherwise: ask one concise question or stop as `BLOCKER: unknown generation mode`.
@@ -340,6 +341,7 @@ Steps:
 
 - First identify the exact target image set from the current output folder, `manifest.md`, user-provided screenshots/paths, and recent native generation cache when needed.
 - Do not regenerate or reprocess the whole set when the request concerns only one or a few existing images.
+- Any newly generated, regenerated, restored, or continued production image receives the default brand overlay unless the user explicitly disables branding; an older unbranded manifest does not disable the current default.
 - If the target image is ambiguous or the discovered count conflicts with the user's count, create a quick contact sheet or ask for confirmation before copying candidates into the final output. If ambiguity remains unresolved, stop as `BLOCKER: unresolved target`.
 - For overlays, start from the unbranded/source image when available so the same brand mark is not applied twice.
 - If overlay is requested and no unbranded/source image exists, ask whether to use the current branded image with duplicate-mark risk or regenerate the source. If the user does not choose, stop as `BLOCKER: missing source image`.
@@ -347,7 +349,7 @@ Steps:
 
 Exit when `ContinuePlan.targets`, `operation`, `source_images`, `output_paths`, and `manifest_rows_to_update` are non-empty where required. Then run only the required overlay, copy, or single-image generation step.
 
-### 7.5 Apply Brand Plugin Overlay
+### 7.5 Apply Default Brand Plugin Overlay
 
 If `brand_enabled` is true and the selected `style_spec` defines an enabled brand slot:
 
@@ -367,13 +369,13 @@ node scripts/apply-brand-overlay.mjs \
   --output "$PROJECT_OUTPUT_DIR/images/branded/01-cover.png"
 ```
 
-- The overlay command is generic for every brand-enabled `style_spec`, including `wechat-doodle`, `xhs-explainer-notebook`, and `zhihu-tech`.
+- The overlay command is generic for every production `style_spec`, including `wechat-doodle`, `xhs-explainer-notebook`, `xhs-cream-paper`, `xhs-orange-card`, and `zhihu-tech`.
 - The overlay script has no npm dependency, but it requires `rsvg-convert` to be available on the machine.
 
 ### 8. QA And Fallback
 
 1. Read `references/qa-checklist.md` before judging output.
-2. Check every image against the QA checklist and selected `style_reference`.
+2. Check every image against the QA checklist and selected `style_reference`. Ignore brand-watermark presence and position in the reference; validate production branding only against the selected `style_spec`.
 3. If all images pass content QA, style QA, brand QA, and set QA, enter Section 9.
 4. If an image fails, identify the reason before retrying. Retry a failed image at most two times after the first failed output.
 5. If the same image still fails after retries, return to Section 4 for anchor/shot-list adjustment or deliver only with explicit `residual_risk` if the user approves.
@@ -392,6 +394,8 @@ If an image fails, identify the reason before retrying:
 ### 9. Save And Deliver
 
 Create or update `manifest.md` in the output folder using this stable YAML schema. Continuation work in Section 7.1 MUST patch this same schema instead of inventing a separate mini manifest.
+
+Unless the user explicitly disabled branding, `brand_plugin_enabled` MUST be `true`, each final `file` MUST point to `images/branded/`, each `source_file` MUST point to its retained unbranded source, and `brand_overlay_status` MUST be `applied`. An unbranded source is not a production deliverable. If the user explicitly disabled branding, record `brand_plugin_enabled: false` and `brand_overlay_status: disabled-by-user`.
 
 ```yaml
 post_illustration_bundle:
@@ -435,7 +439,8 @@ Final response must include:
 
 - Missing source content: return to Section 1 and ask for the article/note/post.
 - Unknown or unreadable `style_id`, `style_file`, or required `style_spec`: stop before Section 4 and list available candidates.
-- `rsvg-convert` missing and user declines install: continue unbranded and record `brand_plugin_enabled: false`; if user required branding, stop as `BLOCKER: brand overlay unavailable`.
+- `rsvg-convert` missing and the user declines or does not approve installation: stop as `BLOCKER: required brand overlay unavailable`; continue unbranded only if the user explicitly disables branding and record `brand_plugin_enabled: false`.
+- Selected production Style Spec lacks an enabled top-right `brandSlot`: stop as `BLOCKER: required production brand slot unavailable`.
 - Native image generation unavailable: stop as `BLOCKER: native image generation unavailable`.
 - QA failure after retry limit: return to Section 4 for anchor revision or record `residual_risk` only with user approval.
 - User changes platform or suite style mid-run: return to Section 3, mark previous shot list superseded, and do not mix styles inside one bundle.
@@ -449,7 +454,10 @@ Final response must include:
 - MUST use content expression structure to organize information.
 - MUST use visual metaphor to turn abstraction into a concrete scene.
 - MUST treat the suite-level `style_spec` as authority for platform appearance, dimensions, colors, layout, safe areas, and fixed component slots.
-- MUST enable Brand Plugin only when the user has not disabled it and the selected `style_spec` defines an enabled brand slot.
+- MUST enable Brand Plugin for every production image unless the user explicitly disables branding.
+- MUST require every production `style_spec` to define an enabled top-right `brandSlot`.
+- MUST treat Style Reference watermark presence and position as irrelevant to production branding.
+- MUST apply the real brand SVG overlay before delivery when Brand Plugin is enabled.
 - MUST NOT let Brand Plugin behave as a global visual system.
 - MUST NOT let the image model draw brand logos, page-number badges, placeholder frames, reserve boxes, or visible brand-slot markers.
 - MUST generate and QA one image at a time.

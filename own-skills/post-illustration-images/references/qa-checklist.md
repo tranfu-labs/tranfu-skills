@@ -1,6 +1,6 @@
 # QA Checklist
 
-Run QA after each image, after optional overlays, and before delivery.
+Run QA after each image, after the default brand overlay, and before delivery. Skip overlay QA only when the user explicitly disabled branding.
 
 ## Content QA
 
@@ -20,7 +20,8 @@ Run QA after each image, after optional overlays, and before delivery.
 - Canvas size and page orientation follow the selected Style Spec unless explicitly overridden.
 - Fixed palette follows the selected Style Spec closely enough for the platform template.
 - The selected style has one Style Reference image, and the generated image matches its baseline visual system.
-- Style Reference comparison ignores semantic content and checks only palette, texture, spacing, typography feel, icon/illustration style, composition language, and fixed-component treatment.
+- Style Reference comparison ignores semantic content and checks only palette, texture, spacing, typography feel, icon/illustration style, composition language, and non-brand fixed-component treatment.
+- Style Reference watermark presence, absence, and position are ignored; production branding is validated only against the selected Style Spec.
 - Content stays inside the selected Style Spec's content safe area.
 - Fixed component reserved areas stay clear.
 - Page-number badges are absent unless the selected Style Spec explicitly enables them.
@@ -29,17 +30,18 @@ Run QA after each image, after optional overlays, and before delivery.
 
 ## Brand Plugin QA
 
-Run only when Brand Plugin is enabled.
+Run by default for every production image. Skip only when the user explicitly disabled Brand Plugin.
 
 - The image model did not draw a logo, `TF`, `Tranfu`, watermark, or brand sticker.
 - The image model did not draw a placeholder frame, reserve box, guide outline, empty label, or visible marker for the brand slot.
 - The real brand asset was overlaid after generation.
 - The asset matches `references/brand.md`.
 - Placement and size follow the selected Style Spec's `brandSlot`.
+- The selected Style Spec's `brandSlot` is enabled and anchored at `top-right`.
 - The brand overlay does not block body text, labels, icons, or key visual elements.
 - There is only one brand mark unless the selected Style Spec explicitly allows more.
 
-If Brand Plugin is disabled, QA should record `Brand Plugin: disabled`, not fail the run.
+If the user explicitly disabled Brand Plugin, QA should record `Brand Plugin: disabled by explicit user request`, not fail the run. Any other unbranded production image fails Brand Plugin QA.
 
 ## Set-Level QA
 
