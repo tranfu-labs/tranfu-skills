@@ -1,0 +1,4 @@
+interface:
+  display_name: "Format Content"
+  short_description: "Format Markdown for WeChat in red and white"
+  default_prompt: "Use $format-content to format this Markdown for WeChat with the fixed red-and-white theme."
