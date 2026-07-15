@@ -8,7 +8,7 @@ prompt_examples:
   - prompt: Review the tranfu-site homepage against the TranFu design system and give me a findings report.
     scene: Review against the system
   - prompt: Add responsive behavior to the card component while preserving the original TranFu website style. Adapt the card width, layout, spacing, typography, and stacking behavior across desktop, tablet, and mobile breakpoints.
-  scene: Responsive adaptation
+    scene: Responsive adaptation
 ---
 
 # TranFu Website Design System
