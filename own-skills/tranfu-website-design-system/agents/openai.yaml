@@ -1,8 +1,0 @@
-interface:
-  display_name: "TranFu Website Design System"
-  short_description: "TranFu 官网响应式 UI 设计规范、实现与审查指南"
-  brand_color: "#E63A46"
-  default_prompt: "Use $tranfu-website-design-system to build or review a TranFu website page against the extracted responsive design rules."
-
-policy:
-  allow_implicit_invocation: true

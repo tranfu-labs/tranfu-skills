@@ -7,6 +7,8 @@ prompt_examples:
     scene: 修改现有组件
   - prompt: 审一下 src/app/components/Hero.tsx 是不是符合 TranFu 官网设计规范, 只挑问题别改文件。
     scene: 检查页面设计
+  - prompt: 为卡片组件补充响应式适配，在保持 TranFu 官网视觉风格不变的前提下，针对桌面端、平板端和移动端自动调整卡片宽度、排列方式、间距与字号。
+    scene: 响应式适配
 ---
 
 # TranFu 官网设计规范
@@ -59,7 +61,6 @@ prompt_examples:
 
 | 场景 | 交给 |
 |---|---|
-| `1920` / `1440` / `1280` / `756` / `375` 断点的响应式系统 | **tranfu-website-design-system** |
 | 非 TranFu 品牌或通用设计系统的活 | **ui-ux-pro-max** |
 | 技术架构图 (不属于品牌 UI) | **fireworks-tech-graph** |
 
