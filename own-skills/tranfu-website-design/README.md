@@ -7,6 +7,8 @@ prompt_examples:
     scene: Update a component
   - prompt: Review src/app/components/Hero.tsx against the TranFu website design rules — findings only, don't edit.
     scene: Review the design
+  - prompt: Add responsive behavior to the card component while preserving the original TranFu website style. Adapt the card width, layout, spacing, typography, and stacking behavior across desktop, tablet, and mobile breakpoints.
+    scene: Responsive adaptation
 ---
 
 # TranFu Website Design
@@ -59,7 +61,6 @@ A TranFu React/Vite project — or at least a target component file, screenshot,
 
 | Action | Owner |
 |---|---|
-| Responsive system across `1920` / `1440` / `1280` / `756` / `375` breakpoints | **tranfu-website-design-system** |
 | Non-TranFu brand or generic design system work | **ui-ux-pro-max** |
 | Technical / architecture diagrams (not brand UI) | **fireworks-tech-graph** |
 
