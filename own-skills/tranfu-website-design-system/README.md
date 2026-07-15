@@ -1,4 +1,5 @@
 ---
+description: "Keep the TranFu official website visually consistent — pull any starting point (Figma node, screenshot, existing code) back onto the extracted responsive design system."
 prompt_examples:
   - prompt: Build a new skill card list page in the TranFu website style.
     scene: Create a website page
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Build from Figma
   - prompt: Review the tranfu-site homepage against the TranFu design system and give me a findings report.
     scene: Review against the system
-  - prompt: This page breaks at 375 and 1440 — run a visual QA pass per the spec at every breakpoint.
-    scene: Check responsive layouts
-  - prompt: This hero uses too much red decoration — refactor it to respect the restrained brand-red rule.
-    scene: Adjust the brand style
-  - prompt: Give me a copyable prompt for building the product center page in TranFu style.
-    scene: Generate a build prompt
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # TranFu Website Design System
 

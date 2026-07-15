@@ -1,4 +1,5 @@
 ---
+description: "给页面加一套完整的社交分享 head, 让飞书、Slack、微信等即时通讯场景稳定显示标题、卡片图和 icon。"
 prompt_examples:
   - prompt: 给这个新落地页加上飞书 / Slack 分享用的完整 head, 别漏标签。
     scene: 为新页面补分享信息
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 修复分享卡片没图
   - prompt: 换了新 logo, 平台一直返回旧缓存, 怎么按「换实体文件名」刷一遍?
     scene: 更新分享图缓存
-  - prompt: 主页 head 太乱查不出来, 帮我做个最小社交预览探针页孤立验证。
-    scene: 用测试页排查
-  - prompt: head 写完了, 帮我跑一遍 curl 头 + 图片编码检查, 上线前确认。
-    scene: 上线前检查
-  - prompt: favicon / apple-touch-icon / manifest icon / JSON-LD logo 想一次成组换新, 列全清单。
-    scene: 批量更换图标文件
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 社交分享 Head 编写
 

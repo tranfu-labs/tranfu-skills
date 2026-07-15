@@ -1,4 +1,5 @@
 ---
+description: "用 Producer Handoff / Visual DNA / 独立命题出一份原创 HTML 视觉稿——落地页、海报、小红书卡、数据面板 (dashboard)、幻灯片 (deck) 一次成稿。"
 prompt_examples:
   - prompt: 用这份 Visual DNA 帮我做一个 AI 笔记的落地页，出 HTML 就行。
     scene: 根据视觉参考制作
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 制作小红书卡片
   - prompt: 这份 Producer Handoff 是给 dashboard 的，按它直接出 HTML。
     scene: 根据交付说明制作
-  - prompt: 用这份 Visual DNA 但把我们的品牌色和 logo 也融进去，品牌手册在下面。
-    scene: 融合品牌规范
-  - prompt: 给我出一份 HTML deck，顺便附一份幻灯片大纲和 CSS 变量。
-    scene: 制作 HTML 演示稿
-  - prompt: 没 DNA 也没 handoff，一句话：出一张秋招海报，风格清冷极简。
-    scene: 根据简短需求制作
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # visual-design-producer
 

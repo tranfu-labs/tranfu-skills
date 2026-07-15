@@ -1,4 +1,5 @@
 ---
+description: "Research a market or industry and produce a structured report covering its size, competition, opportunities, and risks."
 prompt_examples:
   - prompt: Analyze the AI customer service SaaS market.
     scene: Analyze a specific market
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Research an industry
   - prompt: "Competitive landscape analysis: EV market."
     scene: Map the competitors
-  - prompt: Where are the opportunities in the AI healthcare market?
-    scene: Find market opportunities
-  - prompt: Deep dive into the cross-border e-commerce market.
-    scene: Run a deep analysis
-  - prompt: Quick look at the short video market size.
-    scene: Get a quick overview
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # market-analysis
 

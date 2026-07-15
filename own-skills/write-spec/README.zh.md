@@ -1,4 +1,5 @@
 ---
+description: "把一个模糊想法 / 问题陈述 / 用户诉求变成一份结构化 PRD——含目标、非目标、用户故事、P0/P1/P2 需求、验收标准、成功指标。"
 prompt_examples:
   - prompt: 帮我写个 SSO 功能的 spec。
     scene: 根据功能名写方案
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 根据问题写方案
   - prompt: 用户想要把数据导出成 CSV, 帮我 scope 一下写成 PRD。
     scene: 根据用户需求写方案
-  - prompt: 新用户引导环节掉率有点高, 帮我把这个模糊想法收成 v1 的 spec。
-    scene: 梳理模糊想法
-  - prompt: SSO 这块太大, 一次发布塞不下, 帮我拆成分阶段的 spec。
-    scene: 拆分实施阶段
-  - prompt: 帮我把 CSV 导出这份 spec 的 non-goals 段收紧, 防止实现时范围蔓延。
-    scene: 明确不做什么
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 写 Spec
 

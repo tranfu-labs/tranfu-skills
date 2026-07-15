@@ -1,4 +1,5 @@
 ---
+description: "Before a major product or engineering project starts, align the strategy, reference solutions, technology choices, roadmap, and project documents."
 prompt_examples:
   - prompt: "I am starting a new AI web product. Discuss strategy first, inventory every decision-worthy capability, compare broad candidate pools, and do not write code yet."
     scene: "Plan a greenfield product"
@@ -6,11 +7,7 @@ prompt_examples:
     scene: "Run first stack selection"
   - prompt: "The existing stack is accepted. Evaluate only the new search subsystem and keep all unrelated ADRs frozen."
     scene: "Make a targeted stack change"
-  - prompt: "We have consensus. Materialize AGENTS.md, strategy, north-star, technical-stack, and roadmap docs without touching production code."
-    scene: "Write the control plane"
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Strategy-First Development
 

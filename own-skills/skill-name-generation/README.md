@@ -1,4 +1,5 @@
 ---
+description: "Generate paired English + Chinese display names for an existing skill — 1 recommended + 3 alternates in a single pass, candidates only, no files touched."
 prompt_examples:
   - prompt: Give me an English + Chinese display_name for this skill — I'll paste the description.
     scene: Name one skill
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Name several skills
   - prompt: Come up with a display_name and display_name_zh for skill-content-fit.
     scene: Name a specific skill
-  - prompt: The current display name for this skill reads like an explanation — propose a tighter set.
-    scene: Replace an existing name
-  - prompt: Slug is lark-safe-write, its job is "run the full safety check before writing to Lark" — give me paired display names.
-    scene: Name from supplied details
-  - prompt: Read own-skills/xxx/SKILL.md and propose a paired display name.
-    scene: Name from SKILL.md
 ---
-
-[English](README.md) | [简体中文](README.zh.md)
 
 # skill-name-generation
 

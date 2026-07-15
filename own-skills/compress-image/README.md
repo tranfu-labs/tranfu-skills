@@ -1,3 +1,7 @@
+---
+description: "compress-image 用固定版本 Sharp 把本地静态 PNG、JPEG、WebP 压缩为 WebP 或无损 PNG。默认保留原图，只有用户明确授权时才替换源文件。"
+---
+
 # compress-image
 
 `compress-image` 用固定版本 Sharp 把本地静态 PNG、JPEG、WebP 压缩为 WebP 或无损 PNG。默认保留原图，只有用户明确授权时才替换源文件。

@@ -1,4 +1,5 @@
 ---
+description: "Have AI hand you four style-consistent 64×64 minimal linear UI icons that drop straight into your interface."
 prompt_examples:
   - prompt: Give me 4 dashboard icons — settings, analytics, notifications, users.
     scene: Add icons to a UI
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Describe the product area
   - prompt: I need a 64×64 icon set, soft pastel backing, 6px stroke, four colors.
     scene: Set the visual style
-  - prompt: "My app already uses this linear icon style — extend it with 4 more: cloud, share, upload, download."
-    scene: Extend an icon set
-  - prompt: "Two colors only, blue and green — 4 messaging icons: DM, group, mute, notification."
-    scene: Limit the colors
-  - prompt: Design 4 minimal calendar icons, square backing, 6px rounded stroke.
-    scene: Set size and stroke
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Linear UI Icon Set
 

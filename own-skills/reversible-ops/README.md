@@ -1,4 +1,5 @@
 ---
+description: "A review-only safety gate for ops commands — I never execute writes for you, I rewrite reversible ones for you to run manually, and I refuse the irreversible outright."
 prompt_examples:
   - prompt: Can I run `docker compose down -v` on this stack right now?
     scene: Review a pasted command
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Review a cleanup request
   - prompt: Here's a Python cleanup script — walk it line by line before I run it.
     scene: Review a script
-  - prompt: Take this app off Coolify — `coolify app delete 8f3a-staging-uuid --force`.
-    scene: Review a Coolify deletion
-  - prompt: Update DATABASE_URL on service abc-uuid to the new endpoint.
-    scene: Review an environment change
-  - prompt: Run `git reset --hard origin/main` to sync my feature branch.
-    scene: Review a risky Git command
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # reversible-ops
 

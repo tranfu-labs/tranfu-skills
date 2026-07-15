@@ -1,4 +1,5 @@
 ---
+description: "让 AI 一次画出 4 个风格统一的 64×64 极简线性 UI 图标, 直接能塞进界面里用。"
 prompt_examples:
   - prompt: "给我 4 个后台 dashboard 用的功能图标: 设置、数据、通知、用户。"
     scene: 为界面配图标
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 说明产品用途
   - prompt: 我要一套 64×64 图标, 柔和浅底, 6px 描边, 蓝橙紫绿四色。
     scene: 指定图标风格
-  - prompt: "这个 App 已经在用之前那套线性图标, 再画 4 个: 云盘、分享、下载、上传, 风格延续。"
-    scene: 延续现有图标
-  - prompt: "只要蓝色和绿色两个色, 出 4 个消息类图标: 私信、群聊、通知、静音。"
-    scene: 指定图标配色
-  - prompt: 帮我配 4 个日历相关的极简图标, 直角底板, 6px 圆角描边。
-    scene: 指定尺寸和线宽
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 线性 UI 图标组
 

@@ -1,4 +1,5 @@
 ---
+description: "在重大产品或工程项目开始前，先对齐战略、参考方案、技术选择、路线图和项目文档。"
 prompt_examples:
   - prompt: "我要做一个新的 AI Web 产品，先讨论战略、盘点所有技术积木、广泛比较候选，不要直接写代码。"
     scene: "规划全新产品"
@@ -6,11 +7,7 @@ prompt_examples:
     scene: "运行首次技术选型"
   - prompt: "现有技术栈和 ADR 已接受，只评估新增搜索模块，不要重新选择全栈。"
     scene: "局部技术变更"
-  - prompt: "共识已达成，只落地 AGENTS.md、strategy、north-star、technical-stack 和 roadmap，不动生产代码。"
-    scene: "生成项目控制面"
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 战略先行开发流程
 

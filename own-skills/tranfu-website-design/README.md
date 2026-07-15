@@ -1,4 +1,5 @@
 ---
+description: "A rule set that keeps the TranFu website visually consistent — apply the brand system when building UI, or run review / visual QA without touching a line of code."
 prompt_examples:
   - prompt: Add a new "customer stories" section to the TranFu homepage, following the site's brand look.
     scene: Create a page section
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Update a component
   - prompt: Review src/app/components/Hero.tsx against the TranFu website design rules — findings only, don't edit.
     scene: Review the design
-  - prompt: Run visual QA on the pricing page — desktop and mobile viewport, flag overflow, overlap, or brand-red misuse.
-    scene: Check visual details
-  - prompt: I need the TranFu favicon and header lockup — use the bundled logo assets, don't grab one from the old deployed site.
-    scene: Update logo assets
-  - prompt: Refactor this card component but keep the TranFu radii, shadow, and typography intact.
-    scene: Refactor without visual changes
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # TranFu Website Design
 

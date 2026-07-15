@@ -1,4 +1,5 @@
 ---
+description: "把产品介绍整理成清晰的 Logo 方向，并生成一组可比较的 Logo、应用图标和 favicon 方案。"
 prompt_examples:
   - prompt: 给 AI 会议助手探索三种不同的 Logo 方向。
     scene: 探索 Logo 方向
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 制作 App 图标
   - prompt: 给这个开发者工具做一个简洁的网页图标。
     scene: 制作网页图标
-  - prompt: 沿用我们的品牌色，不要渐变，探索几种 Logo 方案。
-    scene: 遵循品牌规范
-  - prompt: 生成几种差异明显的 Logo 方案，方便我并排比较。
-    scene: 对比多个方案
-  - prompt: 检查最终标志缩到 32px 后是否仍然清楚。
-    scene: 检查小尺寸效果
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # generate-product-logo
 

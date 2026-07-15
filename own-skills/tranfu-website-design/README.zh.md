@@ -1,4 +1,5 @@
 ---
+description: "一份让 TranFu 官网视觉语言保持一致的规则集——加 / 改 / 重构组件时先对齐规范再动手, 审查和视觉 QA 只挑问题不改文件。"
 prompt_examples:
   - prompt: 帮我在 TranFu 官网首页加一个「客户案例」区块, 按官网品牌风格来。
     scene: 新建页面区块
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 修改现有组件
   - prompt: 审一下 src/app/components/Hero.tsx 是不是符合 TranFu 官网设计规范, 只挑问题别改文件。
     scene: 检查页面设计
-  - prompt: 跑一下定价页的视觉 QA, 桌面端和移动端都看, 溢出 / 重叠 / 品牌红滥用都圈出来。
-    scene: 检查视觉细节
-  - prompt: 官网的 favicon 和顶栏 logo 需要放上去, 用打包好的资产, 别去老站上抓。
-    scene: 更新 Logo 资源
-  - prompt: 重构一下这个卡片组件, 圆角 / 阴影 / 字体保持 TranFu 官网原样。
-    scene: 保持外观重构
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # TranFu 官网设计规范
 

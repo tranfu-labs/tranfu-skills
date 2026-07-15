@@ -1,4 +1,5 @@
 ---
+description: "Generates a full illustration set for a WeChat / Xiaohongshu / Zhihu post in one pass — reading the body, storyboarding, shot-by-shot generation, and QA all handled end-to-end."
 prompt_examples:
   - prompt: Here's the body of my WeChat article — put together a few illustrations for it.
     scene: Illustrate a WeChat article
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Create a Xiaohongshu set
   - prompt: Use the wechat-doodle style to draw 3 concept illustrations for this piece.
     scene: Follow a chosen style
-  - prompt: This paragraph needs a process breakdown, that one needs a common-mistakes diagram, and add a side-by-side comparison too.
-    scene: Plan images by paragraph
-  - prompt: For the earlier 01-cover, just apply the brand logo — don't redraw it.
-    scene: Add a logo afterward
-  - prompt: Skip the brand logo, just give me the raw images — I'll add a watermark myself later.
-    scene: Remove brand elements
 ---
-
-English | [中文](./README.zh.md)
 
 # Post Illustration Images
 

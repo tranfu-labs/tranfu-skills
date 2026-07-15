@@ -1,4 +1,5 @@
 ---
+description: "A back-half product-design pipeline: given \"user scenario + what to display\" as input, drive it to a high-fidelity chosen version."
 prompt_examples:
   - prompt: Design the settings page for our internal review tool.
     scene: Design a new page
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Improve an existing design
   - prompt: Take the dashboard, list, and detail pages of the new product through the pipeline one by one.
     scene: Design several pages
-  - prompt: Fields and user scenario are already locked, push it straight to high-fidelity.
-    scene: Start the visual design
-  - prompt: The overall vibe is off, I want a magazine feel instead of a dashboard feel.
-    scene: Change the visual style
-  - prompt: Get the wireframe out first, don't jump to color yet — I want to see the skeleton before pixels.
-    scene: Review the layout first
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # visual-pipeline
 

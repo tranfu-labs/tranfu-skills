@@ -1,4 +1,5 @@
 ---
+description: "从一份视觉样本里抽出可跨项目复用的视觉 DNA——色板、字体、版式节奏、材质、语气, 剥掉源品牌痕迹, 交下游 skill 直接接手。绝不出成品页面。"
 prompt_examples:
   - prompt: 提取 stripe.com 的视觉风格, 保留克制的高级感, 别抄 logo。
     scene: 分析参考网站
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 分析参考截图
   - prompt: 我发了三张落地页截图, 帮我合成一套主 DNA, 或者告诉我风格打架。
     scene: 融合多个参考
-  - prompt: 从这个 Figma 提取 tokens, 顺手给我一段可以粘给 ui-ux-pro-max 的 prompt。
-    scene: 交给后续设计使用
-  - prompt: 分析这个 app UI 的编辑节奏, 图标语言不用管。
-    scene: 比较不同风格
-  - prompt: 把这个 dashboard 截图抽成可迁移的色板与字号阶梯, 存到 docs/visual-dna/finance.md。
-    scene: 保存到指定位置
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 视觉 DNA 系统
 

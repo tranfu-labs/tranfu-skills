@@ -1,4 +1,5 @@
 ---
+description: "查看网页截图，找出有证据的体验和视觉问题，但不会修改代码。"
 prompt_examples:
   - prompt: 审下 https://practice.example.com, 抓一下哪里像 demo 不像正式产品。
     scene: 检查单个页面
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 检查多个页面
   - prompt: 仪表盘 1440 看着还行, 手机上塌了, 帮我做视口对比审。
     scene: 检查响应式布局
-  - prompt: /settings/team 里新加了一个表单弹窗, 审下空/加载/错/成功四态。
-    scene: 检查页面状态
-  - prompt: 这个落地页读起来像真产品还是像 demo, 帮我判一下。
-    scene: 判断产品成熟度
-  - prompt: 定价页刚上线, 发公告前帮我过一遍完成度。
-    scene: 上线前检查
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Webapp 打磨审查
 

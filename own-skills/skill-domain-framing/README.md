@@ -1,4 +1,5 @@
 ---
+description: "Choose the clearest scope and directory name for a new skill based on the source material, without creating the skill itself."
 prompt_examples:
   - prompt: This postmortem — help me frame what kind of skill it should become before I write SKILL.md.
     scene: Name from a postmortem
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Name from an issue
   - prompt: I want to call it cache-debug-fix — score my name against alternatives before I commit.
     scene: Review a proposed name
-  - prompt: PR discussion attached — lift the right skill container out of it, don't just pick the noun I already used.
-    scene: Name from a pull request
-  - prompt: skill-content-fit passed this postmortem — frame the container so skill-create-workflow can pick it up.
-    scene: Continue after fit review
-  - prompt: Skim docs/postmortems/ and frame a container for each one that has enough signal.
-    scene: Name several skills
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Skill Domain Framing
 

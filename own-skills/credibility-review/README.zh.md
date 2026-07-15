@@ -1,4 +1,5 @@
 ---
+description: "检查文章是否可信、是否像营销号，并列出问题，但不会直接改稿。"
 prompt_examples:
   - prompt: 帮我看下这篇稿子, 看能不能发。
     scene: 审查粘贴草稿
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 审查指定文件
   - prompt: 这篇像不像 PR 通稿, 有没有升华金句和藏起来的抒情段, 帮我抓一下。
     scene: 检查写作风格
-  - prompt: 帮我审这篇英文行业长文, 看是不是堆引用的公关腔。
-    scene: 审查英文文章
-  - prompt: 我 tag 挂的养成记但只跨了一个月, 你先判体裁再说能不能发。
-    scene: 确认文章类型
-  - prompt: tranfu-site/src/content/posts/ 下所有草稿, 逐篇双轨审并汇总。
-    scene: 批量审查草稿
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 文章可信度审稿
 

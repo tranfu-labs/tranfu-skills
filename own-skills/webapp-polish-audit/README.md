@@ -1,4 +1,5 @@
 ---
+description: "Review screenshots of a web app and return focused, evidence-based polish issues without changing the code."
 prompt_examples:
   - prompt: Audit https://practice.example.com and flag anything that reads demo-like, not real product.
     scene: Audit one page
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Audit several pages
   - prompt: The dashboard looks fine at 1440px but collapses on mobile. Run the viewport comparison audit.
     scene: Check responsive layouts
-  - prompt: A new form modal shipped at /settings/team. Audit empty, loading, error and success states.
-    scene: Check all UI states
-  - prompt: Does this landing page read like a real product or still like a demo? Judge it.
-    scene: Assess product readiness
-  - prompt: Pricing page just went live. Give it a completion-quality check before we announce.
-    scene: Check before launch
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Webapp Polish Audit
 

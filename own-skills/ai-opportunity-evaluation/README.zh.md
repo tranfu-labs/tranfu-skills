@@ -10,15 +10,7 @@ prompt_examples:
     scene: 审核内部工具
   - prompt: "这个方向能不能做：AI 情报订阅平台"
     scene: 判断新方向
-  - prompt: "这个产品想法值不值得做：VPN 智能路由平台"
-    scene: 评估初步想法
-  - prompt: "用 AI 机会立项判断 Skill 帮我分析这个项目"
-    scene: 点名这个工具
-  - prompt: "这个想法能不能沉淀成 TranFu 的 Skill 或 Agent"
-    scene: 判断复用价值
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # AI 机会立项判断
 

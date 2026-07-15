@@ -1,4 +1,5 @@
 ---
+description: "给一个已有 skill 起中英文成对显示名, 一次产 1 推荐 + 3 备选, 只出候选文本, 不动任何文件。"
 prompt_examples:
   - prompt: 帮我给这个 skill 起个中英文 display_name，description 我贴给你。
     scene: 为单个 Skill 起名
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 批量为 Skill 起名
   - prompt: 给 skill-content-fit 起个 display_name 和 display_name_zh。
     scene: 为指定 Skill 起名
-  - prompt: 这个 skill 现有的显示名读起来像解释，帮我重起一组更贴的。
-    scene: 重新命名
-  - prompt: 英文目录名是 lark-safe-write，主职是「写飞书前的一整套安全检查」，起个中英文显示名。
-    scene: 根据信息起名
-  - prompt: 读 own-skills/xxx/SKILL.md，帮我起个中英文显示名。
-    scene: 根据 SKILL.md 起名
 ---
-
-[English](README.md) | [简体中文](README.zh.md)
 
 # skill-name-generation
 

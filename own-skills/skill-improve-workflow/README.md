@@ -1,4 +1,5 @@
 ---
+description: "Review an existing skill, identify what is missing or unclear, and fix the issues that have a clear answer."
 prompt_examples:
   - prompt: Improve the own-skills/daily-report skill
     scene: Improve an existing skill
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Check whether it should stay
   - prompt: Health check own-skills/bar before I merge, fix what fits
     scene: Check before merging
-  - prompt: Run a review pass over the whole own-skills/ directory
-    scene: Review several skills
-  - prompt: Just review this skill, don't touch files yet
-    scene: Review without editing
-  - prompt: How is own-skills/xxx written? Worth rebuilding?
-    scene: Decide whether to rebuild
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # skill-improve-workflow
 

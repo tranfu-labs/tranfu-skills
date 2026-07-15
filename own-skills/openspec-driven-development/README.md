@@ -1,4 +1,5 @@
 ---
+description: "Turns day-to-day development into a closed loop — proposal → feature branch → spec → code → archive → PR — so the plan, the code, and the source of truth stay in sync."
 prompt_examples:
   - prompt: Add a "bulk export" option to the card export flow.
     scene: Build a new feature
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Investigate a bug
   - prompt: How would you migrate "user preferences" from localStorage to the backend? Talk it through first — don't start coding yet.
     scene: Discuss an approach
-  - prompt: Implement openspec/changes/add-export-all — the plan is already confirmed.
-    scene: Implement an approved plan
-  - prompt: I've finished implementing — check whether the code matches openspec/changes/add-export-all and flag anything missing.
-    scene: Check against the plan
-  - prompt: Add an "export preferences" button to settings; run the openspec loop but stop at plan-written so I can take a look.
-    scene: Pause after planning
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # openspec-driven-development
 

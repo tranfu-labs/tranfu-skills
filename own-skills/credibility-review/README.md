@@ -1,4 +1,5 @@
 ---
+description: "Check whether an article sounds credible or like marketing fluff, then list the problems without rewriting the draft."
 prompt_examples:
   - prompt: Take a look at this draft and tell me if it's ready to ship.
     scene: Review a pasted draft
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Review a file
   - prompt: Does this read like a PR puff piece? Are there uplift punchlines or buried sentimental turns? Flag them.
     scene: Check the writing style
-  - prompt: Review this English long-form industry piece — is it citation-stuffed PR-speak?
-    scene: Review English content
-  - prompt: I tagged this as a 养成记 but the span is only one month. Judge the genre first before you call it shippable.
-    scene: Confirm the article type
-  - prompt: Every draft under tranfu-site/src/content/posts/ — run the dual-track review on each and roll them up.
-    scene: Review multiple drafts
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Article Credibility Review
 

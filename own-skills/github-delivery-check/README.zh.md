@@ -1,4 +1,5 @@
 ---
+description: "把产品项目整理成可交付的 GitHub 仓库，补齐部署说明、本地验证并推送到主分支。"
 prompt_examples:
   - prompt: 把这个项目推到 GitHub 主分支。
     scene: 准备常规交付
@@ -6,13 +7,7 @@ prompt_examples:
     scene: 新建代码仓库
   - prompt: 已有仓库, 帮我补 README 部署说明、本地验证后推送。
     scene: 更新代码仓库
-  - prompt: 帮我检查这个项目能不能安装、构建、启动和验证。
-    scene: 交付前检查
-  - prompt: 帮我整理成技术能直接部署的项目, 部署配置写清。
-    scene: 交给技术团队
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # GitHub 交付检查
 

@@ -1,4 +1,5 @@
 ---
+description: "Turn a Producer Handoff, a Visual DNA, or a plain brief into an original HTML visual — landing pages, posters, Xiaohongshu cards, dashboards, decks — in a single pass."
 prompt_examples:
   - prompt: Use this Visual DNA to make an HTML landing page for an AI notebook.
     scene: Build from visual references
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Create a Xiaohongshu card
   - prompt: Here is the Producer Handoff for a dashboard — produce the HTML directly from it.
     scene: Build from a handoff
-  - prompt: Blend this Visual DNA with our brand — color and logo attached below.
-    scene: Apply brand guidelines
-  - prompt: Give me an HTML deck plus a slide outline and CSS variables.
-    scene: Create an HTML deck
-  - prompt: No DNA, no handoff — just make a poster for a job listing, clean minimal.
-    scene: Start from a short brief
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # visual-design-producer
 

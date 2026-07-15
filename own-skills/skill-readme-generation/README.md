@@ -1,4 +1,5 @@
 ---
+description: "Turn any existing skill's SKILL.md into a bilingual, human-readable pair — English README.md plus Chinese README.zh.md — ready for the internal skill catalog page."
 prompt_examples:
   - prompt: Just finished own-skills/skill-name-generation—generate its companion README too.
     scene: Document a new skill
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Add missing READMEs
   - prompt: This README is the old single-language version—regenerate it bilingual, overwrite.
     scene: Replace an old README
-  - prompt: Generate the README for own-skills/openspec-driven-development/.
-    scene: Document a specific skill
-  - prompt: This skill goes live on the catalog soon—get its README ready first.
-    scene: Prepare for publishing
-  - prompt: Same treatment as skill-name-generation—give this skill a README too.
-    scene: Follow another README
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Skill README Generation
 
@@ -51,8 +44,8 @@ Editing one paragraph of an existing README — plain editing is enough; buildin
 **One call writes two files — English `README.md` and Chinese `README.zh.md`, matched in structure but never word-for-word translated.**
 
 - **Writes**: `<skill dir>/README.md` (English body) plus `<skill dir>/README.zh.md` (Chinese body)
-- **Language switcher**: each file drops `[English](./README.md) | [中文](./README.zh.md)` right below the top matter, above the H1
-- **Top matter**: only field is `prompt_examples` — 5-6 natural spoken lines, covering at least 4 distinct trigger scenes
+- **Top matter**: a plain-language `description` plus no more than 3 natural `prompt_examples`, each covering a distinct trigger scene
+- **No language switcher**: the H1 starts immediately after the top matter
 - **Four sections**: opening one-liner, when to use it, what it produces, prerequisites & boundaries — each version 30-80 lines
 - **Plain-language pass**: the Chinese version is scanned line by line, insider slang gets rewritten in plain Chinese so a non-author can still read it
 - **Terminal report**: both output paths, line counts, prompt_examples count, covered scenes, and any "not sure about" note

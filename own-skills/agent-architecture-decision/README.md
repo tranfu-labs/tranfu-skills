@@ -1,4 +1,5 @@
 ---
+description: "Decide whether a project really needs AI agents and, if it does, design the simplest setup that fits the product and technology."
 prompt_examples:
   - prompt: Should we use agents here, or is a plain workflow enough?
     scene: Decide whether to use agents
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Choose a framework
   - prompt: Based on the project vision and current stack, recommend an agentic architecture.
     scene: Plan the architecture
-  - prompt: Review this multi-agent design — is it justified, or could a simpler shape do the job?
-    scene: Review the design
-  - prompt: The packet is confirmed. Materialize the docs into architecture/ and product-control/.
-    scene: Write the architecture docs
-  - prompt: Packet is approved — implement the first slice bounded by the verification matrix.
-    scene: Build the first stage
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Agent Architecture Decision
 

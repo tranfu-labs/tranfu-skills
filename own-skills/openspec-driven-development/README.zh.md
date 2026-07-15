@@ -1,4 +1,5 @@
 ---
+description: "把日常开发跑成「方案 → feature 分支 → spec → 码 → 归档 → PR」的闭环, 让方案、代码、事实源始终对得上。"
 prompt_examples:
   - prompt: 帮我加一个「一键导出全系列」的功能，卡片导出那边。
     scene: 开发新功能
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 排查程序问题
   - prompt: 你会如何把「用户偏好」从 localStorage 迁到后端？先讨论一下，别急着写码。
     scene: 先讨论方案
-  - prompt: 实施 openspec/changes/add-export-all，方案已经确认过了。
-    scene: 实施已定方案
-  - prompt: 方案实施完了，帮我检查代码是否符合 openspec/changes/add-export-all，有没有遗漏。
-    scene: 检查方案落实
-  - prompt: 给 settings 加一个「导出偏好」按钮，按 openspec 走一遍，停在 plan-written 让我看一眼。
-    scene: 写完方案暂停
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # openspec-driven-development
 

@@ -1,4 +1,5 @@
 ---
+description: "Deploy, update, or troubleshoot a tranfu-labs app on the company Coolify service until its public URL works."
 prompt_examples:
   - prompt: Deploy https://github.com/tranfu-labs/markdown-kits-app to Coolify.
     scene: Deploy for the first time
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Deploy a new version
   - prompt: Move markdown-kits-app domain to board.tranfu.com.
     scene: Change the domain
-  - prompt: Add DATABASE_URL=postgres://... to markdown-kits-app env.
-    scene: Change environment variables
-  - prompt: Add a redis service to markdown-kits-app compose.
-    scene: Deploy source changes
-  - prompt: markdown-kits-app deploy is broken — take a look.
-    scene: Troubleshoot a deployment
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Tranfu Coolify Deployment
 

@@ -1,4 +1,5 @@
 ---
+description: "Analyze an existing skill to explain when it runs, how it works, what it produces, and which parts can be reused elsewhere."
 prompt_examples:
   - prompt: Take a quick look at this SKILL.md and tell me what it's really doing.
     scene: Diagnose a skill quickly
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Analyze a skill in depth
   - prompt: The trigger on this SKILL.md reads too vague — rewrite it for me.
     scene: Find improvement areas
-  - prompt: Generate a trigger benchmark so I can tell whether this skill fires on the requests I care about.
-    scene: Test when it triggers
-  - prompt: Compare these three skills and extract the shared creation formula.
-    scene: Compare two skills
-  - prompt: Package this prompt workflow into a marketplace-ready skill.
-    scene: Prepare for publishing
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # skill-reverse-engineer
 

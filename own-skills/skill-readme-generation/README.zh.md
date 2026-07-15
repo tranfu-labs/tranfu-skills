@@ -1,4 +1,5 @@
 ---
+description: "给已有 skill 的 SKILL.md 派生一对双语人话说明——英文 README.md + 中文 README.zh.md, 直接落到公司自建官网的 skill 详情页。"
 prompt_examples:
   - prompt: 刚做完 own-skills/skill-name-generation, 顺手把配套 README 也生成一下
     scene: 为新 Skill 写说明
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 批量补充 README
   - prompt: 这份 README 是旧版单语中文, 按最新双语规范重生成, 覆盖旧的
     scene: 更新旧版 README
-  - prompt: own-skills/openspec-driven-development/ 帮我生成 README
-    scene: 为指定目录写说明
-  - prompt: 这个 skill 要挂官网了, 先把 README 补齐再上线
-    scene: 发布前补说明
-  - prompt: 跟 skill-name-generation 一样, 给这个 skill 也做一份 README
-    scene: 参考现有 README
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Skill README 生成
 
@@ -51,8 +44,8 @@ prompt_examples:
 **一次调用产两份文件——英文 `README.md` + 中文 `README.zh.md`, 结构对应但绝不逐词直译。**
 
 - **落盘**: `<目标 skill 目录>/README.md` (全英文正文) 与 `<目标 skill 目录>/README.zh.md` (全中文正文)
-- **语言切换链接**: 两份文件都在开头元数据之后、H1 之前放一行 `[English](./README.md) | [中文](./README.zh.md)`
-- **开头元数据**: 唯一字段 `prompt_examples`, 5-6 条自然口语示例提问, 覆盖至少 4 种触发场景
+- **开头元数据**: 一条普通人看得懂的 `description` 加最多 3 条自然口语 `prompt_examples`, 每条覆盖不同触发场景
+- **不放语言切换行**: 开头元数据结束后直接进入 H1
 - **正文四段**: 开场一句摘要 → 什么时候用它 → 它会产出什么 → 前置条件与边界, 每版 30-80 行
 - **改成人话**: 中文版逐句把作者圈才懂的行话过滤成普通中文, 让路过详情页的普通同事也扫得懂
 - **完成汇报**: 终端打印两份落盘路径、总行数、示例提问条数与覆盖场景, 以及「拿不准之处」一行

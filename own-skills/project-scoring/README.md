@@ -10,15 +10,7 @@ prompt_examples:
     scene: Review a reusable skill
   - prompt: "Run project-scoring on this demo concept; if information is thin, ask me questions first"
     scene: Review a public demo
-  - prompt: "Score this AI workflow product for commercial launch: <name, target user, willingness-to-pay evidence>"
-    scene: Score a commercial product
-  - prompt: "Compare and rank these three AI workflow candidates with project-scoring: <A, B, C>"
-    scene: Rank several projects
-  - prompt: "The idea is thin — ask 3-5 clarification questions before scoring, then produce a low-confidence memo"
-    scene: Clarify an early idea
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Tranfu Project Scoring
 

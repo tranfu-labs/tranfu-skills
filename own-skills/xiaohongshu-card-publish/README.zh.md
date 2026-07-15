@@ -1,4 +1,5 @@
 ---
+description: "把小红书文案变成 1080×1440 成品配图, 一条流水线走完填模板、排系列、playwright 无损导出。"
 prompt_examples:
   - prompt: 帮我按这份文案给 claude-code-quick-reference 系列出一张预览卡片。
     scene: 根据文案预览
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 新建卡片系列
   - prompt: 在 claude-code-quick-reference 系列后面再加一张 /compact 的卡片。
     scene: 补充一张卡片
-  - prompt: 把 claude-code-quick-reference 系列导出成小红书成品配图。
-    scene: 导出完整系列
-  - prompt: 这两个系列都按尺寸导成 webp。
-    scene: 批量导出系列
-  - prompt: 把 /clear 那张挪到第 3 位。
-    scene: 调整卡片顺序
 ---
-
-[English](./README.md) | 中文
 
 # 小红书卡片出图
 

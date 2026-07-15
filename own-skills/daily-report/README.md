@@ -1,4 +1,5 @@
 ---
+description: "Turn structured AI news into TranFu-branded daily-report images ready for WeChat and community sharing."
 prompt_examples:
   - scene: Render one report
     prompt: Render report.json into a TranFu daily image using the default research + iceblue style
@@ -6,13 +7,7 @@ prompt_examples:
     prompt: Run --all-variants once to preview every bundled style and palette side by side
   - scene: Create a dark dashboard
     prompt: Switch to dark + steelblue for an intelligence-dashboard feel
-  - scene: Create a media card
-    prompt: Produce a verge + iceblue variant that reads like a tech-media info card
-  - scene: Prepare for public sharing
-    prompt: Strip the QR, URLs, and low-context project badges so the image is safe to share on WeChat Moments
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # AI Daily Report
 

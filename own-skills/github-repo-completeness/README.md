@@ -1,4 +1,5 @@
 ---
+description: "Scans an existing GitHub repo, produces a P0-P3 missing-item checklist, then walks you through each gap one at a time — you approve before it writes anything."
 prompt_examples:
   - prompt: Check what this project is missing before I open source it.
     scene: Prepare for open source
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Audit the repository
   - prompt: This repo has no CI or issue templates — add them.
     scene: Add CI templates
-  - prompt: Getting the repo ready for GitHub — fill in README and LICENSE.
-    scene: Publish on GitHub
-  - prompt: Short on time — do all P0 items with defaults, review at the end.
-    scene: Check multiple repositories
-  - prompt: My .gitignore feels off — check if anything's missing.
-    scene: Check one project
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # GitHub Repo Completeness
 

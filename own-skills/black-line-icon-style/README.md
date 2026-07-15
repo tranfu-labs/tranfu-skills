@@ -1,4 +1,5 @@
 ---
+description: "Ask for a minimalist black-and-white line icon — transparent background, thick rounded strokes, single centered subject, no text — and get the image on the first turn."
 prompt_examples:
   - prompt: Make me a minimalist black-and-white icon for AI workflow — abstract.
     scene: Draw from a concept
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Create an empty-state icon
   - prompt: Give me a UI entry icon for goal decomposition, readable at 32px.
     scene: Make a UI icon
-  - prompt: Just the generation prompt for a prompt-review icon — no image needed.
-    scene: Return a prompt only
-  - prompt: Logo-like mark for our AI review module, not a formal brand logo.
-    scene: Create a supporting mark
-  - prompt: Icon for multi-round prompt review — cycle arrows, feedback loop feel.
-    scene: Show a cycle
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # black-line-icon-style
 

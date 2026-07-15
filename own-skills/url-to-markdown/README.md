@@ -1,3 +1,7 @@
+---
+description: "通过 Chrome CDP 抓取公开网页，将渲染后的正文保存为 Markdown 或结构化 JSON。支持通用页面、匿名可访问的 X 帖子与线程、YouTube 字幕、Hacker News 讨论和媒体下载。"
+---
+
 # URL to Markdown
 
 通过 Chrome CDP 抓取公开网页，将渲染后的正文保存为 Markdown 或结构化 JSON。支持通用页面、匿名可访问的 X 帖子与线程、YouTube 字幕、Hacker News 讨论和媒体下载。

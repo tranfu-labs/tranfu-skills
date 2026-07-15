@@ -1,4 +1,5 @@
 ---
+description: "判断项目是否真的需要 AI Agent；如果需要，就设计最简单、最适合现有产品和技术的方案。"
 prompt_examples:
   - prompt: 这个功能到底要不要上 agent, 还是普通 workflow 就够？帮我判一下。
     scene: 判断是否需要 Agent
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 选择技术框架
   - prompt: 根据项目愿景和现有架构, 推荐一套 agent 技术流程和落地路线。
     scene: 规划整体架构
-  - prompt: 帮我看下这个多 agent 设计, 复杂度值不值, 有没有更简单的形态能替代？
-    scene: 检查架构方案
-  - prompt: 方案已经确认, 帮我把架构文档和产品控制文档更新到位。
-    scene: 生成架构文档
-  - prompt: 方案通过了, 按验证矩阵实施第一片, 别一次铺全栈。
-    scene: 实施第一阶段
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Agent 架构决策
 

@@ -1,4 +1,5 @@
 ---
+description: "Add the full social-preview head — OG, Twitter, icons, manifest — so Lark, Slack, and WeChat show titles, cards, and icons every time."
 prompt_examples:
   - prompt: Add the full social-preview head to this new landing page for Lark and Slack sharing.
     scene: Set up a new page
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Fix a missing preview image
   - prompt: New logo but platforms keep the old cache — how do I rotate by swapping file names?
     scene: Refresh cached images
-  - prompt: The main page head is too tangled — build me a minimal social-preview probe page.
-    scene: Test on a probe page
-  - prompt: Head is done — run the curl header check and image encoding check before I ship.
-    scene: Check before launch
-  - prompt: Swap favicon, apple-touch-icon, manifest icons, and JSON-LD logo as one set — list every path.
-    scene: Replace all icon files
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Social Preview Head Writer
 

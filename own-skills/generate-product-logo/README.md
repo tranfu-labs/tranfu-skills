@@ -1,4 +1,5 @@
 ---
+description: "Turn a product brief into a clear logo direction and a comparable set of logo, app icon, and favicon options."
 prompt_examples:
   - prompt: Explore three logo directions for an AI meeting assistant.
     scene: Explore a logo direction
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Create an app icon
   - prompt: Create a simple favicon for this developer tool.
     scene: Create a favicon
-  - prompt: Use our brand colors and avoid gradients while exploring the logo.
-    scene: Follow brand guidelines
-  - prompt: Generate several distinct logo concepts so I can compare them side by side.
-    scene: Compare several concepts
-  - prompt: Check whether the final mark stays clear at 32px.
-    scene: Check small-size clarity
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # generate-product-logo
 

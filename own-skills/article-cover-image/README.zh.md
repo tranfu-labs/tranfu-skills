@@ -1,4 +1,5 @@
 ---
+description: "给一个标题或整篇文章, 直接出一张 16:9 横版封面图, 主色 #E63A46, MiSans 风格标题, 材质哑光克制, 拒绝信息图化。"
 prompt_examples:
   - prompt: 帮我给「AI Agent 重构入口」配张封面。
     scene: 根据标题出图
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 根据全文出图
   - prompt: 我这条视频要 16:9 的封面, 标题在这。
     scene: 制作视频封面
-  - prompt: 别出图, 只给我封面的 prompt, 我拿去别的模型跑。
-    scene: 只要提示词
-  - prompt: 先来无字图, 留个安全区, 标题我自己上。
-    scene: 制作无字封面
-  - prompt: 换个杂志风, 别老是深蓝科技感。
-    scene: 更换视觉风格
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 文章封面图生成
 

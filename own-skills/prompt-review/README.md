@@ -1,4 +1,5 @@
 ---
+description: "Review a prompt, skill, or agent definition and explain each problem, why it matters, and how to fix it, without editing the original file."
 prompt_examples:
   - prompt: Review this prompt and point out the engineering problems.
     scene: Review a prompt
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Review a skill
   - prompt: Check whether this agent definition has conflicting instructions.
     scene: Review an agent
-  - prompt: Review the prompt text I pasted below without editing any files.
-    scene: Review pasted text
-  - prompt: Review every prompt file in this directory and summarize the issues.
-    scene: Review several files
-  - prompt: Give me concrete rewrite suggestions, but do not apply them yet.
-    scene: Suggest changes only
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # prompt-review
 
