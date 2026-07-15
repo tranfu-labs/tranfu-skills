@@ -12,6 +12,8 @@ prompt_examples:
     scene: Update logo assets
   - prompt: Refactor this card component but keep the TranFu radii, shadow, and typography intact.
     scene: Refactor without visual changes
+  - prompt: Add responsive behavior to the card component while preserving the original TranFu website style. Adapt the card width, layout, spacing, typography, and stacking behavior across desktop, tablet, and mobile breakpoints.
+    scene: Responsive adaptation
 ---
 
 [English](./README.md) | [中文](./README.zh.md)
