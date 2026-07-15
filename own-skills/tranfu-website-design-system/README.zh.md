@@ -8,7 +8,7 @@ prompt_examples:
   - prompt: 检查 tranfu-site 首页是否符合官网设计规范, 给我一份结构化的问题清单。
     scene: 检查设计规范
   - prompt: 为卡片组件补充响应式适配，在保持 TranFu 官网视觉风格不变的前提下，针对桌面端、平板端和移动端自动调整卡片宽度、排列方式、间距与字号。
-  scene: 响应式适配
+    scene: 响应式适配
 ---
 
 # TranFu 官网设计系统
