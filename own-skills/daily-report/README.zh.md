@@ -1,4 +1,5 @@
 ---
+description: "把整理好的 AI 新闻做成 TranFu 品牌日报图片，可直接用于朋友圈、公众号和社群分享。"
 prompt_examples:
   - scene: 生成单份日报
     prompt: 把 report.json 渲染成 TranFu 日报图，默认走 research + iceblue 样式
@@ -6,13 +7,7 @@ prompt_examples:
     prompt: 用 --all-variants 把所有风格和配色跑一遍，方便挑选
   - scene: 制作暗色看板
     prompt: 换成 dark + steelblue 样式，做出情报仪表盘的感觉
-  - scene: 制作媒体卡片
-    prompt: 用 verge + iceblue 出一版科技媒体信息卡样式
-  - scene: 准备公开发布
-    prompt: 关掉 QR、URL 和低语境项目名，只留标题和编号新闻，适合朋友圈发布
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # AI 日报图生成
 

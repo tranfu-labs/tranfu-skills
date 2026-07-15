@@ -1,4 +1,5 @@
 ---
+description: "把「找机会」从等灵感变成一套猎法——四猎场定位、why-now 扳机、卖铲子提问、四道杀闸快筛。"
 prompt_examples:
   - prompt: 最近 OpenAI 又降价了, 会不会是某类基础设施创业的扳机? 帮我推一下因果链。
     scene: 判断市场变化
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 评估创业想法
   - prompt: 我每天做电商选品要在 5 个平台之间反复切换粘贴数据, 这算不算真机会?
     scene: 从日常麻烦找机会
-  - prompt: 帮我列 3 个不性感行业里的脏活方向, 用你的四猎场逻辑。
-    scene: 探索机会方向
-  - prompt: 这波大厂全都免费送 agent 平台了, 会不会把我这类工具型创业直接杀死?
-    scene: 评估大厂影响
-  - prompt: 手上攒了 4 个候选想法, 用四道杀闸挨个杀一遍, 只留活下来的。
-    scene: 筛选已有想法
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 创业机会猎手
 

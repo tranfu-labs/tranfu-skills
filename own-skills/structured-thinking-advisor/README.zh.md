@@ -1,4 +1,5 @@
 ---
+description: "一个把 Claude 切换为\"结构化思考与系统设计顾问\"模式的 skill — 让它做共创伙伴, 而不是解释型助手."
 prompt_examples:
   - scene: 审阅整份文档
     prompt: 帮我审视这份文档 — 它到底在解决什么, 逻辑哪里断了?
@@ -6,15 +7,7 @@ prompt_examples:
     prompt: 拆解一下这篇内容的结构 — 模块、层级、逻辑关系.
   - scene: 解释一段内容
     prompt: 这一段什么意思? 帮我用一个清晰的类比讲清楚.
-  - scene: 检查逻辑问题
-    prompt: 这一段逻辑对吗? 有没有因果倒置?
-  - scene: 一起修改表达
-    prompt: 给我 2-3 版优化 — 一版落地感, 一版发布会语感.
-  - scene: 提炼方法模型
-    prompt: 能不能把这些散落的观点提炼成一个方法论或模型?
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # structured-thinking-advisor
 

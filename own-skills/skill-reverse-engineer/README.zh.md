@@ -1,4 +1,5 @@
 ---
+description: "分析一个已有 skill，说明它什么时候运行、怎么工作、会产出什么，以及哪些做法可以复用。"
 prompt_examples:
   - prompt: 帮我快速看一下这个 SKILL.md 到底在干嘛。
     scene: 快速诊断 Skill
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 深入分析 Skill
   - prompt: 这个 SKILL.md 的触发写得太糊, 帮我重写一版。
     scene: 查找改进方向
-  - prompt: 生成一份触发测试集, 让我看看它在我关心的请求上到底能不能被触发。
-    scene: 测试触发条件
-  - prompt: 这三个 skill 对比一下, 提炼共用的创建公式。
-    scene: 对比两个 Skill
-  - prompt: 把这段 prompt 工作流包装成可以直接发到市场的 skill。
-    scene: 准备发布材料
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # skill-reverse-engineer
 

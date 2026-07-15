@@ -1,4 +1,5 @@
 ---
+description: "Turn a vague idea, problem statement, or user request into a structured PRD — with goals, non-goals, user stories, P0/P1/P2 requirements, acceptance criteria, and success metrics."
 prompt_examples:
   - prompt: Write a PRD for SSO support in our platform.
     scene: Start from a feature name
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Start from a problem
   - prompt: Users want to export their data as CSV. Spec it end-to-end.
     scene: Start from a user request
-  - prompt: We should do something about onboarding drop-off — help me scope a first version.
-    scene: Clarify a rough idea
-  - prompt: This SSO scope is too big for one release — break it into phased specs.
-    scene: Plan in phases
-  - prompt: For the CSV export spec, tighten the non-goals so scope creep does not blow us up.
-    scene: Define what is out of scope
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Write Spec
 

@@ -1,4 +1,5 @@
 ---
+description: "把「做一个 X」这类模糊目标, 先押注最可能的形态, 再让画像 Agent 反复核对, 一路推到真产物。"
 prompt_examples:
   - prompt: 做一个蒙特卡洛模拟网站，帮我从头规划到能跑起来。
     scene: 规划新项目
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 先讨论方案
   - prompt: 首页那个卡片列表偏了，帮我改一下，goal-docs/ 已经在。
     scene: 修复现有项目
-  - prompt: 给这个网站加一个「收藏夹」功能，顺着之前的 goal-docs/ 继续走。
-    scene: 添加新功能
-  - prompt: 这次面向的用户换成完全零基础的初中生，之前的画像基本不适用了。
-    scene: 更换目标用户
-  - prompt: 上次跑到第二个切片停了，接着往下走。
-    scene: 继续上次工作
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 目标驱动分解
 

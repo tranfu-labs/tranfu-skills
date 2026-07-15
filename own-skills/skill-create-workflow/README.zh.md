@@ -1,4 +1,5 @@
 ---
+description: "把一段值得复用的经验 / 复盘 / 提示词做成一个新 skill——先过内容准入 / 命名 / 提示词复审三道门, 合格才落盘发布。"
 prompt_examples:
   - prompt: 把 docs/postmortem.md 沉淀成一个项目内 skill
     scene: 从文件创建 Skill
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 接着上文创建
   - prompt: 把刚才聊的发布检查清单封装成 skill
     scene: 把想法做成 Skill
-  - prompt: 把这套日报流程做成一个 own-skills/ 下的新 skill
-    scene: 把流程做成 Skill
-  - prompt: 从我的品牌口吻笔记做一个公司 skill 并发布
-    scene: 创建后直接发布
-  - prompt: 把那个 agent 的系统提示词包成一个 Codex skill
-    scene: 把提示词做成 Skill
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # skill-create-workflow
 

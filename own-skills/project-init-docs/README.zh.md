@@ -1,4 +1,5 @@
 ---
+description: "为代码仓库建立 AI 协作基础，一次生成对齐的协作、部署、需求和线框图文档。"
 prompt_examples:
   - prompt: 初始化。
     scene: 初始化项目文档
@@ -6,13 +7,7 @@ prompt_examples:
     scene: 为现有代码补文档
   - prompt: 帮我把项目文档初始化一下, 把结构、命令、业务域一起沉下来。
     scene: 准备 AI 协作
-  - prompt: 给这个项目加线框图, 每页把版式画清楚。
-    scene: 补充页面线框图
-  - prompt: 帮我搭 DEPLOY.md, 把部署到哪、怎么建、怎么退写清楚。
-    scene: 记录部署信息
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 项目文档初始化
 

@@ -10,15 +10,7 @@ prompt_examples:
     scene: 评估可复用 Skill
   - prompt: "对这个 demo 概念做立项审核, 信息不足先问我问题"
     scene: 评估公开演示项目
-  - prompt: "用 project-scoring 评估这个商业化 AI 工作流产品: <产品名、用户、付费证据>"
-    scene: 评估商业化产品
-  - prompt: "比较这三个 AI 工作流候选项目并排序: <A、B、C>"
-    scene: 排定项目优先级
-  - prompt: "点子信息很稀薄 — 先问 3-5 个澄清问题再评分, 输出低置信度评审"
-    scene: 先澄清再评分
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Tranfu 项目评分
 

@@ -1,4 +1,5 @@
 ---
+description: "Initialize a repository for AI-assisted work by creating aligned collaboration, deployment, specification, and wireframe documents."
 prompt_examples:
   - prompt: Init this repo.
     scene: Set up project docs
@@ -6,13 +7,7 @@ prompt_examples:
     scene: Document existing code
   - prompt: Init the project docs and pin down the structure, commands, and business domains in one go.
     scene: Prepare for AI work
-  - prompt: Add wireframes to this project, one clear layout per page.
-    scene: Add page wireframes
-  - prompt: Set up a DEPLOY.md that spells out where we deploy, how we build, and how to roll back.
-    scene: Record deployment sources
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Project Documentation Init
 

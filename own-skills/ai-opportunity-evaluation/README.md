@@ -10,15 +10,7 @@ prompt_examples:
     scene: Review an internal tool
   - prompt: "Is this direction worth pursuing: AI intelligence subscription platform"
     scene: Assess a new direction
-  - prompt: "Is this product idea worth building: VPN smart routing platform"
-    scene: Check an early idea
-  - prompt: "Use the AI Opportunity Evaluation skill to analyze this project"
-    scene: Use the skill by name
-  - prompt: "Can this idea be distilled into a TranFu skill or agent"
-    scene: Assess reuse potential
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # AI Opportunity Evaluation
 

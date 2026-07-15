@@ -1,4 +1,5 @@
 ---
+description: "扫已有 GitHub repo, 出 P0-P3 缺失清单, 按优先级逐项引导补齐——你点头再动手, 绝不一次性代你全生成。"
 prompt_examples:
   - prompt: 帮我看看这个项目还缺什么, 准备开源。
     scene: 准备开源发布
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 全面检查仓库
   - prompt: 这个 repo 缺 CI 和 issue 模板, 帮我补一下。
     scene: 补充 CI 模板
-  - prompt: 项目要上 GitHub, 帮我把 README 和 LICENSE 补齐。
-    scene: 发布到 GitHub
-  - prompt: 时间紧, 全部按默认补, 最后一起给我审。
-    scene: 批量检查仓库
-  - prompt: .gitignore 好像不太对, 帮我看看还缺什么。
-    scene: 检查单个项目
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # GitHub 项目完备性
 

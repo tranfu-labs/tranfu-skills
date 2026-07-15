@@ -1,4 +1,5 @@
 ---
+description: "Extract a de-branded, reusable visual DNA — palette, type, layout rhythm, material, voice — from any visual sample, then hand it off to downstream producers. Never a final page."
 prompt_examples:
   - prompt: Pull the visual DNA out of stripe.com — keep the calm premium feel, drop the brand.
     scene: Analyze a reference website
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Analyze a screenshot
   - prompt: Three landing pages attached — synthesize one main DNA or tell me they clash.
     scene: Combine several references
-  - prompt: Extract tokens from this Figma frame and give me a prompt I can hand to ui-ux-pro-max.
-    scene: Prepare for another designer
-  - prompt: Analyze the editorial rhythm of this app UI, ignore the icon system.
-    scene: Choose between styles
-  - prompt: Turn this dashboard screenshot into transferable color roles and type scales, save to docs/visual-dna/finance.md.
-    scene: Save to a chosen path
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Visual DNA System
 

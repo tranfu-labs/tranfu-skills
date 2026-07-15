@@ -1,4 +1,5 @@
 ---
+description: "运维写命令的安全网——默认不替你执行, 可恢复的改写成可恢复命令让你复制着跑, 不可恢复的直接拒。"
 prompt_examples:
   - prompt: 我能跑 `docker compose down -v` 吗？
     scene: 检查粘贴的命令
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 检查清理操作
   - prompt: 我写了个 Python 清缓存脚本, 跑之前你先逐条审。
     scene: 检查运行脚本
-  - prompt: 把 Coolify 上 8f3a-staging-uuid 这个 app 摘掉, 加了 --force。
-    scene: 检查 Coolify 删除
-  - prompt: 帮我改一下 service abc-uuid 的 DATABASE_URL 环境变量。
-    scene: 检查环境变量修改
-  - prompt: 用 `git reset --hard origin/main` 把我这个 feature 分支拉回主线。
-    scene: 检查危险 Git 操作
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 运维可回滚守则
 

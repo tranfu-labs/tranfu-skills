@@ -1,4 +1,5 @@
 ---
+description: "给产品、功能、模块、活动主题或品牌短名一次性生成 1 条推荐 + 6 条备选中文标题, 短到能直接贴 UI。"
 prompt_examples:
   - prompt: 帮我给一个团队 Agent 可观测性平台起个 4-6 字的产品入口标题。
     scene: 根据用途起名
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 根据关键词起名
   - prompt: 给一个日语 30 天冲刺陪练课起个产品名, 要有紧迫感。
     scene: 为产品品类起名
-  - prompt: 给「团队异构 Agent 的可观测性层」起一个 8 个字的产品标题。
-    scene: 按长度要求起名
-  - prompt: 参考「驾驶舱」、「底座」的路子, 给 AI 基础设施起个中文短标题。
-    scene: 参考现有名称
-  - prompt: "帮我一次给两个功能起名: 学习陪练课 + Agent 产品发布平台。"
-    scene: 批量命名产品
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 产品标题生成
 

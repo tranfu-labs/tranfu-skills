@@ -1,4 +1,5 @@
 ---
+description: "根据原始素材确定新 skill 最清楚的范围和目录名，但不会创建 skill 文件。"
 prompt_examples:
   - prompt: 这段事故复盘, 帮我在动 SKILL.md 之前先框一下容器名。
     scene: 根据事故复盘命名
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 根据问题讨论命名
   - prompt: 我想叫 cache-debug-fix, 帮我打分挑战一下再决定。
     scene: 检查候选名称
-  - prompt: 这段 PR 讨论, 别拿我用的名词直接命名, 抬出对的容器给我。
-    scene: 根据 PR 讨论命名
-  - prompt: skill-content-fit 判过通过, 先帮我定容器名, 再交给 skill-create-workflow。
-    scene: 接着上一步命名
-  - prompt: docs/postmortems/ 下每份复盘扫一遍, 有素材的就框个容器。
-    scene: 批量确定目录名
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Skill 任务域框定
 

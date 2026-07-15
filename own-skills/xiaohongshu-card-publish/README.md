@@ -1,4 +1,5 @@
 ---
+description: "Turn a Xiaohongshu draft into finished 1080×1440 cards — one pipeline covering template fill, series layout, and playwright lossless WebP export."
 prompt_examples:
   - prompt: Turn this Xiaohongshu draft into a preview card in the claude-code-quick-reference series.
     scene: Preview from text
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Start a new series
   - prompt: Append a /compact card at the end of the claude-code-quick-reference series.
     scene: Add one card
-  - prompt: Export the claude-code-quick-reference series as final Xiaohongshu images.
-    scene: Export a finished series
-  - prompt: Batch-export both these series to lossless WebP.
-    scene: Export several series
-  - prompt: Move the /clear card to position 3 in the series.
-    scene: Reorder the cards
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Xiaohongshu Card Export
 

@@ -1,4 +1,5 @@
 ---
+description: "给公众号 / 小红书 / 知乎文章一次配齐整套插图, 从读懂正文到分镜再到 QA 全程兜底。"
 prompt_examples:
   - prompt: 这是我公众号文章的正文, 帮我做几张配图。
     scene: 为公众号文章配图
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 制作小红书组图
   - prompt: 用 wechat-doodle 风格给这篇文章画 3 张概念图。
     scene: 使用指定风格
-  - prompt: 这段流程要一张分解图, 那段要一张常见错误图, 再来一张对比图。
-    scene: 按段落安排配图
-  - prompt: 上一张 01-cover 帮我贴一下品牌 logo, 别重新画。
-    scene: 后续添加 Logo
-  - prompt: 不用品牌 logo, 出图就好, 我自己后期加水印。
-    scene: 移除品牌元素
 ---
-
-[English](./README.md) | 中文
 
 # 文章配图生成
 

@@ -1,4 +1,5 @@
 ---
+description: "在公司 Coolify 上部署、更新或排查 tranfu-labs 应用，直到公网地址可以正常访问。"
 prompt_examples:
   - prompt: 帮忙确认并部署 https://github.com/tranfu-labs/markdown-kits-app
     scene: 首次部署项目
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 发布新版本
   - prompt: markdown-kits-app 改域名到 board.tranfu.com。
     scene: 修改访问域名
-  - prompt: markdown-kits-app 加个 env DATABASE_URL=postgres://xxx。
-    scene: 修改环境变量
-  - prompt: markdown-kits-app 的 compose 加个 redis service。
-    scene: 部署代码更新
-  - prompt: markdown-kits-app 部署挂了, 帮我看下。
-    scene: 排查部署问题
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Tranfu Coolify 部署
 

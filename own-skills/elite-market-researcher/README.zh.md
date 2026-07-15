@@ -1,4 +1,5 @@
 ---
+description: "从战略、投资和经营角度深入研究市场或行业，找出最值得关注的机会和风险。"
 prompt_examples:
   - prompt: 分析一下 AI 代码审查这条赛道
     scene: 判断市场机会
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 分析竞争格局
   - prompt: 以 VC 视角评估这个创业方向, 我要不要投
     scene: 辅助投资决策
-  - prompt: 做一份合成生物学行业的深度研报, 长版没关系
-    scene: 生成深度研报
-  - prompt: 快速看看向量数据库这个市场, 精简版就行
-    scene: 快速了解市场
-  - prompt: 我要下场做垂直 Agent, 帮我以创业操盘手视角研究一下
-    scene: 寻找创业机会
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # elite-market-researcher
 

@@ -1,4 +1,5 @@
 ---
+description: "Take \"build X\" goals from a one-liner to a real artifact — commit to the most probable shape first, then verify it against a roleplay-able persona through a doc-relay pipeline."
 prompt_examples:
   - prompt: Help me build a Monte Carlo simulation website — plan it end to end.
     scene: Plan a new project
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Discuss an idea first
   - prompt: The homepage card list drifted — please fix it. goal-docs/ is already there.
     scene: Fix an existing project
-  - prompt: Add a favorites feature to the site, continuing from the existing goal-docs/.
-    scene: Add a new feature
-  - prompt: The audience is now complete middle-school beginners. The old persona no longer fits.
-    scene: Change the target users
-  - prompt: We stopped at slice 2 last time — pick it up from there.
-    scene: Continue previous work
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Goal-Driven Decomposition
 

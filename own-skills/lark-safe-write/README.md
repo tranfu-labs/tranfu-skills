@@ -1,4 +1,5 @@
 ---
+description: "A safe-write workflow Skill for Lark (Feishu) wiki. Enforces a four-step loop — preflight, backup, write, verify — so a wiki page never gets clobbered or silently fails to update."
 prompt_examples:
   - prompt: Create a new page in this Lark knowledge base.
     scene: Create a wiki page
@@ -6,13 +7,7 @@ prompt_examples:
     scene: Update a wiki page
   - prompt: Back up this page before writing the new content.
     scene: Back up before writing
-  - prompt: Verify that the title and first paragraph were written correctly.
-    scene: Verify after writing
-  - prompt: Safely replace the existing page with this new Markdown content.
-    scene: Replace existing content
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Lark Safe Write
 

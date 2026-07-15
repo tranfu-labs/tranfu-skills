@@ -1,4 +1,5 @@
 ---
+description: "Turn a reusable idea, postmortem, or prompt into a new skill — three gates (content-fit, naming, prompt review) run before anything hits disk."
 prompt_examples:
   - prompt: Turn docs/postmortem.md into a project-level skill.
     scene: Build from a source file
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Continue from earlier context
   - prompt: Let's skill-ify the release checklist we just talked about.
     scene: Turn an idea into a skill
-  - prompt: Package this daily-report workflow as a new skill under own-skills/.
-    scene: Turn a workflow into a skill
-  - prompt: Create a company skill from my brand-voice notes and publish it.
-    scene: Create and publish
-  - prompt: Wrap that agent's system prompt into a Codex skill.
-    scene: Turn a prompt into a skill
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # skill-create-workflow
 

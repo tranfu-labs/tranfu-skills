@@ -1,4 +1,5 @@
 ---
+description: "检查一个 AI 创业想法是否可行，并用红、黄、绿灯说明主要风险和赚钱能力。"
 prompt_examples:
   - prompt: "帮我评估一下'用 AI Agent 做中小企业客服'这个方向能不能做"
     scene: 评估创业想法
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 判断 AI 赛道
   - prompt: "用 13 条 AI 创业禁止清单评估我这个项目"
     scene: 排查高风险项
-  - prompt: "分析一下 Jasper 这类 AI 写作工具的结构性死亡风险"
-    scene: 分析现有公司
-  - prompt: "做一份 AI Coding 赛道的市场研报，附带可行性自检"
-    scene: 配合市场研究
-  - prompt: "帮我用替代风险/杠杆方向/单位经济给这个 AI 项目打分"
-    scene: 评估关键风险
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # ai-startup-feasibility-check
 

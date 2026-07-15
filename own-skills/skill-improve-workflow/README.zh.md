@@ -1,4 +1,5 @@
 ---
+description: "检查已有 skill 缺什么、哪里不清楚，并直接修复有明确答案的问题。"
 prompt_examples:
   - prompt: 帮我提升下 own-skills/daily-report 这个 skill
     scene: 改进现有 Skill
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 判断是否值得保留
   - prompt: 合入前给 own-skills/bar 做次体检, 能改的顺手改
     scene: 合并前检查
-  - prompt: 把 own-skills/ 整个目录过一遍审查
-    scene: 批量检查 Skill
-  - prompt: 帮我审一下这个 skill, 只出报告先别改文件
-    scene: 只检查不修改
-  - prompt: own-skills/xxx 写得怎么样? 值不值得重构
-    scene: 判断是否需要重做
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # skill-improve-workflow
 

@@ -1,4 +1,5 @@
 ---
+description: "Check whether an AI startup idea is viable and return a red, yellow, or green assessment of its main risks and economics."
 prompt_examples:
   - prompt: "Check whether 'AI agents for SMB customer support' is worth pursuing"
     scene: Evaluate a startup idea
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Assess an AI market
   - prompt: "Score my project against the 13-item AI startup prohibition list"
     scene: Check major red flags
-  - prompt: "Analyze the structural death risk of AI writing tools like Jasper"
-    scene: Review an existing company
-  - prompt: "Do a market report on the AI coding space and attach a feasibility appendix"
-    scene: Add to market research
-  - prompt: "Score this AI project on substitution risk, leverage direction, and unit economics"
-    scene: Score the key risks
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # ai-startup-feasibility-check
 

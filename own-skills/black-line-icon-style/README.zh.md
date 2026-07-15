@@ -1,4 +1,5 @@
 ---
+description: "一句话出一张极简黑白线性图标——透明底、粗黑圆角线条、单主体居中、不带文字, 也可以只要 Prompt。"
 prompt_examples:
   - prompt: 帮我出一个「AI 工作流」的极简黑白线性图标, 抽象风格。
     scene: 根据主题出图
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 制作空状态图标
   - prompt: 给「目标拆解」出个 UI 入口图标, 缩到 32px 也要看得清。
     scene: 制作界面图标
-  - prompt: 只给我「Prompt 多轮评审」的图标生成 Prompt 就行, 不用出图。
-    scene: 只要提示词
-  - prompt: 内部 AI 评审模块想要个 logo 感的辅助符号, 不是正式 Logo。
-    scene: 制作辅助标识
-  - prompt: 出一个「多轮循环评审」的图标, 循环箭头 + 反馈感。
-    scene: 表达循环概念
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # 黑白线性图标风
 

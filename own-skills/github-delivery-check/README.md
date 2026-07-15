@@ -1,4 +1,5 @@
 ---
+description: "Prepare a product project for GitHub delivery by completing deployment notes, verifying it locally, and pushing it to the main branch."
 prompt_examples:
   - prompt: Push this project to the GitHub main branch.
     scene: Prepare a delivery
@@ -6,13 +7,7 @@ prompt_examples:
     scene: Create a repository
   - prompt: We already have a repo; complete the README deployment section, verify locally, then push.
     scene: Update a repository
-  - prompt: Check whether this project can install, build, start, and be verified.
-    scene: Check before delivery
-  - prompt: Prepare this project so engineers can deploy it directly — spell out the deployment config.
-    scene: Hand off to engineers
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # GitHub Delivery Check
 

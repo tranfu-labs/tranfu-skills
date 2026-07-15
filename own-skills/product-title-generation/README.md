@@ -1,4 +1,5 @@
 ---
+description: "Turn a product, feature, module, campaign theme, or brand short name into 1 recommended + 6 alternate Chinese titles in a single pass — short enough to drop straight into the UI."
 prompt_examples:
   - prompt: Give me a 4-6 character Chinese product title for a team-level Agent observability platform.
     scene: Name from a use case
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Name from keywords
   - prompt: Name a 30-day Japanese sprint coaching course in Chinese — should feel time-pressured.
     scene: Name a product category
-  - prompt: Give an 8-character Chinese product title for "observability layer for heterogeneous team agents".
-    scene: Follow a length limit
-  - prompt: Follow the "cockpit" / "foundation" pattern and name an AI infrastructure product in Chinese.
-    scene: Follow a reference style
-  - prompt: Name two things at once — a language coaching course and an Agent product launchpad.
-    scene: Name multiple products
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Product Title Generation
 

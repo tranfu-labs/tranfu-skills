@@ -1,4 +1,5 @@
 ---
+description: "A skill that switches Claude into \"structured-thinking and system-design advisor\" mode — a co-creation partner, not an explaining assistant."
 prompt_examples:
   - scene: Review a full document
     prompt: Review this document for me — what is it actually solving, and where does the logic break?
@@ -6,15 +7,7 @@ prompt_examples:
     prompt: Break down the structure of this piece — modules, hierarchy, logical flow.
   - scene: Explain one passage
     prompt: What does this paragraph mean? Explain it with a clear analogy.
-  - scene: Check the logic
-    prompt: Is the logic in this section sound, or is there a causal reversal?
-  - scene: Rewrite together
-    prompt: Give me 2-3 optimized versions — one grounded, one with product-launch polish.
-  - scene: Build a model
-    prompt: Can you distill these scattered points into a methodology or model?
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # structured-thinking-advisor
 

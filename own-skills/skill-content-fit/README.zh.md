@@ -1,4 +1,5 @@
 ---
+description: "判断一份文档、提示词或经验是否足够完整，可以做成可复用的 skill；不够时会列出缺少的内容。"
 prompt_examples:
   - prompt: 这段事故复盘我想沉淀成 skill, 帮我看看够不够格。
     scene: 从事故中提炼
@@ -6,15 +7,7 @@ prompt_examples:
     scene: 整理经验教训
   - prompt: AGENTS.md 里这段用户偏好, 能固化成 skill 吗?
     scene: 检查文档片段
-  - prompt: 这段内容能不能沉淀成能力? 心里没底, 先帮我判一下。
-    scene: 判断是否值得做成 Skill
-  - prompt: docs/postmortems/ 下所有复盘都过一遍, 挑出值得做成 skill 的。
-    scene: 批量筛选素材
-  - prompt: 这个 issue 讨论出来的规则要不要做成 skill? 直接判个通过 / 打回。
-    scene: 从讨论中提炼规则
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Skill 内容准入评估
 

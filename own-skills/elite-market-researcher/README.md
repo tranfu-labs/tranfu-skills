@@ -1,4 +1,5 @@
 ---
+description: "Research a market or industry from strategy, investment, and operating angles, then report the strongest opportunities and risks."
 prompt_examples:
   - prompt: Analyze the AI code review market for me.
     scene: Assess a market
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Map the competitors
   - prompt: Evaluate this startup direction from a VC angle — should I write the check?
     scene: Support an investment decision
-  - prompt: Give me a deep industry report on synthetic biology — long form is fine.
-    scene: Write a deep report
-  - prompt: Quick read on the vector database market — condensed version is fine.
-    scene: Run a quick market scan
-  - prompt: I'm going to build a vertical AI agent — research it for me from an operator's seat.
-    scene: Find startup opportunities
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # elite-market-researcher
 

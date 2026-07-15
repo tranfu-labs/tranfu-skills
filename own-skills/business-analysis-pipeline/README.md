@@ -1,4 +1,5 @@
 ---
+description: "Evaluate an AI product or startup idea with a structured report covering the market, competition, business model, and risks."
 prompt_examples:
   - prompt: "Evaluate the commercial viability of this AI product: <product description>."
     scene: Evaluate a new idea
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Request a full report
   - prompt: Score these two AI startup directions side by side using the same rubric.
     scene: Compare several directions
-  - prompt: Investment due-diligence pass on this project before I write a check.
-    scene: Prepare due diligence
-  - prompt: Run PEST + Porter's Five Forces + SWOT + BMC in one go, with findings cross-referenced across modules.
-    scene: Combine analysis frameworks
-  - prompt: Just the opportunity matrix plus the executive summary — skip the deep-dive modules.
-    scene: Run a quick review
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # business-analysis-pipeline
 

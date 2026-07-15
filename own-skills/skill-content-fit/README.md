@@ -1,4 +1,5 @@
 ---
+description: "Decide whether a document, prompt, or experience is complete enough to turn into a reusable skill, and list what is missing if it is not."
 prompt_examples:
   - prompt: I want to crystallize this postmortem into a skill — is it good enough?
     scene: Learn from an incident
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Capture a lesson
   - prompt: This user-preference block in AGENTS.md — can it be crystallized into a skill?
     scene: Review a document excerpt
-  - prompt: Can this material be turned into a capability? I'm not sure — judge it first.
-    scene: Decide if it deserves a skill
-  - prompt: Run every postmortem under docs/postmortems/ through the check and pick the ones worth skilling.
-    scene: Screen several ideas
-  - prompt: The rule from this issue thread — should it be a skill? Just give me pass or reject.
-    scene: Turn a discussion into rules
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Skill Content Fit Check
 

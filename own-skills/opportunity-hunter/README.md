@@ -1,4 +1,5 @@
 ---
+description: "Turn opportunity hunting from waiting for inspiration into a repeatable drill — four hunting grounds, why-now trigger, pick-and-shovel test, four kill gates."
 prompt_examples:
   - prompt: OpenAI cut prices again. Is this a trigger for infra startups? Walk the chain.
     scene: Check a market change
@@ -6,15 +7,7 @@ prompt_examples:
     scene: Test a startup idea
   - prompt: I paste product data across 5 platforms daily. Is this a real opportunity?
     scene: Start from daily friction
-  - prompt: List 3 dirty-work directions in unsexy industries with your four grounds.
-    scene: Explore possible ideas
-  - prompt: Big players give away agent platforms free. Does this kill my tool startup?
-    scene: Assess large competitors
-  - prompt: I have 4 candidate ideas. Run all through the kill gates. Keep survivors.
-    scene: Compare existing ideas
 ---
-
-[English](./README.md) | [中文](./README.zh.md)
 
 # Startup Opportunity Hunter
 
