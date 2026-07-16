@@ -55,3 +55,12 @@ jobs:
           body: "Auto-generated from main@${{ github.sha }}"
           files: index.json
           make_latest: "true"
+      - name: Trigger tranfucom Skill Catalog Sync
+        # catalog release 成功后触发下游同步；最终同步/部署状态由 Hermes 负责跟踪.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.TRANFUCOM_WORKFLOW_TOKEN }}
+        run: |
+          gh workflow run 302044723 \
+            --repo tranfu-labs/tranfucom \
+            --ref main
