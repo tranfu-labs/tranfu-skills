@@ -1,0 +1,60 @@
+title-options
+
+Copyright (c) 2026 BruceL017
+
+This Skill is an original bilingual implementation for factual,
+platform-adapted article-title generation. The workflow, schemas, examples,
+strategy organization, and wording in this repository were independently
+written for title-options.
+
+Projects reviewed for method-level or conceptual research:
+
+1. songxrui/dbs-xhs-title@5d84e96560fb2695a919cef123b73470ba11673a
+   Repository: https://github.com/songxrui/dbs-xhs-title
+   License at reference time: no license identified
+   Use: conceptual research only; no unique wording, full formula collection,
+   examples, or implementation copied
+
+2. dontbesilent2025/dbskill@f1204d7807ca5d5f851afa519b56ec6a706843b7
+   Repository: https://github.com/dontbesilent2025/dbskill
+   License at reference time: CC BY-NC 4.0
+   Use: conceptual research only; no unique wording, full formula collection,
+   examples, or implementation copied
+
+3. JuneYaooo/xhs-writer-skill@6adef3b97db63dd931a1fd6b29550b31832355bd
+   Repository: https://github.com/JuneYaooo/xhs-writer-skill
+   License at reference time: Apache-2.0
+   Use: method-level study only; all instructions and examples were rewritten
+
+4. HeyClioo/ai-title-generator@301bffcf0cfa6171b66b30ab445d2624cda3d1d6
+   Repository: https://github.com/HeyClioo/ai-title-generator
+   License at reference time: MIT
+   Use: method-level study only; all instructions and examples were rewritten
+
+5. majiabin2020/xinzhiyuan-title-craft@84e2e84c7b28ab3e554f3fbdbfcb4ec8dc49ed19
+   Repository: https://github.com/majiabin2020/xinzhiyuan-title-craft
+   License at reference time: MIT
+   Use: method-level study only; all instructions and examples were rewritten
+
+6. ren644/xhs-title-skill@9800f8aee0adda4eee0503776ecb907b3c9ffb8e
+   Repository: https://github.com/ren644/xhs-title-skill
+   License at reference time: no license identified
+   Use: conceptual research only; no unique wording, full formula collection,
+   examples, or implementation copied
+
+7. sungwong/wq-gzh-title@ad7a6e2ac4ad6f5389b5885ec1df0af06f1467d8
+   Repository: https://github.com/sungwong/wq-gzh-title
+   License at reference time: no license identified
+   Use: conceptual research only; no unique wording, full formula collection,
+   examples, or implementation copied
+
+8. liucongg/liucong-skills@d488b68613e05d70d0283f23bd7eec63b21c1697
+   Repository: https://github.com/liucongg/liucong-skills
+   License at reference time: Apache-2.0
+   Use: method-level study of content routing and title mechanics only; no
+   645-article empirical data, title templates, examples, or implementation copied
+
+MIT- and Apache-licensed sources informed methods only. The CC BY-NC source
+and sources without an identified license were used only for conceptual
+research. This repository does not copy their distinctive text, complete
+formula sets, or examples.
