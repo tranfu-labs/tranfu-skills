@@ -1,0 +1,19 @@
+proofread-content
+Copyright (c) 2026 BruceL017
+Licensed under the MIT License in LICENSE.
+
+Third-party material
+====================
+
+references/humanizer-zh-24.md is adapted from:
+
+- Humanizer-zh, Copyright (c) 2026 歸藏
+  https://github.com/op7418/Humanizer-zh
+  MIT License
+
+- Humanizer, Copyright (c) 2025 Siqi Chen
+  https://github.com/blader/humanizer
+  MIT License
+
+The standard MIT terms are reproduced in LICENSE. Retain both notices in
+copies or substantial portions derived from those works.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Proofread Content"
+  short_description: "三轮审校中文自媒体成稿，保真去 AI 味并交付排版净稿"
+  default_prompt: "Use $proofread-content to proofread this finished Chinese draft in three passes and deliver copy ready for layout."
