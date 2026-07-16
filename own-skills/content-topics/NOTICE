@@ -1,0 +1,66 @@
+content-topics
+
+This project-level Skill is an original implementation for evidence-driven,
+cross-platform topic selection. Its instructions, schemas, examples, account
+profile integration, and output contract were written specifically for this
+workspace.
+
+Public projects reviewed for conceptual workflow ideas:
+
+1. Project: imraywang/wewrite
+   Repository: https://github.com/imraywang/wewrite
+   Reference commit: 2c0c18417b36ac34d56a3c6f116e5cb479fbcbdc
+   License at reference time: MIT
+   Conceptual influence: positioning-aware content workflow and separation of
+   topic planning from downstream creation
+   Use in this Skill: concepts only; no source text or code copied
+
+2. Project: coinluu/xhs-topic-strategist-skill
+   Repository: https://github.com/coinluu/xhs-topic-strategist-skill
+   Reference commit: ff27637178d6788bedc11c3934b2758ff7e0d303
+   License at reference time: MIT
+   Conceptual influence: topic-candidate generation, platform relevance, and
+   evidence-aware selection for Xiaohongshu
+   Use in this Skill: concepts only; workflow, criteria, and wording rewritten
+
+3. Project: aby-aby111/toutiao-article-creator
+   Repository: https://github.com/aby-aby111/toutiao-article-creator
+   Reference commit: d818713d97ca20ee99ffd262fee11a319f036e06
+   License at reference time: GNU General Public License v3.0
+   Conceptual influence: Toutiao news value, broad-reader relevance, and clear
+   information structure
+   Use in this Skill: conceptual review only; no GPL source text, prompt text,
+   code, templates, or examples copied or redistributed
+
+Local Skills and workflows reviewed for conceptual comparison:
+
+- xhs-topic-strategist
+- huashu-topic-gen
+- wb-xhs-topic-bank
+- cheat-seed, cheat-trends, and cheat-recommend
+- dailyhot-skill and weibo-trending-analysis
+- the private gzh-blog topic and research workflow
+
+These local sources have mixed or unspecified licenses. They were used only to
+compare responsibilities such as material intake, hotspot discovery, candidate
+screening, evidence gates, and workflow handoff. No prompt text, formula
+library, examples, or implementation code from a source with incompatible or
+unknown terms is included in this Skill.
+
+The bundled reader profile is a user-authorized private snapshot derived from
+a local reader-profile source. The user explicitly authorized its current
+proportions and behavior assumptions for unified use across WeChat Official
+Accounts, Xiaohongshu, Zhihu, Weibo, and Toutiao. The source file is not
+redistributed in this package.
+
+Modification and packaging notice (2026-07-15):
+
+The previous title-only draft was replaced with a private topic-selection
+workflow. The new implementation adds a fixed account profile, structured
+upstream-material intake, a 72-hour attention-signal policy, dual-evidence and
+truth gates, hidden candidate scoring, five-platform adaptation, and the
+ContentTopicPlan output contract. It does not include network scrapers and does
+not track publishing history or performance data. The runtime package includes
+one deterministic provider-contract validator for orchestrated request/result,
+path, hash, and artifact validation. Repository synchronization does not install
+the Skill into a user-level Skill directory.
