@@ -1,0 +1,4 @@
+interface:
+  display_name: "LangGraph Architecture Review"
+  short_description: "梳理、绘制并审查项目中的 LangGraph 架构流程"
+  default_prompt: "Use $langgraph-architecture-review to map this project’s LangGraph workflow, render its architecture, and recommend concrete improvements."
