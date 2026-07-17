@@ -1,0 +1,9 @@
+draft-content
+Copyright (c) 2026 BruceL017
+
+This package contains independently distilled editorial rules informed by the
+projects listed in the repository NOTICE. It has no runtime dependency on
+those projects and includes no publishing integration.
+
+`references/style-b.md` is the user-supplied "老同事聊干货" style guide bundled
+for the B drafting variant.
