@@ -1,0 +1,3 @@
+vendor/resvg-wasm/* -text
+*.wasm binary
+references/style-index.md text eol=lf

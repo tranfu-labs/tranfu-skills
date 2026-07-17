@@ -53,6 +53,21 @@
       "assetFit": "contain"
     }
   },
+  "brandPolicy": {
+    "defaultEnabled": true,
+    "userOverrideAllowed": true
+  },
+  "inputHandling": {
+    "preserveNativeOutput": true,
+    "ratioTolerance": 0.002,
+    "outputCanvasRole": "design-coordinate-system",
+    "allowPostGenerationResize": false,
+    "allowCrop": false,
+    "allowPadding": false,
+    "allowRotation": false,
+    "allowWrongRatioStretch": false,
+    "wrongRatioAction": "regenerate"
+  },
   "generationConstraints": {
     "forbidModelDrawnBrand": true,
     "forbidPageNumberBadge": true,
