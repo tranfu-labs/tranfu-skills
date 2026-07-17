@@ -1,0 +1,4 @@
+interface:
+  display_name: "Draft Content"
+  short_description: "从已选题与素材生成共享大纲和 A/B 五平台完整初稿"
+  default_prompt: "Use $draft-content with a prepared topic, audience, and authorized materials to create or improve one shared outline, pause for exact path-and-hash approval, and then draft A/B content for five Chinese platforms."

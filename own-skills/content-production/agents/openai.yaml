@@ -1,0 +1,7 @@
+interface:
+  display_name: "Content Production"
+  short_description: "一句话或大纲自动生成十稿、五套配图、封面与公众号 HTML"
+  default_prompt: "Use $content-production to turn this one-line brief or Markdown outline into ten platform drafts, five image sets, a WeChat cover, and validated WeChat HTML."
+
+policy:
+  allow_implicit_invocation: true

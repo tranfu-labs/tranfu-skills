@@ -1,0 +1,4 @@
+interface:
+  display_name: "Compress Image"
+  short_description: "Compress static images to WebP or PNG"
+  default_prompt: "Use $compress-image to compress this image to WebP while keeping the original."

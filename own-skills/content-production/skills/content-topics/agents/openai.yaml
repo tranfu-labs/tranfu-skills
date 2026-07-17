@@ -1,0 +1,7 @@
+interface:
+  display_name: "Content Topics"
+  short_description: "从调研材料与热点生成五平台适配选题"
+  default_prompt: "使用 $content-topics，读取当前内容目录的调研材料，生成微信公众号、小红书、知乎、微博和今日头条的跨平台选题方案。"
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,210 @@
+{
+  "schema_version": "1.0",
+  "profile_set": {
+    "id": "five-platform-profiles",
+    "version": "1.0.0",
+    "updated_at": "2026-07-15",
+    "core_profile": "core-audience.md",
+    "snapshot_required": true
+  },
+  "merge_order": [
+    "core_audience",
+    "platform_overlay",
+    "article_segment"
+  ],
+  "constraint_priority": [
+    "facts_and_safety",
+    "platform_rules",
+    "audience_profile",
+    "variant_b_style"
+  ],
+  "platforms": {
+    "wechat": {
+      "id": "wechat",
+      "display_name": "微信公众号",
+      "audience_overlay": {
+        "reading_context": "读者愿意投入连续阅读时间，希望获得完整判断、系统解释和可收藏的方法。",
+        "primary_need": "在一篇文章内完成理解、判断和行动闭环。"
+      },
+      "editorial_contract": {
+        "shape": "完整长文",
+        "opening": "尽快建立问题、变化或具体场景与读者的关系。",
+        "body": "允许多级论证，但每节只承担一个主要任务，并保持清晰转场。",
+        "ending": "收束核心判断并给出可执行下一步，不机械复述全文。",
+        "format": [
+          "短段落",
+          "清晰小标题",
+          "复杂步骤使用列表",
+          "关键结论避免连续堆叠加粗"
+        ]
+      },
+      "title_contract": {
+        "candidate_count_per_variant": 3,
+        "goal": "准确承诺核心价值，并让读者理解文章为何值得打开。",
+        "cover_title_requirement": "入选标题必须含汉字、为单行且包含 2-35 个非空白字符。",
+        "avoid": [
+          "正文未兑现的收益",
+          "夸大确定性",
+          "只靠情绪没有信息"
+        ]
+      },
+      "visual_contract": {
+        "platform_alias": "wechat",
+        "cover_required": false,
+        "publication_cover_required": true,
+        "publication_cover_provider": "wechat_cover",
+        "inline_images_allowed": true,
+        "final_output": "Markdown with local image references, independent 1923x818 cover.png, clean article.html, and article-preview.html"
+      }
+    },
+    "xiaohongshu": {
+      "id": "xiaohongshu",
+      "display_name": "小红书",
+      "audience_overlay": {
+        "reading_context": "读者通常先扫标题、封面和前几行，再决定是否继续阅读或收藏。",
+        "primary_need": "快速识别内容是否与自己有关，并获得可立即执行、便于保存的要点。",
+        "observed_discovery": {
+          "homepage_recommendation_share": 0.77,
+          "search_share": 0.05,
+          "profile_share": 0.02,
+          "interpretation": "历史样本主要通过首页推荐被发现；这些数据只描述该样本，不代表平台总体规律。"
+        },
+        "observed_timing": {
+          "active_window": "19:00-24:00",
+          "observed_peak": "19:00-20:00",
+          "caveat": "高峰可能受到历史发布时间集中影响，不能据此声称因果关系。"
+        }
+      },
+      "editorial_contract": {
+        "shape": "高密度笔记",
+        "opening": "首屏给出具体问题、结果或使用场景，避免长背景。",
+        "body": "按可扫描的信息块组织，突出步骤、判断标准、清单和避坑点。",
+        "ending": "给出自然的收藏理由、行动建议或开放问题，不强行互动。",
+        "format": [
+          "短段落",
+          "明确层级",
+          "关键词自然出现",
+          "表情符号仅在确有表达价值时少量使用"
+        ]
+      },
+      "title_contract": {
+        "candidate_count_per_variant": 5,
+        "goal": "把具体人群、问题或可获得的结果说清楚，同时保留真实的信息增量。",
+        "avoid": [
+          "绝对化收益",
+          "无事实依据的亲历口吻",
+          "与正文无关的热词堆叠"
+        ]
+      },
+      "visual_contract": {
+        "platform_alias": "xhs",
+        "cover_required": true,
+        "inline_images_allowed": true,
+        "final_output": "Markdown with local image references"
+      }
+    },
+    "zhihu": {
+      "id": "zhihu",
+      "display_name": "知乎",
+      "audience_overlay": {
+        "reading_context": "读者围绕一个问题评估答案是否可信、是否完整，并会关注论据、反方与适用边界。",
+        "primary_need": "获得有依据、可辩护且能解释不同条件下结论变化的回答。"
+      },
+      "editorial_contract": {
+        "shape": "问题驱动的深度回答",
+        "opening": "先给核心判断和成立条件，再说明论证路径。",
+        "body": "围绕问题逐层论证，显式区分事实、推断和个人建议，并处理主要反方。",
+        "ending": "总结结论边界和选择标准。",
+        "format": [
+          "论点与证据相邻",
+          "必要时列出来源",
+          "避免把公众号式导语原样搬入"
+        ]
+      },
+      "title_contract": {
+        "candidate_count_per_variant": 3,
+        "goal": "形成自然、明确、可回答的问题或判断议题。",
+        "avoid": [
+          "预设错误事实",
+          "只有立场没有问题",
+          "正文无法支撑的结论"
+        ]
+      },
+      "visual_contract": {
+        "platform_alias": "zhihu",
+        "cover_required": false,
+        "inline_images_allowed": true,
+        "final_output": "Markdown with local image references"
+      }
+    },
+    "weibo": {
+      "id": "weibo",
+      "display_name": "微博",
+      "audience_overlay": {
+        "reading_context": "读者在快速信息流中判断一条内容是否值得停留、转发或进入讨论。",
+        "primary_need": "用较短篇幅抓住核心事实、判断和讨论价值。"
+      },
+      "editorial_contract": {
+        "shape": "自洽的短内容",
+        "opening": "首句直接给事件、冲突或判断。",
+        "body": "保留必要证据和边界，删去依赖长文上下文才能理解的铺垫。",
+        "ending": "用问题或结论自然收束，不做机械号召。",
+        "format": [
+          "短段落",
+          "移动端可扫描",
+          "话题标签只在准确且必要时使用"
+        ]
+      },
+      "title_contract": {
+        "candidate_count_per_variant": 2,
+        "goal": "提供可作为首句或发布标题的高信息密度表达。",
+        "avoid": [
+          "断章取义",
+          "用夸张替代事实",
+          "堆叠无关话题标签"
+        ]
+      },
+      "visual_contract": {
+        "platform_alias": "weibo",
+        "cover_required": false,
+        "inline_images_allowed": true,
+        "final_output": "Markdown with local image references"
+      }
+    },
+    "toutiao": {
+      "id": "toutiao",
+      "display_name": "头条号",
+      "audience_overlay": {
+        "reading_context": "读者需要快速确认事件背景、核心信息和实际影响，也重视文章能否独立读懂。",
+        "primary_need": "获得信息完整、结构清楚、事实可核验的解释或分析。"
+      },
+      "editorial_contract": {
+        "shape": "信息完整的资讯分析长文",
+        "opening": "快速交代最重要的事实、变化与影响。",
+        "body": "补齐背景、因果、证据和实际影响，避免依赖外部上下文。",
+        "ending": "给出有边界的判断或行动参考。",
+        "format": [
+          "小标题清楚",
+          "段落简短",
+          "重要来源可追溯",
+          "避免只改公众号标题后原样搬运"
+        ]
+      },
+      "title_contract": {
+        "candidate_count_per_variant": 4,
+        "goal": "清楚呈现事实主体、变化和读者能获得的信息。",
+        "avoid": [
+          "标题夸大正文影响",
+          "省略关键限定条件",
+          "制造与事实不符的紧迫感"
+        ]
+      },
+      "visual_contract": {
+        "platform_alias": "toutiao",
+        "cover_required": true,
+        "inline_images_allowed": true,
+        "final_output": "Markdown with local image references"
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+proofread-content
+Copyright (c) 2026 BruceL017
+Licensed under the MIT License in LICENSE.
+
+Third-party material
+====================
+
+The adapted 24-pattern catalog in
+proofread-content/references/humanizer-zh-24.md is derived from:
+
+1. Humanizer-zh
+   Copyright (c) 2026 歸藏
+   Source: https://github.com/op7418/Humanizer-zh
+   License: MIT
+
+2. Humanizer
+   Copyright (c) 2025 Siqi Chen
+   Source: https://github.com/blader/humanizer
+   License: MIT
+
+The standard MIT permission and warranty terms reproduced in LICENSE apply to
+the adapted material. The copyright notices above must be retained in copies
+or substantial portions derived from those works.
+
+Humanizer-zh also credits hardikpandya/stop-slop as inspiration. This project
+does not copy stop-slop text or code.

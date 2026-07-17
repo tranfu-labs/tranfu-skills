@@ -1,0 +1,19 @@
+draft-content
+Copyright (c) 2026 BruceL017
+
+The workflow and platform references were independently distilled from public
+methodology and skill documentation, including:
+
+- jiji262/wechat-publisher
+- AIPMAndy/wechat-explosive-article-skill
+- JuneYaooo/xhs-writer-skill
+- jackbauerxu/workbuddy-xhs-skills
+- coinluu/xhs-topic-strategist-skill
+- aby-aby111/toutiao-article-creator
+
+No runtime dependency on those projects is included. Their names identify
+methodology sources only; their respective licenses and copyrights remain with
+their authors.
+
+The bundled B-variant style guide is copied from the user-supplied local file
+"写作风格提示词—老同事聊干货.md" for this project's configured writing workflow.

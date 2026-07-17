@@ -1,0 +1,290 @@
+---
+name: proofread-content
+description: >-
+  Three-pass proofreading for complete Simplified Chinese self-media drafts intended for WeChat
+  Official Accounts, Xiaohongshu, Weibo, Zhihu, or Toutiao. Use when the user supplies a finished
+  draft and asks to 去 AI 味、三轮审校、终稿润色、发布前审校、改得像我, or explicitly invokes
+  $proofread-content. Preserve the title, claims, stance, facts, data, cases, and overall structure,
+  and deliver clean copy ready for layout. Do not use for writing from scratch, topics or outlines,
+  viral restructuring, translation, format-only work, academic/legal/government writing, platform
+  publishing, or AI-detector evasion.
+---
+
+# Proofread Content
+
+对已经成稿的简体中文自媒体内容做三轮审校。成功结果是纯净正文，不是诊断稿，也不包含审校说明。
+
+## 总控 Provider 路由
+
+执行独立流程前先检查结构化请求。请求只要出现 `contract: content-production-provider/v1`、
+`capability: proofreading`、`provider_contract: proofreading-v1` 或
+`content-production-provider: proofreading-v1` 任一标记，就必须改走
+`references/orchestrated-provider.md` 并使用 `scripts/provider-contract.mjs`。完整合同仍要求前三项
+同时精确匹配；部分、冲突或无效标记必须结构化阻断，不得回退独立模式。
+
+Provider 路由不覆盖输入 `draft.md`，不执行独立模式的原子写回和 YAML `PROOFREAD_RESULT`，也不
+创建嵌套 run、门禁或用户偏好文件。没有上述标记的普通请求继续执行下方独立流程，行为不变。
+
+## 交付边界
+
+- 支持微信公众号、小红书、微博、知乎和头条号的完整成稿。
+- 支持对话中粘贴的正文，以及可读、非空、UTF-8 编码的 `.md` 或 `.txt` 单文件。
+- 只调整字句、删除不承载独立信息的冗余，并在同一小节内调整段落顺序。
+- MUST 保持标题、标题层级、核心观点、立场、事实、数据、案例、引用、链接、术语和整体结构。
+- MUST 原样保留数字、百分比、日期、金额、版本号、数字与单位组合及专有名词的字面形式；不得为
+  “统一排版”在这些受保护字面值内部插删空格、标点或字词。
+- NEVER 发明数字、人物、经历、对话、时间、地点、情绪、引用或来源。
+- NEVER 为平台增长新增钩子、CTA、emoji、话题标签或爆款结构。
+- NEVER 以 AI 检测百分比作为目标，也不声称绕过检测器。
+- 默认只检查原稿内部一致性。外部事实真实性、法律合规和平台最新政策不属于
+  `READY_FOR_LAYOUT` 的保证。
+
+调用本 Skill 处理文件，表示用户授权在全部硬门禁通过后覆盖该输入文件。处理粘贴文本，表示用户
+授权在全部硬门禁通过后原子创建或覆盖当前工作目录下的 `proofread-content.md`。除此之外，不得
+编辑其他用户文件。
+
+## 规则优先级
+
+规则冲突时，序号小的优先：
+
+1. 禁止虚构和双向事实保真。
+2. 标题、立场、事实、案例与整体结构保护。
+3. 当前原稿体现的作者声口。
+4. 目标平台的语体与阅读节奏。
+5. Humanizer-zh 24 类模式。
+6. 错别字、标点、排版与局部精炼。
+
+不得为了满足后一级规则破坏前一级规则。无法兼容时，停止写回，把状态设置为
+`NEEDS_AUTHOR_INPUT` 或 `BLOCKED`，再转至统一输出子流程。
+
+## 必读参考
+
+每次执行 MUST 完整读取：
+
+- `references/humanizer-zh-24.md`：24 类检测面、检查清单和内部五维诊断。
+- `references/platform-registers.md`：五个平台和通用自媒体语体的适配边界。
+
+## 执行流程
+
+CREATE A TODO LIST FOR THE TASKS BELOW:
+
+1. 校验输入并确定目标产物。
+2. 识别平台并建立不可变基线。
+3. 执行第一轮：内容、逻辑与内部一致性。
+4. 执行第二轮：24 类去 AI 味与作者声口。
+5. 执行第三轮：语言细节、Markdown 与阅读节奏。
+6. 运行最终回归门禁；失败时最多内部修复两次。
+7. 仅在门禁通过后原子写回。
+8. 转至子流程「输出结果」，输出唯一的 `PROOFREAD_RESULT` 并结束。
+
+### 1. 校验输入
+
+1. 初始化内部 `RESULT_CONTEXT`：`status` 未设置，`platform=unknown`，`source=none`，
+   `output=unchanged`，`hard_gates=not_run`，三个 `changes` 字段均为 `not_run`，
+   `author_questions=[]`，`block_reason=""`。
+2. 接收文件路径或粘贴正文。两者都没有时，设置 `status=NEEDS_AUTHOR_INPUT`，写入一个索取完整
+   成稿的具体问题，转至子流程「输出结果」。
+3. 同时收到文件路径和粘贴正文时，只有用户明确且排他地指向其中一种输入，才能按该唯一指向继续。
+   用户同时要求处理两者、没有排他指向或指向含糊时，不读取或覆盖任一目标；设置
+   `status=NEEDS_AUTHOR_INPUT`，要求二选一，转至子流程「输出结果」。
+4. 确定唯一输入后，文件输入把 `source` 设为输入文件绝对路径；粘贴输入设为 `inline`。
+5. 文件输入必须是可读、非空、UTF-8 的单个 `.md` 或 `.txt` 文件；否则设置
+   `status=BLOCKED` 和具体 `block_reason`，转至子流程「输出结果」。
+6. 输入必须是完整成稿。只有选题、提纲、零散素材或明显未完成片段时，设置
+   `status=NEEDS_AUTHOR_INPUT`，写入索取完整成稿的具体问题，转至子流程「输出结果」。
+7. 学术、法律、公文等专业文本，或从零创作、翻译、排版、发布、爆款重构请求，设置
+   `status=BLOCKED` 和具体越界原因，转至子流程「输出结果」。
+8. 文件输入的最终目标是原文件路径；粘贴输入的最终目标是当前工作目录中的
+   `proofread-content.md`。
+9. 此阶段不得写入最终目标。所有改写先保存在内存中；只有通过硬门禁后，才可在最终目标同目录
+   创建临时文件。
+
+### 2. 识别平台并建立基线
+
+1. 用户明确指定微信公众号、小红书、微博、知乎或头条号时，采用该平台。
+2. 用户明确指定其他平台时，设置 `status=BLOCKED`、`platform=unknown` 和
+   `block_reason="V1 仅支持微信公众号、小红书、微博、知乎和头条号。"`，在执行三轮前转至
+   子流程「输出结果」，不写回文件。
+3. 用户未指定平台时，根据请求、标题、正文和已有格式推断。
+4. 仍无法判断时采用“通用自媒体”，并在报告中注明，不向用户追加问题。
+5. 建立内部 `PRESERVATION_LEDGER`，逐项记录：
+   - 标题、YAML frontmatter 和标题层级。
+   - 核心观点、结论、立场、程度与因果关系。
+   - 数字、百分比、日期、金额、版本号、数字与单位组合及专有名词，并记录其原文字面形式。
+   - 案例、人物、时间、地点、引语、引用来源和链接。
+   - 代码块、行内代码、图片、列表及其他 Markdown 语义结构。
+6. 记录各小节边界。段落只能在原有同一小节内调序，标题不得移动、增加或删除。
+
+### 3. 第一轮：内容与一致性
+
+1. 通读全文，检查跑题、前后矛盾、因果跳跃、指代不明、重复论点和缺失的必要过渡。
+2. 删除冗余前，确认被删内容不承载独立事实、限定、论据、案例或态度。
+3. 发现内部事实冲突、残留占位符或必须由作者补充的关键信息时，把已完成检查概括到
+   `changes.pass_1`，设置 `status=NEEDS_AUTHOR_INPUT` 并记录具体作者问题，转至子流程
+   「输出结果」；不得生成替代事实。
+4. 不默认联网核实。不能从原稿内部确认的外部事实保持原样，不把猜测写成修正。
+5. 产出第一轮内部稿，把本轮实际改动概括为一句话写入 `changes.pass_1`，不写回最终目标。
+
+### 4. 第二轮：去 AI 味与声口
+
+1. 从当前原稿提取高频用词、句群节奏、段首习惯、标点偏好和整体语域。
+2. 把原稿声口特征当作约束，不为制造真人感凭空强化口语或添加个人经历。
+3. 建立内部 `HUMANIZER_LEDGER`，为 #1 到 #24 各建立一条记录。
+4. 按 `references/humanizer-zh-24.md` 从 #1 到 #24 全量扫描。每条记录的状态必须是
+   `no_hit`、`changed` 或 `kept_with_reason`；后者必须写明语境或声口理由。
+5. 每个命中必须经过语境判断：
+   - 单次出现且承担真实功能，不改。
+   - 在短段内机械重复、可以无损删除或替换，才改。
+   - 平台或作者声口中的合法表达，保留。
+6. 优先做最小必要改写：删空转、还原主体、压缩重复、恢复自然语序、改变机械节奏。
+7. 只有添加原稿不存在的真实细节才能修复命中时，保持当前内部稿不变，把已完成检查概括到
+   `changes.pass_2`，设置 `status=NEEDS_AUTHOR_INPUT` 并记录具体作者问题，转至子流程
+   「输出结果」；不得用第一人称、数字或故事伪造真人感。
+8. 产出第二轮内部稿，把本轮实际改动概括为一句话写入 `changes.pass_2`，不写回最终目标。
+
+### 5. 第三轮：细节与阅读节奏
+
+1. 修正错别字、语病、标点误用、重复词、异常空格和不自然断句。
+2. 依据平台参考调整句长变化、段落密度和口语程度，不使用全局固定字数阈值。
+3. `.md` 输入必须保持 YAML frontmatter、标题层级、链接、图片、列表、代码块和行内代码的语义；
+   `.txt` 输入不得凭空加入 Markdown。
+4. 不得在 `PRESERVATION_LEDGER` 的受保护字面值内部增删空格、标点或字词；只可调整不属于该
+   字面值的外围标点和句法。
+5. 删除正文中的助手残留、审校说明、门检文本、评分和改动摘要。
+6. 只在同一小节内调序。不得跨小节搬段或重新设计整体结构。
+7. 产出第三轮内部稿，把本轮实际改动概括为一句话写入 `changes.pass_3`，不写回最终目标。
+
+### 6. 最终回归门禁
+
+按 `PRESERVATION_LEDGER` 逐项比较原稿与内部终稿。以下条件必须全部成立：
+
+- 标题、frontmatter、标题层级和整体结构未变。
+- 核心观点、结论、立场、程度和因果未漂移。
+- 原稿事实、数据、案例、引用、链接、术语和 Markdown 语义结构全部保留。
+- 数字、百分比、日期、金额、版本号、数字与单位组合及专有名词的受保护字面形式逐字一致。
+- 终稿没有新增原稿不包含的事实、经历、数字、人物、对话或来源。
+- 终稿没有未完成占位符、作者待答问题、助手残留或审校说明。
+- `HUMANIZER_LEDGER` 恰好包含 #1 到 #24，且每项都有合法状态；任何缺项、重复项或无理由的
+  `kept_with_reason` 都视为门禁失败。
+- 正文在识别的平台语体下可读，且没有因去 AI 味而统一降格成聊天口吻。
+
+同时运行五维内部诊断，但不得把分数作为通过线，也不得在报告中展示分数。
+
+若硬门禁失败：
+
+1. 仅针对失败项修复一次，并重新运行完整门禁。
+2. 仍失败时再修复一次，并重新运行完整门禁。
+3. 两次后仍失败，设置 `hard_gates=failed`、`status=BLOCKED` 和具体 `block_reason`，转至
+   子流程「输出结果」；不得写回最终目标。
+4. 任一失败需要作者提供事实或意图，立即设置 `hard_gates=failed`、
+   `status=NEEDS_AUTHOR_INPUT` 和具体作者问题，转至子流程「输出结果」，不消耗修复次数。
+5. 全部硬门禁通过时，设置 `hard_gates=passed`，再进入原子写回。
+
+### 7. 原子写回
+
+只有全部硬门禁通过时才能执行：
+
+1. 在最终目标同一目录创建并写入临时文件。创建或写入失败时，删除残留临时文件，设置
+   `status=BLOCKED` 和具体 `block_reason`，保持目标字节不变，转至子流程「输出结果」。
+2. 校验临时文件可读、非空，且内容与通过门禁的内部终稿完全一致。任一条件失败时，删除临时文件，
+   设置 `status=BLOCKED` 和具体 `block_reason`，保持目标字节不变，转至子流程「输出结果」。
+3. 使用运行时可用的同文件系统原子替换机制，把临时文件替换为最终目标。机制不可用或替换失败时，
+   删除残留临时文件，设置 `status=BLOCKED` 和具体 `block_reason`，保持目标字节不变，转至
+   子流程「输出结果」。
+4. 不创建备份。
+5. 确认不存在残留临时文件。
+6. 设置 `status=READY_FOR_LAYOUT`，把 `output` 设为最终目标绝对路径，转至子流程「输出结果」。
+
+`NEEDS_AUTHOR_INPUT` 或 `BLOCKED` 时，必须删除临时文件并保持现有最终目标字节不变。
+
+### 8. 子流程：输出结果
+
+这是唯一允许结束执行的出口。任何前置分支只能设置 `RESULT_CONTEXT` 并转入本子流程，不得直接
+输出裸状态或终止。
+
+1. 接收 `RESULT_CONTEXT`。若 `status` 不是三个合法状态之一，设置 `status=BLOCKED`、
+   `output=unchanged` 和 `block_reason="内部流程未生成合法状态。"`。
+2. 按下方状态矩阵归一化全部字段。未执行轮次保持 `not_run`；已执行轮次只写一句改动摘要。
+3. 校验非成功状态下 `output=unchanged`，并再次确认临时文件已删除。若清理失败，把具体原因写入
+   `block_reason`，保持 `status=BLOCKED`。
+4. 按「报告格式」渲染且只输出一个完整 `PROOFREAD_RESULT`。对象前后不得添加正文、净稿、评分或
+   第二个状态对象。
+5. 输出完成后结束执行。没有其他路径可以结束。
+
+## 报告格式
+
+正文只存在于最终目标文件。回复中仅输出：
+
+```yaml
+PROOFREAD_RESULT:
+  status: READY_FOR_LAYOUT | NEEDS_AUTHOR_INPUT | BLOCKED
+  platform: 微信公众号 | 小红书 | 微博 | 知乎 | 头条号 | 通用自媒体 | unknown
+  source: <输入文件绝对路径 | inline | none>
+  output: <最终文件绝对路径 | unchanged>
+  hard_gates: passed | failed | not_run
+  changes:
+    pass_1: <一句话 | not_run>
+    pass_2: <一句话 | not_run>
+    pass_3: <一句话 | not_run>
+  author_questions: []
+  block_reason: ""
+  boundary: "仅代表文稿编辑就绪；未验证外部事实、法律合规或平台最新政策。"
+```
+
+字段值按状态固定：
+
+- `READY_FOR_LAYOUT`：平台已确定，`output` 是绝对路径，`hard_gates` 是 `passed`，
+  `author_questions` 为空，`block_reason` 为空。
+- `NEEDS_AUTHOR_INPUT`：未识别平台时填 `unknown`，`output` 是 `unchanged`；
+  最终门禁尚未运行时 `hard_gates` 填 `not_run`，已经运行并发现作者依赖时填 `failed`；
+  未执行轮次填 `not_run`，`author_questions` 必须是能直接补入原稿的具体问题，
+  `block_reason` 为空。
+- `BLOCKED`：未识别平台时填 `unknown`，`output` 是 `unchanged`；
+  最终门禁未运行时 `hard_gates` 填 `not_run`，运行后失败填 `failed`；全部硬门禁通过、随后因
+  临时文件或原子写回失败而阻塞时填 `passed`；
+  未执行轮次填 `not_run`，`author_questions` 为空，`block_reason` 必须是一条具体原因。
+
+不得输出内部评分或冗长逐处报告。
+
+## 示例
+
+<example>
+用户提供 `article.md`，要求“做三轮审校，去 AI 味后直接给排版”。
+
+行动：读取完整文件，建立保真基线，执行三轮，门禁通过后原子覆盖 `article.md`。
+回复中的 `status` 为 `READY_FOR_LAYOUT`，`output` 是 `article.md` 的绝对路径。
+</example>
+
+<example>
+用户粘贴完整公众号成稿。原文没有事实缺口，三轮和门禁通过。
+
+行动：把纯净终稿写到当前目录 `proofread-content.md`，报告留在回复中，不把报告追加到文件。
+</example>
+
+<bad-example>
+WRONG: 原文只写“效率提高很多”，终稿改成“效率提高 40%”并覆盖文件。
+
+Reason: 40% 是原稿没有的事实。正确行为是保留可确认的表达；若具体数字对文章成立不可或缺，
+设置 `status=NEEDS_AUTHOR_INPUT` 并通过统一输出子流程交付结果，保持原文件不变。
+</bad-example>
+
+<bad-example>
+WRONG: 小红书稿出现一个 emoji，就把全文 emoji 全删，再新增“姐妹们快冲”和收藏 CTA。
+
+Reason: 既机械套用规则，又越权重构平台表达。应按密度和作者声口判断，并且不得新增钩子或 CTA。
+</bad-example>
+
+<bad-example>
+WRONG: 原稿写“2026年7月15日”和“37%”，终稿为了统一间距改成“2026 年 7 月 15 日”和“37 %”。
+
+Reason: 日期与百分比是受保护字面值。即使数值含义未变，也必须保持原文字面形式。
+</bad-example>
+
+## 失败路径
+
+- 输入缺失或不是完整成稿：`NEEDS_AUTHOR_INPUT`，不写文件。
+- 文件缺失、不可读、为空、编码错误或扩展名不支持：`BLOCKED`，不写文件。
+- 请求属于专业写作、从零创作、翻译、排版、发布或传播重构：`BLOCKED`，不写文件。
+- 原文存在必须由作者决定的事实冲突、占位符或材料缺口：`NEEDS_AUTHOR_INPUT`，不写文件。
+- 两次内部修复后硬门禁仍失败：`BLOCKED`，不写文件。
+- 原子替换不可用或失败：删除临时文件，设置 `status=BLOCKED` 并转至统一输出子流程，原文件保持不变。

@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "format": "json-compatible-yaml",
+  "capabilities": {
+    "topic_planning": {
+      "required": true,
+      "contract": "topic-planning-v1",
+      "skill_path": "skills/content-topics/SKILL.md",
+      "required_markers": ["name: content-topics", "content-production-provider: topic-planning-v1"]
+    },
+    "source_research": {
+      "required": true,
+      "contract": "source-research-v1",
+      "skill_path": "skills/collect-sources/SKILL.md",
+      "required_markers": ["name: collect-sources", "content-production-provider: source-research-v1"]
+    },
+    "drafting": {
+      "required": true,
+      "contract": "drafting-v1",
+      "skill_path": "skills/draft-content/SKILL.md",
+      "required_markers": ["name: draft-content", "content-production-provider: drafting-v1"]
+    },
+    "proofreading": {
+      "required": true,
+      "contract": "proofreading-v1",
+      "skill_path": "skills/proofread-content/SKILL.md",
+      "required_markers": ["name: proofread-content", "content-production-provider: proofreading-v1"]
+    },
+    "title_generation": {
+      "required": true,
+      "contract": "title-generation-v1",
+      "skill_path": "skills/title-options/SKILL.md",
+      "required_markers": ["name: title-options", "content-production-provider: title-generation-v1"]
+    },
+    "illustration": {
+      "required": true,
+      "contract": "illustration-v1",
+      "skill_path": "skills/post-illustration-images/SKILL.md",
+      "required_markers": ["name: post-illustration-images", "content-production-provider: illustration-v1"]
+    },
+    "wechat_cover": {
+      "required": true,
+      "contract": "wechat-cover-v1",
+      "skill_path": "skills/wechat-sketch-cover/SKILL.md",
+      "required_markers": ["name: wechat-sketch-cover", "content-production-provider: wechat-cover-v1"]
+    },
+    "image_compression": {
+      "required": true,
+      "contract": "image-compression-v1",
+      "skill_path": "skills/compress-image/SKILL.md",
+      "required_markers": ["name: compress-image", "content-production-provider: image-compression-v1"]
+    },
+    "wechat_layout": {
+      "required": true,
+      "contract": "wechat-layout-v1",
+      "skill_path": "skills/format-content/SKILL.md",
+      "required_markers": ["name: format-content", "content-production-provider: wechat-layout-v1"]
+    }
+  }
+}
