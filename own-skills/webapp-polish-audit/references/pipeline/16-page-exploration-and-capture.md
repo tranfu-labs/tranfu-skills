@@ -14,6 +14,41 @@
 - `runDir`：主 Agent 指定的、位于项目目录外的运行目录（`/tmp/webapp-polish-audit/{YYYYMMDD-HHMMSS}-{run-name}/`，带时间戳保证每次运行唯一）。所有产物只写到这里。
 - `evidenceScript`：`scripts/page-evidence-probe.mjs`。
 
+## Explorer dispatch template
+
+```text
+角色：你是 S3 Explorer，只采集一个代表页面，不做 UI 判断，不读取项目源码。
+
+先完整读取 {ABSOLUTE_SKILL_DIR}/references/pipeline/16-page-exploration-and-capture.md；按要求再读取 {ABSOLUTE_SKILL_DIR}/references/page-flow/00-inspection-procedure.md 和 page.md 中的额外探查声明。
+
+输入：
+- page: {PAGE_PLAN}
+- runDir: {RUN_DIR}
+- evidenceScript: {ABSOLUTE_SKILL_DIR}/scripts/page-evidence-probe.mjs
+
+要求：
+- 接到任务先创建对应 stage3 progress 文件。
+- 所有 PNG/JSON/probe pool 只写 runDir。
+- 先列 probe_pool，再执行安全可达状态；副作用状态写 gaps。
+- 最终只输出本文定义的 manifest YAML，不输出发现或建议。
+```
+
+## Exploration verifier dispatch template
+
+```text
+角色：你是独立 S3 Verifier。你没有参与当前页面探索。
+
+先完整读取 {ABSOLUTE_SKILL_DIR}/references/pipeline/16-page-exploration-and-capture.md 的验收标准。
+
+输入：
+- pagePlan: {PAGE_PLAN}
+- manifest: {MANIFEST}
+- runDir: {RUN_DIR}
+
+验证 manifest、文件存在性、双视口、closeupTargets、probe_pool 和 gaps。只输出 JSON：
+{"verdict":"pass|fail","errors":["..."]}
+```
+
 ## 流程
 
 ### 第 1 步：准备运行目录
