@@ -1,10 +1,10 @@
 # 17. 截图判断派发 / Screenshot Judgement Dispatch
 
-这是阶段 4 的任务文档，两个角色使用：主 Agent 读「派发规则」与「聚合规则」，判断 SubAgent 读「判断任务」。
+这是 S4 的任务文档，供 Dispatcher、Judge 和 judgement Verifier 使用。Aggregator 与最终报告只遵循 `18-final-report-contract.md`。主 Agent 读取本文件是为了正确派发和验收，不在主会话首次判断截图。
 
-阶段 4 是唯一的判断阶段。主 Agent 在本阶段只做调度，绝不亲自看图判断；判断者不开浏览器，只看落盘的截图文件与盘点 JSON。
+S4 是唯一的首次判断阶段。主 Agent 在本阶段只做调度和状态验收；Judge 不开浏览器，只看落盘的截图文件与盘点 JSON。
 
-## 派发规则（主 Agent）
+## 派发规则（Dispatcher）
 
 输入：阶段 2 的页面级 `md` 数组、阶段 3 的 manifest。
 
@@ -34,7 +34,26 @@
 
 **筛空仍派发**：筛选后 `md` 为空的截图仍然必须派发单图判断者，判断任务只做新鲜眼第一遍（`results` 输出空数组）。新鲜眼兜底对每张截图无条件成立——维度筛选只收窄文档，绝不取消截图的判断。
 
-**派发 TODO**：派发前用当前运行时的计划/TODO 工具建清单——manifest 每张截图一条 TODO，对比组每组一条。一条 TODO 对应一个判断 SubAgent，绝不把多张截图合给同一个单图判断者（对比组除外）。判断者返回并通过验收后勾掉对应条目。这份 TODO 清单就是派发对账：静默漏派一张截图即阻塞项。
+**派发 TODO**：Dispatcher 输出通过验收后，由主 Agent把 manifest 每张截图/规定对比组写入 TODO 与 `audit-state.json`。一条 unit 对应一个隔离 Judge 任务，绝不把多张截图合给同一个单图 Judge（对比组除外）。
+
+## Dispatcher dispatch template
+
+```text
+角色：你是 S4 Dispatcher，只生成 judgement units 和 filtered md，不看图、不做 UI 判断、不聚合报告。
+
+先完整读取 {ABSOLUTE_SKILL_DIR}/references/pipeline/17-screenshot-judgement-dispatch.md 的「派发规则」。
+
+输入：
+- manifests: {MANIFESTS}
+- pagePlans: {PAGE_PLANS}
+- runDir: {RUN_DIR}
+
+要求：
+- 每张 manifest screenshot 必须被一个单图 unit 覆盖；规定对比组额外生成 group unit。
+- 不得把普通截图任意合并；filtered md 拿不准就保留。
+- 只输出 YAML：units: [{id, files, page, state, device, viewport, kind, filtered_md, inventory}]
+- 不读取项目源码，不修改文件，不打开 Browser。
+```
 
 ## 判断任务（SubAgent）
 
@@ -52,7 +71,7 @@
 
 - **本截图天然不含某类证据**（如桌面整页判不了窄屏重排）→ `not_applicable — 证据不在本截图`。
 - **证据本应在本截图却缺失或不可读**（特写模糊、样式向量缺字段）→ `blocker`。
-- 页面级证据缺口由主 Agent 聚合时结合 manifest `gaps` 判定，不在截图级凭空升级。
+- 页面级证据缺口由 Aggregator 结合 manifest `gaps` 判定，不在截图级凭空升级。
 
 ### 第 3 步：合并两遍
 
@@ -85,19 +104,19 @@ results:
       G: "actionable — 见 findings[0]"
     findings:
       - class: "G"
-        severity: "P2"
+        severity: "MEDIUM"
         observed: "..."
         impact: "..."
         recommendation: "..."
 uncatalogued: []
 ```
 
-## 聚合规则（主 Agent）
+## 页面级归并语义（Aggregator 使用）
 
 - **页面级 `class_coverage`**：同页同 `md` 同类，把所有判断者的截图级结论合并——任一 `actionable` → `actionable`；否则任一 `blocker` → `blocker`；否则任一 `already_satisfied` → `already_satisfied`；全部 `not_applicable` 时查 manifest `gaps`：该类证据本应采到而没采到 → `blocker`，确实不适用 → `not_applicable`。
 - **去重**：同一可见问题出现在多张截图或多个判断者 → 合并为一条，列出全部证据文件名。
 - **目录外发现**：各判断者的 `fresh_findings` 与 `uncatalogued` 合并去重后，作为「目录外发现」一并上报，不得丢弃。
-- **最终锚定**：对要上报的 `actionable` 发现，主 Agent 按完成契约回 Browser 做一次最终验证。
+- **最终锚定**：Aggregator 只产 draft；对要上报的 `actionable` 发现，主 Agent 按 SKILL.md S6 回 Browser 验证。
 
 ## 验收标准（判断者输出）
 
@@ -107,3 +126,37 @@ uncatalogued: []
 - 每份带形式目录的 md，其 `class_coverage` 覆盖全部类字母，每个值以四态之一开头。
 - findings 以截图文件名为证据，不引用源码、内部组件名、文件修改或浏览器操作。
 - `actionable` 的 finding 带非空 `recommendation`。
+
+## Judge dispatch template
+
+```text
+角色：你是独立 Judge，只判断一个 judgement unit，不打开 Browser，不读取项目源码，不修改文件。
+
+先完整读取 {ABSOLUTE_SKILL_DIR}/references/pipeline/17-screenshot-judgement-dispatch.md 的「判断任务」。
+
+输入：
+- unit: {JUDGEMENT_UNIT}
+- runDir: {RUN_DIR}
+
+要求：
+- 先打开 unit.files 做 fresh_findings，再读取 unit.filtered_md。
+- 使用 severity: BLOCKER|HIGH|MEDIUM|LOW；禁止 P0/P1/P2/P3。
+- 只输出本文定义的截图级 YAML，前后不带散文。
+```
+
+## Judgement verifier dispatch template
+
+```text
+角色：你是独立 judgement Verifier。你没有参与当前 unit 的判断，不打开 Browser，不读取项目源码。
+
+先完整读取 {ABSOLUTE_SKILL_DIR}/references/pipeline/17-screenshot-judgement-dispatch.md 的「验收标准」。
+
+输入：
+- unit: {JUDGEMENT_UNIT}
+- judgement: {JUDGEMENT_OUTPUT}
+- manifests: {MANIFESTS}
+- runDir: {RUN_DIR}
+
+验证输出结构、每类四态覆盖、证据只引用 unit/manifest 文件、severity 枚举和 recommendation 完整性。
+只输出 JSON：{"verdict":"pass|fail","errors":["..."]}
+```
