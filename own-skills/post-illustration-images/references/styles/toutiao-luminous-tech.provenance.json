@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "extraction_mode": "image",
+  "source": {
+    "sha256": "a81d722aa8b26e861d269abec31db103a30fe78ab999c78609bec4b81bc41bef",
+    "width": 1672,
+    "height": 941,
+    "short_edge": 941
+  },
+  "confidence": 0.92,
+  "original_retained": false,
+  "used_as_generation_reference": false
+}

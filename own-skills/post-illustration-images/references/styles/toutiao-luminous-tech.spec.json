@@ -1,7 +1,7 @@
 {
-  "id": "zhihu-tech",
-  "styleFile": "references/styles/zhihu-style-title.md",
-  "platform": "zhihu",
+  "id": "toutiao-luminous-tech",
+  "styleFile": "references/styles/toutiao-luminous-tech.md",
+  "platform": "toutiao",
   "canvas": {
     "width": 1600,
     "height": 900,
@@ -9,14 +9,14 @@
     "orientation": "horizontal"
   },
   "colors": {
-    "background.offWhite": "#F8FAF7",
-    "background.blueGray": "#EAF0F4",
-    "ink.black": "#171A1F",
-    "ink.gray": "#5F6873",
-    "card.white": "#FFFFFF",
-    "line.gray": "#CBD3DC",
-    "accent.orangeRed": "#F0564A",
-    "brand.red": "#E63A46"
+    "canvas.luminous": "#F6F7F5",
+    "ink.graphite": "#24272B",
+    "ink.silver": "#747B82",
+    "accent.signal": "#ED3F50",
+    "accent.mist": "#F5C8CE",
+    "surface.white": "#FFFFFF",
+    "surface.silver": "#D8DDE2",
+    "line.neutral": "#C9CED3"
   },
   "layout": {
     "contentSafeArea": {
@@ -45,7 +45,7 @@
     }
   },
   "brandPolicy": {
-    "defaultEnabled": true,
+    "defaultEnabled": false,
     "userOverrideAllowed": true
   },
   "inputHandling": {
@@ -53,6 +53,7 @@
     "ratioTolerance": 0.002,
     "outputCanvasRole": "design-coordinate-system",
     "allowPostGenerationResize": false,
+    "minShortEdge": 900,
     "allowCrop": false,
     "allowPadding": false,
     "allowRotation": false,
@@ -62,12 +63,15 @@
   "generationConstraints": {
     "forbidModelDrawnBrand": true,
     "forbidPageNumberBadge": true,
-    "keepBrandReservedAreaClear": true
+    "keepBrandReservedAreaClear": true,
+    "forbidSourceSemantics": true,
+    "forbidExactSourceLayout": true,
+    "forbidExactSourcePalette": true
   },
   "styleReference": {
-    "image": "assets/style-references/zhihu-tech.png",
-    "usage": "QA and failure review only; do not use as generation input or copy its content.",
-    "contentPolicy": "Ignore all semantic content in the reference image. Compare only baseline visual elements, palette, composition language, texture, typography feel, icon/illustration style, spacing, and non-brand fixed-component treatment. Ignore whether the reference image contains a brand watermark and ignore its brand position; production branding is controlled only by fixedComponents.brandSlot.",
+    "image": "assets/style-references/toutiao-luminous-tech.png",
+    "usage": "QA and failure review only; never use as generation input or copy its content.",
+    "contentPolicy": "Ignore all semantic content and identity. Compare only the abstract palette roles, typography character, spacing, material language, component language, and composition grammar. Production branding is controlled only by brandPolicy and fixedComponents.brandSlot.",
     "isGenerationInput": false
   }
 }

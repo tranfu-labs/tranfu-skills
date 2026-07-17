@@ -1,0 +1,44 @@
+name: Brand Overlay
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression-tests:
+    name: ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        node:
+          - 22
+          - 24
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Run brand overlay regression tests
+        run: node --test scripts/test-brand-overlay.mjs
+
+      - name: Run skill contract tests
+        run: node --test tests/brand-policy.test.mjs tests/generation-geometry.test.mjs tests/style-bundle.test.mjs
+
+      - name: Validate installed style registry
+        run: node scripts/validate-style-bundle.mjs --installed
