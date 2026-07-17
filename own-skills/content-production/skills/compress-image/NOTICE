@@ -1,0 +1,33 @@
+compress-image
+
+This distribution contains material derived from:
+
+  Project: baoyu-skills / baoyu-compress-image
+  Repository: https://github.com/JimLiu/baoyu-skills
+  Source commit: 6b7a2e417500561a5ecdd0b168332f4142584617
+  Original copyright: Copyright (c) 2026 Jim Liu
+  License: MIT License
+
+Modification notice (2026-07-14):
+
+The upstream Skill was extracted into an independent Skill named
+"compress-image". The multi-backend Bun/TypeScript implementation was replaced
+with a Node.js CLI using pinned Sharp 0.34.5. The supported scope is static PNG,
+JPEG, and WebP input with WebP or lossless PNG output. Source images are kept by
+default, output writes are staged through temporary files, and replacement
+requires an explicit --replace option. The upstream EXTEND.md convention,
+JPEG output, GIF/TIFF input, and system-tool backend selection were removed.
+
+The installable Skill is packaged under compress-image/. Repository-level
+documentation, tests, and CI remain at the repository root. LICENSE and NOTICE
+are copied into the installable Skill so attribution travels with installation.
+
+Runtime dependency:
+
+  Project: Sharp
+  Version: 0.34.5
+  Repository: https://github.com/lovell/sharp
+  License: Apache License 2.0
+
+Sharp is installed from npm into the user's cache on first use and is not
+vendored in this repository.

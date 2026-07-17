@@ -1,0 +1,26 @@
+wechat-sketch-cover
+
+This distribution contains material derived from:
+
+  Project: baoyu-skills / baoyu-cover-image
+  Repository: https://github.com/JimLiu/baoyu-skills
+  Source commit: 6b7a2e417500561a5ecdd0b168332f4142584617
+  Original copyright: Copyright (c) 2026 Jim Liu
+  License: MIT License
+
+Modification notice (2026-07-14):
+
+The upstream multi-style cover generator was reduced to a standalone Codex
+Skill named wechat-sketch-cover. It has one warm hand-drawn notebook style,
+one left-title/right-illustration composition, backend-agnostic candidate
+generation, no preference file, no branding, and one final PNG size of
+1923 x 818.
+
+The fixed style specification was rewritten from the upstream warm palette,
+hand-drawn rendering guidance, and cover workflow. The bundled OfferPilot
+cover image was supplied by the repository owner with permission for public
+redistribution under this repository's MIT License. It is used only as a QA
+style reference and is never passed to the image-generation model.
+
+LICENSE and NOTICE are copied into the installable Skill so attribution travels
+with installation.

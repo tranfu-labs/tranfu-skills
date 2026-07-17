@@ -1,0 +1,77 @@
+{
+  "id": "toutiao-luminous-tech",
+  "styleFile": "references/styles/toutiao-luminous-tech.md",
+  "platform": "toutiao",
+  "canvas": {
+    "width": 1600,
+    "height": 900,
+    "ratio": "16:9",
+    "orientation": "horizontal"
+  },
+  "colors": {
+    "canvas.luminous": "#F6F7F5",
+    "ink.graphite": "#24272B",
+    "ink.silver": "#747B82",
+    "accent.signal": "#ED3F50",
+    "accent.mist": "#F5C8CE",
+    "surface.white": "#FFFFFF",
+    "surface.silver": "#D8DDE2",
+    "line.neutral": "#C9CED3"
+  },
+  "layout": {
+    "contentSafeArea": {
+      "x": 80,
+      "y": 70,
+      "width": 1440,
+      "height": 760
+    },
+    "brandReservedArea": {
+      "x": 1320,
+      "y": 44,
+      "width": 240,
+      "height": 100
+    }
+  },
+  "fixedComponents": {
+    "pageNumberBadge": false,
+    "brandSlot": {
+      "enabled": true,
+      "anchor": "top-right",
+      "x": 1350,
+      "y": 64,
+      "width": 170,
+      "height": 46,
+      "assetFit": "contain"
+    }
+  },
+  "brandPolicy": {
+    "defaultEnabled": false,
+    "userOverrideAllowed": true
+  },
+  "inputHandling": {
+    "preserveNativeOutput": true,
+    "ratioTolerance": 0.002,
+    "outputCanvasRole": "design-coordinate-system",
+    "allowPostGenerationResize": false,
+    "minShortEdge": 900,
+    "allowCrop": false,
+    "allowPadding": false,
+    "allowRotation": false,
+    "allowWrongRatioStretch": false,
+    "wrongRatioAction": "regenerate"
+  },
+  "generationConstraints": {
+    "forbidModelDrawnBrand": true,
+    "forbidPageNumberBadge": true,
+    "keepBrandReservedAreaClear": true,
+    "forbidSourceSemantics": true,
+    "forbidExactSourceLayout": true,
+    "forbidExactSourcePalette": true
+  },
+  "styleReference": {
+    "image": "assets/style-references/toutiao-luminous-tech.png",
+    "usage": "QA and failure review only; never use as generation input or copy its content.",
+    "contentPolicy": "Ignore all semantic content and identity. Compare only the abstract palette roles, typography character, spacing, material language, component language, and composition grammar. Production branding is controlled only by brandPolicy and fixedComponents.brandSlot.",
+    "isGenerationInput": false
+  }
+}

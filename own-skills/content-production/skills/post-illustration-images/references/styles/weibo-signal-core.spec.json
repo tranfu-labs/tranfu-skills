@@ -1,0 +1,75 @@
+{
+  "id": "weibo-signal-core",
+  "styleFile": "references/styles/weibo-signal-core.md",
+  "platform": "weibo",
+  "canvas": {
+    "width": 1080,
+    "height": 1440,
+    "ratio": "3:4",
+    "orientation": "vertical"
+  },
+  "colors": {
+    "canvas.void": "#07090B",
+    "surface.glass": "#121619",
+    "ink.primary": "#F3F0EA",
+    "ink.muted": "#AAA7A4",
+    "accent.signal": "#E33A43",
+    "accent.soft": "#E8AAA6",
+    "line.cool": "#8293A8"
+  },
+  "layout": {
+    "contentSafeArea": {
+      "x": 80,
+      "y": 96,
+      "width": 920,
+      "height": 1248
+    },
+    "brandReservedArea": {
+      "x": 842,
+      "y": 44,
+      "width": 208,
+      "height": 90
+    }
+  },
+  "fixedComponents": {
+    "pageNumberBadge": false,
+    "brandSlot": {
+      "enabled": true,
+      "anchor": "top-right",
+      "x": 872,
+      "y": 64,
+      "width": 148,
+      "height": 40,
+      "assetFit": "contain"
+    }
+  },
+  "brandPolicy": {
+    "defaultEnabled": true,
+    "userOverrideAllowed": true
+  },
+  "inputHandling": {
+    "preserveNativeOutput": true,
+    "ratioTolerance": 0.002,
+    "outputCanvasRole": "design-coordinate-system",
+    "allowPostGenerationResize": false,
+    "allowCrop": false,
+    "allowPadding": false,
+    "allowRotation": false,
+    "allowWrongRatioStretch": false,
+    "wrongRatioAction": "regenerate"
+  },
+  "generationConstraints": {
+    "forbidModelDrawnBrand": true,
+    "forbidPageNumberBadge": true,
+    "keepBrandReservedAreaClear": true,
+    "forbidSourceSemantics": true,
+    "forbidExactSourceLayout": true,
+    "forbidExactSourcePalette": true
+  },
+  "styleReference": {
+    "image": "assets/style-references/weibo-signal-core.png",
+    "usage": "User-authorized QA and failure review only; never use as generation input or copy its content.",
+    "contentPolicy": "Ignore all semantic content, source identity, logo, watermark state, exact icon assets, and exact layout. Compare only abstract palette roles, typography character, spacing, material language, component language, and composition grammar. Production branding is controlled only by brandPolicy and fixedComponents.brandSlot.",
+    "isGenerationInput": false
+  }
+}

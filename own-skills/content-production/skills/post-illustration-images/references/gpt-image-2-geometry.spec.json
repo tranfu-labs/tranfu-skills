@@ -1,0 +1,26 @@
+{
+  "id": "gpt-image-2-v1",
+  "model": "gpt-image-2",
+  "outputSizeSemantics": "advisory",
+  "constraints": {
+    "maxEdge": 3840,
+    "edgeMultiple": 16,
+    "maxAspectRatio": 3,
+    "minPixels": 655360,
+    "maxPixels": 8294400
+  },
+  "requestSizesByRatio": {
+    "4:3": {
+      "width": 1600,
+      "height": 1200
+    },
+    "3:4": {
+      "width": 1152,
+      "height": 1536
+    },
+    "16:9": {
+      "width": 2048,
+      "height": 1152
+    }
+  }
+}

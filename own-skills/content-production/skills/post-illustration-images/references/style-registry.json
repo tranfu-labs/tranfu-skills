@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "indexFile": "references/style-index.md",
+  "platforms": [
+    {
+      "id": "wechat",
+      "specPlatform": "wechat",
+      "displayName": "WeChat official account",
+      "defaultStyleId": "wechat-doodle",
+      "canvas": {
+        "width": 1600,
+        "height": 1200,
+        "ratio": "4:3",
+        "orientation": "horizontal"
+      },
+      "routingPhrases": [
+        "公众号",
+        "微信公众号",
+        "文章正文配图",
+        "长文穿插配图"
+      ]
+    },
+    {
+      "id": "xhs",
+      "specPlatform": "xiaohongshu",
+      "displayName": "Xiaohongshu",
+      "defaultStyleId": "xhs-explainer-notebook",
+      "canvas": {
+        "width": 1080,
+        "height": 1440,
+        "ratio": "3:4",
+        "orientation": "vertical"
+      },
+      "routingPhrases": [
+        "小红书",
+        "笔记配图",
+        "封面图",
+        "卡片 / 轮播 / 图文笔记"
+      ]
+    },
+    {
+      "id": "zhihu",
+      "specPlatform": "zhihu",
+      "displayName": "Zhihu",
+      "defaultStyleId": "zhihu-tech",
+      "canvas": {
+        "width": 1600,
+        "height": 900,
+        "ratio": "16:9",
+        "orientation": "horizontal"
+      },
+      "routingPhrases": [
+        "知乎",
+        "回答配图",
+        "专栏配图"
+      ]
+    },
+    {
+      "id": "weibo",
+      "specPlatform": "weibo",
+      "displayName": "Weibo",
+      "defaultStyleId": "weibo-signal-core",
+      "canvas": {
+        "width": 1080,
+        "height": 1440,
+        "ratio": "3:4",
+        "orientation": "vertical"
+      },
+      "routingPhrases": [
+        "微博",
+        "微博配图",
+        "微博竖版配图",
+        "微博竖版信息图"
+      ]
+    },
+    {
+      "id": "toutiao",
+      "specPlatform": "toutiao",
+      "displayName": "Toutiao",
+      "defaultStyleId": "toutiao-luminous-tech",
+      "canvas": {
+        "width": 1600,
+        "height": 900,
+        "ratio": "16:9",
+        "orientation": "horizontal",
+        "sizing": "flexible",
+        "minShortEdge": 900
+      },
+      "routingPhrases": [
+        "头条号",
+        "今日头条",
+        "头条配图",
+        "头条号配图"
+      ]
+    }
+  ],
+  "styles": [
+    {
+      "id": "wechat-doodle",
+      "displayName": "米色手绘正文配图",
+      "platform": "wechat",
+      "styleFile": "references/styles/wechat-style-doodle.md",
+      "specFile": "references/styles/wechat-style-doodle.spec.json",
+      "styleReference": "assets/style-references/wechat-doodle.png",
+      "provenanceFile": null,
+      "aliases": [],
+      "defaultUse": "Long article body illustrations, warm hand-drawn explainer set."
+    },
+    {
+      "id": "xhs-explainer-notebook",
+      "displayName": "小红书手账科普",
+      "platform": "xhs",
+      "styleFile": "references/styles/xhs-style-explainer-notebook.md",
+      "specFile": "references/styles/xhs-style-explainer-notebook.spec.json",
+      "styleReference": "assets/style-references/xhs-explainer-notebook.png",
+      "provenanceFile": null,
+      "aliases": [],
+      "defaultUse": "Vertical notebook-style science/explainer carousel images."
+    },
+    {
+      "id": "xhs-cream-paper",
+      "displayName": "小红书奶油纸手绘",
+      "platform": "xhs",
+      "styleFile": "references/styles/xhs-style-cream-paper.md",
+      "specFile": "references/styles/xhs-style-cream-paper.spec.json",
+      "styleReference": "assets/style-references/xhs-cream-paper.png",
+      "provenanceFile": null,
+      "aliases": [
+        "奶油色",
+        "奶油纸",
+        "米白色",
+        "米白纸",
+        "cream paper",
+        "cream",
+        "off-white paper",
+        "手绘马克笔",
+        "轻量手账"
+      ],
+      "defaultUse": "Warm cream-paper hand-drawn Xiaohongshu infographic base."
+    },
+    {
+      "id": "xhs-orange-card",
+      "displayName": "小红书暖橙撕纸知识卡",
+      "platform": "xhs",
+      "styleFile": "references/styles/xhs-style-orange-card.md",
+      "specFile": "references/styles/xhs-style-orange-card.spec.json",
+      "styleReference": "assets/style-references/xhs-orange-card.png",
+      "provenanceFile": null,
+      "aliases": [
+        "暖橙色",
+        "暖橙",
+        "橙色",
+        "橙色撕纸",
+        "暖橙撕纸",
+        "orange card",
+        "torn paper",
+        "Quick Guide",
+        "Key Point"
+      ],
+      "defaultUse": "Warm orange torn-paper knowledge-card carousel style."
+    },
+    {
+      "id": "zhihu-tech",
+      "displayName": "知乎现代科技信息图",
+      "platform": "zhihu",
+      "styleFile": "references/styles/zhihu-style-title.md",
+      "specFile": "references/styles/zhihu-style-title.spec.json",
+      "styleReference": "assets/style-references/zhihu-tech.png",
+      "provenanceFile": null,
+      "aliases": [],
+      "defaultUse": "Fixed 16:9 modern AI/SaaS/developer-tool infographic."
+    },
+    {
+      "id": "weibo-signal-core",
+      "displayName": "Weibo 信号核心科技图解",
+      "platform": "weibo",
+      "styleFile": "references/styles/weibo-signal-core.md",
+      "specFile": "references/styles/weibo-signal-core.spec.json",
+      "styleReference": "assets/style-references/weibo-signal-core.png",
+      "provenanceFile": null,
+      "aliases": [
+        "信号核心",
+        "黑底红光科技",
+        "red signal tech"
+      ],
+      "defaultUse": "微博竖版科技概念、流程机制、对比关系与检查清单图解。"
+    },
+    {
+      "id": "toutiao-luminous-tech",
+      "displayName": "头条号明亮科技流程",
+      "platform": "toutiao",
+      "styleFile": "references/styles/toutiao-luminous-tech.md",
+      "specFile": "references/styles/toutiao-luminous-tech.spec.json",
+      "styleReference": "assets/style-references/toutiao-luminous-tech.png",
+      "provenanceFile": "references/styles/toutiao-luminous-tech.provenance.json",
+      "aliases": [
+        "头条号明亮科技",
+        "今日头条科技配图",
+        "高调科技",
+        "柔性3D流程",
+        "luminous tech"
+      ],
+      "defaultUse": "头条号科技概念、产品机制、流程解释与发布前检查配图。"
+    }
+  ]
+}

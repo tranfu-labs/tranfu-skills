@@ -1,0 +1,4 @@
+interface:
+  display_name: "Title Options"
+  short_description: "为五大中文内容平台生成并优化真实、适配、可兑现且有张力的文章标题"
+  default_prompt: "Use $title-options to generate fact-grounded, platform-adapted title options for this finished article."

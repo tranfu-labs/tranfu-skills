@@ -1,0 +1,30 @@
+collect-sources
+
+Copyright (c) 2026 BruceL017
+
+This project is an original implementation informed by the design ideas in:
+
+  - huashu-info-search, by Huashu: multi-channel technology research,
+    freshness awareness, source attribution, and knowledge capture.
+  - huashu-research, by Huashu: create the research record before searching,
+    save incrementally, separate research from drafting, and report gaps.
+  - xhs-writer-skill/references/reference-search.md, by JuneYaooo:
+    multi-angle bilingual search, original-page acquisition, independent
+    corroboration, and a writing-oriented source handoff.
+    Repository: https://github.com/JuneYaooo/xhs-writer-skill
+    Reviewed source commit: 6adef3b97db63dd931a1fd6b29550b31832355bd
+    Upstream license: Apache License 2.0.
+  - Agent Reach: anonymous public-channel routing patterns for web, RSS,
+    GitHub, V2EX, YouTube, and Bilibili research.
+  - content-research-writer: the boundary between source evaluation and
+    downstream drafting.
+
+No source code, templates, or verbatim workflow text from those projects is
+included. All instructions, schemas, tests, and repository files in this
+distribution were written for collect-sources and are licensed under the MIT
+License in LICENSE.
+
+The installable Skill is packaged under collect-sources/ so its references,
+metadata, license, and notice travel together. Repository documentation,
+tests, and CI remain at the repository root; exact copies of LICENSE and
+NOTICE are bundled inside the installable Skill.
