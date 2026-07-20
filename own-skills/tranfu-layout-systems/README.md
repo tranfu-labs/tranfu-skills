@@ -1,54 +1,67 @@
 ---
-description: "为 TranFu 页面选择主布局系统、页面框架和页面模式，输出可被实现或评审流程直接消费的结构化布局产物。"
+description: "Choose or review the structural layout for a TranFu page before visual styling or implementation begins."
+prompt_examples:
+  - prompt: "Choose the right layout system for this SaaS management page."
+    scene: Choose a page layout
+  - prompt: "Review this dashboard structure and flag layout problems."
+    scene: Review page structure
+  - prompt: "Plan how this desktop workspace should reorganize on mobile."
+    scene: Plan responsive structure
 ---
 
-# tranfu-layout-systems
+# TranFu Layout Systems
 
-为 TranFu 页面选择主布局系统、页面框架和页面模式，输出可被实现或评审流程直接消费的结构化布局产物。
+Choose page structure before styling or implementation.
 
-## 什么时候用它
+## When to use it
 
-- 创建、修改或评审官网、SaaS、操作台、知识库、表单、向导和详情页。
-- 需要先确定页面骨架、导航、主工作区、Section 顺序和移动端重排。
-- 不用于纯视觉样式、Logo、Token 或组件外观调整。
+**Choose a page layout**
 
-## 同类 Skill 对比
+I am creating a website, SaaS screen, knowledge base, landing page, form, wizard, dashboard, or detail page and need the right structural model before styling.
 
-> 由 tranfu-publish 起草，帮助阅读者横向决定使用哪个 Skill。
+**Review page structure**
 
-### 公司库内
+I have a page, screenshot, file, or running interface and want its navigation, information hierarchy, workspace, and required states reviewed.
 
-- [tranfu-website-design](../tranfu-website-design/SKILL.md) — 落地 TranFu 品牌、组件和响应式实现；**本 Skill 区别**：只负责页面结构，是它的上游布局决策。
-- [visual-pipeline](../visual-pipeline/SKILL.md) — 从已知内容推进高保真视觉方案；**本 Skill 区别**：先确定产品外壳、页面框架和任务模式。
-- [ui-ux-pro-max](../../external-skills/ui-ux-pro-max/SKILL.md) — 提供通用 UI 风格与材料库；**本 Skill 区别**：输出 TranFu 专用布局 Schema。
+**Plan responsive structure**
 
-### 外部世界
+I need to decide what stays primary, what collapses, and what becomes a drawer or separate path as the page moves from desktop to mobile.
 
-- 暂无。
+**Won't take**
 
-### 本 skill 独特价值
+This is not for copywriting, logos, color and typography choices, component styling, or any change that leaves page structure untouched.
 
-- 三层模型区分系统、框架与页面模式。
-- 决策和评审都有稳定命名产物。
-- 调用守卫避免两个设计 Skill 循环。
+## What it produces
 
-## 使用技巧
+**It makes layout decisions only; it never edits code, design files, or brand assets.**
 
-> 由 tranfu-publish 根据本次验证整理，横向定位见上方同类对比。
+- **Layout decision**: Names one primary system, frame layout, and page pattern with desktop and mobile structure
+- **Layout review**: Reports observed structural issues, evidence, severity, consistency, and allowed deviations
+- **Blocker record**: Returns a named blocker when the activity, evidence, or required reference cannot support a decision
+- **Implementation handoff**: Can pass the named layout artifact to `tranfu-website-design` when implementation is also requested
+- **Never**: Chooses visual tokens, invents unobserved interface facts, or modifies project files
 
-### 材料方案
+## Prerequisites & boundaries
 
-- 结构规则与视觉规则分开维护。
-- 以用户主要活动代替页面名称猜测。
+**Prerequisites**
 
-### 推荐用法
+Provide a page description, file, screenshot, running target, or enough task context to identify the user's main activity. The required `references/layout-contracts.md` must be readable.
 
-- 页面级任务先运行本 Skill。
-- 提供路由、截图和同类页面基准。
-- 只需判断时使用 `classify` 模式。
+**Neighbor skill split**
 
-### 已知限制
+| Need | Hand off to |
+|---|---|
+| Visual styling and implementation | **tranfu-website-design** |
+| Reusable visual style extraction | **visual-builder** |
 
-- 不编辑代码或设计文件。
-- 缺少主要活动时会追问一次。
-- 未观察视口不会声明通过。
+**Scenarios it declines**
+
+- Pure copy or brand-asset work
+- Color, type, radius, shadow, or icon decisions without structural change
+- Reviews where page, code, screenshot, and runtime evidence materially conflict
+
+**Subtle edges**
+
+- More information does not automatically justify a multi-panel layout
+- Mobile structure is reorganized by task priority, not merely scaled down
+- Unobserved viewports and states are marked `not_run`, never guessed as passing
