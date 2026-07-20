@@ -1,0 +1,26 @@
+# 复制下面这一段给 /loop 使用
+
+在新对话里先 `cd {{PROJECT_REPO}}`,然后输入:
+
+```
+/loop 5m 读 {{STATE_ROOT}}/loop-instructions.md 后严格按其中步骤执行**一次**心跳。做完就结束本次心跳,不要连续做多轮。
+```
+
+`5m` 是心跳间隔(每 5 分钟触发一次)。任务大多需要几分钟到十几分钟跑完,5m 是"当前心跳结束后, 5 分钟内没被新事件唤醒就再心跳一次"的兜底节奏。想更慢/更快可改成 `10m` / `2m`;想让 /loop 自适应节奏就去掉这个参数(不推荐, codex 完成信号靠 probe-codex 主动扫, 需要固定节奏)。
+
+## 停止 loop
+
+看到心跳输出"全绿报告"、"待人工列表"或"疑似死锁"时,回复 `stop` 或按提示中止 loop。
+
+## 手动干预
+
+- 想临时暂停某任务:改 runtime.json 中该任务 `status="paused"`,主 loop 只跳过它,不影响其他
+- 想改任务定义:直接改 `{{PROJECT_REPO}}/openspec/changes/{{CHANGE_ID}}/tasks.md`,下次心跳 Reconcile 会同步
+- 想放弃某任务:在 openspec 的 checkbox 里打 `[x]`,下次心跳标 done 跳过
+- 想 unblock 一个 blocked 任务:改 runtime.json 该任务 `status="todo"`、`blocked_reason=null`、`attempts=0`、`worktree_path=null`,并手动删掉旧 worktree(`git worktree remove ... --force`)和分支
+
+## 观察工具
+
+- `cat {{STATE_ROOT}}/runtime.json | jq '.tasks[] | {id, status, attempts, merged_sha}'` 快看进度
+- `ls {{STATE_ROOT}}/state/` 看哪些任务有状态目录
+- `tail -f {{STATE_ROOT}}/state/<T>/codex-tail.log` 看某 codex 实时输出

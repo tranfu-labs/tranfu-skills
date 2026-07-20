@@ -1,0 +1,40 @@
+{
+  "change_id": "{{CHANGE_ID}}",
+  "repo_root": "{{PROJECT_REPO}}",
+  "openspec_tasks_file": "openspec/changes/{{CHANGE_ID}}/tasks.md",
+  "product_doc": "{{PRD_PATH}}",
+  "state_dir_root": "{{STATE_ROOT}}/state",
+  "worktree_root": "{{STATE_ROOT}}/worktrees",
+  "created_at": "{{CREATED_AT_ISO}}",
+  "updated_at": "{{CREATED_AT_ISO}}",
+  "max_parallel": 3,
+  "max_resume_per_task": 3,
+  "idle_stall_ms": 600000,
+  "no_progress_stop_heartbeats": 5,
+  "hard_stop_total_heartbeats": 200,
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "<替换为协商定版后第 1 个任务的一句话标题>",
+      "depends_on": [],
+      "acceptance_ids": [],
+      "status": "todo",
+      "worktree_path": null,
+      "branch": null,
+      "codex_session_id": null,
+      "started_at": null,
+      "attempts": 0,
+      "last_probe_at": null,
+      "last_probe_state": null,
+      "done_file": null,
+      "blocked_reason": null,
+      "merged_sha": null
+    }
+  ],
+  "heartbeats": {
+    "total": 0,
+    "no_progress_streak": 0,
+    "last_at": null,
+    "last_status_hash": null
+  }
+}
