@@ -233,7 +233,7 @@ skill 执行完成后,以下全部满足才算成功:
 5. runtime.json 可解析,`tasks` 数量与 openspec tasks.md 顶层 checkbox 数一致
 6. runtime.tasks 每项都有 `id`、`title`、`status`(初值 `todo`)、`depends_on`(数组)、`acceptance_ids`(数组);其余运行时字段可以 null / 0
 7. loop-instructions.md 里所有 `{{XXX}}` 占位符已替换成实值,除了 `{{VERIFY_COMMANDS_BLOCK}}` 允许为空/占位
-8. loop-prompt.md 里 `cd <项目仓库>` + `/loop 读 ...` 那两行都指向正确的 change-id 与状态目录
+8. loop-prompt.md 里 `cd <项目仓库>` + `/loop 5m 读 ...` 那两行都指向正确的 change-id 与状态目录(`5m` 是心跳间隔的默认值,可换 `10m` / `2m`)
 
 ## 目录结构参考
 
