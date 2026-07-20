@@ -57,10 +57,14 @@ jobs:
           make_latest: "true"
       - name: Trigger tranfucom Skill Catalog Sync
         # catalog release 成功后触发下游同步；最终同步/部署状态由 Hermes 负责跟踪.
+        # trigger_deploy=true: 本库更新意味着目录数据要上线, 让同步在检测到 catalog 有变更时
+        # 顺带派发 tranfucom 的 Build and deploy image; 那边每天 cron 巡检不带此参, 只同步不部署.
+        # 依赖 tranfucom skill-catalog-sync.yml 已声明 trigger_deploy 入参, 否则 API 返回 422.
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ secrets.TRANFUCOM_WORKFLOW_TOKEN }}
         run: |
           gh workflow run 302044723 \
             --repo tranfu-labs/tranfucom \
-            --ref main
+            --ref main \
+            -f trigger_deploy=true
