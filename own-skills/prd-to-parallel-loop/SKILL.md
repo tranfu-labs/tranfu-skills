@@ -10,6 +10,7 @@ version: 0.1.0
 author: aquarius-wing
 updated_at: 2026-07-20
 origin: own
+allow_exec: true
 ---
 
 # prd-to-parallel-loop
