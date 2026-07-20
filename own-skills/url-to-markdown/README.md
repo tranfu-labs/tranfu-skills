@@ -1,92 +1,66 @@
 ---
-description: "通过 Chrome CDP 抓取公开网页，将渲染后的正文保存为 Markdown 或结构化 JSON。支持通用页面、匿名可访问的 X 帖子与线程、YouTube 字幕、Hacker News 讨论和媒体下载。"
+description: "Capture a public webpage through Chrome and save its rendered content as verified Markdown or JSON."
+prompt_examples:
+  - prompt: "Save this public article as Markdown and download its images."
+    scene: Save a public page
+  - prompt: "Extract the transcript from this public YouTube video as Markdown."
+    scene: Extract a transcript
+  - prompt: "Capture this Hacker News discussion as structured JSON."
+    scene: Capture a discussion
 ---
 
-# URL to Markdown
+# Public URL Content Capture
 
-通过 Chrome CDP 抓取公开网页，将渲染后的正文保存为 Markdown 或结构化 JSON。支持通用页面、匿名可访问的 X 帖子与线程、YouTube 字幕、Hacker News 讨论和媒体下载。
+Capture and verify a public webpage as Markdown or JSON.
 
-## 什么时候用它
+## When to use it
 
-- 归档无需登录的公开网页。
-- 保存匿名可访问的 X 内容。
-- 提取 YouTube 字幕或 HN 讨论。
-- 连同图片、视频保存为本地文件。
+**Save a public page**
 
-## 同类 Skill 对比
+I have an HTTP or HTTPS page that opens without a login and want its rendered main content saved locally, with optional media download.
 
-> 由 tranfu-publish 起草，作者 `BruceL017` 签字。帮助阅读者横向决定要安装哪个 Skill。
+**Extract a transcript**
 
-### 公司库内
+I need the public transcript from a YouTube video, or the readable content from an anonymously accessible X post or thread.
 
-- 暂无。
+**Capture a discussion**
 
-### 外部世界
+I want a Hacker News discussion or another public page captured as Markdown or structured JSON for later use.
 
-- [baoyu-url-to-markdown](https://github.com/JimLiu/baoyu-skills/tree/6b7a2e417500561a5ecdd0b168332f4142584617/skills/baoyu-url-to-markdown) — 上游合集中的网页抓取 Skill；**本 Skill 区别**：独立维护，只支持无登录、非交互抓取。
+**Won't take**
 
-### 本 skill 独特价值
+This is not for pages that require login, CAPTCHA, payment, or manual browser action, and it does not summarize, rewrite, translate, or publish the captured content.
 
-- 匿名适配 X、YouTube 与 HN。
-- 登录墙和验证码立即失败。
-- Markdown、JSON 和媒体路径稳定。
+## What it produces
 
-## 使用技巧
+**A successful command is still provisional until the saved title and body are inspected.**
 
-> 由 tranfu-publish 引导起草，作者 `BruceL017` 签字。横向定位见上方同类对比。
+- **Content file**: Saves clean Markdown or JSON at a conflict-safe path grouped by domain and page
+- **Media files**: Optionally downloads images and videos beside the capture and rewrites local links
+- **Capture report**: Returns the output path, selected adapter, media result, and any unverified limitation
+- **Preferences**: On first use, asks where to save captures and how to handle media before writing `EXTEND.md`
+- **Browser activity**: Uses Chrome through the bundled command and may reuse an explicitly supplied CDP endpoint
+- **Never**: Exports authentication state, asks the user to defeat an access wall, or preserves an unusable login page as success
 
-### 材料方案
+## Prerequisites & boundaries
 
-- 优先提供页面的公开 URL。
-- 准备 Bun 与 Chrome 或 Chromium。
-- 复用浏览器时提供 CDP 地址。
+**Prerequisites**
 
-### 推荐用法
+Provide exactly one public HTTP or HTTPS URL. The environment needs Bun, Chrome or Chromium, writable output storage, and first-use preference choices when no `EXTEND.md` exists.
 
-- 文件输出搭配 `--quiet`。
-- 下载媒体时同时指定输出文件。
-- 首次运行先设置保存偏好。
+**Neighbor skill split**
 
-### 已知限制
+- Saving one public page unchanged → **url-to-markdown**
+- Researching and verifying claims across sources → **collect-sources**
 
-- 不支持登录、验证码和人工操作。
-- CDP 或 Profile 可能带已有 Cookie。
-- 动态站点受公开页面结构影响。
+**Scenarios it declines**
 
-## 使用方式
+- Login walls, CAPTCHA, Cloudflare verification, or any manual interaction
+- Multiple ambiguous URLs or an unsupported forced adapter
+- Requests to summarize, edit, translate, or publish the captured page
 
-```text
-请使用 $url-to-markdown，把 https://example.com/article 保存为 Markdown。
-```
+**Subtle edges**
 
-默认输出结构：
-
-```text
-./url-to-markdown/{domain}/{slug}/{slug}.md
-```
-
-启用媒体下载后，图片和视频分别保存在同一页面目录下的 `imgs/` 与 `videos/`。
-
-## 支持范围
-
-| 项目 | 支持情况 |
-|---|---|
-| 通用公开网页 | 支持 |
-| 匿名 X 帖子与线程 | 支持 |
-| YouTube 字幕 | 支持 |
-| Hacker News 讨论 | 支持 |
-| Markdown / JSON | 支持 |
-| 媒体下载 | 支持 |
-| 登录或人工验证 | 不支持，立即失败 |
-
-## 运行要求
-
-- Bun
-- Chrome 或 Chromium
-- 首次运行可联网安装 `scripts/package.json` 中的依赖
-
-CLI 位于 `scripts/url-to-markdown`。用户可提供 `--cdp-url`、`--chrome-profile-dir` 或 `URL_TO_MARKDOWN_CHROME_PROFILE_DIR` 复用浏览器，但 Skill 不管理登录状态。
-
-## 来源与许可证
-
-本 Skill 从 Jim Liu 的 `baoyu-url-to-markdown` 固定提交独立抽离并重命名，后续独立维护。MIT 许可证及原作者版权声明保留在 [LICENSE](LICENSE) 和 [NOTICE](NOTICE) 中。
+- Site adapters cover X, YouTube, Hacker News, and generic public pages
+- Media behavior follows explicit arguments first, saved preferences second, and defaults last
+- A low-quality capture is removed and reported as unsupported even when the command exits successfully
