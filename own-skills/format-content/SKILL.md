@@ -1,5 +1,7 @@
 ---
 name: format-content
+display_name: WeChat Article Formatting
+display_name_zh: 微信文章排版
 description: "Format Markdown text or a readable .md file as WeChat Official Account HTML with the fixed red-and-white theme, producing a validated clean section fragment and a browser preview with a copy button. Use when the user asks for 公众号排版, 微信排版, WeChat Official Account formatting, or Markdown-to-WeChat HTML and supplies Markdown. Do NOT trigger when the request concerns Word, PDF, TXT, rich text, unstructured prose, other themes, ordinary web pages, substantive rewriting, or WeChat publishing/API operations."
 version: 0.1.0
 author: BruceL017

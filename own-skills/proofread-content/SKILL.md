@@ -1,5 +1,7 @@
 ---
 name: proofread-content
+display_name: Chinese Content Proofreading
+display_name_zh: 中文内容审校
 description: >-
   三轮审校简体中文成稿，去除模板化 AI 表达并交付排版净稿。Use when 用户要求去 AI 味或发布前审校。Do NOT trigger when 从零写作、翻译、排版、专业文本、发布或规避检测。
 version: 0.1.0

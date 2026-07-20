@@ -1,5 +1,7 @@
 ---
 name: proofread-content
+display_name: Chinese Content Proofreading
+display_name_zh: 中文内容审校
 description: >-
   Three-pass proofreading for complete Simplified Chinese self-media drafts intended for WeChat
   Official Accounts, Xiaohongshu, Weibo, Zhihu, or Toutiao. Use when the user supplies a finished

@@ -1,5 +1,7 @@
 ---
 name: compress-image
+display_name: Image Compression
+display_name_zh: 图片压缩
 description: "Compress static PNG, JPEG, or WebP files to WebP or lossless PNG. Use when the user asks to compress or optimize an image, reduce image file size, convert an image to WebP or PNG, or says 图片压缩、压缩图片、减小图片体积、转 WebP、转 PNG. Do NOT trigger for resizing, cropping, retouching, general image editing, animated images, remote URLs, or formats other than PNG, JPEG, and WebP."
 ---
 
