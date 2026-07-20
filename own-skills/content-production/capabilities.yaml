@@ -23,6 +23,7 @@
     "proofreading": {
       "required": true,
       "contract": "proofreading-v1",
+      "profile": "markdown-alignment",
       "skill_path": "skills/proofread-content/SKILL.md",
       "required_markers": ["name: proofread-content", "content-production-provider: proofreading-v1"]
     },

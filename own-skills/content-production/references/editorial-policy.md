@@ -45,6 +45,9 @@ regression，不能把 verified claims 当作新增内容许可。独立 semanti
 变化、因果增强、事实新增、事实遗漏和专名漂移。任一失败必须回滚或返回 editing 阶段；需要补事实时
 再回到研究阶段。
 
+Provider 在单稿 PASS 前先运行同一 `markdown-alignment` 自动检查。正文按 Markdown 小节和结构类型
+一对一对齐，H1 不参与正文限定词、引语或效果匹配；字节相同直接 PASS，对齐歧义必须阻断。
+
 ## 标题
 
 - 只读取十份稳定终稿。

@@ -203,6 +203,9 @@ node scripts/create-drafting-request.mjs <run-dir> adapt --platform wechat --var
 
 ## `proofreading`
 
+公开 provider contract 保持 `proofreading-v1`；新 run 的 capability 快照必须额外声明
+`profile: markdown-alignment`。缺少该 profile 的旧 completed run 只读兼容，不再创建或恢复任务。
+
 总控把 `editing` 设为 running 后，为五平台 x A/B 确定性创建十个任务：
 
 ```bash
@@ -222,12 +225,18 @@ review 和 `reviews/proofread-result.json`，恰好七件。三份 review 逐轮
 结构化 result 绑定 task、原 draft、三个 checkpoint、三份 review、八项 hard gate、三轮摘要和
 1-24 完整 humanizer ledger；schema 字段精确，不得包含内部评分。干净稿允许三个 checkpoint 字节相同。
 
-Provider 完成后，总控以原始 `draft.md` 为唯一 novelty 基线，分别执行
+Provider finalize 在写 PASS 前使用共享 `markdown-alignment-1` 引擎，以原始 `draft.md` 为基线检查
+`humanized.md` 与 `final.md`；失败立即返回具体 platform、variant、phase 和 blocker。Provider 不读取
+claims。Provider 完成后，总控以原始 `draft.md` 为唯一 novelty 基线，分别执行
 `draft.md -> humanized.md` 与 `draft.md -> final.md` 两次 claim regression；canonical
 `claims.json` 只用于报告绑定和语义核对，不授权加入原稿没有的事实。两份 automatic report 通过后，
 总控独立记录 `new_conclusion|scope_change|causal_strength|factual_addition|factual_omission|proper_noun_drift`
 semantic review，并要求非空 reviewer 和有效 reviewed_at。任一新增数字、经历、引语、效果、事实、
 结论、范围或因果强度，事实遗漏、专名漂移或删除限定词，均阻断。
+
+报告记录 `engine_version` 和 `alignment_status`。只有 before、after、claims SHA-256 与 engine version
+四项完全一致时，`set-semantic-review.mjs --reuse-from <report>` 才能复用 PASS 审查，并在目标报告记录
+`review_mode=reused`、来源路径与来源 SHA-256。
 
 `editing` completed 必须精确绑定每任务七件 provider 产物和两件总控 regression，共 `10 x 9 = 90`
 件，并重新验证 canonical request/result、attempt、输入/输出哈希、标题/frontmatter/受保护字面、

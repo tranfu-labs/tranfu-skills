@@ -88,7 +88,7 @@ node scripts/init-run.mjs <slug> --outline <path> [--material <path>]
 3. 对选题或大纲做深度调研，产出 verified claims。
 4. 生成或规范化证据大纲，绑定 outline 决策。
 5. 调用 drafting provider 生成 A/B 母稿和十份平台初稿。
-6. 对十份稿分别调用 proofreading provider，并运行总控 claim regression。
+6. 对十份稿分别调用 proofreading provider；provider 在单稿 PASS 前运行 `markdown-alignment`，总控再绑定 claims 并完成两份 regression report 与六项 semantic review。
 7. 对十份终稿调用 title provider，聚合精确 34 个候选并选择五个平台赢家。
 8. 只为五个赢家先规划配图；批准五份 plan 后，并行生成五套正文图和独立公众号封面，精确验收 22 件视觉核心产物。
 9. 为全部正文图和封面生成压缩 candidate，总控按 strict-smaller 规则组装五个平台发布包；再为公众号排版创建受限 request，由 `format-content` 生成 staging clean HTML/预览，经过总控复验和晋级后才完成 package。

@@ -49,10 +49,12 @@ import {
   writeJson,
   writeText
 } from './lib.mjs';
+import { ENGINE_VERSION as CLAIM_ENGINE_VERSION } from '../skills/proofread-content/scripts/claim-regression.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const runDir = expandPath(args._[0]);
 const issues = [];
+let state = null;
 
 function add(code, message, extra = {}) {
   issues.push({ code, message, ...extra });
@@ -147,6 +149,10 @@ async function regression(path, beforePath, afterPath, claimsPath, phase) {
     if (report[field] !== value) add('claim_regression_stale', `${field} is stale in ${relativeTo(runDir, path)}.`, { path: relativeTo(runDir, path), field });
   }
   if (report.phase !== phase) add('claim_regression_phase_mismatch', `Expected phase ${phase} in ${relativeTo(runDir, path)}.`, { path: relativeTo(runDir, path) });
+  if (state.capabilities?.providers?.proofreading?.profile === 'markdown-alignment'
+    && (report.engine_version !== CLAIM_ENGINE_VERSION || !['IDENTICAL', 'ALIGNED'].includes(report.alignment_status))) {
+    add('claim_regression_engine_mismatch', `Claim regression does not use ${CLAIM_ENGINE_VERSION}: ${relativeTo(runDir, path)}.`, { path: relativeTo(runDir, path) });
+  }
   const semantic = report.semantic_review;
   const semanticChecks = ['new_conclusion', 'scope_change', 'causal_strength', 'factual_addition', 'factual_omission', 'proper_noun_drift'];
   if (semantic?.status !== 'PASS' || semantic.recorded_by !== 'set-semantic-review.mjs'
@@ -162,7 +168,7 @@ async function regression(path, beforePath, afterPath, claimsPath, phase) {
 try {
   if (!runDir || !fileExists(join(runDir, 'run.json'))) throw new Error('Usage: verify-run.mjs <run-dir>');
   const statePath = join(runDir, 'run.json');
-  const state = await readJson(statePath);
+  state = await readJson(statePath);
   const integrity = await gateIntegrity(runDir, state);
   issues.push(...integrity.map((item) => ({ ...item, message: item.message || `Approved artifact integrity failed for ${item.path}.` })));
   if (state.capabilities?.status !== 'PASS') add('capability_snapshot_blocked', 'Run capability preflight is not PASS.');

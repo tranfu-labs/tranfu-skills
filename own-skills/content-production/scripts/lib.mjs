@@ -16,7 +16,7 @@ export const capabilityDefinitions = {
   topic_planning: { required: true, contract: 'topic-planning-v1' },
   source_research: { required: true, contract: 'source-research-v1' },
   drafting: { required: true, contract: 'drafting-v1' },
-  proofreading: { required: true, contract: 'proofreading-v1' },
+  proofreading: { required: true, contract: 'proofreading-v1', profile: 'markdown-alignment' },
   title_generation: { required: true, contract: 'title-generation-v1' },
   illustration: { required: true, contract: 'illustration-v1' },
   wechat_cover: { required: true, contract: 'wechat-cover-v1' },
@@ -309,6 +309,7 @@ export async function inspectCapabilities(configPath) {
       id,
       required: definition.required,
       contract: definition.contract,
+      profile: entry.profile || null,
       skill_path: path,
       skill_sha256: null,
       status: 'PASS',
@@ -323,6 +324,9 @@ export async function inspectCapabilities(configPath) {
     }
     if (entry.contract !== definition.contract) {
       fail({ code: 'capability_contract_version_mismatch', capability: id, message: `${id} must declare contract ${definition.contract}.` });
+    }
+    if (definition.profile && entry.profile !== definition.profile) {
+      fail({ code: 'capability_profile_mismatch', capability: id, message: `${id} must declare profile ${definition.profile}.` });
     }
     if (!fileExists(path)) {
       fail({ code: 'missing_capability_skill', capability: id, message: `Missing skill file: ${path}` });

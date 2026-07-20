@@ -178,7 +178,8 @@ if (entryBlockers.length || missingInputs.length) {
         skill_sha256: item.skill_sha256,
         status: item.status,
         required: item.required,
-        contract: item.contract
+        contract: item.contract,
+        profile: item.profile
       }]))
     },
     snapshots: {

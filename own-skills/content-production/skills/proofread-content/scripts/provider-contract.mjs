@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { analyzeClaimRegression, ENGINE_VERSION } from './claim-regression.mjs';
 
 const CONTRACT = 'content-production-provider/v1';
 const PROVIDER = 'proofreading-v1';
@@ -334,6 +335,17 @@ async function validateArtifacts(context) {
     if (headings(text).filter((line) => /^#\s+/.test(line)).length !== 1) add(issues, 'invalid_h1_count', `Checkpoint must contain exactly one H1: ${relativePath}.`, { path: relativePath });
     preservationIssues(source, text, relativePath, issues);
   }
+  for (const [phase, checkpointIndex] of [['humanize', 1], ['final', 2]]) {
+    const regression = analyzeClaimRegression(source, checkpoints[checkpointIndex]);
+    for (const blocker of regression.blockers) {
+      add(issues, `claim_regression_${phase}_${blocker.code}`, blocker.message, {
+        platform: context.request.platform,
+        variant: context.request.variant,
+        phase,
+        blocker
+      });
+    }
+  }
 
   const chain = {
     logic: { source: context.request.inputs[0].path, output: checkpointPaths[0], review: context.spec.expected[3] },
@@ -408,7 +420,11 @@ function makeResult(context, status, artifacts, issues, requestValid = true) {
     request_sha256: context.requestSha256,
     status,
     artifacts,
-    checks: { request_valid: requestValid, mode: context.request?.mode || null },
+    checks: {
+      request_valid: requestValid,
+      mode: context.request?.mode || null,
+      claim_regression_engine: ENGINE_VERSION
+    },
     issues,
     warnings: []
   };

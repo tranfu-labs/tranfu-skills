@@ -97,10 +97,13 @@ reviewed 模式要求修改已完成大纲时，把 `outline` 阶段重新设为
 editing attempt，唯一 input 是该分支的只读 `draft.md`；十份稿可并行。
 
 单稿内部按逻辑事实、去模板腔/平台声口、细节格式顺序执行三轮。provider 输出三个 checkpoint、
-三份 review 和 `proofread-result.json`，finalize 后总控以原始 `draft.md` 为 before，分别对
+三份 review 和 `proofread-result.json`。provider finalize 在写 PASS 前先以原始 `draft.md` 检查
+`humanized.md` 与 `final.md`；任一自动 blocker 立即返回当前 platform/variant，不等待其他任务。
+provider 通过后，总控以原始 `draft.md` 为 before，分别对
 `humanized.md`、`final.md` 运行 `check-claim-regression.mjs`。automatic PASS 后再用
 `set-semantic-review.mjs` 独立记录新增结论、范围变化、因果增强、事实新增、事实遗漏和专名漂移六项
-判断，并登记 reviewer 与 reviewed_at；不能用 verified claims 补入原稿没有的信息。同平台 A/B
+判断，并登记 reviewer 与 reviewed_at。两份报告的 before、after、claims 哈希和 engine version
+完全相同时可使用 `--reuse-from` 复用并记录来源；不能用 verified claims 补入原稿没有的信息。同平台 A/B
 request 必须使用相同模型和参数，provider result 必须绑定 request SHA-256。
 
 十个任务全部完成后，用 `set-stage.mjs` 精确绑定七件 provider 产物和两件 regression report，

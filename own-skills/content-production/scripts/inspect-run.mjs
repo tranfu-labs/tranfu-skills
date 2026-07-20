@@ -58,7 +58,8 @@ try {
           skill_sha256: item.skill_sha256,
           status: item.status,
           required: item.required,
-          contract: item.contract
+          contract: item.contract,
+          profile: item.profile
         }]));
         const now = new Date().toISOString();
         if (capabilityReport.status === 'PASS') {

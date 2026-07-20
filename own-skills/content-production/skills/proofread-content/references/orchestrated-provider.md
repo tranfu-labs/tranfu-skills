@@ -15,7 +15,9 @@
 5. 原稿存在必须由作者确认的冲突或缺口时，不直接提问；运行
    `node "<SKILL_ROOT>/scripts/provider-contract.mjs" block <request.json> "<具体原因>"` 并返回总控。
 6. 否则只写 request 的七个 `expected_artifacts`，再运行
-   `node "<SKILL_ROOT>/scripts/provider-contract.mjs" finalize <request.json>`。只有 `PASS` 可交付。
+   `node "<SKILL_ROOT>/scripts/provider-contract.mjs" finalize <request.json>`。finalize 会先用共享
+   `markdown-alignment-1` 检查 `draft -> humanized` 与 `draft -> final`；失败时先修正本任务 checkpoint
+   和 review 血缘再重跑，只有 `PASS` 可交付。
 
 request 或 input 漂移、作者依赖返回 `BLOCKED`；输出侧 schema、路径、哈希、保真或产物错误返回
 `FAILED`。Provider 不向用户输出独立模式 YAML，不创建 run、门禁、版本决策、备份或临时偏好文件。
@@ -56,4 +58,5 @@ canonical `proofreading.result.json` 还必须用 `request_sha256` 绑定本次 
 长度的行内代码及列表结构。代码中的模板示例不
 视为占位符。不得新增事实、数字、经历、人物、引语、效果、
 结论或因果强度，不得删除限定词或改变整体结构。不得包含占位符、作者待答问题、助手包装、审校说明
-或门禁报告。总控随后仍会以原始 `draft.md` 为基线执行两次 claim regression 和独立语义审查。
+或门禁报告。Provider 自动检查不读取 claims；总控随后仍会以原始 `draft.md` 为基线执行两次带
+claims 哈希的 claim regression 和独立语义审查。
