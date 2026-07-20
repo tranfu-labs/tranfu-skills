@@ -21,6 +21,8 @@ allow_exec: true
 - NEVER 读取项目源码、组件、样式源码、路由、配置、package 文件、生成源码或内部组件名。
 - NEVER 修改项目文件、依赖、资源、内容、路由、配置或 git 状态。
 - NEVER 提交表单、创建/更新/删除数据、变更权限、上传文件或触发外部副作用。
+- MUST 只审计 `audit-state.json.originAllowlist` 内 origin 的页面；不在允许清单里的 origin 一律视作跨源，不 navigate、不 click-that-navigates、不 hover-that-preloads、不进 new-tab、不打开 `target="_blank"`。子域与主域视作不同 origin（例如 `tranfu.com` 与 `offerpilot-app.tranfu.com` 是两个 origin）。
+- NEVER 顺着首页或任何被审页面的 `<a href>` 主动进入其他 origin；此类链接的存在本身可作 finding evidence，但不打开。要审跨源子站必须由用户在 S0 显式点名并使 scope = `explicit-multi-page`。
 - 审计产物只能写入 `/tmp/webapp-polish-audit/<RUN_ID>/`；项目目录零写入。
 - 用户只要求实现、修复或提交 diff 时，停止使用本 Skill；不要把实现请求改写成审计请求。
 - 用户明确要求“先审查再修复”时，本 Skill 只完成审查并结束；实现由后续工作流接手。
@@ -96,11 +98,19 @@ CREATE A TODO LIST FOR THE TASKS BELOW。只以本节 S0–S7 作为顶层流程
    - 只审查/诊断 → 继续；
    - 只实现/修复 → 退出本 Skill；
    - 先审查再实现 → 只执行审查并在完成后交接。
-2. 解析目标：用户点名一个页面、路由或当前页面 → `explicit-single-page`；点名多个路由或全站/完整流程 → `explicit-multi-page`；只给入口 URL 且未限制范围 → `inferred-child-pages`。
+2. 解析目标 scope（三选一，严格按字面判定，禁止扩大解读）：
+   - `explicit-single-page`：用户点名一个页面、路由或当前页面。语义 = **只在该 URL 的 rendered DOM 上做审计**；不点 same-origin 的其他路由链接，不点跨源链接，不进任何 new-tab，不打开 `target="_blank"`。`<a>` 的存在本身可作 finding evidence，但不打开。“审首页”“审这一页”“审当前页”等表述一律命中本档，不得因为首页含 nav / 子域入口就自动升级为 multi-page。
+   - `explicit-multi-page`：用户显式列出多个路由，或明确要求“全站 / 完整流程 / 顺着 X 走到 Y”。用户列出的 URL 全部进入 `originAllowlist`。
+   - `inferred-child-pages`：用户只给入口 URL 且未限制范围，且未点名任何单页。此时才可派 Discovery。
 3. 若没有 URL：优先使用当前已打开的 HTTP(S) 页面；仍没有则向用户索取 URL 并退出。
 4. 检查 §1 能力；失败按表中出口结束。
 5. 创建唯一 `/tmp/webapp-polish-audit/<YYYYMMDD-HHMMSS>-<run-name>/`。
-6. 建立 `audit-state.json`：记录 `run_id`、scope、S0–S7 状态及后续 judgement units。
+6. 建立 `audit-state.json`：记录 `run_id`、`scope`、`originAllowlist`、S0–S7 状态及后续 judgement units。
+   - `originAllowlist` 计算规则：
+     - `explicit-single-page` → `[origin(target_url)]`，长度必须为 1；
+     - `explicit-multi-page` → 用户显式列出的每个 URL 的 origin 去重后的集合；
+     - `inferred-child-pages` → `[origin(seed_url)]`，Discovery 只沿 same-origin 走。
+   - 子域视作独立 origin。任何后续阶段观察到需要访问不在 `originAllowlist` 内的 origin 时，MUST 停止访问，记 `blocker` 且 gap 类型 = `cross-origin-not-inspected`，绝不静默扩大 allowlist。
 7. 创建 S0–S7 TODO；完成 S0，进入 S1。
 
 ### S1 — 可选页面发现
@@ -115,6 +125,8 @@ CREATE A TODO LIST FOR THE TASKS BELOW。只以本节 S0–S7 作为顶层流程
 ### S3 — 页面探索与证据落盘
 
 完整读取 `references/pipeline/16-page-exploration-and-capture.md`。按代表页面分批派 Explorer，再为每页派独立 verifier。只有 verifier 通过的 manifest 可以进入 S4；失败页面保留为 BLOCKER，其他页面继续。
+
+Explorer 与该阶段的 verifier MUST 遵守 §0 的 origin 门禁：任何 navigate / click-that-navigates / hover-that-preloads / new-tab / `target="_blank"` 打开动作，MUST 先校验目标 origin 属于 `audit-state.json.originAllowlist`；不属于则展开态截图后即停，落 gap 类型 `cross-origin-not-inspected`。违反此约束的 Explorer 输出一律视作验收失败，走「重派阶梯」。
 
 ### S4 — 截图判断与逐单元验收
 
