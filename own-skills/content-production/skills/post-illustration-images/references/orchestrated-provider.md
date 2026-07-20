@@ -5,6 +5,10 @@ uses `contract: content-production-provider/v1`, `capability: illustration`, and
 `provider_contract: illustration-v1`. Standalone behavior and `post-illustration-output/` ownership
 remain unchanged when no provider marker is present.
 
+The public provider contract remains `illustration-v1`. A run capability snapshot with
+`profile: bounded-per-image` selects the bounded child workflow below; the profile is descriptive
+and does not change the public provider ID.
+
 ## Common Rules
 
 1. Run `node "<SKILL_ROOT>/scripts/provider-contract.mjs" validate-request <request.json>` before
@@ -53,7 +57,8 @@ style = { id, platform, style_file, style_spec, style_reference }
 brand = { enabled, policy_default_enabled, override, policy_source, disabled_reason }
 generation_backend = {
   kind, adapter, endpoint_source, resolved_model, artifact_format,
-  credential_access, model_check, process_cleanup_plan, process_cleanup_status
+  credential_access, model_check, process_cleanup_plan, process_cleanup_status,
+  aspect_control, structured_size
 }
 generation_geometry = {
   geometry_profile, resolved_model, requested_dimensions: { width, height },
@@ -62,35 +67,53 @@ generation_geometry = {
 }
 anchor = {
   image_id, placement, source_excerpt, core_meaning, structure, visual_metaphor,
-  main_action, suggested_elements, short_labels, qa_risk
+  main_action, suggested_elements, short_labels, qa_risk, text_mode
 }
 shot_list = { path, sha256 }
 ```
 
-Use `status: READY`, backend cleanup `not-run`, and `residual_risk: none`. Every source excerpt must
-exist verbatim in the selected final draft. `max_images` is a ceiling, never a quota. The shot list
-uses `artifact: IllustrationShotList`, `status: READY`, the plan task ID, and one `## <image_id>`
-section per anchor.
+Use `status: READY`, backend cleanup `not-run`, and `residual_risk: none`. A bounded plan contains
+1-8 anchors. Every source excerpt must exist verbatim in the selected final draft; excerpts and core
+meanings are independently unique. Workflow and Checklist anchors default to `icons_only`; an
+`allowlist` anchor must have non-empty `short_labels`. `max_images=8` is a ceiling, never a quota.
+The shot list uses `artifact: IllustrationShotList`, `status: READY`, the plan task ID, and one
+`## <image_id>` section per anchor.
 
 ## Generate Mode
 
 Generate inputs are exactly `final_draft`, `title_selection`, `illustration_plan`, and `shot_list`.
-The visual gate must already bind the current plan and shot-list hashes. Re-run request validation,
-then continue the normal prompt, one-image canary, sequential generation, optional deterministic
-brand overlay, QA, and native manifest workflow without changing the approved plan.
+The visual gate must already bind the current plan and shot-list hashes. In the bounded profile the
+parent request authorizes only the final bundle and native manifest. The orchestrator creates child
+requests and does not let the parent write image files directly.
 
-Generate outputs are ordered exactly as:
+Each child task ID includes platform, image ID, candidate attempt, and visual attempt. Validate it
+with `scripts/child-contract.mjs`, run prompt preflight before generation, and authorize only that
+child's prompt, candidate/source, same-size delivery, and QA. Text is `icons_only` or limited to the
+anchor's `short_labels`; a 3:4 prompt states `0.75` and must not positively request 2:3 or
+`1024x1536`. A hard backend size must equal `requested_dimensions`; `prompt_only` still undergoes
+post-generation geometry checks.
+
+The first child is the suite Canary. Do not submit another child until its content, style, brand,
+and native geometry checks pass. The orchestrator then permits at most two active children in the
+suite and four generation calls globally, including the independent WeChat cover. Rate-limit and
+transport releases reuse the same candidate attempt. Quality or geometry failure creates only that
+image's next attempt, up to three; accepted child paths and hashes remain frozen.
+
+After every child passes, create one serial Set QA request and validate it with
+`scripts/set-qa-contract.mjs`. A failed review names exact `failed_image_ids` and one reason per ID;
+only those images receive another candidate. An unlocalized failure blocks the suite. On PASS, the
+parent aggregates verified child results in approved anchor order, never filesystem completion order.
+
+The bounded parent outputs are ordered exactly as:
 
 ```text
-bundle, native manifest, all prompts in anchor order,
-all unbranded sources in anchor order when branding is enabled,
-all delivery images in anchor order
+bundle, native manifest
 ```
 
-Attempt 1 uses `prompts/<image_id>.md` and the normal native image directories. Attempt N uses
-`prompts/vNNN/`, `images/unbranded/vNNN/`, `images/branded/vNNN/`, or `images/vNNN/` when branding is
-disabled. Brand-enabled sources and deliveries are PNG; a brand-disabled delivery keeps the verified
-backend artifact format.
+Child controls use `children[/vNNN]/<image-id>/attempt-NN/`; Set QA uses
+`set-qa[/vNNN]/round-NN/`. Prompts and image paths include the image ID and candidate attempt so a
+retry cannot overwrite an accepted file. Brand-enabled sources and deliveries are PNG; a
+brand-disabled delivery keeps the verified backend artifact format.
 
 `bundle.json` has these exact root fields:
 
@@ -130,8 +153,9 @@ schema_version, contract, provider_contract, task_id, request_sha256,
 status, artifacts, checks, issues, warnings
 ```
 
-Artifact roles are `illustration_plan`, `shot_list`, `illustration_bundle`, `native_manifest`,
-`prompt`, `source_image`, and `delivery_image`. Only `PASS` is deliverable. Invalid requests and
-explicit blockers return `BLOCKED`; malformed, incomplete, unsafe, drifted, or failed output returns
-`FAILED`. Paths must remain real files inside `run_dir`; symlinks, stale hashes, extra inputs, extra
-outputs, old attempts, and overwritten approved plans are rejected.
+Parent artifact roles are `illustration_plan`, `shot_list`, `illustration_bundle`, and
+`native_manifest`. Child results bind their own prompt/source/delivery/QA roles, and Set QA binds its
+review. Only `PASS` is deliverable. Invalid requests and explicit blockers return `BLOCKED`;
+malformed, incomplete, unsafe, drifted, or failed output returns `FAILED`. Paths must remain real
+files inside `run_dir`; symlinks, stale hashes, extra inputs, extra outputs, old attempts, and
+overwritten approved plans are rejected.

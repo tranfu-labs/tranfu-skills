@@ -87,7 +87,9 @@ Before generating image 2, verify:
 - The selected visual style and fixed-component clear areas are respected.
 - The request process exited and no child process from the request remains active.
 
-Continue the suite one image at a time only after this canary passes.
+Standalone runs continue the suite one image at a time only after this canary passes. Under an
+orchestrator-issued `bounded-per-image` profile, the queue may then submit at most two children from
+this suite while respecting its global limit; every child still has independent artifacts and QA.
 
 ## Credentials And Endpoint Safety
 

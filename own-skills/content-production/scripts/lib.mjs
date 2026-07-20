@@ -18,7 +18,7 @@ export const capabilityDefinitions = {
   drafting: { required: true, contract: 'drafting-v1' },
   proofreading: { required: true, contract: 'proofreading-v1', profile: 'markdown-alignment' },
   title_generation: { required: true, contract: 'title-generation-v1' },
-  illustration: { required: true, contract: 'illustration-v1' },
+  illustration: { required: true, contract: 'illustration-v1', profile: 'bounded-per-image' },
   wechat_cover: { required: true, contract: 'wechat-cover-v1' },
   image_compression: { required: true, contract: 'image-compression-v1' },
   wechat_layout: { required: true, contract: 'wechat-layout-v1' }

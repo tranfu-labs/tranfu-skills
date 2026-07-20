@@ -114,8 +114,8 @@ try {
     throw new Error('Illustration requires --platform wechat|xiaohongshu|zhihu|weibo|toutiao.');
   }
   const styleId = typeof args.style_id === 'string' && args.style_id.trim() ? args.style_id.trim() : null;
-  const maxImages = args.max_images === undefined ? null : Number(args.max_images);
-  if (maxImages !== null && (!Number.isInteger(maxImages) || maxImages < 1)) throw new Error('--max-images must be a positive integer.');
+  const requestedMaxImages = args.max_images === undefined ? null : Number(args.max_images);
+  if (requestedMaxImages !== null && (!Number.isInteger(requestedMaxImages) || requestedMaxImages < 1)) throw new Error('--max-images must be a positive integer.');
   const brandOverride = args.brand_override === undefined ? null : args.brand_override;
   if (brandOverride !== null && !brandOverrides.has(brandOverride)) throw new Error('--brand-override must be enabled or disabled.');
   const backendHint = args.backend_hint || 'unknown';
@@ -133,6 +133,9 @@ try {
     throw new Error('run.json must be a real file inside run-dir.');
   }
   const state = await readJson(statePath);
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
+  const maxImages = requestedMaxImages === null && bounded ? 8 : requestedMaxImages;
+  if (bounded && maxImages > 8) throw new Error('--max-images must be within 1..8 for bounded-per-image runs.');
   const visual = state.stages?.visual;
   if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'visual'
     || visual?.status !== 'running' || !Number.isInteger(visual?.attempt) || visual.attempt < 1) {
@@ -206,7 +209,7 @@ try {
       add(blockers, 'illustration_plan_binding_invalid', 'Visual gate must bind the current attempt plan and shot list for this platform.');
     } else {
       plan = await readJson(join(runDir, paths.plan));
-      try { expectedArtifacts = generateArtifacts(paths, plan); } catch (error) {
+      try { expectedArtifacts = bounded ? [paths.bundle, paths.manifest] : generateArtifacts(paths, plan); } catch (error) {
         add(blockers, 'invalid_illustration_plan', error.message);
       }
     }
@@ -261,7 +264,7 @@ try {
         brand_override: brandOverride,
         backend_hint: backendHint,
         model_preference: modelPreference,
-        execution_strategy: 'one_image_at_a_time'
+        execution_strategy: bounded ? 'bounded_per_image' : 'one_image_at_a_time'
       },
       interaction_policy: 'return_to_orchestrator'
     };

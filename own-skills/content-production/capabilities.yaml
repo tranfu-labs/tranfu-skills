@@ -36,6 +36,7 @@
     "illustration": {
       "required": true,
       "contract": "illustration-v1",
+      "profile": "bounded-per-image",
       "skill_path": "skills/post-illustration-images/SKILL.md",
       "required_markers": ["name: post-illustration-images", "content-production-provider: illustration-v1"]
     },

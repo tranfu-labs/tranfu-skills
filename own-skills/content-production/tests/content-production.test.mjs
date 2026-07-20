@@ -35,7 +35,7 @@ const capabilityMarkers = {
   wechat_layout: ['name: format-content', 'content-production-provider: wechat-layout-v1']
 };
 const capabilityIds = Object.keys(capabilityMarkers);
-const capabilityProfiles = { proofreading: 'markdown-alignment' };
+const capabilityProfiles = { proofreading: 'markdown-alignment', illustration: 'bounded-per-image' };
 
 function tempDir(name) {
   return mkdtempSync(join(tmpdir(), `content-production-${name}-`));

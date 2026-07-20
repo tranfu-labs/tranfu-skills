@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
-  appendFile,
   copyFile,
   lstat,
   mkdir,
@@ -17,11 +16,46 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { deflateSync } from "node:zlib";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = join(ROOT, "scripts/provider-contract.mjs");
 const CONTRACT = "content-production-provider/v1";
 const PROVIDER = "illustration-v1";
+
+function crc32(buffer) {
+  let crc = 0xffffffff;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const name = Buffer.from(type, "ascii");
+  const output = Buffer.alloc(12 + data.length);
+  output.writeUInt32BE(data.length, 0);
+  name.copy(output, 4);
+  data.copy(output, 8);
+  output.writeUInt32BE(crc32(Buffer.concat([name, data])), 8 + data.length);
+  return output;
+}
+
+function pngImage(width, height) {
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  const pixels = Buffer.alloc((width + 1) * height, 1);
+  for (let row = 0; row < height; row += 1) pixels[row * (width + 1)] = 0;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(pixels, { level: 1 })),
+    pngChunk("IEND", Buffer.alloc(0))
+  ]);
+}
 const SELECTION_KEYS = [
   "platform", "variant", "title_id", "title", "topic_phrase", "draft_path",
   "draft_sha256", "decision_rule"
@@ -362,8 +396,12 @@ async function writeBundle(data, mutate) {
     await copyFile(join(ROOT, data.planData.style.raster), join(data.runDir, data.sourceImage));
   }
   await mkdir(dirname(join(data.runDir, data.finalImage)), { recursive: true });
-  await copyFile(join(ROOT, data.planData.style.raster), join(data.runDir, data.finalImage));
-  if (data.sourceImage) await appendFile(join(data.runDir, data.finalImage), "brand-overlay");
+  if (data.sourceImage) {
+    const dims = data.planData.style.dimensions;
+    await writeFile(join(data.runDir, data.finalImage), pngImage(dims.width, dims.height));
+  } else {
+    await copyFile(join(ROOT, data.planData.style.raster), join(data.runDir, data.finalImage));
+  }
   const finalStat = await stat(join(data.runDir, data.finalImage));
   const sourceStat = data.sourceImage ? await stat(join(data.runDir, data.sourceImage)) : finalStat;
   const dims = data.planData.style.dimensions;

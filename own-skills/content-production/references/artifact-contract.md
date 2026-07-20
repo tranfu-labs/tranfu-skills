@@ -14,7 +14,7 @@
 | `04-masters/A|B/` | 各 `final.md`、`review.md`、`provenance.json` |
 | `05-platforms/<platform>/A|B/` | 十份 draft、checkpoint、final、review、画像与 provenance |
 | `06-selection/` | 十个 provider `candidates.json`、`titles.json`、`title-matrix.md`、selection decision |
-| `07-visual/<platform>/` | 五套 plan、shot list、bundle、provider 原生 `manifest.md`、prompts、images；package 阶段另写发布映射 `manifest.json` |
+| `07-visual/<platform>/` | 五套 plan、shot list、bounded child controls、Set QA、bundle、provider 原生 `manifest.md`、prompts、images；package 阶段另写发布映射 `manifest.json` |
 | `07-visual/wechat-cover/` | current-attempt request/result、`source.md`、prompts、candidates、`cover.png`、`cover.json` |
 | `08-publish-pack/<platform>/` | 五份 `final.md`、metadata、optimization、images |
 | `08-publish-pack/wechat/` | 另含 `cover.png`、`article.html`、`article-preview.html`、`layout-result.json` |
@@ -202,7 +202,9 @@ completed stage 的同版本 titles 和 matrix。matrix 保存全部候选和确
 
 每平台 plan 精确绑定 current visual attempt、winner 正文、titles decision、注册 style、品牌策略、后端、`gpt-image-2` 几何和非空 anchors，状态必须 `READY`、residual risk=`none`。`shot-list.md` 的 task ID、image IDs、核心含义与 plan 完全一致。visual gate 精确绑定五份 plan 和五份 shot-list，批准时 visual stage 仍为 running。
 
-generate request 另绑定已批准 plan/shot-list，动态授权 `bundle.json`、provider 原生 `manifest.md`、prompts、源图和交付图。`bundle.json` 精确镜像计划血缘和 image ID 顺序；每张图记录 prompt/source/delivery 路径与哈希、placement、core meaning、structure、visual metaphor、content/style/brand/set QA、原生尺寸、几何尝试、生成尝试和 residual risk。
+`bounded-per-image` generate 父 request 另绑定已批准 plan/shot-list，只授权 `bundle.json` 与 provider 原生 `manifest.md`。`07-visual/generation-queue[.vNNN].json` 登记五个平台 suite、共享全局 4/单套 2 的生成租约和独立封面占位；每图 control 位于 `children[/vNNN]/<image-id>/attempt-NN/`，Set QA 位于 `set-qa[/vNNN]/round-NN/`。child request 精确授权自己的 prompt、candidate/source、delivery 和 QA；result 绑定这些文件的哈希、真实几何和选中 attempt。
+
+Set QA PASS 后父任务从已绑定 child result 按 plan 顺序写 `bundle.json`。bundle 精确镜像计划血缘和 image ID 顺序；每张图记录 prompt/source/delivery 路径与哈希、placement、core meaning、structure、visual metaphor、content/style/brand/set QA、原生尺寸、全部几何尝试、选中生成尝试和 residual risk。queue、child controls 与 Set QA 是递归验收控制产物，不进入 visual stage 的 22 件核心绑定。
 
 content/style/set QA 必须 `pass`。品牌启用时 brand QA=`pass`、overlay=`applied`；品牌关闭时 brand QA 和 overlay 状态必须等于 `disabled-by-user` 或 `disabled-by-style-default`。生成尝试只能为 1-3，accepted source 与 delivery 尺寸保持一致且符合 Style Spec 比例/最短边，`native_output_preserved=true`、residual risk=`none`。
 
