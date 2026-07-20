@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { lstat, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readRasterInfo } from "./validate-style-bundle.mjs";
 
 const SKILL_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTRACT = "content-production-provider/v1";
@@ -20,8 +21,10 @@ const ANALYSIS_KEYS = keys("main_line content_type expression_need");
 const STYLE_KEYS = keys("id platform style_file style_spec style_reference");
 const BRAND_KEYS = keys("enabled policy_default_enabled override policy_source disabled_reason");
 const BACKEND_KEYS = keys("kind adapter endpoint_source resolved_model artifact_format credential_access model_check process_cleanup_plan process_cleanup_status");
+const BOUNDED_BACKEND_KEYS = [...BACKEND_KEYS, "aspect_control", "structured_size"];
 const GEOMETRY_KEYS = keys("geometry_profile resolved_model requested_dimensions target_aspect_ratio design_dimensions delivery_dimensions ratio_tolerance minimum_short_edge native_output_policy post_generation_resize");
 const ANCHOR_KEYS = keys("image_id placement source_excerpt core_meaning structure visual_metaphor main_action suggested_elements short_labels qa_risk");
+const BOUNDED_ANCHOR_KEYS = [...ANCHOR_KEYS, "text_mode"];
 const BUNDLE_KEYS = keys("schema_version task_id status platform provider_platform variant source selection plan shot_list style brand generation_backend generation_geometry image_count manifest images residual_risk");
 const IMAGE_KEYS = keys("image_id file file_sha256 source_file source_sha256 prompt_path prompt_sha256 placement core_meaning structure visual_metaphor content_qa_status style_qa_status brand_qa_status set_qa_status brand_overlay_status size_check_status generation_attempt requested_dimensions source_dimensions source_aspect_ratio source_artifact delivery_dimensions delivery_artifact native_output_preserved post_generation_actions geometry_attempts residual_risk");
 const REF_KEYS = keys("path sha256");
@@ -142,18 +145,19 @@ async function safeOutputTarget(context, relativePath) {
     && inside(context.outputRealDir, await realpath(path));
 }
 
-function validOptions(options, platform) {
+function validOptions(options, platform, bounded = false) {
   const expectedOutput = platform === "wechat" ? "body_illustrations"
     : platform === "xiaohongshu" ? "carousel" : "post_illustrations";
   return sameKeys(options, OPTION_KEYS)
     && options.requested_output === expectedOutput && options.publishing_path === null
     && (options.style_id === null || typeof options.style_id === "string" && Boolean(options.style_id.trim()))
-    && (options.max_images === null || Number.isInteger(options.max_images) && options.max_images > 0)
+    && (options.max_images === null || Number.isInteger(options.max_images)
+      && options.max_images > 0 && (!bounded || options.max_images <= 8))
     && [null, "enabled", "disabled"].includes(options.brand_override)
     && ["runtime-native", "configured-api", "unknown"].includes(options.backend_hint)
     && (options.model_preference === null
       || typeof options.model_preference === "string" && Boolean(options.model_preference.trim()))
-    && options.execution_strategy === "one_image_at_a_time";
+    && options.execution_strategy === (bounded ? "bounded_per_image" : "one_image_at_a_time");
 }
 
 function validSelection(selection, platform, variant) {
@@ -233,6 +237,8 @@ async function validateRequest(input) {
     }
   }
 
+  const bounded = context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image";
+
   if (context.spec && context.runDir) {
     context.outputDir = resolve(context.runDir, context.spec.base);
     try {
@@ -252,7 +258,7 @@ async function validateRequest(input) {
     || request.capability !== "illustration" || request.provider_contract !== PROVIDER
     || !["autonomous", "reviewed"].includes(request.run_mode) || !modeValid
     || request.interaction_policy !== "return_to_orchestrator" || request.output_dir !== context.spec?.base
-    || !validOptions(request.options, request.platform) || !validSelection(request.selection, request.platform, request.variant)
+    || !validOptions(request.options, request.platform, bounded) || !validSelection(request.selection, request.platform, request.variant)
     || context.spec && context.requestPath !== resolve(context.runDir, context.spec.request)) {
     add(context.issues, "invalid_provider_request", "Request does not match illustration-v1.");
   }
@@ -347,6 +353,9 @@ async function validateRequest(input) {
 
 function expectedGenerateArtifacts(context, plan) {
   if (!Array.isArray(plan?.anchors) || !context.spec) return [];
+  if (context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image") {
+    return [context.spec.bundle, context.spec.manifest];
+  }
   const images = expectedImagePaths(context, plan);
   return [
     context.spec.bundle,
@@ -416,17 +425,25 @@ async function expectedGeometry(styleSpec) {
   };
 }
 
-function validBackend(backend, status) {
-  return sameKeys(backend, BACKEND_KEYS) && ["runtime-native", "configured-api"].includes(backend.kind)
+function validBackend(backend, status, bounded = false, geometry = null) {
+  return sameKeys(backend, bounded ? BOUNDED_BACKEND_KEYS : BACKEND_KEYS) && ["runtime-native", "configured-api"].includes(backend.kind)
     && ["adapter", "endpoint_source", "process_cleanup_plan"].every((key) =>
       typeof backend[key] === "string" && Boolean(backend[key].trim()))
     && backend.resolved_model === "gpt-image-2" && ["png", "jpeg", "jpg"].includes(backend.artifact_format)
     && backend.credential_access === "pass" && backend.model_check === "pass"
-    && backend.process_cleanup_status === status;
+    && backend.process_cleanup_status === status
+    && (!bounded || ["hard_parameter", "prompt_only"].includes(backend.aspect_control)
+      && (backend.aspect_control === "prompt_only" && backend.structured_size === null
+        || backend.aspect_control === "hard_parameter" && sameJson(backend.structured_size, geometry?.requested_dimensions)));
 }
 
 function validStringArray(value) {
   return Array.isArray(value) && value.length > 0
+    && value.every((item) => typeof item === "string" && Boolean(item.trim()));
+}
+
+function validOptionalStringArray(value) {
+  return Array.isArray(value) && new Set(value).size === value.length
     && value.every((item) => typeof item === "string" && Boolean(item.trim()));
 }
 
@@ -481,8 +498,10 @@ async function validatePlan(context, { rejectGenerated = true } = {}) {
     || !EXPRESSIONS.has(plan.analysis?.expression_need)) {
     add(issues, "invalid_illustration_analysis", "Plan analysis is incomplete.");
   }
+  const bounded = context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image";
   if (!sameKeys(plan.style, STYLE_KEYS) || !sameKeys(plan.brand, BRAND_KEYS)
-    || !sameKeys(plan.generation_geometry, GEOMETRY_KEYS) || !validBackend(plan.generation_backend, "not-run")) {
+    || !sameKeys(plan.generation_geometry, GEOMETRY_KEYS)
+    || !validBackend(plan.generation_backend, "not-run", bounded, plan.generation_geometry)) {
     add(issues, "invalid_illustration_plan", "Plan style, brand, backend, or geometry schema is invalid.");
   }
   const registered = await registryStyle(plan, issues);
@@ -501,7 +520,8 @@ async function validatePlan(context, { rejectGenerated = true } = {}) {
     }
   }
   const anchors = Array.isArray(plan.anchors) ? plan.anchors : [];
-  if (!Number.isInteger(plan.image_count) || plan.image_count < 1 || plan.image_count !== anchors.length) {
+  if (!Number.isInteger(plan.image_count) || plan.image_count < 1 || plan.image_count !== anchors.length
+    || bounded && plan.image_count > 8) {
     add(issues, "invalid_illustration_count", "image_count must equal the non-empty anchor count.");
   }
   if (context.request.options.max_images !== null && plan.image_count > context.request.options.max_images) {
@@ -510,16 +530,28 @@ async function validatePlan(context, { rejectGenerated = true } = {}) {
   const sourceText = context.inputPaths.get("final_draft")
     ? await readFile(context.inputPaths.get("final_draft"), "utf8") : "";
   const ids = new Set();
+  const excerpts = new Set();
+  const meanings = new Set();
   for (const anchor of anchors) {
-    if (!sameKeys(anchor, ANCHOR_KEYS) || !/^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(anchor.image_id || "")
-      || ids.has(anchor.image_id) || ![anchor.placement, anchor.source_excerpt, anchor.core_meaning,
+    const excerpt = anchor?.source_excerpt?.replace(/\s+/g, " ").trim();
+    const meaning = anchor?.core_meaning?.replace(/\s+/g, " ").trim();
+    if (!sameKeys(anchor, bounded ? BOUNDED_ANCHOR_KEYS : ANCHOR_KEYS) || !/^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(anchor.image_id || "")
+      || ids.has(anchor.image_id) || bounded && (excerpts.has(excerpt) || meanings.has(meaning)) || ![anchor.placement, anchor.source_excerpt, anchor.core_meaning,
         anchor.structure, anchor.visual_metaphor, anchor.main_action, anchor.qa_risk]
         .every((item) => typeof item === "string" && Boolean(item.trim()))
-      || !validStringArray(anchor.suggested_elements) || !validStringArray(anchor.short_labels)) {
+      || !validStringArray(anchor.suggested_elements) || (bounded
+        ? !["icons_only", "allowlist"].includes(anchor.text_mode)
+          || !validOptionalStringArray(anchor.short_labels)
+          || anchor.text_mode === "icons_only" && anchor.short_labels.length !== 0
+          || anchor.text_mode === "allowlist" && anchor.short_labels.length === 0
+          || /(?:workflow|process|checklist)/i.test(anchor.structure) && anchor.text_mode !== "icons_only"
+        : !validStringArray(anchor.short_labels))) {
       add(issues, "invalid_illustration_anchor", `Invalid anchor: ${anchor?.image_id || "(missing)"}.`);
       continue;
     }
     ids.add(anchor.image_id);
+    excerpts.add(excerpt);
+    meanings.add(meaning);
     if (!sourceText.includes(anchor.source_excerpt)) {
       add(issues, "unsupported_illustration_anchor", `source_excerpt is absent from final draft: ${anchor.image_id}.`);
     }
@@ -548,33 +580,8 @@ async function validatePlan(context, { rejectGenerated = true } = {}) {
   return { issues, plan, planPath, shotPath };
 }
 
-function parsePng(buffer) {
-  if (buffer.length < 24 || buffer.subarray(0, 8).toString("hex") !== "89504e470d0a1a0a"
-    || buffer.subarray(12, 16).toString("ascii") !== "IHDR") return null;
-  return { format: "png", width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
-}
-
-function parseJpeg(buffer) {
-  if (buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
-  let offset = 2;
-  while (offset + 9 < buffer.length) {
-    if (buffer[offset] !== 0xff) { offset += 1; continue; }
-    const marker = buffer[offset + 1];
-    if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
-      return { format: "jpg", height: buffer.readUInt16BE(offset + 5), width: buffer.readUInt16BE(offset + 7) };
-    }
-    if (marker === 0xd8 || marker === 0xd9) { offset += 2; continue; }
-    const length = buffer.readUInt16BE(offset + 2);
-    if (length < 2) return null;
-    offset += length + 2;
-  }
-  return null;
-}
-
 async function rasterInfo(path) {
-  const bytes = await readFile(path);
-  const parsed = parsePng(bytes) || parseJpeg(bytes);
-  return parsed ? { ...parsed, bytes: bytes.length } : null;
+  try { return readRasterInfo(path); } catch { return null; }
 }
 
 function validDimensions(value) {

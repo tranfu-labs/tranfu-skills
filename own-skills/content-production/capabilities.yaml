@@ -23,6 +23,7 @@
     "proofreading": {
       "required": true,
       "contract": "proofreading-v1",
+      "profile": "markdown-alignment",
       "skill_path": "skills/proofread-content/SKILL.md",
       "required_markers": ["name: proofread-content", "content-production-provider: proofreading-v1"]
     },
@@ -35,6 +36,7 @@
     "illustration": {
       "required": true,
       "contract": "illustration-v1",
+      "profile": "bounded-per-image",
       "skill_path": "skills/post-illustration-images/SKILL.md",
       "required_markers": ["name: post-illustration-images", "content-production-provider: illustration-v1"]
     },

@@ -238,6 +238,80 @@ export function readPngSize(filePath, label = filePath) {
   return { width, height };
 }
 
+export function readRasterInfo(filePath, label = filePath) {
+  const bytes = readFileSync(filePath);
+  if (bytes.subarray(0, 8).toString("hex") === "89504e470d0a1a0a") {
+    return { format: "png", ...readPngSize(filePath, label), bytes: bytes.length };
+  }
+  const jpeg = readJpegSize(bytes, label);
+  return { format: "jpg", ...jpeg, bytes: bytes.length };
+}
+
+function readJpegSize(bytes, label) {
+  invariant(bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8, `${label} is not a JPEG`);
+  const frameMarkers = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+  let offset = 2;
+  let frame = null;
+  let scans = 0;
+  let scanBytes = 0;
+  let ended = false;
+  while (offset < bytes.length) {
+    invariant(bytes[offset] === 0xff, `${label} contains invalid JPEG marker alignment`);
+    while (bytes[offset] === 0xff) offset += 1;
+    invariant(offset < bytes.length, `${label} contains a truncated JPEG marker`);
+    const marker = bytes[offset++];
+    if (marker === 0xd9) {
+      invariant(offset === bytes.length, `${label} JPEG EOI must be terminal`);
+      ended = true;
+      break;
+    }
+    if (marker === 0xd8 || marker === 0x01 || marker >= 0xd0 && marker <= 0xd7) continue;
+    invariant(offset + 2 <= bytes.length, `${label} contains a truncated JPEG segment`);
+    const length = bytes.readUInt16BE(offset);
+    const end = offset + length;
+    invariant(length >= 2 && end <= bytes.length, `${label} contains an invalid JPEG segment`);
+    if (frameMarkers.has(marker)) {
+      invariant(length >= 8, `${label} contains an invalid JPEG frame`);
+      const height = bytes.readUInt16BE(offset + 3);
+      const width = bytes.readUInt16BE(offset + 5);
+      const components = bytes[offset + 7];
+      invariant(width > 0 && height > 0 && components > 0 && length === 8 + 3 * components,
+        `${label} contains invalid JPEG frame dimensions`);
+      invariant(width <= 32768 && height <= 32768 && width * height <= 50_000_000,
+        `${label} JPEG dimensions exceed the validation limit`);
+      frame = { width, height };
+    }
+    offset = end;
+    if (marker !== 0xda) continue;
+    invariant(frame && length >= 6, `${label} JPEG scan precedes a valid frame`);
+    scans += 1;
+    const start = offset;
+    while (offset < bytes.length) {
+      if (bytes[offset] !== 0xff) {
+        offset += 1;
+        continue;
+      }
+      const markerStart = offset;
+      while (bytes[offset] === 0xff) offset += 1;
+      invariant(offset < bytes.length, `${label} contains a truncated JPEG scan`);
+      const next = bytes[offset];
+      if (next === 0x00) {
+        offset += 1;
+        continue;
+      }
+      if (next >= 0xd0 && next <= 0xd7) {
+        offset += 1;
+        continue;
+      }
+      scanBytes += markerStart - start;
+      offset = markerStart;
+      break;
+    }
+  }
+  invariant(frame && scans > 0 && scanBytes > 0 && ended, `${label} is not a complete decodable JPEG`);
+  return frame;
+}
+
 function crc32(buffer) {
   let crc = 0xffffffff;
   for (const byte of buffer) {

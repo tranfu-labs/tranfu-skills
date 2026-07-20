@@ -88,9 +88,9 @@ node scripts/init-run.mjs <slug> --outline <path> [--material <path>]
 3. 对选题或大纲做深度调研，产出 verified claims。
 4. 生成或规范化证据大纲，绑定 outline 决策。
 5. 调用 drafting provider 生成 A/B 母稿和十份平台初稿。
-6. 对十份稿分别调用 proofreading provider，并运行总控 claim regression。
+6. 对十份稿分别调用 proofreading provider；provider 在单稿 PASS 前运行 `markdown-alignment`，总控再绑定 claims 并完成两份 regression report 与六项 semantic review。
 7. 对十份终稿调用 title provider，聚合精确 34 个候选并选择五个平台赢家。
-8. 只为五个赢家先规划配图；批准五份 plan 后，并行生成五套正文图和独立公众号封面，精确验收 22 件视觉核心产物。
+8. 只为五个赢家先规划 1-8 张有独立正文锚点的配图；批准五份 plan 后，由 bounded-per-image 队列执行 Canary、逐图生成、Set QA 和定向重试，并与独立公众号封面共享四个生成名额，最终精确验收 22 件视觉核心产物。
 9. 为全部正文图和封面生成压缩 candidate，总控按 strict-smaller 规则组装五个平台发布包；再为公众号排版创建受限 request，由 `format-content` 生成 staging clean HTML/预览，经过总控复验和晋级后才完成 package。
 10. 运行确定性 QA；自主模式通过后直接完成，reviewed 模式等待 final 门禁。
 
@@ -105,6 +105,8 @@ node scripts/create-proofreading-request.mjs <run-dir> --platform <id> --variant
 node scripts/create-title-request.mjs <run-dir> --platform <id> --variant <A|B> [--model <id>] [--parameters-json '<json>'] [--execution-strategy parallel_subagents|sequential_fallback]
 node scripts/aggregate-titles.mjs <run-dir>
 node scripts/create-illustration-request.mjs <run-dir> <plan|generate> --platform <id> [--style-id <id>] [--max-images <N>] [--brand-override enabled|disabled] [--backend-hint runtime-native|configured-api|unknown] [--model-preference <id>]
+node scripts/illustration-queue.mjs <run-dir> <init|dispatch|inspect>
+node scripts/illustration-queue.mjs <run-dir> release --task-id <id> --reason rate_limit|transport
 node scripts/create-wechat-cover-request.mjs <run-dir> [--backend-hint runtime-native|configured-api|programmatic|unknown]
 node scripts/create-compression-requests.mjs <run-dir>
 node scripts/assemble-publish-packs.mjs <run-dir>
@@ -127,8 +129,9 @@ node scripts/check-provider-result.mjs <request.json> <result.json>
 - 十个平台适配任务可以并行，每个任务只能读取自己的母稿版本。
 - 十份审校可以并行；单稿的三轮审校必须串行。
 - 十个标题任务可以并行；同平台 A/B 使用相同模型和参数，聚合、阶段完成和门禁批准串行。
-- 五个平台视觉可以并行；每套图内部逐图生成和 QA。
-- visual gate 批准后，公众号封面可与五套正文配图并行；它必须读取 titles gate 的公众号赢家，不接受调用方另传标题。
+- 五个平台视觉由 bounded-per-image 队列调度：每套第 1 张 Canary PASS 前不得提交后续图片；之后全局最多 4 个、同套最多 2 个生成调用。
+- visual gate 批准后，公众号封面与正文 child 共享全局 4 个名额；封面保持独立 provider，必须读取 titles gate 的公众号赢家，不接受调用方另传标题。
+- 全部 child PASS 后每套串行执行 Set QA；失败必须点名 image ID，只为被点名图片创建下一 candidate，未被点名的 PASS child 继续冻结。
 - 压缩 provider 首次运行可能安装固定 Sharp runtime；先串行执行一个任务完成 warm-up，再并行其余 current-attempt request。发布包聚合保持串行。
 
 运行时没有隔离子 Agent 时记录 `sequential_fallback` 并顺序执行，不改变产物契约。

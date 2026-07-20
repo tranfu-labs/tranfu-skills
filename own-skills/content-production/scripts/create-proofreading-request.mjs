@@ -97,8 +97,9 @@ try {
     });
   }
   if (state.capabilities?.providers?.proofreading?.status !== 'PASS'
-    || state.capabilities?.providers?.proofreading?.contract !== 'proofreading-v1') {
-    add(blockers, 'proofreading_provider_unavailable', 'The proofreading provider snapshot is not PASS for proofreading-v1.');
+    || state.capabilities?.providers?.proofreading?.contract !== 'proofreading-v1'
+    || state.capabilities?.providers?.proofreading?.profile !== 'markdown-alignment') {
+    add(blockers, 'proofreading_provider_unavailable', 'The proofreading provider snapshot is not PASS for proofreading-v1 with markdown-alignment.');
   }
   if (state.stages?.platforms?.status !== 'completed') {
     add(blockers, 'proofreading_prerequisite_missing', 'Proofreading requires the completed platforms stage.');

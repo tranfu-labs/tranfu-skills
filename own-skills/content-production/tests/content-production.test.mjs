@@ -35,6 +35,7 @@ const capabilityMarkers = {
   wechat_layout: ['name: format-content', 'content-production-provider: wechat-layout-v1']
 };
 const capabilityIds = Object.keys(capabilityMarkers);
+const capabilityProfiles = { proofreading: 'markdown-alignment', illustration: 'bounded-per-image' };
 
 function tempDir(name) {
   return mkdtempSync(join(tmpdir(), `content-production-${name}-`));
@@ -222,6 +223,7 @@ function makeCapabilityConfig(root, { missing = null } = {}) {
       skill_path: path,
       required: true,
       contract: markers[1].split(': ')[1],
+      ...(capabilityProfiles[id] ? { profile: capabilityProfiles[id] } : {}),
       required_markers: markers
     };
   }
@@ -762,7 +764,9 @@ test('capability preflight passes complete config and blocks a missing skill', (
   const complete = makeCapabilityConfig(join(root, 'complete'));
   const pass = run('check-capabilities.mjs', ['--config', complete]);
   assert.equal(pass.status, 0, pass.stderr);
-  assert.equal(JSON.parse(pass.stdout).status, 'PASS');
+  const passReport = JSON.parse(pass.stdout);
+  assert.equal(passReport.status, 'PASS');
+  assert.equal(passReport.capabilities.find((item) => item.id === 'proofreading').profile, 'markdown-alignment');
 
   const missing = makeCapabilityConfig(join(root, 'missing'), { missing: 'proofreading' });
   const blocked = run('check-capabilities.mjs', ['--config', missing]);
@@ -1447,6 +1451,140 @@ test('claim regression blocks stronger certainty and removed qualifiers', () => 
   assert.match(report.before_sha256, /^[a-f0-9]{64}$/);
   assert.match(report.after_sha256, /^[a-f0-9]{64}$/);
   assert.match(report.claims_sha256, /^[a-f0-9]{64}$/);
+});
+
+test('claim regression locks exact body sentences before comparing a similar H1', () => {
+  const root = tempDir('claim-heading-alignment');
+  const before = join(root, 'before.md');
+  const after = join(root, 'after.md');
+  const claims = join(root, 'claims.json');
+  write(before, [
+    '# 该功能 2026 年 7 月 20 日可用', '',
+    '## 说明', '',
+    '截至 2026 年 7 月 20 日，该功能可能仅适用于试点用户。'
+  ].join('\n'));
+  write(after, [
+    '# 该功能 2026 年 7 月 20 日可用', '',
+    '## 说明', '',
+    '截至 2026 年 7 月 20 日，该功能可能仅适用于试点用户。', '',
+    '下面说明适用边界。'
+  ].join('\n'));
+  write(claims, JSON.stringify({ claims: [] }, null, 2));
+
+  const unchanged = run('check-claim-regression.mjs', [
+    '--before', before, '--after', after, '--claims', claims, '--phase', 'humanize'
+  ]);
+  assert.equal(unchanged.status, 0, unchanged.stderr || unchanged.stdout);
+  const unchangedReport = JSON.parse(unchanged.stdout);
+  assert.equal(unchangedReport.automatic_status, 'PASS');
+  assert.equal(unchangedReport.engine_version, 'markdown-alignment-1');
+
+  write(after, [
+    '# 该功能 2026 年 7 月 20 日可用', '',
+    '## 说明', '',
+    '该功能适用于试点用户。'
+  ].join('\n'));
+  const removed = run('check-claim-regression.mjs', [
+    '--before', before, '--after', after, '--claims', claims, '--phase', 'humanize'
+  ]);
+  assert.equal(removed.status, 2);
+  const categories = JSON.parse(removed.stdout).blockers
+    .filter((item) => item.code === 'qualifier_removed')
+    .map((item) => item.category);
+  assert.ok(categories.includes('time'));
+  assert.ok(categories.includes('uncertainty'));
+  assert.ok(categories.includes('scope'));
+});
+
+test('byte-identical claim regression passes before any similar-sentence alignment', () => {
+  const root = tempDir('claim-identical');
+  const before = join(root, 'before.md');
+  const after = join(root, 'after.md');
+  const claims = join(root, 'claims.json');
+  const markdown = [
+    '# 试点功能可能在 2026 年开放', '',
+    '## 范围', '',
+    '截至 2026 年，这项功能可能只向部分试点用户开放。', '',
+    '2026 年，这项功能向试点用户开放。'
+  ].join('\n');
+  write(before, markdown);
+  write(after, markdown);
+  write(claims, JSON.stringify({ claims: [] }, null, 2));
+
+  const result = run('check-claim-regression.mjs', [
+    '--before', before, '--after', after, '--claims', claims, '--phase', 'final'
+  ]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.automatic_status, 'PASS');
+  assert.equal(report.alignment_status, 'IDENTICAL');
+  assert.deepEqual(report.blockers, []);
+});
+
+test('claim regression blocks ambiguous one-to-one sentence alignment', () => {
+  const root = tempDir('claim-ambiguous');
+  const before = join(root, 'before.md');
+  const after = join(root, 'after.md');
+  const claims = join(root, 'claims.json');
+  write(before, '# 正文\n\n## 范围\n\n试点用户可能在周一使用该功能。');
+  write(after, '# 正文\n\n## 范围\n\n试点用户或许在周一使用该功能。试点用户也许在周一使用该功能。');
+  write(claims, JSON.stringify({ claims: [] }, null, 2));
+
+  const result = run('check-claim-regression.mjs', [
+    '--before', before, '--after', after, '--claims', claims, '--phase', 'final'
+  ]);
+  assert.equal(result.status, 2);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.alignment_status, 'AMBIGUOUS');
+  assert.ok(report.blockers.some((item) => item.code === 'ambiguous_alignment'));
+});
+
+test('claim regression distinguishes attributed quotations, quote wrapping, and effect drift', () => {
+  const root = tempDir('claim-structured-drift');
+  const before = join(root, 'before.md');
+  const after = join(root, 'after.md');
+  const claims = join(root, 'claims.json');
+  write(before, '# 正文\n\n厂商介绍了新功能。试点团队可能提高处理速度。这项能力需要人工确认。');
+  write(after, '# 正文\n\n厂商表示：“新功能已经上线。”全部团队一定提高处理速度。这项能力“需要人工确认”。');
+  write(claims, JSON.stringify({ claims: [] }, null, 2));
+
+  const result = run('check-claim-regression.mjs', [
+    '--before', before, '--after', after, '--claims', claims, '--phase', 'final'
+  ]);
+  assert.equal(result.status, 2);
+  const codes = JSON.parse(result.stdout).blockers.map((item) => item.code);
+  assert.ok(codes.includes('new_attributed_quotation'));
+  assert.ok(codes.includes('new_quote_wrapping'));
+  assert.ok(codes.includes('effect_claim_changed'));
+});
+
+test('semantic review reuses only an identical engine and hash tuple', () => {
+  const root = tempDir('semantic-review-reuse');
+  const before = join(root, 'before.md');
+  const after = join(root, 'after.md');
+  const claims = join(root, 'claims.json');
+  const sourceReport = join(root, 'source.json');
+  const targetReport = join(root, 'target.json');
+  write(before, '# 正文\n\n这项能力可能帮助试点团队。');
+  write(after, '# 正文\n\n这项能力可能帮助试点团队。');
+  write(claims, JSON.stringify({ claims: [] }, null, 2));
+  for (const output of [sourceReport, targetReport]) {
+    const checked = run('check-claim-regression.mjs', [
+      '--before', before, '--after', after, '--claims', claims, '--phase', 'final', '--output', output
+    ]);
+    assert.equal(checked.status, 0, checked.stderr || checked.stdout);
+  }
+  const reviewed = run('set-semantic-review.mjs', [
+    sourceReport, '--reviewer', 'fixture-reviewer', ...semanticPassArgs
+  ]);
+  assert.equal(reviewed.status, 0, reviewed.stderr || reviewed.stdout);
+  const reused = run('set-semantic-review.mjs', [targetReport, '--reuse-from', sourceReport]);
+  assert.equal(reused.status, 0, reused.stderr || reused.stdout);
+  const report = readJson(targetReport);
+  assert.equal(report.semantic_review.review_mode, 'reused');
+  assert.equal(report.semantic_review.reviewer, 'fixture-reviewer');
+  assert.equal(report.semantic_review.reused_from.path, sourceReport);
+  assert.equal(report.semantic_review.reused_from.sha256, sha(sourceReport));
 });
 
 test('semantic review is required and can block a non-numeric new conclusion', () => {
@@ -2451,6 +2589,25 @@ test('drafting and proofreading requests run two masters, ten adaptations, and t
       assert.equal(request.inputs[0].path, `05-platforms/${platform}/${variant}/draft.md`);
       assert.equal(runProofreadingAdapter(['validate-request', requestPath]).status, 0);
       writeProofreadingProviderArtifacts(runDir, request);
+      if (platform === 'wechat' && variant === 'A') {
+        const finalPath = join(runDir, '05-platforms/wechat/A/final.md');
+        write(finalPath, `${readFileSync(finalPath, 'utf8').trim()}\n\n我们亲自测试后发现效果更好。`);
+        const detailReviewPath = join(runDir, '05-platforms/wechat/A/reviews/detail.md');
+        const detailReview = readFileSync(detailReviewPath, 'utf8')
+          .replace(/^output_sha256:\s*.*$/m, `output_sha256: ${sha(finalPath)}`);
+        write(detailReviewPath, detailReview);
+        const reportPath = join(runDir, '05-platforms/wechat/A/reviews/proofread-result.json');
+        const report = readJson(reportPath);
+        report.checkpoints.detail.sha256 = sha(finalPath);
+        report.checkpoints.detail.review_sha256 = sha(detailReviewPath);
+        write(reportPath, JSON.stringify(report, null, 2));
+        const earlyFailure = runProofreadingAdapter(['finalize', requestPath]);
+        assert.equal(earlyFailure.status, 2, earlyFailure.stderr || earlyFailure.stdout);
+        const earlyResult = readJson(join(runDir, '05-platforms/wechat/A/reviews/proofreading.result.json'));
+        assert.equal(earlyResult.status, 'FAILED');
+        assert.ok(earlyResult.issues.some((item) => item.code === 'claim_regression_final_new_personal_experience'));
+        writeProofreadingProviderArtifacts(runDir, request);
+      }
       assert.equal(runProofreadingAdapter(['finalize', requestPath]).status, 0);
       assert.equal(sha(draftPath), draftHash);
 

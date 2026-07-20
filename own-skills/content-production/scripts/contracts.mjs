@@ -11,6 +11,7 @@ import {
   titleCounts,
   variants
 } from './lib.mjs';
+import { ENGINE_VERSION as CLAIM_ENGINE_VERSION } from '../skills/proofread-content/scripts/claim-regression.mjs';
 
 function issue(code, message, extra = {}) {
   return { code, message, ...extra };
@@ -1436,7 +1437,7 @@ function proofreadingPreservationIssues(source, output, path, platform) {
   return issues;
 }
 
-async function validateProofreadingRegression(runDir, spec, phase, afterRelative, issues) {
+async function validateProofreadingRegression(runDir, spec, phase, afterRelative, issues, engineRequired) {
   const reportRelative = `${spec.base}/reviews/claim-regression-${phase}.json`;
   const reportPath = join(runDir, reportRelative);
   let report = null;
@@ -1465,6 +1466,8 @@ async function validateProofreadingRegression(runDir, spec, phase, afterRelative
   const semanticChecks = ['new_conclusion', 'scope_change', 'causal_strength', 'factual_addition', 'factual_omission', 'proper_noun_drift'];
   const reviewedAt = Date.parse(semantic?.reviewed_at || '');
   if (report.status !== 'PASS' || report.automatic_status !== 'PASS' || report.phase !== phase
+    || engineRequired && (report.engine_version !== CLAIM_ENGINE_VERSION
+      || !['IDENTICAL', 'ALIGNED'].includes(report.alignment_status))
     || resolve(report.before || '') !== before || resolve(report.after || '') !== after || resolve(report.claims || '') !== claims
     || !Array.isArray(report.blockers) || report.blockers.length
     || Object.entries(expected).some(([key, value]) => report[key] !== value)
@@ -1474,13 +1477,40 @@ async function validateProofreadingRegression(runDir, spec, phase, afterRelative
     || Object.entries(expected).some(([key, value]) => semantic?.[key] !== value)) {
     issues.push(proofreadingIssue('invalid_proofreading_regression', `Claim regression is missing, blocked, or stale for ${spec.base}/${phase}.`, { path: reportRelative }));
   }
+  if (engineRequired) {
+    const independent = semantic?.review_mode === 'independent' && semantic?.reused_from === null;
+    let reused = false;
+    if (semantic?.review_mode === 'reused' && plainObject(semantic?.reused_from)
+      && sameItems(Object.keys(semantic.reused_from), ['path', 'sha256'])) {
+      const sourceRelative = relative(runDir, resolve(semantic.reused_from.path || '')).replaceAll('\\', '/');
+      const sourcePath = inside(runDir, resolve(semantic.reused_from.path || ''))
+        ? await proofreadingRealFile(runDir, await realpath(runDir), runDir, sourceRelative, issues, 'semantic_reuse_source') : null;
+      if (sourcePath && semantic.reused_from.sha256 === await fileSha256(sourcePath)) {
+        try {
+          const source = await readJson(sourcePath);
+          const tuple = ['before_sha256', 'after_sha256', 'claims_sha256', 'engine_version'];
+          reused = source.status === 'PASS' && source.semantic_review?.status === 'PASS'
+            && tuple.every((field) => source[field] === report[field])
+            && source.semantic_review.reviewer === semantic.reviewer
+            && sameJson(source.semantic_review.checks, semantic.checks);
+        } catch {}
+      }
+    }
+    if (!independent && !reused) {
+      issues.push(proofreadingIssue('invalid_semantic_review_reuse', `Semantic review provenance is invalid for ${spec.base}/${phase}.`, { path: reportRelative }));
+    }
+  }
 }
 
 export async function validateProofreadingStage(runDir, state) {
   const issues = [];
-  if (state.capabilities?.providers?.proofreading?.status !== 'PASS'
-    || state.capabilities?.providers?.proofreading?.contract !== 'proofreading-v1') {
+  const provider = state.capabilities?.providers?.proofreading;
+  const engineRequired = provider?.profile === 'markdown-alignment';
+  if (provider?.status !== 'PASS' || provider?.contract !== 'proofreading-v1') {
     issues.push(proofreadingIssue('proofreading_provider_unavailable', 'The proofreading provider snapshot is not PASS for proofreading-v1.'));
+  }
+  if (!engineRequired && state.stages?.editing?.status !== 'completed') {
+    issues.push(proofreadingIssue('legacy_proofreading_read_only', 'Proofreading runs without the markdown-alignment profile are read-only.'));
   }
   if (state.stages?.editing?.status === 'completed') {
     const expectedEditing = expectedProofreadingStageArtifacts();
@@ -1592,8 +1622,11 @@ export async function validateProofreadingStage(runDir, state) {
           issues.push(proofreadingIssue('invalid_proofread_result', `Proofread result is incomplete or stale for ${platform}/${variant}.`, { path: reportPath }));
         }
       }
-      await validateProofreadingRegression(runDir, spec, 'humanize', checkpointPaths[1], issues);
-      await validateProofreadingRegression(runDir, spec, 'final', checkpointPaths[2], issues);
+      if (engineRequired && validation.result?.checks?.claim_regression_engine !== CLAIM_ENGINE_VERSION) {
+        issues.push(proofreadingIssue('proofreading_provider_engine_missing', `Proofreading provider did not bind ${CLAIM_ENGINE_VERSION} for ${platform}/${variant}.`));
+      }
+      await validateProofreadingRegression(runDir, spec, 'humanize', checkpointPaths[1], issues, engineRequired);
+      await validateProofreadingRegression(runDir, spec, 'final', checkpointPaths[2], issues, engineRequired);
     }
     if (platformRequests.A && platformRequests.B
       && (platformRequests.A.options?.model !== platformRequests.B.options?.model

@@ -1,6 +1,7 @@
 import { lstat, readFile, readdir, realpath } from 'node:fs/promises';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { readRasterInfo } from '../skills/post-illustration-images/scripts/validate-style-bundle.mjs';
 import {
   fileExists,
   fileSha256,
@@ -35,6 +36,7 @@ const anchorKeys = [
   'image_id', 'placement', 'source_excerpt', 'core_meaning', 'structure',
   'visual_metaphor', 'main_action', 'suggested_elements', 'short_labels', 'qa_risk'
 ];
+const boundedAnchorKeys = [...anchorKeys, 'text_mode'];
 const bundleKeys = [
   'schema_version', 'task_id', 'status', 'platform', 'provider_platform', 'variant',
   'source', 'selection', 'plan', 'shot_list', 'style', 'brand', 'generation_backend',
@@ -57,6 +59,7 @@ const backendKeys = [
   'kind', 'adapter', 'endpoint_source', 'resolved_model', 'artifact_format',
   'credential_access', 'model_check', 'process_cleanup_plan', 'process_cleanup_status'
 ];
+const boundedBackendKeys = [...backendKeys, 'aspect_control', 'structured_size'];
 const geometryKeys = [
   'geometry_profile', 'resolved_model', 'requested_dimensions', 'target_aspect_ratio',
   'design_dimensions', 'delivery_dimensions', 'ratio_tolerance', 'minimum_short_edge',
@@ -93,6 +96,10 @@ function nonempty(value) {
 
 function stringList(value) {
   return Array.isArray(value) && value.length > 0 && value.every(nonempty);
+}
+
+function stringArray(value) {
+  return Array.isArray(value) && value.every(nonempty) && new Set(value).size === value.length;
 }
 
 function inside(root, path) {
@@ -260,16 +267,17 @@ async function loadStyleContext(provider, request, issues) {
   }
 }
 
-function expectedOptions(platform, options) {
+function expectedOptions(platform, options, bounded = false) {
   return exactKeys(options, optionKeys)
     && options.requested_output === requestedOutput[platform]
     && options.publishing_path === null
     && (options.style_id === null || nonempty(options.style_id))
-    && (options.max_images === null || Number.isInteger(options.max_images) && options.max_images > 0)
+    && (options.max_images === null || Number.isInteger(options.max_images)
+      && options.max_images > 0 && (!bounded || options.max_images <= 8))
     && [null, 'enabled', 'disabled'].includes(options.brand_override)
     && ['runtime-native', 'configured-api', 'unknown'].includes(options.backend_hint)
     && (options.model_preference === null || nonempty(options.model_preference))
-    && options.execution_strategy === 'one_image_at_a_time';
+    && options.execution_strategy === (bounded ? 'bounded_per_image' : 'one_image_at_a_time');
 }
 
 function expectedStyle(styleContext) {
@@ -317,6 +325,7 @@ function expectedGeometry(styleContext) {
 
 function validateRequest(request, state, platform, mode, selection, titleBinding, paths, issues) {
   const attempt = paths.attempt;
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
   const expectedInputs = [
     { role: 'final_draft', path: selection?.draft_path, sha256: selection?.draft_sha256 },
     { role: 'title_selection', path: titleBinding?.path, sha256: titleBinding?.sha256 }
@@ -331,7 +340,7 @@ function validateRequest(request, state, platform, mode, selection, titleBinding
     || request.variant !== selection?.variant || !isDeepStrictEqual(request.selection, selection)
     || !exactKeys(request.selection, selectionKeys)
     || request.output_dir !== paths.base || request.interaction_policy !== 'return_to_orchestrator'
-    || !expectedOptions(platform, request.options)) {
+    || !expectedOptions(platform, request.options, bounded)) {
     issues.push(issue('invalid_illustration_request', `Canonical ${mode} request is invalid for ${platform}.`));
   }
   if (mode === 'generate') expectedInputs.push(
@@ -416,6 +425,24 @@ async function currentGeneratedFiles(runDir, paths) {
     || path.includes(`/images/branded/${paths.version}/`));
 }
 
+async function currentBoundedControlFiles(runDir, paths) {
+  const found = [];
+  async function walk(relativePath) {
+    const absolute = resolve(runDir, relativePath);
+    if (!fileExists(absolute) || (await lstat(absolute)).isSymbolicLink()) return;
+    for (const entry of await readdir(absolute, { withFileTypes: true })) {
+      const child = `${relativePath}/${entry.name}`;
+      if (entry.isDirectory()) await walk(child);
+      else found.push(child);
+    }
+  }
+  const suffix = paths.attempt === 1 ? '' : `/${paths.version}`;
+  await walk(`${paths.base}/children${suffix}`);
+  await walk(`${paths.base}/set-qa${suffix}`);
+  if (paths.attempt !== 1) return found;
+  return found.filter((path) => !path.includes('/children/v') && !path.includes('/set-qa/v'));
+}
+
 async function validatePlanTask(runDir, context, state, platform, selection, titleBinding) {
   const issues = [];
   const paths = illustrationPaths(state, platform);
@@ -453,22 +480,35 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
   const expectedBrandValue = styleContext ? expectedBrand(styleContext, request.options.brand_override) : null;
   const expectedGeometryValue = styleContext ? expectedGeometry(styleContext) : null;
   const backend = plan.generation_backend;
-  const validBackend = exactKeys(backend, backendKeys)
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
+  const validBackend = exactKeys(backend, bounded ? boundedBackendKeys : backendKeys)
     && ['runtime-native', 'configured-api'].includes(backend.kind) && nonempty(backend.adapter)
     && ['runtime-native', 'active-runtime-config', 'user-confirmed-config'].includes(backend.endpoint_source)
     && backend.resolved_model === 'gpt-image-2' && ['png', 'jpeg', 'jpg'].includes(backend.artifact_format)
     && backend.credential_access === 'pass' && backend.model_check === 'pass'
     && nonempty(backend.process_cleanup_plan) && backend.process_cleanup_status === 'not-run'
+    && (!bounded || ['hard_parameter', 'prompt_only'].includes(backend.aspect_control)
+      && (backend.aspect_control === 'prompt_only' && backend.structured_size === null
+        || backend.aspect_control === 'hard_parameter'
+          && isDeepStrictEqual(backend.structured_size, plan.generation_geometry?.requested_dimensions)))
     && (request.options.backend_hint === 'unknown' || request.options.backend_hint === backend.kind)
     && (!expectedBrandValue?.enabled || backend.artifact_format === 'png');
   const anchors = Array.isArray(plan.anchors) ? plan.anchors : [];
   const ids = anchors.map((anchor) => anchor?.image_id);
   const meanings = anchors.map((anchor) => anchor?.core_meaning);
-  const validAnchors = anchors.length > 0 && new Set(ids).size === anchors.length
-    && new Set(meanings).size === anchors.length && anchors.every((anchor) => exactKeys(anchor, anchorKeys)
+  const excerpts = anchors.map((anchor) => anchor?.source_excerpt?.replace(/\s+/g, ' ').trim());
+  const validAnchors = anchors.length > 0 && (!bounded || anchors.length <= 8)
+    && new Set(ids).size === anchors.length && new Set(excerpts).size === anchors.length
+    && new Set(meanings).size === anchors.length && anchors.every((anchor) => exactKeys(anchor, bounded ? boundedAnchorKeys : anchorKeys)
       && /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(anchor.image_id || '')
       && ['placement', 'source_excerpt', 'core_meaning', 'structure', 'visual_metaphor', 'main_action', 'qa_risk'].every((key) => nonempty(anchor[key]))
-      && stringList(anchor.suggested_elements) && stringList(anchor.short_labels)
+      && stringList(anchor.suggested_elements) && (bounded
+        ? ['icons_only', 'allowlist'].includes(anchor.text_mode)
+          && stringArray(anchor.short_labels)
+          && (anchor.text_mode !== 'icons_only' || anchor.short_labels.length === 0)
+          && (anchor.text_mode !== 'allowlist' || anchor.short_labels.length > 0)
+          && (!/(?:workflow|process|checklist)/i.test(anchor.structure) || anchor.text_mode === 'icons_only')
+        : stringList(anchor.short_labels))
       && sourceText.includes(anchor.source_excerpt));
   const validPlan = exactKeys(plan, planKeys) && plan.schema_version === 1
     && plan.task_id === request.task_id && plan.status === 'READY' && plan.platform === platform
@@ -570,28 +610,8 @@ function generatedPaths(paths, plan) {
   };
 }
 
-function jpegDimensions(buffer) {
-  if (buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
-  let offset = 2;
-  const sof = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
-  while (offset + 8 < buffer.length) {
-    while (buffer[offset] === 0xff) offset += 1;
-    const marker = buffer[offset++];
-    if (marker === 0xd9 || marker === 0xda) break;
-    const length = buffer.readUInt16BE(offset);
-    if (length < 2 || offset + length > buffer.length) break;
-    if (sof.has(marker)) return { height: buffer.readUInt16BE(offset + 3), width: buffer.readUInt16BE(offset + 5), format: 'jpg' };
-    offset += length;
-  }
-  return null;
-}
-
 async function rasterInfo(path) {
-  const buffer = await readFile(path);
-  const png = buffer.length >= 24 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
-    && buffer.toString('ascii', 12, 16) === 'IHDR'
-    ? { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20), format: 'png' } : null;
-  return { ...(png || jpegDimensions(buffer) || {}), bytes: buffer.length };
+  try { return readRasterInfo(path); } catch { return null; }
 }
 
 function sameDimensions(left, right) {
@@ -770,6 +790,227 @@ async function validateGenerateTask(runDir, runReal, state, task) {
   return { issues, request, result, bundle, generated };
 }
 
+function boundedQueuePath(state) {
+  const attempt = state.stages.visual.attempt;
+  return `07-visual/generation-queue${attempt === 1 ? '' : `.v${String(attempt).padStart(3, '0')}`}.json`;
+}
+
+async function validateBoundedChild(runDir, runReal, state, task, suite, anchor, child, issues) {
+  if (!child || child.status !== 'pass' || !Number.isInteger(child.selected_attempt)
+    || child.selected_attempt < 1 || child.selected_attempt > 3
+    || !Array.isArray(child.attempts) || child.attempts.length !== child.selected_attempt) {
+    issues.push(issue('invalid_illustration_child_state', `${task.platform}/${anchor.image_id} has no complete selected child attempt.`));
+    return null;
+  }
+  let selected = null;
+  for (const [index, row] of child.attempts.entries()) {
+    const requestPath = await safeFile(runDir, runReal, row?.request_path, issues, 'missing_illustration_child_control');
+    const resultPath = await safeFile(runDir, runReal, row?.result_path, issues, 'missing_illustration_child_control');
+    if (!requestPath || !resultPath) continue;
+    let request = null;
+    let result = null;
+    try { request = await readJson(requestPath); } catch (error) {
+      issues.push(issue('invalid_illustration_child_request', error.message, { path: row.request_path }));
+    }
+    try { result = await readJson(resultPath); } catch (error) {
+      issues.push(issue('invalid_illustration_child_result', error.message, { path: row.result_path }));
+    }
+    if (!request || !result) continue;
+    const attempt = index + 1;
+    const expectedTask = `illustration:${state.run_id}:${task.platform}:${task.plan.variant}:${anchor.image_id}:candidate-${String(attempt).padStart(2, '0')}:visual-${String(state.stages.visual.attempt).padStart(3, '0')}`;
+    const artifactPaths = [...new Set(Object.values(request.artifacts || {}))];
+    const artifactsValid = Array.isArray(result.artifacts)
+      && result.artifacts.length === artifactPaths.length
+      && result.artifacts.every((artifact) => artifactPaths.includes(artifact?.path)
+        && /^[a-f0-9]{64}$/.test(artifact?.sha256 || ''));
+    if (row.attempt !== attempt || request.task_id !== expectedTask || row.task_id !== expectedTask
+      || request.mode !== 'generate_image' || request.candidate_attempt !== attempt
+      || request.platform !== task.platform || request.anchor?.image_id !== anchor.image_id
+      || request.parent_task_id !== `illustration:${state.run_id}:${task.platform}:${task.plan.variant}:generate:attempt-${String(state.stages.visual.attempt).padStart(3, '0')}`
+      || !isDeepStrictEqual(request.anchor, anchor)
+      || !isDeepStrictEqual(request.style, task.plan.style)
+      || !isDeepStrictEqual(request.brand, task.plan.brand)
+      || !isDeepStrictEqual(request.generation_backend, task.plan.generation_backend)
+      || !isDeepStrictEqual(request.generation_geometry, task.plan.generation_geometry)
+      || !isDeepStrictEqual(request.expected_artifacts, artifactPaths)
+      || result.task_id !== request.task_id || result.request_sha256 !== await fileSha256(requestPath)
+      || !['PASS', 'FAILED', 'BLOCKED'].includes(result.status) || !artifactsValid) {
+      issues.push(issue('invalid_illustration_child_control', `${task.platform}/${anchor.image_id} attempt ${attempt} is invalid.`));
+    }
+    for (const artifact of result.artifacts || []) {
+      const path = await safeFile(runDir, runReal, artifact.path, issues, 'illustration_child_artifact_unsafe');
+      if (path && artifact.sha256 !== await fileSha256(path)) {
+        issues.push(issue('illustration_child_artifact_drift', `Child artifact changed: ${artifact.path}.`, { path: artifact.path }));
+      }
+    }
+    const selectedAttempt = attempt === child.selected_attempt;
+    if (selectedAttempt && (row.status !== 'pass' || result.status !== 'PASS'
+      || result.image?.image_id !== anchor.image_id || result.image?.selected_attempt !== attempt
+      || row.result_sha256 !== await fileSha256(resultPath))) {
+      issues.push(issue('invalid_illustration_child_result', `${task.platform}/${anchor.image_id} selected result is not a bound PASS.`));
+    }
+    if (selectedAttempt) selected = { row, request, result };
+  }
+  return selected;
+}
+
+async function validateBoundedGenerateTask(runDir, runReal, state, task, queue) {
+  const issues = [];
+  const { platform, paths, plan } = task;
+  const suite = queue?.suites?.[platform];
+  if (!suite || suite.status !== 'pass' || !suite.aggregate
+    || !isDeepStrictEqual(suite.image_order, plan?.anchors?.map((anchor) => anchor.image_id))) {
+    return { issues: [issue('invalid_illustration_queue_suite', `${platform} queue suite is not a terminal ordered PASS.`)] };
+  }
+  const requestPath = await safeFile(runDir, runReal, paths.generateRequest, issues, 'missing_illustration_generate_control');
+  const resultPath = await safeFile(runDir, runReal, paths.generateResult, issues, 'missing_illustration_generate_control');
+  const bundlePath = await safeFile(runDir, runReal, paths.bundle, issues, 'missing_illustration_bundle');
+  const manifestPath = await safeFile(runDir, runReal, paths.manifest, issues, 'missing_illustration_manifest');
+  if (!requestPath || !resultPath || !bundlePath || !manifestPath) return { issues };
+  let request;
+  let result;
+  let bundle;
+  try {
+    [request, result, bundle] = await Promise.all([
+      readJson(requestPath), readJson(resultPath), readJson(bundlePath)
+    ]);
+  } catch (error) {
+    issues.push(issue('invalid_illustration_bounded_output', error.message));
+    return { issues };
+  }
+  const planHash = await fileSha256(task.planPath);
+  const shotHash = await fileSha256(task.shotPath);
+  const expectedInputs = [
+    task.request.inputs[0], task.request.inputs[1],
+    { role: 'illustration_plan', path: paths.plan, sha256: planHash },
+    { role: 'shot_list', path: paths.shotList, sha256: shotHash }
+  ];
+  validateRequest(request, state, platform, 'generate', task.request.selection, request.inputs?.[1], paths, issues);
+  if (!isDeepStrictEqual(request.inputs, expectedInputs) || !isDeepStrictEqual(request.options, plan.options)
+    || !isDeepStrictEqual(request.expected_artifacts, [paths.bundle, paths.manifest])) {
+    issues.push(issue('illustration_generate_lineage_invalid', `${platform} bounded parent request does not bind the approved plan exactly.`));
+  }
+  await validateResult(
+    runDir,
+    requestPath,
+    result,
+    request,
+    [paths.bundle, paths.manifest],
+    ['illustration_bundle', 'native_manifest'],
+    issues
+  );
+  const expectedBackend = { ...plan.generation_backend, process_cleanup_status: 'pass' };
+  const validBundle = exactKeys(bundle, bundleKeys) && bundle.schema_version === 1
+    && bundle.task_id === request.task_id && bundle.status === 'PASS' && bundle.platform === platform
+    && bundle.provider_platform === providerPlatform(platform) && bundle.variant === plan.variant
+    && isDeepStrictEqual(bundle.source, request.inputs[0]) && isDeepStrictEqual(bundle.selection, request.selection)
+    && isDeepStrictEqual(bundle.plan, { path: paths.plan, sha256: planHash })
+    && isDeepStrictEqual(bundle.shot_list, { path: paths.shotList, sha256: shotHash })
+    && isDeepStrictEqual(bundle.style, plan.style) && isDeepStrictEqual(bundle.brand, plan.brand)
+    && exactKeys(bundle.generation_backend, boundedBackendKeys)
+    && isDeepStrictEqual(bundle.generation_backend, expectedBackend)
+    && isDeepStrictEqual(bundle.generation_geometry, plan.generation_geometry)
+    && bundle.image_count === plan.image_count && Array.isArray(bundle.images)
+    && bundle.images.length === plan.image_count && exactKeys(bundle.manifest, ['path', 'sha256'])
+    && bundle.manifest.path === paths.manifest && bundle.manifest.sha256 === await fileSha256(manifestPath)
+    && bundle.residual_risk === 'none';
+  if (!validBundle) issues.push(issue('invalid_illustration_bundle', `${platform} bounded bundle does not mirror its plan and parent request.`));
+
+  const selected = [];
+  const declaredGenerated = new Set();
+  const declaredControls = new Set();
+  for (const [index, anchor] of plan.anchors.entries()) {
+    const child = suite.children?.[anchor.image_id];
+    const value = await validateBoundedChild(runDir, runReal, state, task, suite, anchor, child, issues);
+    selected.push(value);
+    for (const row of child?.attempts || []) {
+      const childRequestPath = join(runDir, row.request_path);
+      if (!fileExists(childRequestPath)) continue;
+      const childRequest = await readJson(childRequestPath);
+      declaredControls.add(row.request_path);
+      declaredControls.add(row.result_path);
+      declaredControls.add(childRequest.artifacts.qa);
+      for (const path of [childRequest.artifacts?.prompt, childRequest.artifacts?.candidate, childRequest.artifacts?.delivery]) {
+        if (path) declaredGenerated.add(path);
+      }
+    }
+    if (value && bundle.images?.[index]) {
+      const generated = {
+        prompts: [value.request.artifacts.prompt],
+        sources: plan.brand.enabled ? [value.request.artifacts.candidate] : [],
+        deliveries: [value.request.artifacts.delivery]
+      };
+      await validateImage(runDir, runReal, task, bundle.images[index], anchor, 0, generated, issues);
+      const image = value.result.image;
+      if (bundle.images[index].file !== image.delivery.path
+        || bundle.images[index].file_sha256 !== image.delivery.sha256
+        || bundle.images[index].prompt_sha256 !== image.prompt.sha256
+        || bundle.images[index].generation_attempt !== value.row.attempt
+        || plan.brand.enabled && bundle.images[index].source_sha256 !== image.source.sha256) {
+        issues.push(issue('illustration_child_aggregate_drift', `${platform}/${anchor.image_id} bundle differs from its selected child result.`));
+      }
+    }
+  }
+  if (!isDeepStrictEqual(bundle.images?.map((image) => image.image_id), plan.anchors.map((anchor) => anchor.image_id))) {
+    issues.push(issue('illustration_image_ids_mismatch', `${platform} bounded bundle image order differs from its plan.`));
+  }
+  const generatedFiles = await currentGeneratedFiles(runDir, paths);
+  if (generatedFiles.length !== declaredGenerated.size
+    || generatedFiles.some((path) => !declaredGenerated.has(path))) {
+    issues.push(issue('undeclared_illustration_artifact', `${platform} bounded attempt contains missing or undeclared prompts/images.`));
+  }
+  for (const qaRow of suite.set_qa_rounds || []) {
+    declaredControls.add(qaRow.request_path);
+    declaredControls.add(qaRow.result_path);
+    if (fileExists(join(runDir, qaRow.request_path))) {
+      declaredControls.add((await readJson(join(runDir, qaRow.request_path))).review_path);
+    }
+  }
+  const controlFiles = await currentBoundedControlFiles(runDir, paths);
+  if (controlFiles.length !== declaredControls.size
+    || controlFiles.some((path) => !declaredControls.has(path))) {
+    issues.push(issue('undeclared_illustration_control', `${platform} bounded attempt contains missing or undeclared child/Set QA controls.`));
+  }
+  const lastQa = suite.set_qa_rounds?.at(-1);
+  const qaRequestPath = lastQa
+    ? await safeFile(runDir, runReal, lastQa.request_path, issues, 'missing_illustration_set_qa_control') : null;
+  const qaResultPath = lastQa
+    ? await safeFile(runDir, runReal, lastQa.result_path, issues, 'missing_illustration_set_qa_control') : null;
+  if (!lastQa || lastQa.status !== 'pass' || !qaRequestPath || !qaResultPath) {
+    issues.push(issue('invalid_illustration_set_qa', `${platform} has no terminal Set QA PASS.`));
+  } else {
+    const qaRequest = await readJson(qaRequestPath);
+    const qaResult = await readJson(qaResultPath);
+    const expectedQaInputs = selected.map((value, index) => ({
+      role: 'illustration_child_result',
+      image_id: plan.anchors[index].image_id,
+      path: value.row.result_path,
+      sha256: value.row.result_sha256
+    }));
+    if (qaRequest.mode !== 'set_qa' || qaRequest.parent_task_id !== request.task_id
+      || !isDeepStrictEqual(qaRequest.inputs, expectedQaInputs)
+      || qaResult.status !== 'PASS' || qaResult.set_qa?.status !== 'PASS'
+      || qaResult.request_sha256 !== await fileSha256(qaRequestPath)
+      || lastQa.result_sha256 !== await fileSha256(qaResultPath)
+      || suite.aggregate.set_qa_result?.sha256 !== lastQa.result_sha256
+      || suite.aggregate.set_qa_review?.sha256 !== qaResult.set_qa?.review?.sha256) {
+      issues.push(issue('invalid_illustration_set_qa', `${platform} Set QA lineage is stale or incomplete.`));
+    }
+  }
+  const manifest = await readText(manifestPath);
+  if (!manifest.includes(`platform: ${providerPlatform(platform)}`)
+    || !manifest.includes(`style_id: ${plan.style.id}`)
+    || plan.anchors.some((anchor) => !manifest.includes(`image_id: ${anchor.image_id}`))) {
+    issues.push(issue('invalid_illustration_manifest', `${platform} bounded manifest is incomplete.`));
+  }
+  if (suite.aggregate.bundle?.sha256 !== await fileSha256(bundlePath)
+    || suite.aggregate.manifest?.sha256 !== await fileSha256(manifestPath)
+    || suite.aggregate.parent_result?.sha256 !== await fileSha256(resultPath)) {
+    issues.push(issue('illustration_aggregate_drift', `${platform} aggregate bindings are stale.`));
+  }
+  return { issues, request, result, bundle };
+}
+
 async function validateCompletedBindings(runDir, runReal, state, issues) {
   if (state.stages?.visual?.status !== 'completed') return;
   const expected = expectedVisualStageArtifacts(state);
@@ -793,6 +1034,7 @@ async function validateCompletedBindings(runDir, runReal, state, issues) {
 export async function validateIllustrationGeneration(runDir, state) {
   const planValidation = await validateIllustrationPlans(runDir, state);
   const issues = [...planValidation.issues];
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
   if (state.gates?.visual?.status !== 'approved') {
     issues.push(issue('visual_plan_not_approved', 'Illustration generation requires the current visual plan gate to be approved.'));
   }
@@ -801,9 +1043,38 @@ export async function validateIllustrationGeneration(runDir, state) {
     issues.push(issue('invalid_illustration_run_dir', error.message));
     return { issues, tasks: planValidation.tasks };
   }
+  let queue = null;
+  if (bounded) {
+    const relativePath = boundedQueuePath(state);
+    const path = await safeFile(runDir, runReal, relativePath, issues, 'missing_illustration_queue');
+    try { if (path) queue = await readJson(path); } catch (error) {
+      issues.push(issue('invalid_illustration_queue', error.message, { path: relativePath }));
+    }
+    const validEvents = Array.isArray(queue?.events) && queue.events.every((event) =>
+      event?.event !== 'queue_dispatched' || Number.isInteger(event.active_generation_count)
+        && event.active_generation_count <= 4
+        && Object.values(event.active_generation_by_suite || {}).every((count) => Number.isInteger(count) && count <= 2));
+    if (queue?.schema_version !== 1 || queue.profile !== 'bounded-per-image'
+      || queue.run_id !== state.run_id || queue.visual_attempt !== state.stages.visual.attempt
+      || queue.global_limit !== 4 || queue.suite_limit !== 2 || queue.status !== 'completed'
+      || queue.cover?.status !== 'pass' || !validEvents) {
+      issues.push(issue('invalid_illustration_queue', 'Bounded illustration queue is not a terminal 4-global/2-suite PASS.'));
+    }
+    for (const [platform, suite] of Object.entries(queue?.suites || {})) {
+      const canary = suite.children?.[suite.canary_id];
+      const canaryComplete = canary?.attempts?.find((row) => row.attempt === canary.selected_attempt)?.completed_at;
+      const laterStarts = (suite.image_order || []).slice(1).flatMap((imageId) =>
+        suite.children?.[imageId]?.attempts?.map((row) => row.started_at) || []).filter(Boolean);
+      if (!canaryComplete || laterStarts.some((startedAt) => Date.parse(startedAt) < Date.parse(canaryComplete))) {
+        issues.push(issue('illustration_canary_order_invalid', `${platform} dispatched non-canary images before its canary passed.`));
+      }
+    }
+  }
   const tasks = [];
   for (const task of planValidation.tasks) {
-    const generation = await validateGenerateTask(runDir, runReal, { ...state, __runDir: resolve(runDir) }, task);
+    const generation = bounded
+      ? await validateBoundedGenerateTask(runDir, runReal, { ...state, __runDir: resolve(runDir) }, task, queue)
+      : await validateGenerateTask(runDir, runReal, { ...state, __runDir: resolve(runDir) }, task);
     tasks.push({ ...task, generation });
     issues.push(...generation.issues);
   }
