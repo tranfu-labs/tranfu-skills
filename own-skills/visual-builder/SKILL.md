@@ -1,5 +1,7 @@
 ---
 name: visual-builder
+display_name: Visual Style Bundle Builder
+display_name_zh: 视觉风格包构建
 description: >-
   Convert a user-supplied designed image or an existing visual_dna_system document into a debranded, platform-specific illustration-style candidate bundle. Use when the user asks to extract a reusable visual template, turn a poster, knowledge card, infographic, illustration, or designed interface into a style, compile Visual DNA into a post illustration template, calibrate a new style across multiple content structures, or approve such a candidate for local installation. Do NOT trigger when the request is for ordinary image editing, one-off image generation, natural-photo presets, logo extraction, pixel-identical cloning, or installing an unreviewed style.
 version: 0.1.0

@@ -1,5 +1,7 @@
 ---
 name: url-to-markdown
+display_name: Public URL Content Capture
+display_name_zh: 公开 URL 内容抓取
 description: 抓取无需登录的公开 URL，保存为 Markdown 或 JSON；适用于 X、YouTube 字幕和 Hacker News。Do NOT trigger when 页面需登录、验证码或人工操作。
 version: 0.1.0
 author: BruceL017

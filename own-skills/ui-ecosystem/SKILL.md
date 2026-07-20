@@ -1,5 +1,7 @@
 ---
 name: ui-ecosystem
+display_name: UI Ecosystem Recommendations
+display_name_zh: UI 生态推荐
 description: Use after frontend technical/design choices are complete and Codex is about to build, redesign, polish, or evaluate a UI. Trigger when the user asks UI work to recommend or use stack-matched MCPs, plugins, skills, component libraries, design systems, templates, official examples, or ecosystem tooling to improve frontend beauty and avoid hand-rolled UI. Also match Chinese requests like "ui 根据前端选型推荐 mcp/插件/skill", "前端选型完成后不要手搓", "提升前端设计效果/美观", "根据技术栈选 UI 生态". Do NOT trigger before frontend direction exists, for backend-only work, generic docs lookup, pure bug fixes, or UI review that only needs web-design-guidelines.
 version: 0.1.0
 author: griffithkk3-del

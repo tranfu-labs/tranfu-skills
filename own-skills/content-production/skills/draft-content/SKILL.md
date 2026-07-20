@@ -1,5 +1,7 @@
 ---
 name: draft-content
+display_name: Multiplatform Drafting Workflow
+display_name_zh: 多平台写作流程
 description: >-
   Create or improve one shared content outline from approved topic and source materials, pause for approval, then produce A/B masters and complete adaptations for WeChat Official Accounts, Xiaohongshu, Zhihu, Weibo, and Toutiao. Use only when the request explicitly invokes $draft-content or asks for this complete shared-outline plus A/B five-platform workflow from prepared upstream inputs. Do not use for ordinary or single-platform writing, fiction, advertising copy, research, topic selection, outline-only advice, title pools, proofreading, AI-detector evasion, images, layout, publishing, scheduling, or post-publication analysis.
 metadata:

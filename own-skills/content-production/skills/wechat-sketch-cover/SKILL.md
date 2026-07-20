@@ -1,5 +1,7 @@
 ---
 name: wechat-sketch-cover
+display_name: WeChat Sketch Cover
+display_name_zh: 微信手绘封面
 description: "Generate one WeChat Official Account article cover in a fixed warm hand-drawn notebook style and normalize it to exactly 1923x818 PNG. Use when the user asks to create or generate a 公众号封面, 微信公众号文章封面, 公众号暖色手绘封面, WeChat Official Account cover, WeChat article cover, or WeChat public-account article cover from an exact Chinese or Chinese-mixed title or one Markdown article. Do NOT use for generic covers, covers for platforms other than WeChat Official Accounts, cover critique, design advice, dimension/specification questions, prompt-only requests without image generation, body illustrations, other visual styles or dimensions, visual-only covers, brand overlays, image editing, photorealistic work, non-Markdown local documents, URL fetching, or publishing to WeChat."
 metadata:
   version: "1.2.0"

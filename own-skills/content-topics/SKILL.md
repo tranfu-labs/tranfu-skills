@@ -1,5 +1,7 @@
 ---
 name: content-topics
+display_name: Cross-Platform Topic Selection
+display_name_zh: 跨平台内容选题
 description: 为固定内容账号做证据驱动的跨平台选题。当用户说“选题”“热点选题”“跨平台选题”“今天写什么”“从调研材料提炼内容方向”或“这批素材能做什么”时使用；读取本地调研/事实库或公开资料，默认同时产出微信公众号、小红书、知乎、微博和今日头条版本。仅负责选题、平台适配与主选题简纲；仅起标题、完整写稿、已有正文改写、单纯调研、内容日历、发布或历史数据分析时不要使用。Do NOT trigger when 用户仅起标题、完整写稿、已有正文改写、单纯调研、内容日历、发布或历史数据分析。
 version: 0.1.1
 author: BruceL017

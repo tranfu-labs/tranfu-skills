@@ -1,5 +1,7 @@
 ---
 name: langgraph-architecture-review
+display_name: LangGraph Architecture Review
+display_name_zh: LangGraph 架构审查
 description: >-
   Inspect, explain, visualize, and improve Python LangGraph architecture in an existing project. Use when the user asks to map or draw a LangGraph workflow, understand StateGraph nodes and edges, review state/reducers/persistence/HITL/tool boundaries, compare a graph with current LangGraph guidance, or propose architecture changes for a concrete feature or task. Also matches Chinese requests such as “梳理 LangGraph 架构”, “画节点流程图”, “检查 Agent 工作流”, and “结合业务优化 LangGraph”. Do not use for generic AI architecture selection, ordinary code review without LangGraph, TypeScript-only graphs, or implementing a new graph when no architecture inspection is requested.
 version: 0.1.0

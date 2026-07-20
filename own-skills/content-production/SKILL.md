@@ -1,5 +1,7 @@
 ---
 name: content-production
+display_name: Multiplatform Content Production Workflow
+display_name_zh: 多平台内容工作流
 version: 0.1.0
 author: BruceL017
 updated_at: "2026-07-17"

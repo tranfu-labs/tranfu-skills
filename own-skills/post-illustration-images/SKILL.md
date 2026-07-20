@@ -1,5 +1,7 @@
 ---
 name: post-illustration-images
+display_name: Multiplatform Post Illustrations
+display_name_zh: 多平台文章配图
 description: "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, Zhihu posts, Toutiao posts, and Weibo posts with a registered style through either a runtime-native image tool or an already-configured API backend. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 微博配图, 头条号配图, 今日头条配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or when the user explicitly names another image-generation skill. Safety boundaries: verify the generation backend before production, use one registered suite style, generate and QA one image at a time, preserve accepted native pixels, forbid model-drawn logos/page badges, and resolve deterministic branding from the user override or selected style policy."
 version: "0.5.0"
 author: BruceL017

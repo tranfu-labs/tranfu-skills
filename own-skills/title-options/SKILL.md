@@ -1,5 +1,7 @@
 ---
 name: title-options
+display_name: Article Title Generation
+display_name_zh: 文章标题生成
 description: >-
   当用户要为已完成文章起标题、改标题或优化标题时，生成公众号、小红书、知乎、微博和头条号候选。Do NOT trigger when 用户要选题、正文、视频/SEO/广告/邮件标题、落地页文案或命名。
 version: 0.1.0

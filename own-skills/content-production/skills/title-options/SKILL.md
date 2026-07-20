@@ -1,5 +1,7 @@
 ---
 name: title-options
+display_name: Article Title Generation
+display_name_zh: 文章标题生成
 description: >-
   为已完成的文章、片段或“旧标题 + 正文”生成和优化可兑现、平台适配的文章标题，支持微信公众号、小红书、知乎、微博和头条号。当用户说“起标题”“取标题”“给几个标题”“改标题”或“标题优化”时适用；also use for requests to generate article-title options, rewrite an article headline, or improve an article title. 不用于选题策划、正文写作、封面/开头创作、视频标题、SEO title tags、落地页或广告 headline、邮件主题、其他营销文案标题，或书籍、产品、课程命名；不接受 URL、DOCX、PDF 或 TXT 作为文章输入。绝不新增原文没有的时间、数字、权威、引语、因果、冲突或结果。
 ---

@@ -1,5 +1,7 @@
 ---
 name: collect-sources
+display_name: Source Research and Fact-Checking
+display_name_zh: 素材调研与核查
 description: >-
   Collect and fact-check prewriting sources for Chinese AI and adjacent technology media content. Trigger when the user says "启动调研", "素材收集", or "调研这个话题", asks to research an AI or technology event, supplies URLs/Markdown/TXT/PDF for source enrichment, or requests AI/technology content that needs research first. Covers AI models and products, developer tools, chips, robotics, and internet platforms. Do NOT trigger when the request is for a non-technology topic, an isolated fact lookup with no content-production goal, post-draft fact-checking, rewriting existing copy, title- or outline-only generation, writing from an already approved evidence package, or publishing.
 version: 0.1.0
