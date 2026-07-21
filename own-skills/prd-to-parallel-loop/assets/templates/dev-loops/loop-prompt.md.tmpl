@@ -6,7 +6,10 @@
 /loop 5m 读 {{STATE_ROOT}}/loop-instructions.md 后严格按其中步骤执行**一次**心跳。做完就结束本次心跳,不要连续做多轮。
 ```
 
-`5m` 是心跳间隔(每 5 分钟触发一次)。任务大多需要几分钟到十几分钟跑完,5m 是"当前心跳结束后, 5 分钟内没被新事件唤醒就再心跳一次"的兜底节奏。想更慢/更快可改成 `10m` / `2m`;想让 /loop 自适应节奏就去掉这个参数(不推荐, codex 完成信号靠 probe-codex 主动扫, 需要固定节奏)。
+`5m` 是心跳间隔。注意每个 change 要走三段(实施 → 反思 → 归档),**一次心跳只推进一段**,所以
+单个 change 从点火到落地约需 3 次心跳。按 5m 算是 15 分钟左右——这是刻意的,段与段之间是调度器
+的检查关。想更慢/更快可改成 `10m` / `2m`;不建议去掉参数让 /loop 自适应,codex 的完成信号靠
+probe-codex 主动扫,需要固定节奏。
 
 ## 停止 loop
 
@@ -14,13 +17,21 @@
 
 ## 手动干预
 
-- 想临时暂停某任务:改 runtime.json 中该任务 `status="paused"`,主 loop 只跳过它,不影响其他
-- 想改任务定义:直接改 `{{PROJECT_REPO}}/openspec/changes/{{CHANGE_ID}}/tasks.md`,下次心跳 Reconcile 会同步
-- 想放弃某任务:在 openspec 的 checkbox 里打 `[x]`,下次心跳标 done 跳过
-- 想 unblock 一个 blocked 任务:改 runtime.json 该任务 `status="todo"`、`blocked_reason=null`、`attempts=0`、`worktree_path=null`,并手动删掉旧 worktree(`git worktree remove ... --force`)和分支
+- **临时暂停某任务**:改 runtime.json 该任务 `status="paused"`,调度器只跳过它,不影响其他
+- **改依赖 DAG**:改 runtime.json 该任务的 `depends_on`(改前先确认它不在 running,否则可能与
+  本跳写盘打架)。依赖只认 runtime.json,改里程碑文档不会同步
+- **加一个 change**:在 `{{PROJECT_REPO}}/openspec/changes/` 下建好目录与四文件,下次心跳
+  Reconcile 会自动收进 runtime(依赖会留空,记得补)
+- **放弃某个 change**:把 `openspec/changes/<id>/` 手动归档进 `archive/`,下次心跳标 done 跳过
+- **unblock 一个 blocked 任务**:改 runtime.json 该任务 `status="todo"`、`phase=null`、
+  `blocked_reason=null`、`phase_attempts` 全部归零、`worktree_path=null`,并手动删掉旧 worktree
+  (`git worktree remove ... --force`)和分支
+- **让某任务重跑某一段**:把 `phase` 改回上一段、删掉 `<state_dir>/.task-done.json`,下次心跳会
+  重新发那一段的 resume
 
 ## 观察工具
 
-- `cat {{STATE_ROOT}}/runtime.json | jq '.tasks[] | {id, status, attempts, merged_sha}'` 快看进度
-- `ls {{STATE_ROOT}}/state/` 看哪些任务有状态目录
-- `tail -f {{STATE_ROOT}}/state/<T>/codex-tail.log` 看某 codex 实时输出
+- `cat {{STATE_ROOT}}/runtime.json | jq '.tasks[] | {id, status, phase, merged_sha}'` 快看进度
+- `ls {{STATE_ROOT}}/state/<change-id>/` 看某任务各段留下的 `.task-done.<phase>.json`
+- `tail -f {{STATE_ROOT}}/state/<change-id>/codex-tail.log` 看某 codex 实时输出
+- `git -C {{PROJECT_REPO}} worktree list` 看当前挂着几个并行工作区
