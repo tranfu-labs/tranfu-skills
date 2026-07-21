@@ -17,6 +17,7 @@ UTF-8 JSON，不是 YAML。
         "url": "http://localhost:3000/settings/",
         "page_family": "",
         "viewports_anchored": ["1280x720", "390x844"],
+        "locales_audited": ["zh", "en"],
         "findings": [
           {
             "id": "settings-07-D-1",
@@ -67,6 +68,8 @@ UTF-8 JSON，不是 YAML。
 - `dimension`：两位数字，且只能是主流程五条之一（`03` / `07` / `10` / `11` / `13`）
 
 `class_coverage` 永远是对象数组，绝不是按维度嵌套的 map。
+
+`locales_audited` 必填，列出该页实际审过的全部语言变体（无变体时为单元素数组）。locale 变体默认全审、不需用户确认，详见 SKILL.md §0；某变体打不开须记 `blocker`，**不得静默只审一种就交差**。文案敏感的类（`11.F` / `11.A` / `13`）的 finding 必须写明是哪个 locale 出的问题。
 
 ## gap / blocker
 

@@ -56,6 +56,7 @@ const validReport = {
         url: "http://localhost:3000/",
         page_family: "",
         viewports_anchored: ["1280x720", "390x844"],
+        locales_audited: ["zh"],
         findings: [
           {
             id: "home-07-E-1",
@@ -277,6 +278,16 @@ assert.equal(scriptRefOrphanResult.output.verdict, "fail");
 assert.ok(
   scriptRefOrphanResult.output.errors.some((e) => e.includes("no matching probe JSON")),
   scriptRefOrphanResult.stdout,
+);
+
+// locale 变体与视口同级，缺 locales_audited 直接失败
+const noLocales = structuredClone(validReport);
+delete noLocales.polish_audit_report.pages[0].locales_audited;
+const noLocalesResult = runValidator(noLocales, state);
+assert.equal(noLocalesResult.output.verdict, "fail");
+assert.ok(
+  noLocalesResult.output.errors.some((e) => e.includes("locales_audited")),
+  noLocalesResult.stdout,
 );
 
 process.stdout.write("validate-polish-audit-report tests passed\n");

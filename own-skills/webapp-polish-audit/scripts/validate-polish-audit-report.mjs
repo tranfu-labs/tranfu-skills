@@ -124,6 +124,14 @@ if (isObject(report)) {
     if (typeof page.page_family !== "string") fail(`${pageLocation}.page_family must be a string`);
     const viewports = requireArray(page.viewports_anchored, `${pageLocation}.viewports_anchored`);
     if (viewports.length < 2) fail(`${pageLocation}.viewports_anchored must contain desktop and narrow viewports`);
+    // locale 变体与视口同级：默认全审，不得只审一种就交差（SKILL.md §0）。
+    const locales = requireArray(page.locales_audited, `${pageLocation}.locales_audited`);
+    if (locales.length === 0) {
+      fail(`${pageLocation}.locales_audited must list every locale actually audited (single-element array when the page has no variants)`);
+    }
+    for (const [localeIndex, locale] of locales.entries()) {
+      requireString(locale, `${pageLocation}.locales_audited[${localeIndex}]`);
+    }
     const findings = requireArray(page.findings, `${pageLocation}.findings`);
     const coverage = requireArray(page.class_coverage, `${pageLocation}.class_coverage`);
     requireArray(page.disposition_history, `${pageLocation}.disposition_history`);

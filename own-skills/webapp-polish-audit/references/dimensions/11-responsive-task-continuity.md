@@ -133,20 +133,35 @@
 
 **操作卡 · 怎么做（正向）**:
 
+**按行为找，不按 role 枚举。** 浮层的实现方式千差万别——`role=dialog`、`role=listbox`、`role=menu`、`aria-haspopup`，还有大量纯 `div + onClick` 什么都不标的。枚举 role 是白名单思路，永远在追加清单、永远漏下一个。正确做法是：**可点的就点，点完看多出了什么**。
+
 - `resize_page` 到 `375×812`。
-- `evaluate_script`:
-  - 找所有 `[role=dialog]` / `[aria-modal=true]` / `<dialog>` 元素（含 hidden 或 open state）。
-  - 每个 dialog 拿 rect（若 hidden 就临时 unhide 观察: `el.hidden = false; requestAnimationFrame(...)` 后拿 rect，再复原）。
-  - 检查: `rect.bottom > innerHeight` (超出)，找 dialog 内 close / confirm / cancel 按钮 rect 是否在 viewport 外。
-- 输出 JSON: `[{dialogSelector, rect, closeButtonInViewport, confirmButtonInViewport, currentSelectionInViewport}]`。
-- 键盘弹出遮挡是副作用态，只读到不了 → 记 `blocker`。
+- **候选 = 所有可点元素**：`button`、`a`、`[role=button]`、`[onclick]`、`cursor: pointer` 的元素。不预筛 role。
+- 装写请求拦截钩子（`fetch` / `XHR` / `sendBeacon` / `WebSocket` / `location` setter / `beforeunload`）。
+- 逐个点击（跳过命中破坏性词表的——那走 `pending_authorization`），每次点击前后各拍一次 DOM 快照：
+
+  ```js
+  const before = snapshot();                 // 记录所有可见元素的 selector + rect
+  el.click();
+  await new Promise(r => setTimeout(r, 300));
+  const after = snapshot();
+  const appeared = diff(after, before);      // 新出现或从不可见变可见的元素
+  ```
+
+- `appeared` 非空 = 点出了浮层，**不管它有没有 role**。对新出现的容器取几何：是否 `rect.bottom > innerHeight`、内部的关闭 / 确认 / 取消控件是否落在视口外、当前选中项是否可见。
+- 顺带把 `appeared` 里可点元素的矩形喂给 `10.C`——**展开态的选项此前从未被量过**（折叠时 `display:none` 拿不到有效矩形）。
+- 复原：按 Esc，或再点一次触发控件，或点击浮层外部。确认 DOM 回到 `before` 状态再测下一个。
+- 拦截钩子装不上 → 改用静态兜底（DOM 里已存在但 hidden 的，临时 `el.hidden = false` 取 rect 后复原）；两条都不通才记 `blocker`。
+- 输出 JSON: `[{triggerSelector, appearedContainerSelector, hasRole, rect, overflowsViewport, closeInViewport, confirmInViewport, currentSelectionInViewport, optionRects}]`。`hasRole` 记录它到底标没标 role——用来观察枚举式会漏掉多少。
+- 键盘弹出遮挡是真副作用态，只读到不了 → 记 `blocker`。
 
 **操作卡 · 绝对不要（反向）**:
 
-- 不要 `take_screenshot` 判"是否被遮挡"。
-- 不要真点击弹出 dialog（走 hidden state 静态判）。
+- 不要 `take_screenshot` 判"是否被遮挡"——矩形几何就是结论。
 - 不要派判断者。
-- 键盘弹出遮挡属副作用态，只读判不了记 blocker，不猜。
+- **不要只找静态 DOM 里的 dialog 就收工**：条件渲染的弹层不点开永远是 `dialogs: []`，那不是「没有弹层」而是「没查到」。
+- 点击触发控件前必须先装写请求拦截；拦到写请求立即停止、复原并记 `pending_authorization`。
+- 键盘弹出遮挡属真副作用态，只读到不了记 `blocker`，不猜。
 
 ### E. 响应式变化改变任务语义
 
@@ -232,7 +247,30 @@
 
 - 补全检测：`title` 属性、`aria-describedby` 指向的完整文本、展开按钮、`line-clamp` 且同容器有展开控件。
 - 输出 JSON: `[{selector, viewport, text, textLength, lineCount, lastLineRatio, whiteSpace, overflowX, suspicion, hasCompletion, isCriticalInfo, actionable}]`。
-- 主代理判：命中任一嫌疑 && `!hasCompletion` &&（`isCriticalInfo` || 该控件是关键操作）→ actionable。**释放**：`whiteSpace === 'pre-line'`、`minHeight` 已容纳多行、有可达补全。
+- 主代理判：命中任一嫌疑 && `!hasCompletion` &&（`isCriticalInfo` || 该控件是关键操作）→ actionable。
+
+**释放条件（缺一不可，漏掉任一条都会误报）**：
+
+| 释放 | 理由 |
+| --- | --- |
+| `textLength > 20` | **本就该多行的长文案**。按钮标签通常 ≤10 字（「开始免费试用」6 字），30–40 字的卡片链接标题折两行是正常排版。`isControl` 只区分「是不是控件」，区分不了「控件标签」与「控件里承载的长标题」——这条才是那道闸。 |
+| `whiteSpace === 'pre-line'` | 显式声明的多行排版 |
+| `minHeight` 已容纳多行 | 容器本就为多行设计 |
+| 有可达补全 | `title` / 提示气泡 / 展开机制 |
+
+> 反例（实测踩过）：`a.home-practice-card-link` 文案「OpenClaw 联合 Claude Code 与飞书 Bot 操作完全指南」38 字、末行比 0.324、`isControl: true`——只看 `isControl` 会误判为挤坏，加上 `textLength > 20` 才正确释放。
+
+**跨 locale 对比（有 locale 变体时必做）**：同一控件在不同语言下的贴合表现往往差异巨大——中文「开始免费试用」6 字不折行，英文 `Start Free Trial` 16 字符可能就折了。**一个控件只按一种语言的文案宽度设计过**，是这类缺陷最常见的成因。
+
+对每个稳定选择器并列输出各 locale 的测量值：
+
+```json
+{"selector": "a.cta-primary",
+ "zh": {"text": "开始免费试用", "lineCount": 1, "lastLineRatio": 1, "overflowX": 0},
+ "en": {"text": "Start Free Trial", "lineCount": 2, "lastLineRatio": 0.28, "overflowX": 0}}
+```
+
+判定：**任一 locale 命中嫌疑即定罪**，finding 里必须写明是哪个 locale 出的问题。某 locale 通过不能替另一个 locale 背书。
 
 **操作卡 · 绝对不要（反向）**:
 

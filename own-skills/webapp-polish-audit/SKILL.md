@@ -4,7 +4,7 @@ display_name: Web UI Polish Audit
 display_name_zh: Web UI 打磨审计
 description: >
   对浏览器最终渲染的 Web UI 做只读打磨审计，输出 DOM、可访问性、计算样式、布局几何和交互状态支持的可验证发现。用于用户要求 audit、review、critique、diagnose、产品感检查、完成度检查、真实产品感、good taste、not demo-like、refined，或明确要求先审查可见 UI bug 的场景。Do NOT trigger when 用户要求实现、修复、改代码、产出比对、大范围重新设计、纯后端/API/数据/CLI/基础设施、产品策略、UX 研究、信息架构或纯文案任务；若请求同时包含审查与实现，本 Skill 只执行审查阶段并把实现留给后续工作流。
-version: 0.6.0
+version: 0.7.0
 author: aquarius-wing
 updated_at: 2026-07-21
 origin: own
@@ -35,9 +35,32 @@ allow_exec: true
 
 必须只审计 `audit-state.json.originAllowlist` 内 origin 的页面。**子域与主域视作不同 origin**（`tranfu.com` ≠ `offerpilot-app.tranfu.com`）。
 
-不在清单内的 origin 一律视作跨源：不做跳转、不做会触发跳转的点击、不做会触发预加载的悬停、不进新标签页、不打开 `target="_blank"`。绝不顺着任何被审页面的 `<a href>` 主动进入其他 origin——此类链接的存在本身可作 finding evidence，但不打开。要审跨源子站必须由用户在 S0 显式点名并使 scope = `explicit-multi-page`。
+不在清单内的 origin 一律视作跨源：不做跳转、不做会触发跳转的点击、不做会触发预加载的悬停、不进新标签页、不打开 `target="_blank"`。绝不顺着任何被审页面的 `<a href>` 主动进入其他 origin——此类链接的存在本身可作 finding evidence，但不打开。要审跨源子站必须由用户在 S0 显式点名并使 scope = `explicit-multi-page`——**唯一不需要点名的是同一页面的 locale 变体，见下方例外**。
 
 任何阶段观察到需要访问清单外 origin 时，必须停止访问，记 `blocker` 且 gap 类型 = `cross-origin-not-inspected`，绝不静默扩大 allowlist。S3 的执行细节见 `16-page-exploration-and-capture.md`。
+
+> **唯一例外：同一页面的 locale 变体。** 见下节「locale 变体默认全审」——变体 origin 由 S0 自动写入 `originAllowlist`，**包括子域形式**（`en.example.com`）。这不是"扩大 allowlist"，而是 allowlist 的初始计算就该包含它们：它们是同一个页面的不同语言形态，不是另一个站点。除此之外没有第二个例外。
+
+### locale 变体默认全审（不问、不等确认）
+
+语言版本**不是「另一个站点」，是同一页面的另一种形态**——与视口同级。既然双视口是默认覆盖的一部分，locale 变体也是。
+
+**只审一种语言等于系统性放过一半的贴合缺陷**：「开始免费试用」6 字与 `Start Free Trial` 16 字符，在同一按钮宽度下表现完全不同，而 `11.F`（内容装不下）恰恰最该抓这类。审了中文不等于审了英文。
+
+**检测信号**（S0 执行，任一命中即认定存在 locale 变体）：
+
+- `<link rel="alternate" hreflang="...">` 声明的备用语言页
+- 语言切换控件里 `option` / `a` 的 `href`（如 `role=listbox` 下拉里的 `/` 与 `/en/`）
+- URL 路径含 locale 段（`/en/`、`/zh-CN/`）或 `?lang=` 查询
+- `<html lang>` 与页面可见语言不一致
+
+**处置**：所有检测到的变体 URL **一律自动进入 `originAllowlist` 与页面列表**，同源路径变体（`/en/`）与跨源子域变体（`en.example.com`）**一视同仁**，都默认审，都不需要用户确认。
+
+- 快速通道：主代理对每个 locale 各跑一遍脚本。
+- 标准通道：每个 locale 派独立采集者。
+- 报告的 `locales_audited` 必须列出实际审过的全部 locale；某个变体打不开则记 `blocker`，**不得静默只审一种就交差**。
+
+**边界**：本例外只覆盖「同一页面的语言变体」。变体判定必须有上述检测信号支撑——不能因为某个跨源链接"看起来像另一个语言版本"就放行。产品子站、第三方域、营销页不属于 locale 变体，仍受门禁约束。
 
 ### 例外条款：受限截图
 
@@ -140,13 +163,14 @@ CREATE A TODO LIST FOR THE TASKS BELOW。只以 S0–S7 作为顶层流程；其
 
 1. 判定意图：只审查/诊断 → 继续；只实现/修复 → 退出；先审查再实现 → 只执行审查并交接。
 2. 解析 scope（三选一，**严格按字面判定，禁止扩大解读**）：
-   - `explicit-single-page`：用户点名一个页面、路由或当前页面。语义 = **只在该 URL 的 rendered DOM 上做审计**。"审首页""审这一页""审当前页"一律命中本档，不得因首页含 nav 或子域入口就升级为 multi-page。
+   - `explicit-single-page`：用户点名一个页面、路由或当前页面。语义 = **只审该页面**，但「该页面」包含它的**全部 locale 变体与两档视口**——它们是同一页面的不同形态，不是别的页面。"审首页""审这一页""审当前页"一律命中本档，不得因首页含 nav 或产品子域入口就升级为 multi-page。
    - `explicit-multi-page`：用户显式列出多个路由，或明确要求"全站 / 完整流程 / 顺着 X 走到 Y"。列出的 URL 全部进 `originAllowlist`。
    - `inferred-child-pages`：用户只给入口 URL 且未限制范围、未点名任何单页。此时才可派发现者。
 3. 没有 URL 时优先使用当前已打开的 HTTP(S) 页面；仍没有则向用户索取并退出。
 4. 检查 §1 能力；失败按表中出口结束。
 5. 创建唯一 `/tmp/webapp-polish-audit/<YYYYMMDD-HHMMSS>-<run-name>/`。
-6. 建立 `audit-state.json`（schema 见 `18-final-report-contract.md`），`originAllowlist` 按 scope 计算：single → `[origin(target_url)]`（长度必须为 1）；multi → 用户列出 URL 的 origin 去重集合；inferred → `[origin(seed_url)]`，发现者只沿 same-origin 走。
+6. 建立 `audit-state.json`（schema 见 `18-final-report-contract.md`），`originAllowlist` 按 scope 计算：single → `[origin(target_url)]`；multi → 用户列出 URL 的 origin 去重集合；inferred → `[origin(seed_url)]`，发现者只沿 same-origin 走。
+6b. **locale 变体探测（每种 scope 都做）**：打开目标页后按 §0「locale 变体默认全审」的四个信号找出所有语言变体，把变体 URL 加进页面列表，其 origin 并入 `originAllowlist`（子域变体同样并入——这是门禁的既定例外，不是扩大）。变体一个都没有则记 `locales_audited: [<当前 locale>]`。
 7. 解析 `explicit_dimensions`——用户是否显式点名维度（"只审 XX"、"只看 XX 一个维度"、"focus on XX"）。命中写入 `audit-state.json` 供 S2 short-circuit，未命中留空数组。
 8. 创建 S0–S7 TODO；进入 S1。
 
