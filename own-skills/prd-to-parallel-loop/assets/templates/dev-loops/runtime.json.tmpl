@@ -1,24 +1,29 @@
 {
-  "change_id": "{{CHANGE_ID}}",
+  "milestone_slug": "{{MILESTONE_SLUG}}",
+  "milestone_file": "{{MILESTONE_FILE}}",
+  "milestone_short": "{{MILESTONE_SHORT}}",
   "repo_root": "{{PROJECT_REPO}}",
-  "openspec_tasks_file": "openspec/changes/{{CHANGE_ID}}/tasks.md",
   "product_doc": "{{PRD_PATH}}",
+  "branch_prefix": "loop/{{MILESTONE_SHORT}}",
   "state_dir_root": "{{STATE_ROOT}}/state",
   "worktree_root": "{{STATE_ROOT}}/worktrees",
   "created_at": "{{CREATED_AT_ISO}}",
   "updated_at": "{{CREATED_AT_ISO}}",
-  "max_parallel": 3,
-  "max_resume_per_task": 3,
+  "max_parallel": 2,
+  "max_resume_per_phase": 3,
   "idle_stall_ms": 600000,
   "no_progress_stop_heartbeats": 5,
   "hard_stop_total_heartbeats": 200,
   "tasks": [
     {
-      "id": "T1",
-      "title": "<替换为协商定版后第 1 个任务的一句话标题>",
+      "id": "<change-id,与 openspec/changes/ 下的目录名一致>",
+      "title": "<里程碑清单里那一句话标题>",
+      "change_dir": "openspec/changes/<change-id>",
       "depends_on": [],
       "acceptance_ids": [],
       "status": "todo",
+      "phase": null,
+      "phase_attempts": { "implement": 0, "reflect": 0, "archive": 0 },
       "worktree_path": null,
       "branch": null,
       "codex_session_id": null,
@@ -28,7 +33,8 @@
       "last_probe_state": null,
       "done_file": null,
       "blocked_reason": null,
-      "merged_sha": null
+      "merged_sha": null,
+      "archived_dir": null
     }
   ],
   "heartbeats": {

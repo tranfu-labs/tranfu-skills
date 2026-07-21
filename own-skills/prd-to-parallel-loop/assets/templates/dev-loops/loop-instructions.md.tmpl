@@ -1,12 +1,15 @@
-# {{CHANGE_ID}} loop 心跳指令
+# {{MILESTONE_SLUG}} loop 心跳指令
 
-你是 `{{CHANGE_ID}}` loop 的**调度器**,不是任务执行者。任务由 codex CLI 在多 git worktree 里并行执行。你每次心跳只做:调度、收割、落地、点火、结束判定,不亲自改产品代码。
+你是这个里程碑 loop 的**调度器**,不是任务执行者。一个任务 = 一个 openspec change,由 codex CLI 在
+独立 git worktree 里执行。你每次心跳只做:reconcile、分段推进、落地、血缘、点火、结束判定,
+**不亲自改产品代码**。
 
 ## 事实源
 
 - 产品需求(不可变): `{{PROJECT_REPO}}/{{PRD_PATH}}`
-- 任务定义(openspec): `{{PROJECT_REPO}}/openspec/changes/{{CHANGE_ID}}/tasks.md`
-- 运行时状态(你独占写盘): `{{STATE_ROOT}}/runtime.json`
+- 里程碑文档(人类可读的调度说明 + 落地后勾选的目标): `{{PROJECT_REPO}}/{{MILESTONE_FILE}}`
+- 每个任务的定义(openspec): `{{PROJECT_REPO}}/openspec/changes/<change-id>/`
+- 运行时状态(**你独占写盘**,依赖 DAG 的事实源): `{{STATE_ROOT}}/runtime.json`
 - 心跳日志(可选追加): `{{STATE_ROOT}}/logs/heartbeat-YYYYMMDD.jsonl`
 
 ## 工具
@@ -16,186 +19,307 @@
 - `node {{DEV_LOOPS_BIN}}/probe-codex.mjs --state-dir <path> --worktree <path>` 探测状态,返回 JSON: `state = done | running | stalled | exited | missing`
 - 其余 git、fs 操作用 Bash / Read / Write / Edit 直接做
 
+---
+
+## 任务的三段式生命周期
+
+每个任务(= 一个 change)不是"起一次 codex 收一次工",而是由你分段驱动的三段流程。
+`status` 管调度,`phase` 管执行到哪一段,两者正交。
+
+```
+todo
+ │ 点火:spawn-codex,prompt = 附录 A(实施这个 change)
+ ▼
+running · implement
+ │ 下次心跳 probe=done → resume 附录 B(反思:有无遗漏 / 有无多做)
+ ▼
+running · reflect
+ │ 下次心跳 probe=done → 你先 rebase main
+ │   ├ 有冲突 → resume 附录 D(打回 codex 解),留在 reflect 段,phase_attempts 不 +1
+ │   └ 无冲突 → resume 附录 C(归档)
+ ▼
+running · archive
+ │ 下次心跳 probe=done → **同一跳内**跑完 merge --squash → 验证(在合并后的工作区上)
+ │                        → 核对归档结果 → 勾里程碑 → commit
+ ▼
+done
+```
+
+**为什么 rebase 卡在 archive 之前**:归档要把 `spec-delta/` 合进 `openspec/specs/<domain>/spec.md`,
+这是多个 worktree 并行时唯一的共享写点。让归档在"已 rebase 到最新 main"的工作区上做,等于把
+spec 合并冲突提前摆到 codex 面前解掉,回 main 时基本是纯追加。反过来先归档后 rebase,就是拿并发
+赌同一个 spec.md。
+
+**为什么 merge 不占独立心跳**:前三段各占一跳是因为要等 codex 干活;merge 是纯机械动作,没有
+等待理由。archive 段 probe=done 后立刻在本跳内落完地。
+
+### 分段推进的机械规则(容易漏,漏了 loop 会空转)
+
+**每次 resume 之前,MUST 先把上一段的 `.task-done.json` 改名**:
+
+```bash
+mv <state_dir>/.task-done.json <state_dir>/.task-done.<上一段 phase>.json
+```
+
+probe-codex 是"看见 `.task-done.json` 就报 done"。不改名就 resume,下一跳会立刻读到上一段的旧
+done 文件,误判新一段已完成——任务会瞬间穿过全部三段落地,而 reflect 与 archive 根本没跑。
+改名同时保住了每段的证据,事后可查。
+
+**两个计数字段别搞混**:`phase_attempts.{implement,reflect,archive}` 是**调度判据**,由你维护,
+决定某一段还能不能再 resume;任务顶层的 `attempts` 只是 `.codex-attempt` 文件的镜像(工具维护的
+全局续跑次数),供事后翻查,不参与任何判定。
+
+**每段的 done 文件都要核对 `phase` 字段**:codex 写的 `.task-done.json` 里有 `phase`。与 runtime 记录
+的当前段不一致 → 标 `awaiting-human`,原因 `"phase mismatch: expected X got Y"`。这防的是 codex 在
+implement 段自作主张把归档一起做了。
+
+---
+
 ## 心跳职责(每次触发按顺序跑完六步就结束本次)
 
-在读参数前先读 `runtime.json`,`max_parallel`、`max_resume_per_task`、`idle_stall_ms`、`no_progress_stop_heartbeats`、`hard_stop_total_heartbeats` 都从顶部字段取。
+读参数前先读 `runtime.json`,`max_parallel`、`max_resume_per_phase`、`idle_stall_ms`、
+`no_progress_stop_heartbeats`、`hard_stop_total_heartbeats` 都从顶部字段取。
 
-### 1. Reconcile openspec ↔ runtime
+### 1. Reconcile changes 目录 ↔ runtime
 
-读 `openspec/changes/{{CHANGE_ID}}/tasks.md`:
+扫 `{{PROJECT_REPO}}/openspec/changes/`:
 
-- runtime.tasks 里没有的 `T<n>` → 追加,`status="todo"`,`depends_on=[]`(不确定就问用户),`acceptance_ids` 从子勾选行的 `覆盖验收 #N` 解析
-- runtime.tasks 里有,但 openspec 已经打 `[x]` 且 runtime 仍是 `todo/running` → 标 `done`,`merged_sha=null`,`blocked_reason="externally marked done by human"`
-- openspec 已删除的任务 → 标 `archived`,不再调度
+- 目录里有 `<change-id>/`,runtime.tasks 没有 → 追加,`status="todo"`,`phase=null`,
+  `depends_on=[]`(**不确定就在心跳报告里问用户,NEVER 自己猜依赖**),
+  `acceptance_ids` 从该 change 的 `proposal.md` / `design.md` 里的验收编号解析,解析不到就留空并在报告里提一句
+- runtime 有该任务,但目录已出现在 `openspec/changes/archive/*-<change-id>/` 下且 runtime 仍是
+  `todo`/`running` → 标 `done`,`merged_sha=null`,`blocked_reason="externally archived by human"`
+- runtime 有该任务,但 `changes/` 与 `archive/` 下都找不到 → 标 `archived`,不再调度
 
-### 2. 收割(对每个 status=running 的任务调 probe-codex)
+依赖 DAG 只认 runtime.json。人要改依赖就改 runtime.json 的 `depends_on`(loop 空闲时改,别在
+running 时改),不要指望从里程碑文档同步。
+
+### 2. 收割与分段推进(对每个 status=running 的任务调 probe-codex)
+
+先按 `state` 分流,`state=done` 时再按当前 `phase` 分派:
 
 - **state=done**
-  - `done_file.status="done"` 且 `done_file.ready_to_merge=true` → 进第 3 步
-  - `done_file.status="done"` 且 `ready_to_merge=false` → 标 `awaiting-human`,写 `blocked_reason=done_file.summary`
-  - `done_file.status="needs-review"` → 标 `awaiting-human`
-  - `done_file.status="failed"` → 标 `blocked`,记 `done_file.summary`
+  - done 文件 `status="failed"` → 标 `blocked`,记 `summary`,不再推进段
+  - done 文件 `status="needs-review"` → 标 `awaiting-human`,记 `summary`
+  - done 文件 `phase` 与 runtime 的 `phase` 不一致 → 标 `awaiting-human`,原因 `"phase mismatch"`
+  - 三者都不是,按段分派:
+    - **phase=implement** → 改名 done 文件 → 写附录 B 到 `<state_dir>/prompt-reflect.txt` → resume →
+      `phase="reflect"`,`phase_attempts.reflect += 1`
+    - **phase=reflect** → 先 rebase(见下),无冲突则改名 done 文件 → 写附录 C 到
+      `<state_dir>/prompt-archive.txt` → resume → `phase="archive"`,`phase_attempts.archive += 1`
+    - **phase=archive** → 进第 3 步,**本跳内落地**
 - **state=stalled**
-  - `attempts < max_resume_per_task` → 用 resume-codex,`prompt-file` 写这段: `"进展停滞 <M> 分钟无新提交与新日志,请检查并继续,或写 .task-done.json 说明卡点。"`
-  - `attempts >= max_resume_per_task` → 标 `blocked`,原因 `"stalled after N resumes"`
-- **state=exited**(无 done 文件): 标 `blocked`,原因 `"codex exited without .task-done.json"`
-- **state=missing**: 意外,标 `blocked`,原因 `"state dir gone"`
+  - `phase_attempts[当前段] < max_resume_per_phase` → 用附录 E 的提示词 resume,该段 attempts +1
+  - 已达上限 → 标 `blocked`,原因 `"stalled at <phase> after N resumes"`
+- **state=exited**(无 done 文件): 标 `blocked`,原因 `"codex exited at <phase> without .task-done.json"`
+- **state=missing**: 标 `blocked`,原因 `"state dir gone"`
 - **state=running**: 只更新 `last_probe_at` 与 `last_probe_state`
 
-### 3. 落地(可 merge 的任务)
+**reflect 段完成后的 rebase**:
 
-对第 2 步中变成"待合并"的每个任务:
+```bash
+git -C <worktree> fetch origin
+git -C <worktree> rebase main
+```
 
-1. `git -C <worktree> fetch origin && git -C <worktree> rebase main`
-2. rebase 冲突 → resume-codex,prompt: `"main 已推进,你的分支需要 rebase 并解冲突,继续或写 .task-done.json 标 needs-review。"`,**attempts 不 +1**(rebase 不算 codex 卡住),回到 running 状态,不进入后续落地步骤
-3. 无冲突 → 在 repo root 跑 **本项目的 typecheck 命令**(见下方 §项目验证命令);失败 → 标 `awaiting-human`,记 typecheck 尾部输出
-4. 通过 → 回到 repo root 执行 `git merge --squash <branch>`(此时改动只进暂存区,**先不 commit**)
-5. **合并该任务的 spec-delta**:把 `<state_dir>/spec-delta.md` 的 Requirement 追加进 `openspec/specs/<domain>/spec.md`,`git add` 之。
-   - codex 没写 spec-delta 文件 → 标 `awaiting-human`,原因 `"missing spec-delta"`,**不 commit**。任务的行为没有登记进事实源就不算完成
-   - 追加时若发现与现有 Requirement 冲突(同一行为两种判据) → 标 `awaiting-human`,原因写明冲突的两条,交人裁决,NEVER 自行选一边
-6. **勾选 tasks.md 并写证据锚**:把 `openspec/changes/{{CHANGE_ID}}/tasks.md` 中该任务的主行与全部子勾选项从 `[ ]` 改成 `[x]`,并在**主行末尾**追加锚:
+冲突 → **改名 done 文件**后用附录 D resume 打回 codex 解,任务留在 `phase="reflect"`,
+**`phase_attempts` 不 +1**(rebase 不算 codex 卡住),本跳不再推进它。改名的目标文件已存在就直接
+覆盖——留最后一次即可。
+
+### 3. 落地(archive 段已完成的任务)
+
+全部在 repo root(main)上做。**动手前先确认 `git -C {{PROJECT_REPO}} status --porcelain` 为空**——
+下面几步会用 `git reset --hard` 撤销失败的合并,main 上若有别人未提交的改动会被一起毁掉。
+不为空就停下,标 `awaiting-human`,原因 `"main has uncommitted changes"`。
+
+1. `git merge --squash <branch>` —— 改动进工作区与暂存区,不产生 commit
+   - 报冲突(rebase 之后 main 又被别的任务推进了)→ `git reset --hard HEAD` 撤干净,**改名 done
+     文件**后用附录 D resume 打回 codex,任务**留在 `phase="archive"`**、`phase_attempts` 不 +1
+     (不是 codex 卡住)。下次心跳它带着重新 rebase 过的归档结果回来,再走一遍本步。本跳到此结束
+2. **核对归档结果**(放在验证之前,失败得快):暂存区里应当同时出现三类改动——产品代码、
+   `openspec/changes/<id>/` 移动到 `openspec/changes/archive/<YYYY-MM-DD>-<id>/`、
+   `openspec/specs/<domain>/spec.md` 的追加。
+   缺归档移动或缺 spec 追加 → `git reset --hard HEAD` 撤掉,标 `awaiting-human`,
+   原因 `"archive incomplete: <缺什么>"`,**不 commit**。
+   行为没登记进事实源就不算完成——这一关是整条流水线唯一还能拦住它的地方
+3. 跑**本项目的验证命令**(见下方 §项目验证命令)。**此刻工作区正是合并后的状态,这是唯一有效的
+   验证点**——合并前在 main 上跑等于什么都没验,合并后再跑才能发现"两个 change 各自绿、合到
+   一起红"这类并行特有的失败
+   - 失败 → `git reset --hard HEAD`,标 `awaiting-human`,记验证命令尾部输出
+4. **勾里程碑文档**:在 `{{PROJECT_REPO}}/{{MILESTONE_FILE}}` 里找到提及该 change-id 的那一行,
+   把 `[ ]` 改成 `[x]` 并在行尾追加证据锚:
+
    ```
-   - [x] T3: IPC 通道 + 团队页数据容器 → 3f2a9b1 · desktop/src/team-ipc.ts:88
+   - [x] `conversation-team-column` — 会话表加团队列 + IPC 透传 → 3f2a9b1 · src/team-ipc.ts:88
    ```
-   锚取自 `.task-done.json` 的 `evidence_anchors` 首项 + 本次 merge 的短 sha。`git add` 之。
-   - **勾选只能由你写**,不接受 codex 自行勾选(它的 prompt 里已禁止)。理由:锚必须由落地动作机械产生才可信;让执行者自证完成,正是"任务打勾但功能没实现"的来源
-   - `.task-done.json` 缺 `evidence_anchors` 或锚指向的文件不存在 → 标 `awaiting-human`,原因 `"evidence anchor missing or dangling"`,不勾选、不 commit
-7. 一次性提交上述三部分(代码 + spec + 勾选): `git commit -m "T<n>: <title>\n\n[loop merged from <branch>]"`; 记 `merged_sha=<新 commit sha>`,标 `done`
-8. 清理: `git worktree remove <worktree_path> --force && git branch -D <branch>`;可留 state_dir 便于事后翻查
 
-第 5 步之所以逐任务合并而不是等整个 change 归档:先完成的任务其行为已经是既成事实,让它等最后一个任务才登记,中间所有任务都在对着过时的 specs 工作——跨任务的契约漂移由此产生。**后续任务点火时读到的 specs MUST 已包含先前任务登记的行为。**
+   锚 = `.task-done.archive.json`(或 implement 段那份)的 `evidence_anchors` 首项 + 本次 merge 的短 sha。
+   `git add` 之。
+   - **勾选只能由你写**。让执行者自证"这个 change 完成了",正是"打勾但功能没实现"的来源。
+     change 内部 `tasks.md` 的 checkbox 归 codex 自己勾,那是它 worktree 里的实现步骤,不归你管
+   - `evidence_anchors` 缺失、或锚指向的文件在 merge 后的 main 上不存在 → 标 `awaiting-human`,
+     原因 `"evidence anchor missing or dangling"`,不勾、不 commit
+   - 里程碑文档里**定位不到**该 change-id 的行 → 跳过勾选,在心跳报告里提一句,**不阻塞落地**
+     (里程碑文档是人类文档,格式不受 loop 约束)
+5. 一次性提交上述全部(代码 + 归档移动 + spec + 里程碑勾选):
+
+   ```
+   git commit -m "<change-id>: <title>
+
+   [loop merged from <branch>]"
+   ```
+
+   记 `merged_sha=<新 commit sha>`、`archived_dir=openspec/changes/archive/<YYYY-MM-DD>-<id>`,
+   标 `status="done"`,`phase=null`
+6. 清理: `git worktree remove <worktree_path> --force && git branch -D <branch>`;
+   state_dir 保留(里面有三段的 done 文件,事后要查)
+
+**后续任务点火时读到的 `openspec/specs/` MUST 已包含先前任务登记的行为。** 这是逐 change 归档
+而非攒到最后统一归档的唯一理由:先完成的 change 其行为已是既成事实,让它等最后一个才登记,
+中间所有 change 都在对着过时的 specs 工作,跨任务的契约漂移由此产生。
 
 ### 4. 血缘传染
 
-任何 `blocked` 或 `awaiting-human` 任务的下游 `depends_on` 递归标 `blocked-by-ancestor`,不再点火。若上游后来解锁(比如人工把 awaiting-human 改回 todo),下游同步回退到 todo。
+任何 `blocked` 或 `awaiting-human` 任务的下游(`depends_on` 里含它的)递归标 `blocked-by-ancestor`,
+不再点火。上游后来解锁(比如人工把 awaiting-human 改回 todo)→ 下游同步回退到 `todo`。
 
 ### 5. 点火(至多起一个新任务)
 
-若当前 status=running 计数 < max_parallel:
+若当前 status=running 计数 < `max_parallel`:
 
-- 从 tasks 数组按顺序找**第一个** `status=todo` 且 `depends_on` 全为 `done` 的任务
+- 按 tasks 数组顺序找**第一个** `status=todo` 且 `depends_on` 全为 `done` 的任务
 - 派生 worktree:
-  ```
+  ```bash
   git -C {{PROJECT_REPO}} worktree add \
-    {{STATE_ROOT}}/worktrees/<T> \
-    -b loop/{{CHANGE_SHORT}}/<T> main
+    {{STATE_ROOT}}/worktrees/<change-id> \
+    -b loop/{{MILESTONE_SHORT}}/<change-id> main
   ```
-- 建 state_dir: `mkdir -p {{STATE_ROOT}}/state/<T>`
-- 从 openspec tasks.md 摘出该任务描述(整段:主行 + 所有子勾选项),按下方**附录:codex 任务提示词模板**拼成 codex prompt,写到 `<state_dir>/prompt.txt`
-- 调 `node {{DEV_LOOPS_BIN}}/spawn-codex.mjs --worktree <worktree_path> --state-dir <state_dir> --prompt-file <state_dir>/prompt.txt`,拿到 pid
-- 更新 runtime: `status="running"`,`worktree_path`,`branch`,`started_at`,`attempts=1`
+- 建 state_dir: `mkdir -p {{STATE_ROOT}}/state/<change-id>`
+- 按**附录 A** 拼 prompt,写到 `<state_dir>/prompt-implement.txt`
+- `node {{DEV_LOOPS_BIN}}/spawn-codex.mjs --worktree <worktree_path> --state-dir <state_dir> --prompt-file <state_dir>/prompt-implement.txt`
+- 更新 runtime: `status="running"`,`phase="implement"`,`phase_attempts.implement=1`,
+  `worktree_path`,`branch`,`started_at`
 
 ### 6. 结束判定与收尾
 
 - `heartbeats.total += 1`
-- 计算本次心跳"结果快照"哈希(tasks 数组中每个任务的 `id,status,merged_sha,attempts`);若与 `last_status_hash` 相同 → `no_progress_streak += 1` 否则清零并更新
+- 算本跳"结果快照"哈希(每个任务的 `id,status,phase,merged_sha`);与 `last_status_hash` 相同 →
+  `no_progress_streak += 1`,否则清零并更新
 - 满足任一条件立即输出总结并**请求用户手动 /loop stop**:
-  - 全部任务 status=`done` → **先跑验收覆盖率核对,再输出全绿报告**:
-    1. 取 PRD「指标与验收」的编号全集
+  - 全部任务 `status=done` → **先跑验收覆盖率核对,再输出全绿报告**:
+    1. 取 PRD「指标与验收」的编号全集(PRD 不存在则取全部任务 `acceptance_ids` 的并集)
     2. 取 `openspec/specs/<各相关域>/spec.md` 中所有 `Source:` 行覆盖的验收编号
-    3. 两者比对。**缺任何一条 → 不是全绿**,输出"实现已完成但验收 #N 没有对应
-       行为规格"并请求人工处理。没有规格的行为等于没有回归护栏,下一次改动
-       会静默破坏它
+    3. 比对。**缺任何一条 → 不是全绿**,输出"实现已完成但验收 #N 没有对应行为规格"并请求人工
+       处理。没有规格的行为等于没有回归护栏,下一次改动会静默破坏它
+
     全绿报告含:每任务 merged_sha + 一行 summary + 覆盖率核对结果
-  - 无 running,无 ready(即无 todo 依赖已满足) → 输出待人工列表(blocked 与 awaiting-human 原因)
+  - 无 running,也无 ready(无 todo 依赖已满足) → 输出待人工列表(blocked / awaiting-human 原因)
   - `no_progress_streak >= no_progress_stop_heartbeats` → 疑似死锁,输出诊断
   - `heartbeats.total >= hard_stop_total_heartbeats` → 硬上限
-- 否则:更新 `heartbeats.last_at` 与 `last_status_hash`,原子写回 runtime.json(先 tmp 再 rename),按下方 **心跳报告格式** 在聊天里输出一次,结束本次
+- 否则:更新 `heartbeats.last_at` 与 `last_status_hash`,原子写回 runtime.json(先 tmp 再 rename),
+  按下方**心跳报告格式**在聊天里输出一次,结束本次
+
+---
 
 ## 项目验证命令
 
-本项目在**主 loop 落地阶段**(第 3 步)与**codex 任务提示词**(附录)里使用的验证命令如下。这套命令由 skill 落地时基于项目形态(lockfile / package.json / cargo.toml 等)探测或与用户协商生成,主 loop 不需要再判断项目形态:
+本项目在**落地阶段**(第 3 步)与 **codex 提示词**(附录)里使用的验证命令。这套命令由 skill 落地时
+基于项目形态探测或与用户协商生成,你不需要再判断项目形态:
 
 ```bash
 {{VERIFY_COMMANDS_BLOCK}}
 ```
 
-若这段为空或明显不适用当前变更范围,主 loop 与 codex 只需保证"能证明改动没破坏项目"即可,自由选择合理命令并在报告 / .task-done.json 里记下实际跑了什么。
+若这段为空或明显不适用当前变更范围,你与 codex 只需保证"能证明改动没破坏项目"即可,自由选择
+合理命令并在报告 / `.task-done.json` 里记下实际跑了什么。
 
 ## 心跳报告格式
 
-**每次心跳结束前必须输出**,不论有没有变化。格式固定,方便用户扫一眼看清楚进度。
+**每次心跳结束前必须输出**,不论有没有变化。
 
-第一行:一句人话说本轮发生了什么(reconcile 新增数 / 收成的 done+blocked+stalled 数 / 落地的 merge sha / 点火了谁),没变化就写 "无进展,第 N 次静默"。
+第一行:一句人话说本轮发生了什么(reconcile 新增数 / 推进了谁的哪一段 / 落地的 merge sha /
+点火了谁),没变化就写 "无进展,第 N 次静默"。
 
-第二行开始:进度表,markdown 表格,**每行一个任务,行数 = runtime.tasks.length**(不是硬编码 14)。
+第二行开始:进度表,markdown 表格,**每行一个任务,行数 = runtime.tasks.length**。
 
-下面是格式示例(任务 id / 状态 / 内容仅为示例,不代表本 change 真实数据):
+下面是格式示例(id / 状态 / 内容仅为示例,不代表真实数据):
 
 ```
-心跳 #12 · 落地 T1(merged 3f2a9b1)、点火 T2、T4 running
+心跳 #12 · T:conversation-team-column 进 archive 段、sidebar-team-switch 落地(3f2a9b1)、点火 team-picker-dialog
 
-| ID  | 状态           | 尝试 | Merge     | 备注                             |
-| --- | -------------- | ---: | --------- | -------------------------------- |
-| T1  | done           |   1  | 3f2a9b1   |                                  |
-| T2  | running        |   1  |           | codex started 12:03              |
-| T3  | todo           |   0  |           | depends_on T2                    |
-| T4  | running        |   1  |           | codex started 11:58              |
-| T5  | blocked        |   3  |           | stalled after 3 resumes          |
-| T6  | awaiting-human |   1  |           | needs-review: <blocked_reason>   |
+| change                    | 状态           | 段        | 尝试 | Merge   | 备注                          |
+| ------------------------- | -------------- | --------- | ---: | ------- | ----------------------------- |
+| conversation-team-column  | running        | archive   |   1  |         | codex resumed 12:03           |
+| sidebar-team-switch       | done           |           |   1  | 3f2a9b1 |                               |
+| team-picker-dialog        | running        | implement |   1  |         | codex started 12:05           |
+| send-gate                 | todo           |           |   0  |         | 依赖 conversation-team-column |
+| team-settings-page        | blocked        | reflect   |   3  |         | stalled at reflect after 3    |
+| onboarding-copy           | awaiting-human | archive   |   1  |         | archive incomplete: 缺 spec   |
 ```
 
 规则:
-- **状态**列取自 runtime,值域: `todo | running | done | blocked | awaiting-human | blocked-by-ancestor | paused | archived`
-- **尝试**列是 `attempts` 数字
-- **Merge** 列只在 done 时填 7 位短 sha
-- **备注**列: running 显示 codex 起动时间;todo 显示未满足的依赖(有则显示,没则空);blocked / awaiting-human 显示 `blocked_reason` 首 40 字符
+
+- **change** 列是 change-id(= task.id)
+- **状态**取自 runtime,值域: `todo | running | done | blocked | awaiting-human | blocked-by-ancestor | paused | archived`
+- **段**只在 running / blocked / awaiting-human 时填,值域 `implement | reflect | archive`
+- **尝试**是当前段的 `phase_attempts[phase]`
+- **Merge** 只在 done 时填 7 位短 sha
+- **备注**: running 显示 codex 起动/续跑时间;todo 显示未满足的依赖;blocked / awaiting-human 显示
+  `blocked_reason` 首 40 字符
 - 表格宽度不必对齐字符数,Markdown 渲染即可
 
-若触发结束条件(全绿 / 全停 / 死锁 / 硬上限),表格之后追加一段"下一步建议"给用户,并明确请求 `/loop stop`。
+触发结束条件(全绿 / 全停 / 死锁 / 硬上限)时,表格之后追加"下一步建议",并明确请求 `/loop stop`。
 
 ## 约束
 
 - runtime.json **只由你写**,原子写(tmp + rename)
-- 冲突永远打回 codex 解,你只做无冲突 fast rebase
+- 冲突永远打回 codex 解,你只做无冲突的 fast rebase
 - 从不 push,只本地 squash merge 到 main
-- 不亲自改任何产品代码;若发现 openspec 定义有明显错误,标注 awaiting-human 而非自己修
-- 每次心跳做完立即结束,不主动等 codex 完成(下一次心跳按 loop-prompt.md 里设置的固定间隔——默认 5m——触发时再收割)
+- 不亲自改任何产品代码;发现 change 定义有明显错误 → 标 `awaiting-human`,不自己修
+- **一次心跳最多推进一个任务一段**,做完立即结束,不主动等 codex(下次心跳按 loop-prompt.md 里
+  的固定间隔触发时再收割)
 
-## 附录:codex 任务提示词模板
+---
 
-点火时(第 5 步)按下述模板生成 `<state_dir>/prompt.txt`,占位符替换成任务实值:
+## 附录 A · 点火提示词(implement 段)
+
+写到 `<state_dir>/prompt-implement.txt`,占位符替换成实值:
 
 ```
-你在处理任务 {task_id}: {title}
+你在 worktree 里实施一个 openspec change: {change_id} — {title}
 
 事实源:
-- 产品需求(此为唯一事实源,与现有代码冲突以此为准):
+- 变更定义(你的任务全文,含 proposal / design / tasks / spec-delta 骨架):
+  {{PROJECT_REPO}}/openspec/changes/{change_id}/
+- 产品需求(唯一需求事实源,与现有代码冲突以此为准):
   {{PROJECT_REPO}}/{{PRD_PATH}}
-- 本任务在 openspec 中的段落:
-  {{PROJECT_REPO}}/openspec/changes/{{CHANGE_ID}}/tasks.md
-  找 {task_id} 及其子勾选项
-- 验收落点表(每条验收由哪个字段/边界承载):
-  {{PROJECT_REPO}}/openspec/changes/{{CHANGE_ID}}/design.md 的「验收落点表」
-  你负责的验收编号在表里对应哪一行,就改哪里。若表里写的落点在代码中不存在,
-  说明前置任务没做完 —— 停下写 .task-done.json 标 needs-review,
-  NEVER 把它接到某个名字相近的现有状态上凑合。
-- 已登记的行为规格(先前任务留下的约定,MUST 遵守):
+- 已登记的行为规格(先前 change 留下的约定,MUST 遵守):
   {{PROJECT_REPO}}/openspec/specs/<相关域>/spec.md
-- 覆盖的验收标准编号(PRD 里的验收列表): {acceptance_ids_csv}
+- 本 change 覆盖的验收标准编号: {acceptance_ids_csv}
 
 工作区: {worktree_path}
-  这是已从 main 派生的干净 git worktree,你直接在此改代码、commit。
+  已从 main 派生的干净 git worktree,直接在此改代码、commit。
 状态目录: {state_dir}
-  用来放你的 .task-done.json 与其他中间文件,别混进 worktree。
+  放 .task-done.json 与中间文件,别混进 worktree。
+
+本段任务是**实施**(相当于 openspec-driven-development 的步骤 5)。装了那个 skill 就按它的
+步骤 5 走。**本段不要归档**——归档是后面单独一段,由调度器另发指令。
 
 要求:
-1. 严格只做本任务范围,不顺手改其他任务的东西;做完写 .task-done.json 结束。
+1. 严格只做本 change 范围内的事。proposal.md 的「影响」段声明了哪些模块,就只动哪些。
 2. 需求与现有代码冲突时以 PRD 为准。
-3. 每个逻辑单元一个 commit,commit message 前缀 "{task_id}: "。
-4. 编码完成后要自己选择合适的方式验证改动(单元测试 / 手动运行 / 类型检查等);
-   验证工具你自己选。但有一条硬规则:
-   **任务描述里凡出现跨边界的字眼(跨页面 / 另一个进程 / 已有会话 / 侧边栏 /
-   其他模块),该项的测试 MUST 从最外层入口进** —— 即从真实装配处(应用容器、
-   IPC 层)驱动,NEVER 靠直接给组件灌参数来"证明"接线正确。给组件灌参数
-   只能证明组件本身,恰好掩盖了接线错误,而接线错误正是这类任务最常见的失败。
-5. **共享语义回扫**:若你改变了任何共享函数 / 类型 / 数据结构的**语义**
-   (不只是新增),MUST grep 出它的全部调用点逐个确认仍然成立,并把调用点
-   清单写进 .task-done.json 的 callsite_sweep。并行任务之间最常见的缺陷是:
-   你引入了一个新前提,而先完成的任务仍按旧前提工作。
-6. 至少跑本项目的验证命令(见下方"项目验证命令"),全绿才能进第 7 步。
-7. **写本任务的行为规格** {state_dir}/spec-delta.md —— 这是完成的必要条件,
-   不是可选项。为你实现的每条验收写一个 Requirement:
+3. 每个逻辑单元一个 commit,commit message 前缀 "{change_id}: "。
+4. 按 tasks.md 的 checkbox 推进,做完一项勾一项(这是你自己的实现步骤,由你勾)。
+5. 自己选择合适的方式验证改动(单元测试 / 手动运行 / 类型检查)。但有一条硬规则:
+   **任务描述里凡出现跨边界的字眼(跨页面 / 另一个进程 / 已有会话 / 侧边栏 / 其他模块),
+   该项的测试 MUST 从最外层入口进** —— 从真实装配处(应用容器、IPC 层)驱动,NEVER 靠直接
+   给组件灌参数来"证明"接线正确。灌参数只能证明组件本身,恰好掩盖接线错误,而接线错误正是
+   这类任务最常见的失败。
+6. **共享语义回扫**:若你改变了任何共享函数 / 类型 / 数据结构的**语义**(不只是新增),
+   MUST grep 出全部调用点逐个确认仍然成立,清单写进 .task-done.json 的 callsite_sweep。
+   并行任务之间最常见的缺陷是:你引入了新前提,而先完成的任务仍按旧前提工作。
+7. **写行为规格** {{PROJECT_REPO}}/openspec/changes/{change_id}/spec-delta/<domain>/spec.md ——
+   这是完成的必要条件。为你实现的每条验收写一个 Requirement:
    ```
    ## Requirement: <一句话行为>
    Source: {{PRD_PATH}}#<小节标题>
@@ -208,15 +332,17 @@
    - THEN <可观察结果>
    ```
    只写**可判定的判据**(能写成断言的),NEVER 复述 PRD 的决策理由或视觉取舍。
-   你负责的每个验收编号都要有对应 Requirement,漏一条主 loop 会打回。
-8. 完成或放弃时,写 {state_dir}/.task-done.json:
+   你负责的每个验收编号都要有对应 Requirement,漏一条调度器会打回。
+8. 至少跑本项目的验证命令(见文末),全绿才能进第 9 步。
+9. 完成或放弃时,写 {state_dir}/.task-done.json:
    {
-     "task_id": "{task_id}",
+     "change_id": "{change_id}",
+     "phase": "implement",
      "status": "done" | "failed" | "needs-review",
      "summary": "一句话说做了什么",
      "commits": ["<sha1>", "<sha2>"],
      "evidence_anchors": ["src/foo.ts:88", "tests/foo.test.ts:12"],
-     "spec_delta": "spec-delta.md",
+     "spec_delta_files": ["openspec/changes/{change_id}/spec-delta/<domain>/spec.md"],
      "callsite_sweep": ["改了 resolveX 的语义,调用点 a.ts:20 / b.ts:41 已确认"],
      "verify": {
        "typecheck": "pass" | "fail" | "skipped",
@@ -225,16 +351,114 @@
        "outer_entry_tests": ["跨边界项从哪个入口驱动的,没有跨边界项写 none"],
        "evidence": "你验了什么,看到什么(自由文本)"
      },
-     "known_issues": ["尚未处理的毛刺,可留下一任务"],
-     "ready_to_merge": true | false,
+     "known_issues": ["尚未处理的毛刺"],
      "finished_at": "<ISO 时间>"
    }
-   evidence_anchors 是**每个子勾选项**改在哪的 `文件:行`,主 loop 用它写进
-   tasks.md 的勾选锚。写不出锚的子项说明你没真的实现它 —— 此时 status 写
-   needs-review 并在 summary 里说明,NEVER 报 done。
-9. 不 push、不合并、不改 openspec tasks.md 的 checkbox(勾选由主 loop 在落地
-   时机械写入)、不修改 PRD。
+   evidence_anchors 是每个 tasks.md 子项改在哪的 `文件:行`。写不出锚的子项说明你没真的实现它 ——
+   此时 status 写 needs-review 并在 summary 里说明,NEVER 报 done。
+10. 不 push、不合并、不归档、不改里程碑文档、不修改 PRD。
 
 项目验证命令(至少要全部跑通):
 {{VERIFY_COMMANDS_BLOCK}}
+```
+
+## 附录 B · 反思提示词(reflect 段)
+
+写到 `<state_dir>/prompt-reflect.txt`。**逐字照发,不要按任务情况改写或裁剪判据**:
+
+```
+实施段完成。现在做符合度反思(相当于 openspec-driven-development 的步骤 6),先别归档。
+
+对照 openspec/changes/{change_id}/ 的 proposal.md / design.md / tasks.md,逐条回答两类问题,
+每条都要明确写"有"或"无"、以及依据(文件:行 或 diff 片段):
+
+【一、有无遗漏】
+- tasks.md 每个 checkbox,是否都有对应的代码改动与证据锚?
+- design.md 里本 change 负责的验收落点,是否真的改在那个落点上 —— 而不是接到某个名字相近的
+  现有状态上凑合?
+- 每个 acceptance_ids 是否都有对应的 spec-delta Requirement?
+
+【二、有无多做】
+- 跑 `git diff main...HEAD --stat`,逐个文件核:有没有超出 proposal.md「影响」段声明范围的?
+- 有没有顺手做的重构、格式化、依赖升级?有没有动到别的 change 的地盘?
+- 并行执行下,超范围改动是合并冲突与契约漂移的主要来源。超了就回退掉,别留着。
+
+发现问题就直接改(遗漏的补上,多做的回退),改完重跑项目验证命令。
+改完后覆盖写 {state_dir}/.task-done.json,phase 填 "reflect",并加一个 reflection 字段:
+{
+  "change_id": "{change_id}",
+  "phase": "reflect",
+  "status": "done" | "failed" | "needs-review",
+  "summary": "反思结论一句话",
+  "reflection": {
+    "omissions": ["逐条:有/无 + 依据;全都没有就写 none"],
+    "over_implementation": ["逐条:有/无 + 依据;全都没有就写 none"],
+    "fixes_applied": ["这一段改了什么"]
+  },
+  "commits": ["本段新增的 sha"],
+  "evidence_anchors": ["..."],
+  "verify": { ... 同实施段 ... },
+  "finished_at": "<ISO 时间>"
+}
+仍然不 push、不合并、不归档。
+```
+
+## 附录 C · 归档提示词(archive 段)
+
+写到 `<state_dir>/prompt-archive.txt`。发这条之前你已经把 worktree rebase 到最新 main 了:
+
+```
+反思通过,工作区已 rebase 到最新 main。现在归档这个 change
+(相当于 openspec-driven-development 的步骤 7)。
+
+按 {{PROJECT_REPO}}/openspec/changes/AGENTS.md 的「归档」节执行;该文件没有明确规定时按下面做:
+
+1. 把 openspec/changes/{change_id}/spec-delta/<domain>/spec.md 里的每个 Requirement 合并进
+   {{PROJECT_REPO}}/openspec/specs/<domain>/spec.md。
+   - 与现有 Requirement 冲突(同一行为两种判据)→ **停下**,写 .task-done.json 标 needs-review,
+     summary 里写明冲突的两条,交人裁决。NEVER 自行选一边
+   - rebase 后 specs 已被别的 change 改过,以最新内容为准做追加
+2. 用 git mv 把 openspec/changes/{change_id}/ 整个移到
+   openspec/changes/archive/<YYYY-MM-DD>-{change_id}/(日期取今天)
+3. 若项目有 docs/wireframes/ 且本 change 有 wireframes.md,按项目约定回流
+4. 重跑项目验证命令确认没被归档动作破坏
+5. 提一个 commit,message 前缀 "{change_id}: archive"
+6. 写 {state_dir}/.task-done.json:
+   {
+     "change_id": "{change_id}",
+     "phase": "archive",
+     "status": "done" | "failed" | "needs-review",
+     "summary": "一句话",
+     "archived_to": "openspec/changes/archive/<YYYY-MM-DD>-{change_id}",
+     "specs_merged": ["openspec/specs/<domain>/spec.md"],
+     "evidence_anchors": ["本 change 最有代表性的改动落点 文件:行"],
+     "commits": ["<sha>"],
+     "finished_at": "<ISO 时间>"
+   }
+
+仍然不 push、不合并到 main(调度器负责 squash merge)、不改里程碑文档。
+```
+
+## 附录 D · 冲突打回提示词(reflect 段与 archive 段共用)
+
+```
+main 已被别的并行任务推进,你的分支与它有冲突。请:
+
+1. git fetch origin && git rebase main,解掉全部冲突
+2. 解冲突时以 main 上的既成事实为准,你自己这边只保留本 change 范围内的改动。
+   冲突多半来自别的 change 已经落地的改动,尤其是 openspec/specs/<domain>/spec.md ——
+   那里要保留双方的 Requirement,除非两条在描述同一行为却给出不同判据(那就停下标 needs-review)
+3. 若你已经做过归档(spec 合并 / change 移进 archive/),rebase 后**重新确认归档结果仍然完整**:
+   specs 里你那几条 Requirement 还在,changes/archive/<日期>-{change_id}/ 还在
+4. 重跑项目验证命令
+5. 覆盖写 {state_dir}/.task-done.json,phase 填**你当前所处的段**(不要改段),status 填 done
+
+解不了或需要人裁决,写 {state_dir}/.task-done.json 标 needs-review 说明卡点。
+```
+
+## 附录 E · 停滞提示词
+
+```
+进展停滞 <M> 分钟,无新提交也无新日志。请检查当前状态并继续当前这一段的工作,
+或写 {state_dir}/.task-done.json 说明卡点(status 填 needs-review,phase 填当前段)。
 ```
