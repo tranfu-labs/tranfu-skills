@@ -65,6 +65,15 @@ const rows = await page.evaluate(() => {
       Boolean(el.closest("button, [role=button], [role=tab], a"));
     const isProse = /^(P|LI|BLOCKQUOTE|DD|TD|ARTICLE)$/.test(el.tagName);
 
+    // 余量顶格：文字比内容盒还宽 = padding 被侵蚀。
+    // 余量 == 0 是 auto 宽度按钮的正常态，不是缺陷；-1 门槛避开亚像素舍入。
+    const padL = parseFloat(cs.paddingLeft) || 0;
+    const padR = parseFloat(cs.paddingRight) || 0;
+    const contentBox = el.clientWidth - padL - padR;
+    const textWidth = rects.length ? Math.max(...rects.map((r) => r.width)) : 0;
+    const slack = contentBox > 0 && textWidth ? +(contentBox - textWidth).toFixed(1) : null;
+    const cramped = slack !== null && slack < -1;
+
     const nowrapClip = cs.whiteSpace === "nowrap" && hasScrollBox && reallyClipped;
     const orphanWrap = isControl && !isProse && lineCount >= 2 && lastLineRatio < 0.6;
     const ellipsisClip = cs.textOverflow === "ellipsis" && hasScrollBox && reallyClipped;
@@ -73,7 +82,17 @@ const rows = await page.evaluate(() => {
     const longText = text.length > 20;
     const intentionalMultiline = cs.whiteSpace === "pre-line" || cs.whiteSpace === "pre-wrap";
 
-    const suspicion = nowrapClip ? "nowrap 裁切" : orphanWrap ? "孤字折行" : ellipsisClip ? "省略号截断" : null;
+    // 按严重度归因，重的优先：文字看不见 > 排版坏 > 只是没余量。
+    // 裁切的元素必然也余量为负，若顶格排前面会把所有裁切误标成顶格。
+    const suspicion = nowrapClip
+      ? "nowrap 裁切"
+      : ellipsisClip
+        ? "省略号截断"
+        : orphanWrap
+          ? "孤字折行"
+          : cramped
+            ? "余量顶格"
+            : null;
     const released = hasCompletion || (orphanWrap && (longText || intentionalMultiline));
 
     out.push({
@@ -84,6 +103,7 @@ const rows = await page.evaluate(() => {
       lastLineRatio: Number(lastLineRatio.toFixed(2)),
       whiteSpace: cs.whiteSpace,
       overflowX,
+      slack,
       suspicion,
       hasCompletion,
       longText,
@@ -96,6 +116,9 @@ await browser.close();
 
 // 期望：id → 是否该定罪
 const EXPECT = {
+  cramped: true,       // 固定宽度装不下，padding 被侵蚀
+  autofit: false,      // auto 宽度，余量恰为 0 是正常态
+  roomyfixed: false,   // 固定宽度但余量充裕
   orphan: true,        // 孤字折行
   clipped: true,       // nowrap 裁切
   noTitle: true,       // 省略号截断且无补全

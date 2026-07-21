@@ -6,6 +6,8 @@
  .ellip{display:inline-block;width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .multi{width:200px;white-space:pre-line}
  .roomy{width:400px}
+ .fixedw{width:120px;padding:8px 16px;box-sizing:border-box;white-space:nowrap}
+ .autow{padding:8px 16px}
 </style>
 <h1>贴合判据对照页</h1>
 
@@ -30,3 +32,12 @@
 
 <!-- 应释放：长说明文字折行属正常 -->
 <p class="narrow" id="longtext">这是一段比较长的说明文字，本来就需要折成很多行来显示。</p>
+
+<!-- 应命中：固定宽度装不下，padding 被侵蚀（余量为负） -->
+<button class="fixedw" id="cramped">Soul Methodology Agent</button>
+
+<!-- 应释放：auto 宽度，余量恰为 0 是正常态 -->
+<button class="autow" id="autofit">加入我们</button>
+
+<!-- 应释放：固定宽度但文字短，余量充裕 -->
+<button class="fixedw" id="roomyfixed">OK</button>
