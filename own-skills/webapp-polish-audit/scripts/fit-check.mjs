@@ -25,15 +25,34 @@ const rows = await page.evaluate(() => {
     if (!text) continue;
     const cs = getComputedStyle(el);
 
-    // 关键：只对「叶子文本元素」测行数。对含子元素的元素调 selectNodeContents，
-    // getClientRects 返回的是各子元素盒子的矩形数（button>span+svg 会得到 3），
-    // 那不是行数。真正被折行的永远是承载文本的那一层。
+    // 候选不筛叶子文本——那是「测行数」的前提，不是「谁能进候选」的门槛
+    // （16 通用原则第二条）。边距测量对含子元素的控件同样有效，而且正是它们最容易出问题。
     const kids = [...el.childNodes];
     const isLeafText = kids.length > 0 && kids.every((n) => n.nodeType === 3);
-    if (!isLeafText) continue;
+
+    // 文字层：自身是叶子文本就用自身，否则向下找最宽的文本节点（跨层）
+    let textHost = null;
+    if (isLeafText) {
+      textHost = el;
+    } else {
+      const walk = (node) => {
+        for (const n of node.childNodes) {
+          if (n.nodeType === 3 && n.textContent.trim()) {
+            const rg = document.createRange();
+            rg.selectNodeContents(n);
+            const b = rg.getBoundingClientRect();
+            if (b.width > 0 && (!textHost || b.width > textHost.rect.width)) {
+              textHost = { node: n, rect: b };
+            }
+          } else if (n.nodeType === 1) walk(n);
+        }
+      };
+      walk(el);
+      if (!textHost) continue;
+    }
 
     const range = document.createRange();
-    range.selectNodeContents(el);
+    range.selectNodeContents(isLeafText ? el : textHost.node);
     const rects = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
     const lineCount = rects.length;
     const lastLineRatio = lineCount >= 2 ? rects[rects.length - 1].width / rects[0].width : 1;
@@ -74,6 +93,22 @@ const rows = await page.evaluate(() => {
     const slack = contentBox > 0 && textWidth ? +(contentBox - textWidth).toFixed(1) : null;
     const cramped = slack !== null && slack < -1;
 
+    // 文字到容器边框的实际距离——用户看到的"挤不挤"是这个，不是"宽度够不够"。
+    // 实测：Start training 按宽度算只差 -0.8，实际左边距边框仅 0.6px。左右必须分开。
+    const elRect = el.getBoundingClientRect();
+    const textRect = rects.length
+      ? rects.reduce((a, r) => (r.width > a.width ? r : a), rects[0])
+      : null;
+    const leftGap = textRect ? +(textRect.left - elRect.left).toFixed(1) : null;
+    const rightGap = textRect ? +(elRect.right - textRect.right).toFixed(1) : null;
+    // padding 声明了期望的呼吸空间；实际边距明显小于它 = 文字侵占了 padding 区域。
+    // 这样 padding:0 的元素（如正文段落）天然不命中——它本就不期望间距。
+    const EDGE_TOLERANCE = 2; // 允许的舍入/字形侧边距误差
+    const hugging =
+      leftGap !== null &&
+      ((padL > 0 && leftGap < padL - EDGE_TOLERANCE) ||
+        (padR > 0 && rightGap < padR - EDGE_TOLERANCE));
+
     const nowrapClip = cs.whiteSpace === "nowrap" && hasScrollBox && reallyClipped;
     const orphanWrap = isControl && !isProse && lineCount >= 2 && lastLineRatio < 0.6;
     const ellipsisClip = cs.textOverflow === "ellipsis" && hasScrollBox && reallyClipped;
@@ -90,9 +125,11 @@ const rows = await page.evaluate(() => {
         ? "省略号截断"
         : orphanWrap
           ? "孤字折行"
-          : cramped
-            ? "余量顶格"
-            : null;
+          : hugging
+            ? "文字贴边"
+            : cramped
+              ? "余量顶格"
+              : null;
     const released = hasCompletion || (orphanWrap && (longText || intentionalMultiline));
 
     out.push({
@@ -104,6 +141,8 @@ const rows = await page.evaluate(() => {
       whiteSpace: cs.whiteSpace,
       overflowX,
       slack,
+      leftGap,
+      rightGap,
       suspicion,
       hasCompletion,
       longText,
@@ -116,6 +155,8 @@ await browser.close();
 
 // 期望：id → 是否该定罪
 const EXPECT = {
+  hugging: true,       // 文字被推到距边框 1px
+  breathing: false,    // auto 宽度，左右各 16px
   cramped: true,       // 固定宽度装不下，padding 被侵蚀
   autofit: false,      // auto 宽度，余量恰为 0 是正常态
   roomyfixed: false,   // 固定宽度但余量充裕
