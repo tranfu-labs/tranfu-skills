@@ -4,7 +4,7 @@ display_name: Web UI Polish Audit
 display_name_zh: Web UI 打磨审计
 description: >
   对浏览器最终渲染的 Web UI 做只读打磨审计，输出 DOM、可访问性、计算样式、布局几何和交互状态支持的可验证发现。用于用户要求 audit、review、critique、diagnose、产品感检查、完成度检查、真实产品感、good taste、not demo-like、refined，或明确要求先审查可见 UI bug 的场景。Do NOT trigger when 用户要求实现、修复、改代码、产出比对、大范围重新设计、纯后端/API/数据/CLI/基础设施、产品策略、UX 研究、信息架构或纯文案任务；若请求同时包含审查与实现，本 Skill 只执行审查阶段并把实现留给后续工作流。
-version: 0.6.0
+version: 0.6.1
 author: aquarius-wing
 updated_at: 2026-07-21
 origin: own

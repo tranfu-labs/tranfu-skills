@@ -135,18 +135,21 @@
 
 - `resize_page` 到 `375×812`。
 - `evaluate_script`:
-  - 找所有 `[role=dialog]` / `[aria-modal=true]` / `<dialog>` 元素（含 hidden 或 open state）。
-  - 每个 dialog 拿 rect（若 hidden 就临时 unhide 观察: `el.hidden = false; requestAnimationFrame(...)` 后拿 rect，再复原）。
+  - 找所有 `[role=dialog]` / `[aria-modal=true]` / `<dialog>` 元素，**以及能打开它们的触发控件**（`[aria-haspopup=dialog]` / `[aria-controls]` 指向弹层的按钮）。
+  - **首选：真打开它**。弹层是条件渲染时 DOM 里根本没有节点，静态找永远是空。打开弹层属**低风险交互**（见 SKILL.md §0），默认允许——先装写请求拦截钩子，再点击触发控件，拿到 rect 后按 Esc / 关闭按钮复原。
+  - 次选：DOM 里已存在但 hidden 的，临时 `el.hidden = false` 取 rect 后复原。
+  - 拦截钩子装不上 → 不要放弃，改用次选；两条都不通才记 `blocker`。
   - 检查: `rect.bottom > innerHeight` (超出)，找 dialog 内 close / confirm / cancel 按钮 rect 是否在 viewport 外。
 - 输出 JSON: `[{dialogSelector, rect, closeButtonInViewport, confirmButtonInViewport, currentSelectionInViewport}]`。
 - 键盘弹出遮挡是副作用态，只读到不了 → 记 `blocker`。
 
 **操作卡 · 绝对不要（反向）**:
 
-- 不要 `take_screenshot` 判"是否被遮挡"。
-- 不要真点击弹出 dialog（走 hidden state 静态判）。
+- 不要 `take_screenshot` 判"是否被遮挡"——矩形几何就是结论。
 - 不要派判断者。
-- 键盘弹出遮挡属副作用态，只读判不了记 blocker，不猜。
+- **不要只找静态 DOM 里的 dialog 就收工**：条件渲染的弹层不点开永远是 `dialogs: []`，那不是「没有弹层」而是「没查到」。
+- 点击触发控件前必须先装写请求拦截；拦到写请求立即停止、复原并记 `pending_authorization`。
+- 键盘弹出遮挡属真副作用态，只读到不了记 `blocker`，不猜。
 
 ### E. 响应式变化改变任务语义
 
@@ -232,7 +235,18 @@
 
 - 补全检测：`title` 属性、`aria-describedby` 指向的完整文本、展开按钮、`line-clamp` 且同容器有展开控件。
 - 输出 JSON: `[{selector, viewport, text, textLength, lineCount, lastLineRatio, whiteSpace, overflowX, suspicion, hasCompletion, isCriticalInfo, actionable}]`。
-- 主代理判：命中任一嫌疑 && `!hasCompletion` &&（`isCriticalInfo` || 该控件是关键操作）→ actionable。**释放**：`whiteSpace === 'pre-line'`、`minHeight` 已容纳多行、有可达补全。
+- 主代理判：命中任一嫌疑 && `!hasCompletion` &&（`isCriticalInfo` || 该控件是关键操作）→ actionable。
+
+**释放条件（缺一不可，漏掉任一条都会误报）**：
+
+| 释放 | 理由 |
+| --- | --- |
+| `textLength > 20` | **本就该多行的长文案**。按钮标签通常 ≤10 字（「开始免费试用」6 字），30–40 字的卡片链接标题折两行是正常排版。`isControl` 只区分「是不是控件」，区分不了「控件标签」与「控件里承载的长标题」——这条才是那道闸。 |
+| `whiteSpace === 'pre-line'` | 显式声明的多行排版 |
+| `minHeight` 已容纳多行 | 容器本就为多行设计 |
+| 有可达补全 | `title` / 提示气泡 / 展开机制 |
+
+> 反例（实测踩过）：`a.home-practice-card-link` 文案「OpenClaw 联合 Claude Code 与飞书 Bot 操作完全指南」38 字、末行比 0.324、`isControl: true`——只看 `isControl` 会误判为挤坏，加上 `textLength > 20` 才正确释放。
 
 **操作卡 · 绝对不要（反向）**:
 
