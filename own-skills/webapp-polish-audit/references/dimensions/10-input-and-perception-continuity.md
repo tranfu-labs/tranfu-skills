@@ -45,8 +45,12 @@
 
 **操作卡 · 怎么做（正向, 有空间不限死）**:
 
-- 用 `evaluate_script` 一次调，遍历页面所有 `button` / `a` / `[role=button]`，逐个 `dispatchEvent(new MouseEvent('mouseover'))` 前后比对 computed style 与子元素 visibility（mouseover 是纯浏览器事件，无副作用）。
-- 或分析所有 stylesheet 里含 `:hover` 的 selector，检查其规则是否切换 `display` / `opacity` / `visibility` / `pointer-events`。
+**按行为找，不按样式表枚举。** 扫 stylesheet 里的 `:hover` 规则是白名单思路——JS 驱动的 hover 显隐（`onMouseEnter` 改 state）根本不在样式表里，会整个漏掉。正确做法是真的 hover 一下看变化。
+
+- 用 `evaluate_script` 一次调，遍历所有可点元素及其容器（`button` / `a` / `[role=button]` / `[onclick]` / `cursor: pointer`，以及列表项、卡片、表格行这些常见的 hover 宿主）。
+- 逐个 `dispatchEvent(new MouseEvent('mouseover', {bubbles: true}))`，**前后各拍一次子树快照**（每个后代的 `display` / `opacity` / `visibility` / `pointer-events` / rect），比对出「hover 后才可见」的元素。`mouseover` 是纯浏览器事件，不发请求、不改数据，无需拦截保护。
+- 完成后 `dispatchEvent(new MouseEvent('mouseout', {bubbles: true}))` 复原，确认子树回到初始状态。
+- 样式表扫描只作**补充信号**，不作唯一来源。
 - 输出 JSON: `[{selector, text, appearsOnHoverOnly: bool, hasFallbackPath: bool（同容器内是否有等价非 hover 入口）}]`。
 - 主代理收 JSON 直接判定: `appearsOnHoverOnly && !hasFallbackPath && text 匹配 删除/编辑/更多/详情/查看` → actionable。
 
@@ -81,7 +85,8 @@
 
 - 不要 `take_screenshot` 判 focus 位置。
 - 不要派判断者。
-- 打开弹层属**低风险交互**，默认允许：在拦截 `fetch`/`XHR`/`sendBeacon`/`location` 的前提下点击触发，拦到写请求立即停止并记 `pending_authorization`。
+- **不要因为写请求拦截钩子装不上就跳过 Tab 走查**：按 Tab 键只移动焦点，不发请求、不改数据，本就不需要拦截保护。拦截是「点击可能触发写操作的控件」时才需要的前置条件，别把它扩大成所有交互的通行证。
+- 打开弹层属**低风险交互**，默认允许：装得上拦截就先装，装不上则改用静态 hidden 态取几何（见 11.D）；两条都不通才记 `blocker`。
 
 ### C. 触摸目标过小
 
