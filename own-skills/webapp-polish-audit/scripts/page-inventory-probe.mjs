@@ -1,16 +1,9 @@
+// 主流程只有这五条维度。磁盘上不存在其他 dimensions md，绝不要在这里加回旧编号。
 const REFERENCES = {
-  iconEntry: "references/dimensions/01-icon-entry-craft.md",
-  theme: "references/dimensions/02-theme-experience-equivalence.md",
   interaction: "references/dimensions/03-interaction-feedback-and-safety.md",
-  spatial: "references/dimensions/04-spatial-stability-and-control.md",
-  dataState: "references/dimensions/05-data-state-continuity.md",
-  batchInfo: "references/dimensions/06-batch-information-judgment-efficiency.md",
   form: "references/dimensions/07-form-completion-confidence.md",
-  orientation: "references/dimensions/08-orientation-and-returnability.md",
-  visualTrust: "references/dimensions/09-visual-trust-and-consistency.md",
   inputContinuity: "references/dimensions/10-input-and-perception-continuity.md",
   responsive: "references/dimensions/11-responsive-task-continuity.md",
-  resultFeedback: "references/dimensions/12-result-feedback-and-motion-proportion.md",
   copyClarity: "references/dimensions/13-state-and-action-copy-clarity.md",
 };
 
@@ -82,6 +75,7 @@ export async function collectPageInventory(tab, inputOptions = {}) {
       tag: element.tagName.toLowerCase(),
       type: element.getAttribute("type") || "",
       role: element.getAttribute("role") || "",
+      ariaLabel: element.getAttribute("aria-label") || "",
       text: ownText(element).slice(0, 120),
     }));
 
@@ -172,13 +166,10 @@ export async function collectPageInventory(tab, inputOptions = {}) {
       "生成",
       "撤销",
     ];
-    const themeKeywords = ["theme", "dark", "light", "system", "主题", "深色", "浅色"];
-
     const visibleStatusKeywords = statusKeywords.filter((keyword) => lowerBodyText.includes(keyword.toLowerCase()));
     const visibleActionResultKeywords = actionResultKeywords.filter((keyword) =>
       lowerBodyText.includes(keyword.toLowerCase()),
     );
-    const themeEvidence = themeKeywords.filter((keyword) => lowerBodyText.includes(keyword.toLowerCase()));
 
     const pathStats = links.reduce((acc, link) => {
       if (!link.sameOrigin || !link.path) {
@@ -191,14 +182,50 @@ export async function collectPageInventory(tab, inputOptions = {}) {
     }, {});
 
     const realFormTask =
-      formControls.some((item) => item.tag === "form") ||
-      formControls.some((item) => ["input", "textarea", "select"].includes(item.tag)) ||
-      formControls.some((item) => ["textbox", "searchbox"].includes(item.role));
+      // 07 只覆盖"真的要填完并提交"的表单任务。孤立的搜索框 / 语言切换 / 非提交型选择器
+      // 不算——否则一个站内搜索就会拉起 07 的全部七类判定，其中大半必然 not_applicable。
+      (() => {
+        const isSearchOnly = (item) =>
+          item.type === "search" ||
+          item.role === "searchbox" ||
+          /搜索|search|查找|filter 关键词/i.test(`${item.ariaLabel} ${item.placeholder} ${item.name}`);
+        const fillable = formControls.filter((item) =>
+          ["input", "textarea", "select"].includes(item.tag) || ["textbox", "searchbox"].includes(item.role),
+        );
+        const nonSearchFields = fillable.filter((item) => !isSearchOnly(item));
+        const hasFormElement = formControls.some((item) => item.tag === "form");
+        const hasSubmitControl = buttonLike.some(
+          (item) =>
+            item.type === "submit" ||
+            /提交|保存|登录|注册|发送|创建|确认|更新|submit|save|sign in|log in|register|create|send/i.test(
+              `${item.text} ${item.ariaLabel}`,
+            ),
+        );
+        // 真表单任务 = 有 <form>；或有可提交控件配合至少一个非搜索字段；或多个非搜索字段同时存在。
+        return hasFormElement || (hasSubmitControl && nonSearchFields.length >= 1) || nonSearchFields.length >= 2;
+      })();
 
     const tableLike = all('table, [role="table"], [role="grid"]').length > 0;
     const repeatedCollection = collectionItems.length >= 3 || Object.values(pathStats).some((count) => count >= 5);
-    const hasSameOriginDetailLinks = Object.entries(pathStats).some(([key, count]) => key.endsWith("/*") && count >= 2);
-    const hasExpandable = customControls.some((item) => item.ariaExpanded) || buttonLike.some((item) => /展开|collapse|more|更多/i.test(item.text));
+
+    // 03 / 13 的触发条件按 dimension md 的字面定义编码，不要放宽成"页面上有按钮"。
+    const DESTRUCTIVE = /delete|remove|clear|discard|publish|reset|revoke|删除|移除|清空|清除|丢弃|发布|覆盖|撤销|重置/i;
+    const CRITICAL_CTA = /publish|pay|checkout|delete|send|submit|grant|invite|发布|支付|付款|结算|删除|发送|提交|授权|邀请/i;
+    const actionLabel = (item) => `${item.text || ""} ${item.ariaLabel || ""}`;
+    const destructiveActions = buttonLike
+      .filter((item) => DESTRUCTIVE.test(actionLabel(item)))
+      .map((item) => actionLabel(item).trim().slice(0, 60));
+    // icon-only 破坏性控件：无可见文字，靠 aria-label 或 class 暴露 trash/close 语义。
+    const destructiveIconActions = buttonLike
+      .filter((item) => !item.text.trim() && /trash|delete|close|remove|dismiss/i.test(item.ariaLabel))
+      .map((item) => item.ariaLabel.slice(0, 60));
+    const criticalCtas = buttonLike
+      .filter((item) => CRITICAL_CTA.test(actionLabel(item)))
+      .map((item) => actionLabel(item).trim().slice(0, 60));
+    const confirmDialogs = dialogs.filter((item) =>
+      /confirm|确认|确定|are you sure|不可恢复|无法撤销/i.test(JSON.stringify(item)),
+    );
+    const iconOnlyActions = buttonLike.filter((item) => !item.text.trim());
 
     return {
       url: location.href,
@@ -219,16 +246,17 @@ export async function collectPageInventory(tab, inputOptions = {}) {
         actions: links.length > 0 || buttonLike.length > 0,
         formTask: realFormTask,
         tableListCardCollection: tableLike || repeatedCollection,
-        articleDetailContent: headings.length > 0 && lowerBodyText.length > 800,
         customControlComboboxMenu: customControls.length > 0,
         modalDialogDrawer: dialogs.length > 0,
         dataStateVisible: visibleStatusKeywords.length > 0,
         asyncResultAction: visibleActionResultKeywords.length > 0,
-        themeSpecificControlOrAsset: themeEvidence.length > 0,
         responsiveRisk: navRegions.length > 0 || repeatedCollection || tableLike || customControls.length > 0,
-        spatialStabilityRisk: hasExpandable || dialogs.length > 0,
-        orientationReturnability: navRegions.length > 0 || hasSameOriginDetailLinks,
-        visualTrustRisk: repeatedCollection || headings.length >= 4,
+        // 03：破坏性动作，或可区分的风险 / 优先级层级。仅有普通可点元素不算。
+        destructiveActionRisk: destructiveActions.length > 0 || destructiveIconActions.length > 0,
+        // 10：自定义控件 / 纯图标动作 / 键盘与触摸目标风险。
+        inputPerceptionRisk: customControls.length > 0 || iconOnlyActions.length > 0,
+        // 13：关键 CTA 文案，或破坏性确认弹层。
+        criticalCtaOrConfirmDialog: criticalCtas.length > 0 || confirmDialogs.length > 0,
       },
       evidence: {
         headings: sample(headings, 20),
@@ -242,92 +270,68 @@ export async function collectPageInventory(tab, inputOptions = {}) {
         sameOriginPathStats: pathStats,
         visibleStatusKeywords,
         visibleActionResultKeywords,
-        themeEvidence,
+        destructiveActions: sample(destructiveActions, 10),
+        destructiveIconActions: sample(destructiveIconActions, 10),
+        criticalCtas: sample(criticalCtas, 10),
+        iconOnlyActionCount: iconOnlyActions.length,
       },
     };
   }, undefined, { timeoutMs: options.evaluateTimeoutMs });
 }
 
+/**
+ * 维度选择的唯一实现。S2 直接采信本函数的输出，不再由 SubAgent 复述成 YAML。
+ * 每条 selected 自带 evidence 字段，充当过去 md_evidence 的角色：无证据不选。
+ */
 export function selectReferenceCandidates(inventory) {
   const selected = [];
   const skipped = [];
-  const add = (reference, reason) => selected.push({ reference, reason });
-  const skip = (reference, reason) => skipped.push({ reference, reason });
   const surfaces = inventory.surfaces || {};
+  const evidence = inventory.evidence || {};
+  const counts = inventory.counts || {};
 
-  if (surfaces.actions) {
-    add(REFERENCES.interaction, "visible links/buttons/actions or action controls");
-  } else {
-    skip(REFERENCES.interaction, "no visible action controls detected");
-  }
+  const decide = (reference, triggered, reason, signal) => {
+    if (triggered) {
+      selected.push({ reference, reason, evidence: signal });
+    } else {
+      skipped.push({ reference, reason });
+    }
+  };
 
-  if (surfaces.spatialStabilityRisk) {
-    add(REFERENCES.spatial, "expandable/dialog/stateful layout risk detected");
-  } else {
-    skip(REFERENCES.spatial, "no visible expand/collapse, dialog, or layout state transition detected");
-  }
+  decide(
+    REFERENCES.interaction,
+    surfaces.destructiveActionRisk,
+    "destructive action controls detected",
+    { destructiveActions: evidence.destructiveActions, destructiveIconActions: evidence.destructiveIconActions },
+  );
 
-  if (surfaces.dataStateVisible) {
-    add(REFERENCES.dataState, "visible loading/empty/error/no-results/permission keywords detected");
-  } else {
-    skip(REFERENCES.dataState, "no visible data-state condition detected");
-  }
+  decide(
+    REFERENCES.form,
+    surfaces.formTask,
+    "real form-completion task detected",
+    { formControls: counts.formControls, samples: evidence.formControls },
+  );
 
-  if (surfaces.tableListCardCollection) {
-    add(REFERENCES.batchInfo, "table/list/card collection or repeated records detected");
-  } else {
-    skip(REFERENCES.batchInfo, "no table/list/card collection detected");
-  }
+  decide(
+    REFERENCES.inputContinuity,
+    surfaces.inputPerceptionRisk,
+    "custom control / combobox / menu / icon-only action detected",
+    { customControls: counts.customControls, iconOnlyActions: evidence.iconOnlyActionCount },
+  );
 
-  if (surfaces.formTask) {
-    add(REFERENCES.form, "real form controls or form task detected");
-  } else {
-    skip(REFERENCES.form, "no real form-completion task detected");
-  }
+  decide(
+    REFERENCES.responsive,
+    surfaces.responsiveRisk,
+    "navigation, collection, table, or controls need viewport continuity check",
+    { navRegions: counts.navRegions, collectionItems: counts.collectionItems, tables: counts.tables },
+  );
 
-  if (surfaces.orientationReturnability) {
-    add(REFERENCES.orientation, "navigation or same-origin list-to-detail paths detected");
-  } else {
-    skip(REFERENCES.orientation, "no navigation or return-path risk detected");
-  }
-
-  if (surfaces.visualTrustRisk) {
-    add(REFERENCES.visualTrust, "mixed headings, repeated groups, or visual hierarchy risk detected");
-  } else {
-    skip(REFERENCES.visualTrust, "no strong visual consistency risk detected");
-  }
-
-  if (surfaces.customControlComboboxMenu) {
-    add(REFERENCES.inputContinuity, "custom control / combobox / menu detected");
-  } else {
-    skip(REFERENCES.inputContinuity, "no custom input/perception control detected");
-  }
-
-  if (surfaces.responsiveRisk) {
-    add(REFERENCES.responsive, "navigation, collection, table, or controls need viewport continuity check");
-  } else {
-    skip(REFERENCES.responsive, "no responsive task risk detected");
-  }
-
-  if (surfaces.asyncResultAction) {
-    add(REFERENCES.resultFeedback, "visible async result action keywords detected");
-  } else {
-    skip(REFERENCES.resultFeedback, "no save/create/delete/copy/export/upload/send/refresh/generate action detected");
-  }
-
-  if (surfaces.actions || surfaces.dataStateVisible || surfaces.asyncResultAction) {
-    add(REFERENCES.copyClarity, "visible action or state copy needs naming/scope clarity check");
-  } else {
-    skip(REFERENCES.copyClarity, "no critical action or state copy detected");
-  }
-
-  if (surfaces.themeSpecificControlOrAsset) {
-    add(REFERENCES.theme, "theme-specific control, keyword, or asset detected");
-  } else {
-    skip(REFERENCES.theme, "no visible theme-specific control or asset detected");
-  }
-
-  skip(REFERENCES.iconEntry, "favicon/app icon/logo mark not part of page-surface inventory by default");
+  decide(
+    REFERENCES.copyClarity,
+    surfaces.criticalCtaOrConfirmDialog,
+    "critical CTA label or destructive confirm dialog detected",
+    { criticalCtas: evidence.criticalCtas, dialogs: counts.dialogs },
+  );
 
   return { selected, skipped };
 }

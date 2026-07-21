@@ -1,0 +1,32 @@
+<style>
+ body{font:16px/1.5 sans-serif;margin:0;padding:20px}
+ button{font:inherit;padding:8px 12px;border:1px solid #888;background:#eee;margin:8px 0;display:block}
+ .narrow{width:90px}      /* 逼出孤字折行 */
+ .nowrap{display:inline-block;width:80px;white-space:nowrap;overflow:hidden}
+ .ellip{display:inline-block;width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .multi{width:200px;white-space:pre-line}
+ .roomy{width:400px}
+</style>
+<h1>贴合判据对照页</h1>
+
+<!-- 应命中：孤字折行（末行只剩「用」） -->
+<button class="narrow" id="orphan">开始免费试用</button>
+
+<!-- 应释放：正常两行，末行不短 -->
+<button class="multi" id="intentional">第一行文案
+第二行文案</button>
+
+<!-- 应命中：nowrap 裁切 -->
+<button class="nowrap" id="clipped">导出全部数据报表</button>
+
+<!-- 应释放：省略号裁切但有 title 补全 -->
+<span class="ellip" id="hastitle" title="总计人民币 12,345.67 元">总计人民币 12,345.67 元</span>
+
+<!-- 应命中：省略号裁切且无补全，且是金额 -->
+<span class="ellip" id="noTitle">总计人民币 98,765.43 元</span>
+
+<!-- 应释放：宽敞单行 -->
+<button class="roomy" id="fine">保存设置</button>
+
+<!-- 应释放：长说明文字折行属正常 -->
+<p class="narrow" id="longtext">这是一段比较长的说明文字，本来就需要折成很多行来显示。</p>

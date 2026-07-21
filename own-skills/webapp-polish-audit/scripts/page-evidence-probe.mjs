@@ -82,7 +82,7 @@ async function collectCurrentViewportEvidence(tab, label, options) {
       return parts.join(" > ");
     };
 
-    // 00-inspection-procedure 1.3 字段契约的样式向量：背景色/文字色/边框/圆角/字号/字重/内边距/行高。
+    // 16-page-exploration-and-capture 元素盘点字段契约的样式向量：背景色/文字色/边框/圆角/字号/字重/内边距/行高。
     const styleVectorOf = (style) => ({
       backgroundColor: style.backgroundColor,
       color: style.color,
@@ -112,7 +112,7 @@ async function collectCurrentViewportEvidence(tab, label, options) {
       };
     };
 
-    // 只判裁切，不判换行（getClientRects 对块级控件恒为 1，换行靠 wrapSuspect + 特写）。
+    // 只判裁切，不判换行（getClientRects 对块级控件恒为 1）。换行由 11.F 用 Range 测真实行数，不截特写。
     const overflowOf = (element) => ({
       clipX: element.scrollWidth > element.clientWidth,
       clipY: element.scrollHeight > element.clientHeight,
@@ -302,7 +302,7 @@ async function collectCurrentViewportEvidence(tab, label, options) {
     if (longestLabel) {
       addTarget(longestLabel, "longest-label");
     }
-    const closeupTargets = Array.from(targetMap.values()).slice(0, 12);
+    const suspectTargets = Array.from(targetMap.values()).slice(0, 12);
 
     return {
       url: location.href,
@@ -316,7 +316,7 @@ async function collectCurrentViewportEvidence(tab, label, options) {
         forms: forms.length,
         dialogs: dialogs.length,
       },
-      closeupTargets,
+      suspectTargets,
       samples: {
         headings: sample(headings, 20),
         navItems: sample(navItems, 20),
@@ -373,50 +373,4 @@ export async function collectPageEvidence(browser, tab, inputOptions = {}) {
   }
 
   return result;
-}
-
-// 特写助手：用 transform: scale 做视觉放大——不触发重排版，换行/裁切状态保持采集时原样
-// （CSS zoom 会重排版、可能改变换行结果，不可用于特写取证）。
-// 用法：prepareCloseup → Browser 截当前视口一张（即特写）→ resetCloseup。
-export async function prepareCloseup(tab, selector, inputOptions = {}) {
-  const scale = inputOptions.scale ?? 3;
-  const timeoutMs = inputOptions.timeoutMs ?? 8000;
-  return await tab.playwright.evaluate(
-    ({ targetSelector, zoomScale }) => {
-      const element = document.querySelector(targetSelector);
-      if (!element) {
-        return { ok: false, reason: `selector not found: ${targetSelector}` };
-      }
-      element.scrollIntoView({ block: "center", inline: "center" });
-      const rect = element.getBoundingClientRect();
-      const originX = rect.left + window.scrollX + rect.width / 2;
-      const originY = rect.top + window.scrollY + rect.height / 2;
-      document.body.style.transformOrigin = `${originX}px ${originY}px`;
-      document.body.style.transform = `scale(${zoomScale})`;
-      return {
-        ok: true,
-        scale: zoomScale,
-        box: {
-          x: Math.round(rect.x),
-          y: Math.round(rect.y),
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
-        },
-      };
-    },
-    { targetSelector: selector, zoomScale: scale },
-    { timeoutMs },
-  );
-}
-
-export async function resetCloseup(tab, inputOptions = {}) {
-  const timeoutMs = inputOptions.timeoutMs ?? 8000;
-  await tab.playwright.evaluate(
-    () => {
-      document.body.style.transform = "";
-      document.body.style.transformOrigin = "";
-    },
-    null,
-    { timeoutMs },
-  );
 }
