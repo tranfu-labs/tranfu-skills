@@ -47,10 +47,23 @@
 对第 2 步中变成"待合并"的每个任务:
 
 1. `git -C <worktree> fetch origin && git -C <worktree> rebase main`
-2. rebase 冲突 → resume-codex,prompt: `"main 已推进,你的分支需要 rebase 并解冲突,继续或写 .task-done.json 标 needs-review。"`,**attempts 不 +1**(rebase 不算 codex 卡住),回到 running 状态,不进入第 4 步
+2. rebase 冲突 → resume-codex,prompt: `"main 已推进,你的分支需要 rebase 并解冲突,继续或写 .task-done.json 标 needs-review。"`,**attempts 不 +1**(rebase 不算 codex 卡住),回到 running 状态,不进入后续落地步骤
 3. 无冲突 → 在 repo root 跑 **本项目的 typecheck 命令**(见下方 §项目验证命令);失败 → 标 `awaiting-human`,记 typecheck 尾部输出
-4. 通过 → 回到 repo root: `git merge --squash <branch> && git commit -m "T<n>: <title>\n\n[loop merged from <branch>]"`; 记 `merged_sha=<新 commit sha>`,标 `done`
-5. 清理: `git worktree remove <worktree_path> --force && git branch -D <branch>`;可留 state_dir 便于事后翻查
+4. 通过 → 回到 repo root 执行 `git merge --squash <branch>`(此时改动只进暂存区,**先不 commit**)
+5. **合并该任务的 spec-delta**:把 `<state_dir>/spec-delta.md` 的 Requirement 追加进 `openspec/specs/<domain>/spec.md`,`git add` 之。
+   - codex 没写 spec-delta 文件 → 标 `awaiting-human`,原因 `"missing spec-delta"`,**不 commit**。任务的行为没有登记进事实源就不算完成
+   - 追加时若发现与现有 Requirement 冲突(同一行为两种判据) → 标 `awaiting-human`,原因写明冲突的两条,交人裁决,NEVER 自行选一边
+6. **勾选 tasks.md 并写证据锚**:把 `openspec/changes/{{CHANGE_ID}}/tasks.md` 中该任务的主行与全部子勾选项从 `[ ]` 改成 `[x]`,并在**主行末尾**追加锚:
+   ```
+   - [x] T3: IPC 通道 + 团队页数据容器 → 3f2a9b1 · desktop/src/team-ipc.ts:88
+   ```
+   锚取自 `.task-done.json` 的 `evidence_anchors` 首项 + 本次 merge 的短 sha。`git add` 之。
+   - **勾选只能由你写**,不接受 codex 自行勾选(它的 prompt 里已禁止)。理由:锚必须由落地动作机械产生才可信;让执行者自证完成,正是"任务打勾但功能没实现"的来源
+   - `.task-done.json` 缺 `evidence_anchors` 或锚指向的文件不存在 → 标 `awaiting-human`,原因 `"evidence anchor missing or dangling"`,不勾选、不 commit
+7. 一次性提交上述三部分(代码 + spec + 勾选): `git commit -m "T<n>: <title>\n\n[loop merged from <branch>]"`; 记 `merged_sha=<新 commit sha>`,标 `done`
+8. 清理: `git worktree remove <worktree_path> --force && git branch -D <branch>`;可留 state_dir 便于事后翻查
+
+第 5 步之所以逐任务合并而不是等整个 change 归档:先完成的任务其行为已经是既成事实,让它等最后一个任务才登记,中间所有任务都在对着过时的 specs 工作——跨任务的契约漂移由此产生。**后续任务点火时读到的 specs MUST 已包含先前任务登记的行为。**
 
 ### 4. 血缘传染
 
@@ -77,7 +90,13 @@
 - `heartbeats.total += 1`
 - 计算本次心跳"结果快照"哈希(tasks 数组中每个任务的 `id,status,merged_sha,attempts`);若与 `last_status_hash` 相同 → `no_progress_streak += 1` 否则清零并更新
 - 满足任一条件立即输出总结并**请求用户手动 /loop stop**:
-  - 全部任务 status=`done` → 输出全绿报告(每任务 merged_sha + 一行 summary)
+  - 全部任务 status=`done` → **先跑验收覆盖率核对,再输出全绿报告**:
+    1. 取 PRD「指标与验收」的编号全集
+    2. 取 `openspec/specs/<各相关域>/spec.md` 中所有 `Source:` 行覆盖的验收编号
+    3. 两者比对。**缺任何一条 → 不是全绿**,输出"实现已完成但验收 #N 没有对应
+       行为规格"并请求人工处理。没有规格的行为等于没有回归护栏,下一次改动
+       会静默破坏它
+    全绿报告含:每任务 merged_sha + 一行 summary + 覆盖率核对结果
   - 无 running,无 ready(即无 todo 依赖已满足) → 输出待人工列表(blocked 与 awaiting-human 原因)
   - `no_progress_streak >= no_progress_stop_heartbeats` → 疑似死锁,输出诊断
   - `heartbeats.total >= hard_stop_total_heartbeats` → 硬上限
@@ -146,6 +165,13 @@
 - 本任务在 openspec 中的段落:
   {{PROJECT_REPO}}/openspec/changes/{{CHANGE_ID}}/tasks.md
   找 {task_id} 及其子勾选项
+- 验收落点表(每条验收由哪个字段/边界承载):
+  {{PROJECT_REPO}}/openspec/changes/{{CHANGE_ID}}/design.md 的「验收落点表」
+  你负责的验收编号在表里对应哪一行,就改哪里。若表里写的落点在代码中不存在,
+  说明前置任务没做完 —— 停下写 .task-done.json 标 needs-review,
+  NEVER 把它接到某个名字相近的现有状态上凑合。
+- 已登记的行为规格(先前任务留下的约定,MUST 遵守):
+  {{PROJECT_REPO}}/openspec/specs/<相关域>/spec.md
 - 覆盖的验收标准编号(PRD 里的验收列表): {acceptance_ids_csv}
 
 工作区: {worktree_path}
@@ -158,25 +184,56 @@
 2. 需求与现有代码冲突时以 PRD 为准。
 3. 每个逻辑单元一个 commit,commit message 前缀 "{task_id}: "。
 4. 编码完成后要自己选择合适的方式验证改动(单元测试 / 手动运行 / 类型检查等);
-   验证工具你自己选。
-5. 至少跑本项目的验证命令(见下方"项目验证命令"),全绿才能进第 6 步。
-6. 完成或放弃时,写 {state_dir}/.task-done.json:
+   验证工具你自己选。但有一条硬规则:
+   **任务描述里凡出现跨边界的字眼(跨页面 / 另一个进程 / 已有会话 / 侧边栏 /
+   其他模块),该项的测试 MUST 从最外层入口进** —— 即从真实装配处(应用容器、
+   IPC 层)驱动,NEVER 靠直接给组件灌参数来"证明"接线正确。给组件灌参数
+   只能证明组件本身,恰好掩盖了接线错误,而接线错误正是这类任务最常见的失败。
+5. **共享语义回扫**:若你改变了任何共享函数 / 类型 / 数据结构的**语义**
+   (不只是新增),MUST grep 出它的全部调用点逐个确认仍然成立,并把调用点
+   清单写进 .task-done.json 的 callsite_sweep。并行任务之间最常见的缺陷是:
+   你引入了一个新前提,而先完成的任务仍按旧前提工作。
+6. 至少跑本项目的验证命令(见下方"项目验证命令"),全绿才能进第 7 步。
+7. **写本任务的行为规格** {state_dir}/spec-delta.md —— 这是完成的必要条件,
+   不是可选项。为你实现的每条验收写一个 Requirement:
+   ```
+   ## Requirement: <一句话行为>
+   Source: {{PRD_PATH}}#<小节标题>
+
+   系统 MUST <可判定的判据>。系统 MUST NOT <边界>。
+
+   ### Scenario: <场景名>
+   - GIVEN <前置状态>
+   - WHEN <触发>
+   - THEN <可观察结果>
+   ```
+   只写**可判定的判据**(能写成断言的),NEVER 复述 PRD 的决策理由或视觉取舍。
+   你负责的每个验收编号都要有对应 Requirement,漏一条主 loop 会打回。
+8. 完成或放弃时,写 {state_dir}/.task-done.json:
    {
      "task_id": "{task_id}",
      "status": "done" | "failed" | "needs-review",
      "summary": "一句话说做了什么",
      "commits": ["<sha1>", "<sha2>"],
+     "evidence_anchors": ["src/foo.ts:88", "tests/foo.test.ts:12"],
+     "spec_delta": "spec-delta.md",
+     "callsite_sweep": ["改了 resolveX 的语义,调用点 a.ts:20 / b.ts:41 已确认"],
      "verify": {
        "typecheck": "pass" | "fail" | "skipped",
        "unit_tests": "pass" | "fail" | "skipped",
        "acceptance_ids_covered": [数字数组],
+       "outer_entry_tests": ["跨边界项从哪个入口驱动的,没有跨边界项写 none"],
        "evidence": "你验了什么,看到什么(自由文本)"
      },
      "known_issues": ["尚未处理的毛刺,可留下一任务"],
      "ready_to_merge": true | false,
      "finished_at": "<ISO 时间>"
    }
-7. 不 push、不合并、不改 openspec tasks.md 的 checkbox、不修改 PRD。
+   evidence_anchors 是**每个子勾选项**改在哪的 `文件:行`,主 loop 用它写进
+   tasks.md 的勾选锚。写不出锚的子项说明你没真的实现它 —— 此时 status 写
+   needs-review 并在 summary 里说明,NEVER 报 done。
+9. 不 push、不合并、不改 openspec tasks.md 的 checkbox(勾选由主 loop 在落地
+   时机械写入)、不修改 PRD。
 
 项目验证命令(至少要全部跑通):
 {{VERIFY_COMMANDS_BLOCK}}
