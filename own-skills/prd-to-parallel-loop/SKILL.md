@@ -1,5 +1,7 @@
 ---
 name: prd-to-parallel-loop
+display_name: PRD Parallel Loop Scaffolding
+display_name_zh: PRD 并行 Loop 脚手架
 description: |
   在已有 openspec 惯例的项目里,把一份 PRD / 产品文档 / 里程碑文档搭成「多 git worktree + codex 并行执行 + 主 loop (Claude) 心跳调度」的完整脚手架。**一个 openspec change = 一个并行任务**,每个任务由主 loop 分三段驱动(实施 → 反思 → 归档)。产物包括:N 个 openspec/changes/<change-id>/、~/dev-loops/<project>/<slug>/ 运行时状态目录、以及一段用户复制到新对话就能触发 /loop 的启动语。
 
