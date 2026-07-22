@@ -14,6 +14,8 @@ import {
   readJson,
   writeJson
 } from './lib.mjs';
+import { validateBackendLeaseFile } from './backend-runtime.mjs';
+import { policyPathForAttempt } from './visual-cardinality.mjs';
 
 const backendHints = new Set(['runtime-native', 'configured-api', 'programmatic', 'unknown']);
 
@@ -70,8 +72,8 @@ try {
   if (!runInput || extraPositionals.length || unknownOptions.length) {
     throw new Error('Usage: create-wechat-cover-request.mjs <run-dir> [--backend-hint runtime-native|configured-api|programmatic|unknown]');
   }
-  const backendHint = args.backend_hint || 'unknown';
-  if (!backendHints.has(backendHint)) throw new Error('--backend-hint is invalid.');
+  const requestedBackendHint = args.backend_hint || null;
+  if (requestedBackendHint !== null && !backendHints.has(requestedBackendHint)) throw new Error('--backend-hint is invalid.');
 
   const runDir = expandPath(runInput);
   const runStat = await lstat(runDir);
@@ -83,6 +85,15 @@ try {
     throw new Error('run.json must be a real file inside run-dir.');
   }
   const state = await readJson(statePath);
+  const hasCardinalityPolicy = fileExists(join(runDir, policyPathForAttempt(state)));
+  const leaseValidation = hasCardinalityPolicy
+    ? await validateBackendLeaseFile(runDir, state) : { issues: [], value: null };
+  for (const value of leaseValidation.issues) add(blockers, value.code, value.message, value);
+  const backendHint = leaseValidation.value?.backend_kind || requestedBackendHint || 'unknown';
+  if (requestedBackendHint !== null && leaseValidation.value
+    && requestedBackendHint !== leaseValidation.value.backend_kind) {
+    add(blockers, 'backend_switch_forbidden', 'backend endpoint mismatch');
+  }
   const visual = state.stages?.visual;
   if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'visual'
     || visual?.status !== 'running' || !Number.isInteger(visual?.attempt) || visual.attempt < 1) {

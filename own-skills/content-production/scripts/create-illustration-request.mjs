@@ -15,6 +15,7 @@ import {
   writeJson
 } from './lib.mjs';
 import { validateVisualCoverageSet } from './visual-cardinality.mjs';
+import { validateBackendLeaseFile } from './backend-runtime.mjs';
 
 const modes = new Set(['plan', 'generate']);
 const backendHints = new Set(['runtime-native', 'configured-api', 'unknown']);
@@ -119,8 +120,8 @@ try {
   if (requestedMaxImages !== null && (!Number.isInteger(requestedMaxImages) || requestedMaxImages < 1)) throw new Error('--max-images must be a positive integer.');
   const brandOverride = args.brand_override === undefined ? null : args.brand_override;
   if (brandOverride !== null && !brandOverrides.has(brandOverride)) throw new Error('--brand-override must be enabled or disabled.');
-  const backendHint = args.backend_hint || 'unknown';
-  if (!backendHints.has(backendHint)) throw new Error('--backend-hint is invalid.');
+  const requestedBackendHint = args.backend_hint || null;
+  if (requestedBackendHint !== null && !backendHints.has(requestedBackendHint)) throw new Error('--backend-hint is invalid.');
   const modelPreference = typeof args.model_preference === 'string' && args.model_preference.trim()
     ? args.model_preference.trim() : null;
 
@@ -156,6 +157,17 @@ try {
   }
   const coverageValidation = await validateVisualCoverageSet(runDir, state);
   for (const value of coverageValidation.issues) add(blockers, value.code, value.message, value);
+  const leaseValidation = await validateBackendLeaseFile(runDir, state);
+  for (const value of leaseValidation.issues) add(blockers, value.code, value.message, value);
+  const backendHint = leaseValidation.value?.backend_kind || requestedBackendHint || 'unknown';
+  if (requestedBackendHint !== null && leaseValidation.value
+    && requestedBackendHint !== leaseValidation.value.backend_kind) {
+    add(blockers, 'backend_switch_forbidden', 'backend endpoint mismatch');
+  }
+  if (modelPreference !== null && leaseValidation.value
+    && modelPreference !== leaseValidation.value.model) {
+    add(blockers, 'backend_model_mismatch', 'backend model channel unavailable');
+  }
   const coverageRow = coverageValidation.coverages.get(args.platform) || null;
   const maxImages = coverageRow?.value?.cardinality?.request_max_images ?? null;
   if (requestedMaxImages !== null && maxImages !== null && requestedMaxImages !== maxImages) {

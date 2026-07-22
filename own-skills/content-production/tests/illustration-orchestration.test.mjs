@@ -288,7 +288,7 @@ function coverageSource(platform, count) {
   ]).flat()].join('\n');
 }
 
-function fixture({ bounded = false, counts = imageCounts, coverage = true } = {}) {
+function fixture({ bounded = false, counts = imageCounts, coverage = true, lease = true } = {}) {
   const runDir = mkdtempSync(join(tmpdir(), 'content-production-illustration-'));
   const profilePath = join(runDir, '00-intake', 'platform-profiles.json');
   mkdirSync(dirname(profilePath), { recursive: true });
@@ -405,6 +405,10 @@ function fixture({ bounded = false, counts = imageCounts, coverage = true } = {}
   if (coverage) {
     const created = run('create-visual-coverage.mjs', [runDir, '--all']);
     assert.equal(created.status, 0, created.stderr || created.stdout);
+    if (lease) {
+      const selected = run('backend-lease.mjs', [runDir, 'create', '--native-status', 'available']);
+      assert.equal(selected.status, 0, selected.stderr || selected.stdout);
+    }
   }
   return { runDir, selections };
 }
@@ -414,7 +418,7 @@ function createPlans(runDir, { counts = imageCounts } = {}) {
   for (const platform of platforms) {
     const built = run('create-illustration-request.mjs', [
       runDir, 'plan', '--platform', platform,
-      '--max-images', String(counts[platform]), '--backend-hint', 'configured-api'
+      '--max-images', String(counts[platform]), '--backend-hint', 'runtime-native'
     ]);
     assert.equal(built.status, 0, built.stderr || built.stdout);
     const requestPath = JSON.parse(built.stdout).request_path;
@@ -466,9 +470,9 @@ function createPlans(runDir, { counts = imageCounts } = {}) {
       style: style.style,
       brand: style.brand,
       generation_backend: {
-        kind: 'configured-api',
-        adapter: 'runtime-configured-adapter',
-        endpoint_source: 'active-runtime-config',
+        kind: 'runtime-native',
+        adapter: 'runtime-native:image-generation',
+        endpoint_source: 'runtime-native',
         resolved_model: 'gpt-image-2',
         artifact_format: 'png',
         credential_access: 'pass',
@@ -511,7 +515,7 @@ function prepareBoundedVisual(counts, { cover = true } = {}) {
   for (const platform of platforms) {
     assert.equal(run('create-illustration-request.mjs', [runDir, 'generate', '--platform', platform]).status, 0);
   }
-  if (cover) assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'configured-api']).status, 0);
+  if (cover) assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'runtime-native']).status, 0);
   assert.equal(run('illustration-queue.mjs', [runDir, 'init']).status, 0);
   return runDir;
 }
@@ -621,7 +625,7 @@ function createGeneration(runDir) {
 }
 
 function createCover(runDir) {
-  const built = run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'configured-api']);
+  const built = run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'runtime-native']);
   assert.equal(built.status, 0, built.stderr || built.stdout);
   const requestPath = JSON.parse(built.stdout).request_path;
   const request = readJson(requestPath);
@@ -657,7 +661,7 @@ function createCover(runDir) {
       normalizer: resource('scripts/normalize_cover.py')
     },
     source: { path: sourcePath, sha256: sha(join(runDir, sourcePath)) },
-    backend: { hint: 'configured-api', method: 'fixture-renderer', model: null },
+    backend: { hint: 'runtime-native', method: 'runtime-native:image-generation', model: 'gpt-image-2' },
     generation: {
       max_attempts: 3,
       attempt_count: 1,
@@ -670,7 +674,7 @@ function createCover(runDir) {
           sha256: sha(join(runDir, candidatePath)),
           format: 'png', width: 1923, height: 818
         },
-        backend: { method: 'fixture-renderer', model: null },
+        backend: { method: 'runtime-native:image-generation', model: 'gpt-image-2' },
         status: 'PASS',
         failed_gates: [], absolute_failures: [], visible_title_defects: []
       }],
@@ -909,6 +913,8 @@ test('visual completion enters package and reopening preserves title winners onl
     assert.ok(JSON.parse(blockedNextPlan.stdout).blockers.some((item) => item.code === 'visual_policy_missing'));
     const nextCoverage = run('create-visual-coverage.mjs', [runDir, '--all']);
     assert.equal(nextCoverage.status, 0, nextCoverage.stderr || nextCoverage.stdout);
+    const nextLease = run('backend-lease.mjs', [runDir, 'create', '--native-status', 'available']);
+    assert.equal(nextLease.status, 0, nextLease.stderr || nextLease.stdout);
     const nextPlan = run('create-illustration-request.mjs', [runDir, 'plan', '--platform', 'wechat']);
     assert.equal(nextPlan.status, 0, nextPlan.stderr || nextPlan.stdout);
     const nextRequest = readJson(JSON.parse(nextPlan.stdout).request_path);
@@ -970,7 +976,7 @@ test('bounded illustration plans derive max_images from coverage without changin
   const { runDir } = fixture({ bounded: true });
   try {
     const built = run('create-illustration-request.mjs', [
-      runDir, 'plan', '--platform', 'wechat', '--backend-hint', 'configured-api'
+      runDir, 'plan', '--platform', 'wechat', '--backend-hint', 'runtime-native'
     ]);
     assert.equal(built.status, 0, built.stderr || built.stdout);
     const request = readJson(JSON.parse(built.stdout).request_path);
@@ -983,6 +989,96 @@ test('bounded illustration plans derive max_images from coverage without changin
     ]);
     assert.equal(tooMany.status, 2);
     assert.ok(JSON.parse(tooMany.stdout).blockers.some((item) => item.code === 'illustration_request_max_policy_mismatch'));
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('current visual attempt requires one immutable backend lease before provider planning', () => {
+  const { runDir } = fixture({ bounded: true, lease: false });
+  try {
+    const requestPath = join(runDir, '07-visual', 'wechat', 'illustration-plan.request.json');
+    const missing = run('create-illustration-request.mjs', [runDir, 'plan', '--platform', 'wechat']);
+    assert.equal(missing.status, 2);
+    assert.ok(JSON.parse(missing.stdout).blockers.some((item) => item.code === 'backend_lease_missing'));
+    assert.equal(existsSync(requestPath), false);
+
+    const selected = run('backend-lease.mjs', [runDir, 'create', '--native-status', 'available']);
+    assert.equal(selected.status, 0, selected.stderr || selected.stdout);
+    assert.equal(JSON.parse(selected.stdout).backend_kind, 'runtime-native');
+
+    const promptPath = join(runDir, '07-visual', 'wechat', 'prompts', 'lease-check.md');
+    const outputPath = join(runDir, '07-visual', 'wechat', 'images', 'lease-check.png');
+    write(promptPath, 'Generate one test image.');
+    const native = run('run-image-generation.mjs', [
+      runDir, '--prompt-file', promptPath, '--output', outputPath
+    ]);
+    assert.equal(native.status, 0, native.stderr || native.stdout);
+    assert.equal(JSON.parse(native.stdout).status, 'NATIVE_TOOL_CALL_REQUIRED');
+    assert.equal(existsSync(outputPath), false);
+    const formatMismatch = run('run-image-generation.mjs', [
+      runDir, '--prompt-file', promptPath, '--output', outputPath, '--output-format', 'jpeg'
+    ]);
+    assert.equal(formatMismatch.status, 2);
+    assert.equal(existsSync(outputPath), false);
+    rmSync(dirname(promptPath), { recursive: true, force: true });
+
+    const switched = run('backend-lease.mjs', [runDir, 'create', '--backend', 'configured-api']);
+    assert.equal(switched.status, 2);
+    assert.ok(JSON.parse(switched.stdout).issues.some((item) => item.code === 'backend_switch_forbidden'));
+
+    const built = run('create-illustration-request.mjs', [runDir, 'plan', '--platform', 'wechat']);
+    assert.equal(built.status, 0, built.stderr || built.stdout);
+    const request = readJson(JSON.parse(built.stdout).request_path);
+    assert.equal(request.options.backend_hint, 'runtime-native');
+
+    const plans = createPlans(runDir);
+    const decision = createDecision(runDir);
+    const approved = run('set-gate.mjs', [
+      runDir, 'visual', 'approved', '--decision', decision,
+      ...plans.flatMap((path) => ['--artifact', path])
+    ]);
+    assert.equal(approved.status, 0, approved.stderr || approved.stdout);
+    const cover = run('create-wechat-cover-request.mjs', [runDir]);
+    assert.equal(cover.status, 0, cover.stderr || cover.stdout);
+    const coverRequest = readJson(JSON.parse(cover.stdout).request_path);
+    assert.equal(coverRequest.options.backend_hint, 'runtime-native');
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('backend outcomes stay on the selected route and only irrecoverable errors block the attempt', () => {
+  const { runDir } = fixture({ bounded: true });
+  try {
+    const leasePath = join(runDir, '07-visual', 'backend-lease.v001.json');
+    const leaseHash = sha(leasePath);
+    const quality = run('backend-lease.mjs', [runDir, 'record', '--outcome', 'quality-failure']);
+    assert.equal(quality.status, 0, quality.stderr || quality.stdout);
+    assert.deepEqual(JSON.parse(quality.stdout), {
+      status: 'PASS', action: 'retry-candidate', retry_backend: 'runtime-native', block_attempt: false
+    });
+    assert.equal(sha(leasePath), leaseHash);
+
+    const transient = run('backend-lease.mjs', [runDir, 'record', '--outcome', 'transient-error']);
+    assert.equal(transient.status, 0, transient.stderr || transient.stdout);
+    assert.equal(JSON.parse(transient.stdout).retry_backend, 'runtime-native');
+    assert.equal(sha(leasePath), leaseHash);
+
+    const failed = run('backend-lease.mjs', [runDir, 'record', '--outcome', 'irrecoverable-execution-error']);
+    assert.equal(failed.status, 2);
+    const state = readJson(join(runDir, 'run.json'));
+    assert.equal(state.status, 'blocked');
+    assert.equal(state.stages.visual.status, 'blocked');
+    assert.equal(state.stages.visual.attempt, 1);
+    assert.equal(existsSync(join(runDir, '07-visual', 'wechat', 'illustration-plan.request.json')), false);
+    assert.equal(existsSync(join(runDir, '07-visual', 'wechat', 'prompts')), false);
+
+    const restarted = run('set-stage.mjs', [runDir, 'visual', 'running']);
+    assert.equal(restarted.status, 0, restarted.stderr || restarted.stdout);
+    const next = readJson(join(runDir, 'run.json'));
+    assert.equal(next.stages.visual.attempt, 2);
+    assert.equal(existsSync(join(runDir, '07-visual', 'backend-lease.v002.json')), false);
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }
@@ -1007,7 +1103,7 @@ test('bounded queue dispatches only canaries before suite approval and caps glob
         `07-visual/${platform}/bundle.json`, `07-visual/${platform}/manifest.md`
       ]);
     }
-    const cover = run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'configured-api']);
+    const cover = run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'runtime-native']);
     assert.equal(cover.status, 0, cover.stderr || cover.stdout);
     const initialized = run('illustration-queue.mjs', [runDir, 'init']);
     assert.equal(initialized.status, 0, initialized.stderr || initialized.stdout);
@@ -1049,7 +1145,7 @@ test('coverage tampering after approval blocks queue initialization without prom
     for (const platform of platforms) {
       assert.equal(run('create-illustration-request.mjs', [runDir, 'generate', '--platform', platform]).status, 0);
     }
-    assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'configured-api']).status, 0);
+    assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'runtime-native']).status, 0);
     const coveragePath = join(runDir, '07-visual/wechat/coverage.v001.json');
     const coverage = readJson(coveragePath);
     coverage.cardinality.minimum = 2;
@@ -1197,7 +1293,7 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
     for (const platform of platforms) {
       assert.equal(run('create-illustration-request.mjs', [runDir, 'generate', '--platform', platform]).status, 0);
     }
-    assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'configured-api']).status, 0);
+    assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'runtime-native']).status, 0);
     assert.equal(run('illustration-queue.mjs', [runDir, 'init']).status, 0);
     const first = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
     const firstPath = first.generation_requests.find((path) => readJson(path).platform === 'xiaohongshu');
@@ -1316,7 +1412,7 @@ test('set QA retries only named images, preserves frozen hashes, orders bundles,
     for (const platform of platforms) {
       assert.equal(run('create-illustration-request.mjs', [runDir, 'generate', '--platform', platform]).status, 0);
     }
-    assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'configured-api']).status, 0);
+    assert.equal(run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'runtime-native']).status, 0);
     assert.equal(run('illustration-queue.mjs', [runDir, 'init']).status, 0);
 
     let failedOnce = false;

@@ -14,6 +14,7 @@ import {
   validateCurrentVisualDecision,
   validateVisualCoverageSet
 } from './visual-cardinality.mjs';
+import { expectedPlanBackend, validateBackendLeaseFile } from './backend-runtime.mjs';
 
 const requestKeys = [
   'schema_version', 'contract', 'task_id', 'capability', 'provider_contract', 'run_dir',
@@ -462,7 +463,7 @@ async function currentBoundedControlFiles(runDir, paths) {
   return found.filter((path) => !path.includes('/children/v') && !path.includes('/set-qa/v'));
 }
 
-async function validatePlanTask(runDir, context, state, platform, selection, titleBinding, coverageBinding) {
+async function validatePlanTask(runDir, context, state, platform, selection, titleBinding, coverageBinding, lease) {
   const issues = [];
   const paths = illustrationPaths(state, platform);
   const requestPath = await safeFile(runDir, context.runReal, paths.planRequest, issues, 'missing_illustration_plan_control');
@@ -500,6 +501,10 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
   const expectedGeometryValue = styleContext ? expectedGeometry(styleContext) : null;
   const backend = plan.generation_backend;
   const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
+  const leaseBackend = lease ? expectedPlanBackend(
+    lease,
+    bounded ? plan.generation_geometry?.requested_dimensions : null
+  ) : null;
   const validBackend = exactKeys(backend, bounded ? boundedBackendKeys : backendKeys)
     && ['runtime-native', 'configured-api'].includes(backend.kind) && nonempty(backend.adapter)
     && ['runtime-native', 'active-runtime-config', 'user-confirmed-config'].includes(backend.endpoint_source)
@@ -511,6 +516,7 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
         || backend.aspect_control === 'hard_parameter'
           && isDeepStrictEqual(backend.structured_size, plan.generation_geometry?.requested_dimensions)))
     && (request.options.backend_hint === 'unknown' || request.options.backend_hint === backend.kind)
+    && (!leaseBackend || isDeepStrictEqual(backend, leaseBackend))
     && (!expectedBrandValue?.enabled || backend.artifact_format === 'png');
   const anchors = Array.isArray(plan.anchors) ? plan.anchors : [];
   const ids = anchors.map((anchor) => anchor?.image_id);
@@ -601,11 +607,14 @@ export async function validateIllustrationPlans(runDir, state) {
   const title = await approvedSelections(runDir, context.runReal, state, issues);
   const coverage = await validateVisualCoverageSet(runDir, state);
   issues.push(...coverage.issues);
+  const lease = coverage.legacy ? { issues: [], value: null }
+    : await validateBackendLeaseFile(runDir, state);
+  issues.push(...lease.issues);
   const tasks = [];
   for (const platform of platforms) {
     const task = await validatePlanTask(
       runDir, context, workingState, platform, title.selections.get(platform), title.binding,
-      coverage.coverages.get(platform)
+      coverage.coverages.get(platform), lease.value
     );
     tasks.push({ platform, ...task });
     issues.push(...task.issues);

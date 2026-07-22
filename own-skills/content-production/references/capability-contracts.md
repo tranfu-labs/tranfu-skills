@@ -304,6 +304,10 @@ request 固定包含 current visual attempt、canonical platform、provider alia
 - plan：`final_draft`、titles gate 的 `title_selection` decision、current `visual_coverage`。
 - generate：上述三项，加 visual gate 已批准的 `illustration_plan`、`shot_list`。
 
+总控在所有 plan request 前创建当前 visual attempt 的唯一 BackendLease。用户明确指定后端优先；否则原生能力可调用即固定为 `runtime-native`，只有不可调用时才解析 `configured-api`。request 中的 `backend_hint` 与 `model_preference` 是 Lease 相等性断言，不参与选路。plan 的既有 `generation_backend` schema 不变，但所有值必须由 Lease 派生；visual gate、Queue init、visual completion 和 Final QA 都复验同一 Lease。正文图与公众号封面使用相同的脱敏 BackendContext 和统一生成 wrapper。
+
+原生路径成功生产图片后不得自动切换；质量与几何失败创建同路径下一 candidate，transport 错误复用同路径当前 attempt。不可恢复执行错误只阻断当前 visual attempt；下一 attempt 重建全部 visual 控制工件后才允许解析配置后端。同一 attempt 内的后端、adapter 或配置漂移均为阻断错误。
+
 plan 前由唯一 cardinality policy 分析五份 winner 并原子写 coverage。`max_images` 必须等于 coverage target；plan 图片数处于 minimum..target，逐字映射不同 eligible unit，覆盖全部 required unit并按源文顺序排列。五个平台 Provider cap 都是 8；小红书合法范围固定 4..8 且逐页一图。plan 只输出 current-attempt `plan[.vNNN].json` 与 `shot-list[.vNNN].md`，禁止出现 current-attempt prompts/images。
 
 五个 plan PASS 后总控脚本确定性创建唯一 current VisualDecision，禁止 Agent 手写 PASS。visual gate 在 stage 仍 running 时复算并精确绑定五份 plan 与五份 shot-list。批准后仍停留在 visual，generate 父任务才可创建。bounded-per-image 父任务只授权最终 `bundle[.vNNN].json` 与 provider 原生 `manifest[.vNNN].md`；Queue init、visual completion 和 Final QA 重用同一 validator。
@@ -329,6 +333,8 @@ node scripts/create-wechat-cover-request.mjs <run-dir> [--backend-hint runtime-n
 ```
 
 request 绑定 current visual attempt、titles gate decision、公众号 winner 全对象及其 `final.md` 路径/哈希。标题只接受含汉字、一个逻辑行、2-35 个非空白字符；调用方不能另传标题。固定输出为 current-attempt `cover[.vNNN].png` 与 `cover[.vNNN].json`，固定样式 `warm-hand-drawn-notebook-v1`、尺寸 `1923x818`、PNG、最多三次、逐候选执行，且 `best_effort_allowed=false`。
+
+新 visual attempt 的 cover request 必须继承当前 BackendLease 的 backend kind；每个候选和 top-level backend 记录的 method/model 必须与 Lease 的 adapter/model 一致。封面不得重新解析 endpoint、credential 或 provider，也不得绕开统一 wrapper。
 
 provider 可在授权目录写 current-attempt `source[.vNNN].md`、prompts、normalized candidates 和 canonical result。每个候选必须是完整可解码的 `1923x818 PNG`；最终 cover 与入选候选字节一致。十项视觉门必须全部 PASS，无额外可读文字、绝对失败或可见标题缺陷，residual risk=`none`。
 
