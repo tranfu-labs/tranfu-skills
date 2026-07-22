@@ -1630,12 +1630,44 @@ test('final verification accepts a complete package and rejects a broken image r
   const root = tempDir('verify');
   const runDir = join(root, 'run');
   baseRun(runDir);
+  for (const platform of platforms) {
+    const promptPath = `07-visual/${platform}/prompts/01-cover/attempt-01.md`;
+    write(join(runDir, promptPath), `# ${platform} adopted prompt\n\nGenerate the accepted image.`);
+    write(join(runDir, '07-visual', platform, 'manifest.md'), `# ${platform} Native Manifest\n\n- image_id: 01-cover`);
+    const bundlePath = join(runDir, '07-visual', platform, 'bundle.json');
+    const bundle = readJson(bundlePath);
+    bundle.images[0].prompt_path = promptPath;
+    write(bundlePath, JSON.stringify(bundle, null, 2));
+    const metadataPath = join(runDir, '08-publish-pack', platform, 'metadata.json');
+    const metadata = readJson(metadataPath);
+    metadata.visual_bundle_sha256 = sha(bundlePath);
+    write(metadataPath, JSON.stringify(metadata, null, 2));
+  }
 
   const ready = run('verify-run.mjs', [runDir]);
   assert.equal(ready.status, 0, ready.stderr);
   assert.equal(JSON.parse(ready.stdout).status, 'READY');
   assert.equal(readJson(join(runDir, '09-qa', 'qa.json')).status, 'READY');
-  assert.ok(readFileSync(join(runDir, '09-qa', 'handoff.md'), 'utf8').includes('人工发布'));
+  const handoff = readFileSync(join(runDir, '09-qa', 'handoff.md'), 'utf8');
+  assert.ok(handoff.includes('人工发布'));
+  assert.ok(handoff.indexOf('## 发布资产') < handoff.indexOf('## 核心阶段索引'));
+  assert.doesNotMatch(handoff, /\.json(?:\b|`|\))/);
+  assert.match(handoff, /\.\.\/08-publish-pack\/wechat\/final\.md/);
+  assert.match(handoff, /\.\.\/08-publish-pack\/wechat\/images\//);
+  assert.match(handoff, /\.\.\/08-publish-pack\/wechat\/cover\.png/);
+  assert.match(handoff, /\.\.\/08-publish-pack\/wechat\/article\.html/);
+  assert.match(handoff, /\.\.\/00-intake\/brief\.md/);
+  assert.match(handoff, /\.\.\/02-research\/source-log\.md/);
+  assert.match(handoff, /\.\.\/03-outline\/control-outline\.md/);
+  assert.match(handoff, /\.\.\/04-masters\/A\/review\.md/);
+  assert.match(handoff, /\.\.\/05-platforms\/wechat\/B\/draft\.md/);
+  assert.match(handoff, /\.\.\/05-platforms\/toutiao\/B\/reviews\/detail\.md/);
+  assert.match(handoff, /\.\.\/06-selection\/title-matrix\.md/);
+  assert.match(handoff, /\.\.\/07-visual\/xiaohongshu\/shot-list\.md/);
+  assert.match(handoff, /\.\.\/07-visual\/zhihu\/prompts\/01-cover\/attempt-01\.md/);
+  assert.match(handoff, /\.\.\/07-visual\/weibo\/manifest\.md/);
+  assert.match(handoff, /\.\.\/09-qa\/qa\.md/);
+  assert.doesNotMatch(handoff, /logic-final|humanized|claim-regression|candidate|checkpoint/i);
 
   write(join(runDir, '08-publish-pack', 'zhihu', 'final.md'), '# 知乎\n\n![缺图](images/missing.png)');
   const blocked = run('verify-run.mjs', [runDir]);
@@ -1842,6 +1874,10 @@ test('final verification follows versioned outline and visual artifacts bound by
   const result = run('verify-run.mjs', [runDir]);
   assert.equal(result.status, 0, result.stdout);
   assert.equal(JSON.parse(result.stdout).status, 'READY');
+  const handoff = readFileSync(join(runDir, '09-qa', 'handoff.md'), 'utf8');
+  assert.match(handoff, /03-outline\/control-outline\.v002\.md/);
+  assert.match(handoff, /07-visual\/wechat\/shot-list\.v002\.md/);
+  assert.doesNotMatch(handoff, /07-visual\/wechat\/shot-list\.md/);
 });
 
 test('final verification blocks an unverified critical claim', () => {

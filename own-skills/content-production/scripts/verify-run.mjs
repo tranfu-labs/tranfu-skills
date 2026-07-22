@@ -120,6 +120,151 @@ async function requiredJson(path, code = 'missing_artifact') {
   }
 }
 
+function handoffLink(label, path) {
+  return `[${label}](../${path})`;
+}
+
+function handoffCell(value) {
+  return String(value || '-').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+}
+
+function existingHandoffLink(label, path) {
+  return path && fileExists(join(runDir, path)) ? handoffLink(label, path) : null;
+}
+
+async function buildHandoff({
+  status, state: currentState, selectionByPlatform, titleMatrixRef, outlineRefs, providerPackage
+}) {
+  const packages = Object.fromEntries(platforms.map((platform) => [platform, providerPackage
+    ? packagePaths(currentState, platform)
+    : {
+        final: `08-publish-pack/${platform}/final.md`,
+        imagesDir: `08-publish-pack/${platform}/images`,
+        cover: platform === 'wechat' ? '08-publish-pack/wechat/cover.png' : null,
+        article: platform === 'wechat' ? '08-publish-pack/wechat/article.html' : null,
+        preview: platform === 'wechat' ? '08-publish-pack/wechat/article-preview.html' : null
+      }]));
+  const lines = [
+    '# 人工发布交接单', '',
+    '> 本流程止于人工发布交接。禁止调用平台发布、账号、排期或凭证接口。', '',
+    `- QA: ${status}`, '',
+    '## 发布资产', '',
+    '| 平台 | 入选版本 | 标题 | 发布稿 | 正文图片 |',
+    '|---|---|---|---|---|',
+    ...platforms.map((platform) => {
+      const selected = selectionByPlatform[platform] || {};
+      return `| ${platform} | ${selected.variant || '-'} | ${handoffCell(selected.title)} | ${handoffLink('Markdown', packages[platform].final)} | ${handoffLink('图片目录', `${packages[platform].imagesDir}/`)} |`;
+    }), '',
+    `- 公众号封面：${handoffLink('PNG', packages.wechat.cover)}`,
+    `- 公众号 HTML：${handoffLink('正文', packages.wechat.article)}`,
+    `- 公众号浏览器预览：${handoffLink('预览', packages.wechat.preview)}`, '',
+    '## 核心阶段索引', '',
+    '### 创作简述', '',
+    `- ${handoffLink('创作简述', '00-intake/brief.md')}`, ''
+  ];
+
+  const discovery = (currentState.stages?.discovery?.artifacts || [])
+    .map((item) => item?.path)
+    .filter((path) => typeof path === 'string' && path.endsWith('.md'))
+    .map((path) => existingHandoffLink(path.split('/').at(-1), path))
+    .filter(Boolean);
+  lines.push('### 选题', '');
+  if (discovery.length) lines.push(...discovery.map((link) => `- ${link}`));
+  else lines.push('- 明确选题已由入口确认，见创作简述。');
+
+  lines.push('', '### 研究', '');
+  for (const [label, path] of [
+    ['研究简报', '02-research/brief.md'],
+    ['来源记录', '02-research/source-log.md'],
+    ['证据映射', '02-research/evidence-map.md']
+  ]) {
+    const link = existingHandoffLink(label, path);
+    if (link) lines.push(`- ${link}`);
+  }
+
+  lines.push('', '### 大纲', '');
+  for (const [label, path] of [
+    ['控制大纲', outlineRefs.control], ['A 结构', outlineRefs.a], ['B 结构', outlineRefs.b]
+  ]) {
+    const link = existingHandoffLink(label, path);
+    if (link) lines.push(`- ${link}`);
+  }
+
+  lines.push('', '### A/B 母稿', '');
+  for (const variant of variants) {
+    const links = [
+      existingHandoffLink('母稿', `04-masters/${variant}/final.md`),
+      existingHandoffLink('Review', `04-masters/${variant}/review.md`)
+    ].filter(Boolean);
+    if (links.length) lines.push(`- ${variant}：${links.join(' · ')}`);
+  }
+
+  lines.push('', '### 十份平台稿与审校', '');
+  for (const platform of platforms) {
+    for (const variant of variants) {
+      const base = `05-platforms/${platform}/${variant}`;
+      const links = [
+        existingHandoffLink('初稿', `${base}/draft.md`),
+        existingHandoffLink('终稿', `${base}/final.md`),
+        existingHandoffLink('逻辑 review', `${base}/reviews/logic.md`),
+        existingHandoffLink('表达 review', `${base}/reviews/humanize.md`),
+        existingHandoffLink('细节 review', `${base}/reviews/detail.md`)
+      ].filter(Boolean);
+      if (links.length) lines.push(`- ${platform} ${variant}：${links.join(' · ')}`);
+    }
+  }
+
+  lines.push('', '### 标题矩阵', '');
+  const matrix = existingHandoffLink('当前标题矩阵', titleMatrixRef);
+  if (matrix) lines.push(`- ${matrix}`);
+
+  lines.push('', '### 视觉方案与采用记录', '');
+  for (const platform of platforms) {
+    const paths = illustrationPaths(currentState, platform);
+    const activeShotList = (currentState.gates?.visual?.bound_artifacts || [])
+      .map((item) => item?.path)
+      .filter((path) => typeof path === 'string'
+        && new RegExp(`^07-visual/${platform}/shot-list(?:\\.v\\d{3})?\\.md$`).test(path))
+      .at(-1) || paths.shotList;
+    const links = [
+      existingHandoffLink('Shot list', activeShotList),
+      existingHandoffLink('Native manifest', paths.manifest)
+    ].filter(Boolean);
+    if (fileExists(join(runDir, paths.bundle))) {
+      try {
+        const bundle = await readJson(join(runDir, paths.bundle));
+        const prompts = [...new Set((bundle.images || []).map((item) => item?.prompt_path)
+          .filter((path) => typeof path === 'string' && path.endsWith('.md')))];
+        prompts.forEach((path, index) => {
+          const link = existingHandoffLink(`采用 Prompt ${index + 1}`, path);
+          if (link) links.push(link);
+        });
+      } catch {}
+    }
+    if (links.length) lines.push(`- ${platform}：${links.join(' · ')}`);
+  }
+  const currentCover = coverPaths(currentState);
+  if (fileExists(join(runDir, currentCover.metadata))) {
+    try {
+      const cover = await readJson(join(runDir, currentCover.metadata));
+      const selectedAttempt = cover.generation?.selected_attempt;
+      const prompt = cover.generation?.attempts?.find((item) => item?.attempt === selectedAttempt)?.prompt?.path;
+      const link = typeof prompt === 'string' && prompt.endsWith('.md')
+        ? existingHandoffLink('采用 Prompt', prompt) : null;
+      if (link) lines.push(`- 公众号封面：${link}`);
+    } catch {}
+  }
+
+  lines.push('', '### QA 与交接', '',
+    `- ${handoffLink('Final QA', '09-qa/qa.md')}`,
+    '- [本交接单](handoff.md)', '',
+    '## 发布前人工动作', '',
+    '- 在各平台后台预览正文、图片和标题。',
+    '- 人工确认后发布；本 Skill 不登录、不排期、不发送。', ''
+  );
+  return lines.join('\n');
+}
+
 async function checkImageRefs(documentPath, refs, code = 'missing_image_reference') {
   if (!refs.length) add('missing_image_manifest', `No image references found in ${relativeTo(runDir, documentPath)}.`, { path: relativeTo(runDir, documentPath) });
   for (const ref of refs) {
@@ -617,35 +762,15 @@ try {
     ...(issues.length ? issues.map((item) => `- [${item.code}] ${item.message}`) : ['- All deterministic checks passed.']), ''
   ];
   await writeText(join(qaDir, 'qa.md'), lines.join('\n'));
-  const handoffPackages = Object.fromEntries(platforms.map((platform) => [platform, providerPackage
-    ? packagePaths(state, platform)
-    : {
-        final: `08-publish-pack/${platform}/final.md`,
-        imagesDir: `08-publish-pack/${platform}/images`,
-        cover: platform === 'wechat' ? '08-publish-pack/wechat/cover.png' : null,
-        article: platform === 'wechat' ? '08-publish-pack/wechat/article.html' : null
-      }]));
-  const handoffImages = handoffPackages.wechat.imagesDir.replace('/wechat/', '/<platform>/');
-  const handoff = [
-    '# 人工发布交接单', '',
-    '> 本流程止于人工发布交接。禁止调用平台发布、账号、排期或凭证接口。', '',
-    `- QA: ${status}`, '',
-    '## 五平台入选', '',
-    '| 平台 | 版本 | 标题 ID | 发布包 |', '|---|---|---|---|',
-    ...platforms.map((platform) => {
-      const item = selectionByPlatform[platform] || {};
-      return `| ${platform} | ${item.variant || '-'} | ${item.title_id || '-'} | ${handoffPackages[platform].final} |`;
-    }), '',
-    '## 完整交付', '',
-    '- 10 份终稿：`05-platforms/<platform>/<A|B>/final.md`',
-    `- 5 套平台配图：\`${handoffImages}/\``,
-    `- 公众号封面：\`${handoffPackages.wechat.cover}\``,
-    `- 公众号 HTML：\`${handoffPackages.wechat.article}\``, '',
-    '## 发布前人工动作', '',
-    '- 在各平台后台预览正文、图片和标题。',
-    '- 人工确认后发布；本 Skill 不登录、不排期、不发送。', ''
-  ];
-  await writeText(join(qaDir, 'handoff.md'), handoff.join('\n'));
+  const handoff = await buildHandoff({
+    status,
+    state,
+    selectionByPlatform,
+    titleMatrixRef,
+    outlineRefs: { control: controlOutlineRel, a: aStructureRel, b: bStructureRel },
+    providerPackage
+  });
+  await writeText(join(qaDir, 'handoff.md'), handoff);
 
   const autonomousReady = status === 'READY' && state.run_mode === 'autonomous';
   state.updated_at = now;

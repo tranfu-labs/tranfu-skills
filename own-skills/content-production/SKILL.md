@@ -54,6 +54,8 @@ description: >-
 - illustration 先保存原生 `manifest.md`；所有正文图片优化后再由 package 阶段写发布映射 `manifest.json`。封面保持 PNG 和 `1923x818`。
 - image compression provider 只写 staging candidate；总控仅在 candidate 严格更小时采用，否则逐字节保留原图，并由 package 独占发布扩展名、manifest 和 schema v2 optimization。
 - 图片写回五份入选 Markdown 后，最后执行公众号排版。
+- 整个 run 目录就是唯一交付包；核心阶段 Markdown、正文配图、公众号封面、HTML 和发布资产保留在各自原目录，不复制第二套汇总文件。
+- `handoff.md` 先列五个平台发布稿、图片目录、封面和 HTML，再按阶段索引 current Markdown、被采用的 prompts 与 native manifests；失败候选、旧 attempt、临时 checkpoint 和内部控制文件不进入运营索引。
 - 已批准或自动决定的文件禁止覆盖；修订写 `.v002`、`.v003` 并失效下游。
 
 ## 入口与运行模式
@@ -164,3 +166,4 @@ node scripts/check-provider-result.mjs <request.json> <result.json>
 - package completed 重新进入 running，或 package blocked 后重试时递增 attempt；completed 重开只失效 final QA/final 门禁，visual、titles 和五个平台赢家保留。压缩/layout controls 与发布业务文件使用 `_compression/vNNN`、`_layout/vNNN`、`.vNNN`/`images/vNNN/`。
 - 任何平台配图、独立封面、优化记录、manifest、标题 H1 或 HTML 血缘不一致时，从最早失效阶段恢复。
 - completed run 再次执行是只读；任何 QA 后漂移都视为阻断。
+- Agent 最终回复只报告交付入口和验收结果，不展示内部控制文件路径。
