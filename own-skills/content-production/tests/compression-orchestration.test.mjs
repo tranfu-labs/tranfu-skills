@@ -957,9 +957,14 @@ test('provider package final QA accepts schema v2 lineage and writes current v00
     const qa = JSON.parse(verified.stdout);
     assert.equal(qa.issues.some((item) => item.code === 'manifest_lineage_mismatch'), false);
     const handoff = readFileSync(join(runDir, '09-qa', 'handoff.md'), 'utf8');
-    assert.match(handoff, /08-publish-pack\/<platform>\/images\/v002\//);
+    for (const platform of platforms) {
+      assert.match(handoff, new RegExp(`08-publish-pack/${platform}/final\\.v002\\.md`));
+      assert.match(handoff, new RegExp(`08-publish-pack/${platform}/images/v002/`));
+    }
     assert.match(handoff, /08-publish-pack\/wechat\/cover\.v002\.png/);
     assert.match(handoff, /08-publish-pack\/wechat\/article\.v002\.html/);
+    assert.doesNotMatch(handoff, /\.json(?:\b|`|\))/);
+    assert.doesNotMatch(handoff, /08-publish-pack\/wechat\/final\.md/);
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }

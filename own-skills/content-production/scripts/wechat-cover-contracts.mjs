@@ -10,6 +10,8 @@ import {
   readJson,
   readText
 } from './lib.mjs';
+import { validateBackendLeaseFile } from './backend-runtime.mjs';
+import { policyPathForAttempt } from './visual-cardinality.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const BACKEND_HINTS = new Set(['runtime-native', 'configured-api', 'programmatic', 'unknown']);
@@ -393,7 +395,7 @@ async function currentFiles(runDir, relativeDir, attempt) {
   return attempt === 1 ? values.filter((path) => !/^v\d{3}\//.test(path)) : values;
 }
 
-async function validateMetadata(metadata, request, context, state, paths, winner, requestHash, issues) {
+async function validateMetadata(metadata, request, context, state, paths, winner, requestHash, lease, issues) {
   const selection = winner.selection;
   const validTop = exactKeys(metadata, metadataKeys) && metadata.schema_version === 1
     && metadata.contract === 'wechat-cover-v1' && metadata.task_id === request?.task_id
@@ -418,6 +420,11 @@ async function validateMetadata(metadata, request, context, state, paths, winner
   }
   if (!validBackend(metadata?.backend, true) || metadata.backend.hint !== request?.options?.backend_hint) {
     issues.push(issue('invalid_wechat_cover_backend', 'Cover backend record is invalid or does not bind the request hint.'));
+  }
+  if (lease && (metadata?.backend?.hint !== lease.backend_kind
+    || metadata?.backend?.method !== lease.adapter.path
+    || metadata?.backend?.model !== lease.model)) {
+    issues.push(issue('invalid_wechat_cover_backend', 'Cover backend record does not reuse the current BackendLease.'));
   }
 
   const generation = metadata?.generation;
@@ -450,6 +457,9 @@ async function validateMetadata(metadata, request, context, state, paths, winner
       && stringArray(row.visible_title_defects)
       && (row.status === 'RETRY_NO_CANDIDATE') === (row.candidate === null);
     if (!rowShape) issues.push(issue('invalid_wechat_cover_attempt', `Invalid generation attempt ${number}.`));
+    if (lease && (row?.backend?.method !== lease.adapter.path || row?.backend?.model !== lease.model)) {
+      issues.push(issue('invalid_wechat_cover_backend', `Cover attempt ${number} does not reuse the current BackendLease.`));
+    }
     const prompt = await validateBindingFile(context, row?.prompt, promptPath, issues, 'invalid_wechat_cover_prompt');
     if (prompt) {
       const promptText = await readText(prompt);
@@ -588,6 +598,10 @@ export async function validateWechatCover(runDir, state) {
   const context = await loadContext(runDir, state, issues);
   if (!context) return { issues, request: null, result: null, metadata: null };
   const paths = coverPaths(state);
+  const hasCardinalityPolicy = fileExists(join(runDir, policyPathForAttempt(state)));
+  const lease = hasCardinalityPolicy
+    ? await validateBackendLeaseFile(runDir, state) : { issues: [], value: null };
+  issues.push(...lease.issues);
   const winner = await approvedWinner(context, state, issues);
   const requestFile = await safeJson(context.root, context.runReal, paths.request, issues, 'invalid_wechat_cover_request');
   const request = requestFile.value;
@@ -595,7 +609,7 @@ export async function validateWechatCover(runDir, state) {
   const requestHash = requestFile.absolute ? await fileSha256(requestFile.absolute) : null;
   const metadataFile = await safeJson(context.root, context.runReal, paths.metadata, issues, 'invalid_wechat_cover_metadata');
   const dynamic = await validateMetadata(
-    metadataFile.value, request, context, state, paths, winner, requestHash, issues
+    metadataFile.value, request, context, state, paths, winner, requestHash, lease.value, issues
   );
   const resultFile = await safeJson(context.root, context.runReal, paths.result, issues, 'invalid_wechat_cover_result');
   await validateResult(resultFile.value, request, context, paths, requestHash, dynamic, issues);

@@ -14,6 +14,8 @@ import {
   readJson,
   writeJson
 } from './lib.mjs';
+import { validateVisualCoverageSet } from './visual-cardinality.mjs';
+import { validateBackendLeaseFile } from './backend-runtime.mjs';
 
 const modes = new Set(['plan', 'generate']);
 const backendHints = new Set(['runtime-native', 'configured-api', 'unknown']);
@@ -118,8 +120,8 @@ try {
   if (requestedMaxImages !== null && (!Number.isInteger(requestedMaxImages) || requestedMaxImages < 1)) throw new Error('--max-images must be a positive integer.');
   const brandOverride = args.brand_override === undefined ? null : args.brand_override;
   if (brandOverride !== null && !brandOverrides.has(brandOverride)) throw new Error('--brand-override must be enabled or disabled.');
-  const backendHint = args.backend_hint || 'unknown';
-  if (!backendHints.has(backendHint)) throw new Error('--backend-hint is invalid.');
+  const requestedBackendHint = args.backend_hint || null;
+  if (requestedBackendHint !== null && !backendHints.has(requestedBackendHint)) throw new Error('--backend-hint is invalid.');
   const modelPreference = typeof args.model_preference === 'string' && args.model_preference.trim()
     ? args.model_preference.trim() : null;
 
@@ -134,8 +136,6 @@ try {
   }
   const state = await readJson(statePath);
   const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
-  const maxImages = requestedMaxImages === null && bounded ? 8 : requestedMaxImages;
-  if (bounded && maxImages > 8) throw new Error('--max-images must be within 1..8 for bounded-per-image runs.');
   const visual = state.stages?.visual;
   if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'visual'
     || visual?.status !== 'running' || !Number.isInteger(visual?.attempt) || visual.attempt < 1) {
@@ -154,6 +154,26 @@ try {
   }
   if (mode === 'generate' && state.gates?.visual?.status !== 'approved') {
     add(blockers, 'illustration_plan_not_approved', 'Generate mode requires the current visual plan gate to be approved.');
+  }
+  const coverageValidation = await validateVisualCoverageSet(runDir, state);
+  for (const value of coverageValidation.issues) add(blockers, value.code, value.message, value);
+  const leaseValidation = await validateBackendLeaseFile(runDir, state);
+  for (const value of leaseValidation.issues) add(blockers, value.code, value.message, value);
+  const backendHint = leaseValidation.value?.backend_kind || requestedBackendHint || 'unknown';
+  if (requestedBackendHint !== null && leaseValidation.value
+    && requestedBackendHint !== leaseValidation.value.backend_kind) {
+    add(blockers, 'backend_switch_forbidden', 'backend endpoint mismatch');
+  }
+  if (modelPreference !== null && leaseValidation.value
+    && modelPreference !== leaseValidation.value.model) {
+    add(blockers, 'backend_model_mismatch', 'backend model channel unavailable');
+  }
+  const coverageRow = coverageValidation.coverages.get(args.platform) || null;
+  const maxImages = coverageRow?.value?.cardinality?.request_max_images ?? null;
+  if (requestedMaxImages !== null && maxImages !== null && requestedMaxImages !== maxImages) {
+    add(blockers, 'illustration_request_max_policy_mismatch',
+      `--max-images must equal the current coverage target (${maxImages}) for ${args.platform}.`,
+      { platform: args.platform, expected: maxImages, actual: requestedMaxImages });
   }
 
   const decisionBinding = state.gates?.titles?.decision_ref;
@@ -231,7 +251,8 @@ try {
   } else {
     const inputs = [
       { role: 'final_draft', path: selection.draft_path, sha256: selection.draft_sha256 },
-      { role: 'title_selection', path: decisionRelative, sha256: decisionBinding.sha256 }
+      { role: 'title_selection', path: decisionRelative, sha256: decisionBinding.sha256 },
+      { role: 'visual_coverage', path: coverageRow.path, sha256: coverageRow.sha256 }
     ];
     if (mode === 'generate') {
       inputs.push(

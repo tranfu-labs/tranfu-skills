@@ -18,7 +18,12 @@ export const capabilityDefinitions = {
   drafting: { required: true, contract: 'drafting-v1' },
   proofreading: { required: true, contract: 'proofreading-v1', profile: 'markdown-alignment' },
   title_generation: { required: true, contract: 'title-generation-v1' },
-  illustration: { required: true, contract: 'illustration-v1', profile: 'bounded-per-image' },
+  illustration: {
+    required: true,
+    contract: 'illustration-v1',
+    profile: 'bounded-per-image',
+    adapter_contract: 'illustration-orchestrated-coverage-v1'
+  },
   wechat_cover: { required: true, contract: 'wechat-cover-v1' },
   image_compression: { required: true, contract: 'image-compression-v1' },
   wechat_layout: { required: true, contract: 'wechat-layout-v1' }
@@ -310,6 +315,8 @@ export async function inspectCapabilities(configPath) {
       required: definition.required,
       contract: definition.contract,
       profile: entry.profile || null,
+      adapter_contract: entry.adapter_contract || null,
+      resources: [],
       skill_path: path,
       skill_sha256: null,
       status: 'PASS',
@@ -328,6 +335,9 @@ export async function inspectCapabilities(configPath) {
     if (definition.profile && entry.profile !== definition.profile) {
       fail({ code: 'capability_profile_mismatch', capability: id, message: `${id} must declare profile ${definition.profile}.` });
     }
+    if (definition.adapter_contract && entry.adapter_contract !== definition.adapter_contract) {
+      fail({ code: 'capability_adapter_contract_mismatch', capability: id, message: `${id} must declare adapter contract ${definition.adapter_contract}.` });
+    }
     if (!fileExists(path)) {
       fail({ code: 'missing_capability_skill', capability: id, message: `Missing skill file: ${path}` });
     } else {
@@ -341,6 +351,16 @@ export async function inspectCapabilities(configPath) {
           message: `${id} is missing required markers: ${item.missing_markers.join(', ')}`
         });
       }
+    }
+    for (const resource of entry.resources || []) {
+      const resourcePath = expandPath(resource, dirname(configPath));
+      const resourceItem = { path: resourcePath, sha256: null };
+      if (!fileExists(resourcePath)) {
+        fail({ code: 'missing_capability_resource', capability: id, message: `Missing capability resource: ${resourcePath}` });
+      } else {
+        resourceItem.sha256 = await fileSha256(resourcePath);
+      }
+      item.resources.push(resourceItem);
     }
     report.capabilities.push(item);
   }

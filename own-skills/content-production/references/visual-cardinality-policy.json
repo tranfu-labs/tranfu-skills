@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "policy": "content-production-visual-cardinality",
+  "version": "1.0.0",
+  "platform_order": [
+    "wechat",
+    "xiaohongshu",
+    "zhihu",
+    "weibo",
+    "toutiao"
+  ],
+  "platforms": {
+    "wechat": {
+      "provider_cap": 8,
+      "requested_output": "body_illustrations",
+      "strategy": "longform_sections"
+    },
+    "xiaohongshu": {
+      "provider_cap": 8,
+      "requested_output": "carousel",
+      "strategy": "carousel_pages",
+      "minimum_pages": 4,
+      "maximum_pages": 8
+    },
+    "zhihu": {
+      "provider_cap": 8,
+      "requested_output": "post_illustrations",
+      "strategy": "longform_sections"
+    },
+    "weibo": {
+      "provider_cap": 8,
+      "requested_output": "post_illustrations",
+      "strategy": "weibo_auto",
+      "short_post_max_chars": 1000,
+      "automatic_target_cap": 4
+    },
+    "toutiao": {
+      "provider_cap": 8,
+      "requested_output": "post_illustrations",
+      "strategy": "longform_sections"
+    }
+  },
+  "longform": {
+    "substantive_chars": 120,
+    "long_section_chars": 180,
+    "document_chars": 1200,
+    "substantive_h2_count": 3,
+    "eligible_score_min": 2,
+    "maximum_minimum": 5,
+    "heading_keywords": [
+      "解释",
+      "原理",
+      "为什么",
+      "成本",
+      "价格",
+      "性能",
+      "效率",
+      "影响",
+      "风险",
+      "行动",
+      "步骤",
+      "方法",
+      "检查"
+    ],
+    "comparison_keywords": [
+      "比较",
+      "对比",
+      "成本",
+      "比例",
+      "倍",
+      "率"
+    ],
+    "process_keywords": [
+      "流程",
+      "步骤",
+      "阶段",
+      "首先",
+      "然后",
+      "最后",
+      "之前",
+      "之后",
+      "时间"
+    ],
+    "boundary_keywords": [
+      "边界",
+      "限制",
+      "误区",
+      "错误",
+      "风险",
+      "禁止",
+      "避免",
+      "失败"
+    ],
+    "action_keywords": [
+      "判断",
+      "检查",
+      "确认",
+      "执行",
+      "行动",
+      "选择",
+      "记录",
+      "验证"
+    ]
+  },
+  "excerpt": {
+    "sentence_min_chars": 24,
+    "sentence_max_chars": 120,
+    "paragraph_prefix_chars": [80, 120, 160, 240]
+  }
+}

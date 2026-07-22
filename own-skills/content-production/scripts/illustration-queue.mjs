@@ -15,7 +15,8 @@ import {
   writeText
 } from './lib.mjs';
 import { coverPaths } from './wechat-cover-contracts.mjs';
-import { illustrationPaths } from './illustration-contracts.mjs';
+import { illustrationPaths, validateIllustrationPlans } from './illustration-contracts.mjs';
+import { validateCurrentVisualDecision } from './visual-cardinality.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const [runInput, command, ...extra] = args._;
@@ -155,6 +156,14 @@ async function validateExistingQueue(runDir, state, queue) {
 }
 
 async function initialize(runDir, state) {
+  const plans = await validateIllustrationPlans(runDir, state);
+  const decision = await validateCurrentVisualDecision(runDir, state, plans.tasks);
+  const controlIssues = [...plans.issues, ...decision.issues];
+  if (controlIssues.length) {
+    throw Object.assign(new Error('Current visual plans or decision failed cardinality validation.'), {
+      issues: controlIssues
+    });
+  }
   const relativePath = queuePath(state);
   const absolutePath = join(runDir, relativePath);
   if (fileExists(absolutePath)) {
@@ -238,7 +247,7 @@ async function createChildRequest(runDir, state, platform, suite, imageId) {
     const paths = childPaths(state, platform, imageId, attempt, plan.generation_backend.artifact_format, plan.brand.enabled);
     const taskId = childTaskId(state, parent, platform, imageId, attempt);
     const inputs = [
-      ...parent.inputs,
+      ...parent.inputs.filter((input) => input.role !== 'visual_coverage'),
       { role: 'parent_request', path: suite.parent_request.path, sha256: suite.parent_request.sha256 }
     ];
     const expected = [...new Set([paths.prompt, paths.source, paths.delivery, paths.qa])];
