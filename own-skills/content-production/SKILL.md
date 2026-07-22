@@ -90,7 +90,7 @@ node scripts/init-run.mjs <slug> --outline <path> [--material <path>]
 5. 调用 drafting provider 生成 A/B 母稿和十份平台初稿。
 6. 对十份稿分别调用 proofreading provider；provider 在单稿 PASS 前运行 `markdown-alignment`，总控再绑定 claims 并完成两份 regression report 与六项 semantic review。
 7. 对十份终稿调用 title provider，聚合精确 34 个候选并选择五个平台赢家。
-8. 只为五个赢家先规划 1-8 张有独立正文锚点的配图；批准五份 plan 后，由 bounded-per-image 队列执行 Canary、逐图生成、Set QA 和定向重试，并与独立公众号封面共享四个生成名额，最终精确验收 22 件视觉核心产物。
+8. 只为五个赢家先生成 current policy snapshot 与五份 coverage，再按内容结构规划 `minimum..target` 张有独立正文锚点的配图；小红书固定 4-8 页且逐页覆盖。由脚本生成唯一 VisualDecision 并批准五份 plan 后，bounded-per-image 队列执行 Canary、逐图生成、Set QA 和定向重试，并与独立公众号封面共享四个生成名额，最终精确验收 22 件视觉核心产物。
 9. 为全部正文图和封面生成压缩 candidate，总控按 strict-smaller 规则组装五个平台发布包；再为公众号排版创建受限 request，由 `format-content` 生成 staging clean HTML/预览，经过总控复验和晋级后才完成 package。
 10. 运行确定性 QA；自主模式通过后直接完成，reviewed 模式等待 final 门禁。
 

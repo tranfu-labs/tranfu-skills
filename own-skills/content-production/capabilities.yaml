@@ -37,6 +37,11 @@
       "required": true,
       "contract": "illustration-v1",
       "profile": "bounded-per-image",
+      "adapter_contract": "illustration-orchestrated-coverage-v1",
+      "resources": [
+        "skills/post-illustration-images/scripts/provider-contract.mjs",
+        "skills/post-illustration-images/references/orchestrated-provider.md"
+      ],
       "skill_path": "skills/post-illustration-images/SKILL.md",
       "required_markers": ["name: post-illustration-images", "content-production-provider: illustration-v1"]
     },

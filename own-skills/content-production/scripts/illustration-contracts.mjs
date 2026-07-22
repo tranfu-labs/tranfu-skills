@@ -9,6 +9,11 @@ import {
   readJson,
   readText
 } from './lib.mjs';
+import {
+  evaluatePlatformCardinality,
+  validateCurrentVisualDecision,
+  validateVisualCoverageSet
+} from './visual-cardinality.mjs';
 
 const requestKeys = [
   'schema_version', 'contract', 'task_id', 'capability', 'provider_contract', 'run_dir',
@@ -186,7 +191,10 @@ async function loadRunContext(runDir, state, issues) {
     return null;
   }
   const provider = state?.capabilities?.providers?.illustration;
+  const legacyProvider = state.stages?.visual?.status === 'completed' && !provider?.adapter_contract;
   if (provider?.status !== 'PASS' || provider?.contract !== 'illustration-v1'
+    || !legacyProvider && (provider?.adapter_contract !== 'illustration-orchestrated-coverage-v1'
+      || !Array.isArray(provider?.resources) || provider.resources.length !== 2)
     || !nonempty(provider?.skill_path)) {
     issues.push(issue('illustration_provider_unavailable', 'The illustration provider snapshot is not PASS for illustration-v1.'));
     return { runReal, provider: null };
@@ -203,6 +211,13 @@ async function loadRunContext(runDir, state, issues) {
   } catch (error) {
     issues.push(issue('illustration_provider_unavailable', error.message));
     return { runReal, provider: null };
+  }
+  for (const resource of provider.resources || []) {
+    if (!exactKeys(resource, ['path', 'sha256']) || !nonempty(resource.path)
+      || !/^[a-f0-9]{64}$/.test(resource.sha256 || '') || !fileExists(resource.path)
+      || await fileSha256(resource.path) !== resource.sha256) {
+      issues.push(issue('illustration_provider_unavailable', 'The illustration adapter resource snapshot is missing or stale.'));
+    }
   }
   return { runReal, provider: { ...provider, skillRoot, skillReal } };
 }
@@ -323,13 +338,17 @@ function expectedGeometry(styleContext) {
   };
 }
 
-function validateRequest(request, state, platform, mode, selection, titleBinding, paths, issues) {
+function validateRequest(request, state, platform, mode, selection, titleBinding, coverageBinding, paths, issues) {
   const attempt = paths.attempt;
   const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
+  const legacy = state.stages?.visual?.status === 'completed' && !coverageBinding;
   const expectedInputs = [
     { role: 'final_draft', path: selection?.draft_path, sha256: selection?.draft_sha256 },
     { role: 'title_selection', path: titleBinding?.path, sha256: titleBinding?.sha256 }
   ];
+  if (!legacy) expectedInputs.push(
+    { role: 'visual_coverage', path: coverageBinding?.path, sha256: coverageBinding?.sha256 }
+  );
   if (!exactKeys(request, requestKeys) || request.schema_version !== 1
     || request.contract !== 'content-production-provider/v1' || request.capability !== 'illustration'
     || request.provider_contract !== 'illustration-v1'
@@ -344,12 +363,12 @@ function validateRequest(request, state, platform, mode, selection, titleBinding
     issues.push(issue('invalid_illustration_request', `Canonical ${mode} request is invalid for ${platform}.`));
   }
   if (mode === 'generate') expectedInputs.push(
-    { role: 'illustration_plan', path: paths.plan, sha256: request.inputs?.[2]?.sha256 },
-    { role: 'shot_list', path: paths.shotList, sha256: request.inputs?.[3]?.sha256 }
+    { role: 'illustration_plan', path: paths.plan, sha256: request.inputs?.find((item) => item.role === 'illustration_plan')?.sha256 },
+    { role: 'shot_list', path: paths.shotList, sha256: request.inputs?.find((item) => item.role === 'shot_list')?.sha256 }
   );
   if (!Array.isArray(request.inputs) || request.inputs.length !== expectedInputs.length
-    || !isDeepStrictEqual(request.inputs.slice(0, 2), expectedInputs.slice(0, 2))) {
-    issues.push(issue('illustration_lineage_drift', `${platform} ${mode} request does not bind the approved title winner.`));
+    || !isDeepStrictEqual(request.inputs, expectedInputs)) {
+    issues.push(issue('illustration_lineage_drift', `${platform} ${mode} request does not bind the approved title winner and current coverage.`));
   }
 }
 
@@ -443,7 +462,7 @@ async function currentBoundedControlFiles(runDir, paths) {
   return found.filter((path) => !path.includes('/children/v') && !path.includes('/set-qa/v'));
 }
 
-async function validatePlanTask(runDir, context, state, platform, selection, titleBinding) {
+async function validatePlanTask(runDir, context, state, platform, selection, titleBinding, coverageBinding) {
   const issues = [];
   const paths = illustrationPaths(state, platform);
   const requestPath = await safeFile(runDir, context.runReal, paths.planRequest, issues, 'missing_illustration_plan_control');
@@ -463,7 +482,7 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
     issues.push(issue('invalid_illustration_plan', error.message, { path: paths.plan }));
   }
   if (!request || !result || !plan || !shotPath) return { issues, paths, request, result, plan };
-  validateRequest(request, state, platform, 'plan', selection, titleBinding, paths, issues);
+  validateRequest(request, state, platform, 'plan', selection, titleBinding, coverageBinding, paths, issues);
   if (!isDeepStrictEqual(request.expected_artifacts, [paths.plan, paths.shotList])) {
     issues.push(issue('invalid_illustration_request', `${platform} plan request must expect only plan and shot list.`));
   }
@@ -531,6 +550,9 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
   if (request.options.max_images !== null && plan.image_count > request.options.max_images) {
     issues.push(issue('illustration_count_exceeds_max', `${platform} plan exceeds max_images.`));
   }
+  if (coverageBinding?.value) {
+    issues.push(...evaluatePlatformCardinality(plan, coverageBinding.value).issues);
+  }
   if (state.gates?.visual?.status !== 'approved' && (await currentGeneratedFiles(runDir, paths)).length) {
     issues.push(issue('plan_contains_generated_assets', `${platform} plan phase already contains current-attempt prompts or images.`));
   }
@@ -577,9 +599,14 @@ export async function validateIllustrationPlans(runDir, state) {
   const context = await loadRunContext(runDir, state, issues);
   if (!context) return { issues, tasks: [] };
   const title = await approvedSelections(runDir, context.runReal, state, issues);
+  const coverage = await validateVisualCoverageSet(runDir, state);
+  issues.push(...coverage.issues);
   const tasks = [];
   for (const platform of platforms) {
-    const task = await validatePlanTask(runDir, context, workingState, platform, title.selections.get(platform), title.binding);
+    const task = await validatePlanTask(
+      runDir, context, workingState, platform, title.selections.get(platform), title.binding,
+      coverage.coverages.get(platform)
+    );
     tasks.push({ platform, ...task });
     issues.push(...task.issues);
   }
@@ -735,11 +762,11 @@ async function validateGenerateTask(runDir, runReal, state, task) {
   }
   if (!request || !result || !bundle || !manifestPath) return { issues, request, result, bundle, generated };
   const selection = task.request?.selection;
-  validateRequest(request, state, platform, 'generate', selection, request.inputs?.[1], paths, issues);
+  validateRequest(request, state, platform, 'generate', selection, request.inputs?.[1], request.inputs?.[2], paths, issues);
   const planHash = await fileSha256(task.planPath);
   const shotHash = await fileSha256(task.shotPath);
   const expectedInputs = [
-    task.request.inputs[0], task.request.inputs[1],
+    ...task.request.inputs.filter((input) => ['final_draft', 'title_selection', 'visual_coverage'].includes(input.role)),
     { role: 'illustration_plan', path: paths.plan, sha256: planHash },
     { role: 'shot_list', path: paths.shotList, sha256: shotHash }
   ];
@@ -881,11 +908,11 @@ async function validateBoundedGenerateTask(runDir, runReal, state, task, queue) 
   const planHash = await fileSha256(task.planPath);
   const shotHash = await fileSha256(task.shotPath);
   const expectedInputs = [
-    task.request.inputs[0], task.request.inputs[1],
+    ...task.request.inputs.filter((input) => ['final_draft', 'title_selection', 'visual_coverage'].includes(input.role)),
     { role: 'illustration_plan', path: paths.plan, sha256: planHash },
     { role: 'shot_list', path: paths.shotList, sha256: shotHash }
   ];
-  validateRequest(request, state, platform, 'generate', task.request.selection, request.inputs?.[1], paths, issues);
+  validateRequest(request, state, platform, 'generate', task.request.selection, request.inputs?.[1], request.inputs?.[2], paths, issues);
   if (!isDeepStrictEqual(request.inputs, expectedInputs) || !isDeepStrictEqual(request.options, plan.options)
     || !isDeepStrictEqual(request.expected_artifacts, [paths.bundle, paths.manifest])) {
     issues.push(issue('illustration_generate_lineage_invalid', `${platform} bounded parent request does not bind the approved plan exactly.`));
@@ -1034,6 +1061,8 @@ async function validateCompletedBindings(runDir, runReal, state, issues) {
 export async function validateIllustrationGeneration(runDir, state) {
   const planValidation = await validateIllustrationPlans(runDir, state);
   const issues = [...planValidation.issues];
+  const decisionValidation = await validateCurrentVisualDecision(runDir, state, planValidation.tasks);
+  issues.push(...decisionValidation.issues);
   const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
   if (state.gates?.visual?.status !== 'approved') {
     issues.push(issue('visual_plan_not_approved', 'Illustration generation requires the current visual plan gate to be approved.'));

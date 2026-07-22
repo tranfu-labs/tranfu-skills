@@ -14,6 +14,7 @@ import {
   coverPaths,
   validateWechatCover
 } from './wechat-cover-contracts.mjs';
+import { recountGeneratedVisualAssets } from './visual-cardinality.mjs';
 import {
   compressionPlanPath,
   compressionProviderRequired,
@@ -368,6 +369,9 @@ try {
     const validation = await validatePublishPackages(runDir, state);
     issues.push(...validation.issues);
   }
+  const visualRecount = providerVisual && providerPackage
+    ? await recountGeneratedVisualAssets(runDir, state) : { issues: [], rows: [], total: null };
+  issues.push(...visualRecount.issues);
   const currentLayout = wechatLayoutPaths(state);
   const providerLayout = wechatLayoutProviderRequired(state)
     || [currentLayout.request, currentLayout.result, currentLayout.stagedClean, currentLayout.stagedPreview]
@@ -449,7 +453,11 @@ try {
       if (bundleFiles.size !== manifestBundleFiles.size || [...bundleFiles].some((file) => !manifestBundleFiles.has(file))) {
         add('manifest_bundle_mismatch', `Manifest and bundle image sets differ for ${platform}.`, { platform });
       }
-      if (markdownRefs.length !== manifestMarkdownRefs.size || markdownRefs.some((ref) => !manifestMarkdownRefs.has(ref))) {
+      const sourceRefs = selection?.draft_path && fileExists(join(runDir, selection.draft_path))
+        ? new Set(markdownImageRefs(await readText(join(runDir, selection.draft_path)))) : new Set();
+      const generatedMarkdownRefs = markdownRefs.filter((ref) => !sourceRefs.has(ref));
+      if (generatedMarkdownRefs.length !== manifestMarkdownRefs.size
+        || generatedMarkdownRefs.some((ref) => !manifestMarkdownRefs.has(ref))) {
         add('manifest_markdown_mismatch', `Manifest and Markdown image references differ for ${platform}.`, { platform });
       }
       for (const item of items) {
@@ -587,7 +595,17 @@ try {
     run_id: state.run_id,
     checked_at: now,
     status,
-    counts: { masters: 2, platform_finals: 10, title_candidates: titleResult.total, platform_image_sets: 5, selected_packs: 5, wechat_cover: 1, wechat_html: 1 },
+    counts: {
+      masters: 2,
+      platform_finals: 10,
+      title_candidates: titleResult.total,
+      platform_image_sets: 5,
+      generated_body_images: visualRecount.total,
+      selected_packs: 5,
+      wechat_cover: 1,
+      wechat_html: 1
+    },
+    visual_recount: visualRecount.rows,
     artifact_fingerprints: artifactFingerprints,
     issues
   };

@@ -273,6 +273,26 @@ async function fixture(t, { platform = "wechat", attempt = 1 } = {}) {
   await put(runDir, "run.json", `${JSON.stringify(state, null, 2)}\n`);
   const input = { role: "final_draft", path: sourcePath, sha256: await digest(sourceFile) };
   const titleInput = { role: "title_selection", path: selectionPath, sha256: await digest(selectionFile) };
+  const version = `v${String(attempt).padStart(3, "0")}`;
+  const policyPath = `07-visual/policy.${version}.json`;
+  const policyFile = await put(runDir, policyPath, '{"supported":true}\n');
+  const coveragePath = `07-visual/${platform}/coverage.${version}.json`;
+  const coverageFile = await put(runDir, coveragePath, `${JSON.stringify({
+    status: "READY",
+    run_id: runId,
+    visual_attempt: attempt,
+    platform,
+    variant,
+    source: { path: input.path, sha256: input.sha256 },
+    title_selection: { path: titleInput.path, sha256: titleInput.sha256, title_id: selection.title_id },
+    policy_ref: { path: policyPath, sha256: await digest(policyFile) },
+    cardinality: { minimum: 1, target: 2, request_max_images: 2 },
+    coverage_units: [{
+      unit_id: `${platform}-whole-01`, ordinal: 1, eligible: true, required: true,
+      source_excerpt: "跨系统写入前需要人工确认。"
+    }]
+  }, null, 2)}\n`);
+  const coverageInput = { role: "visual_coverage", path: coveragePath, sha256: await digest(coverageFile) };
   const request = {
     schema_version: 1,
     contract: CONTRACT,
@@ -287,7 +307,7 @@ async function fixture(t, { platform = "wechat", attempt = 1 } = {}) {
     provider_platform: providerPlatform(platform),
     variant,
     selection,
-    inputs: [input, titleInput],
+    inputs: [input, titleInput, coverageInput],
     output_dir: pathSet.base,
     expected_artifacts: [pathSet.plan, pathSet.shot],
     options: options(platform),
@@ -362,7 +382,7 @@ async function generateFixture(t, options = {}) {
     ...data.request,
     task_id: `illustration:${data.runId}:${data.platform}:${data.variant}:generate:attempt-${String(data.request.attempt).padStart(3, "0")}`,
     mode: "generate",
-    inputs: [data.request.inputs[0], data.request.inputs[1], planInput, shotInput],
+    inputs: [data.request.inputs[0], data.request.inputs[1], data.request.inputs[2], planInput, shotInput],
     expected_artifacts: [],
     output_dir: pathSet.base
   };
@@ -453,8 +473,8 @@ async function writeBundle(data, mutate) {
     variant: data.variant,
     source: data.request.inputs[0],
     selection: data.selection,
-    plan: { path: data.request.inputs[2].path, sha256: data.request.inputs[2].sha256 },
-    shot_list: { path: data.request.inputs[3].path, sha256: data.request.inputs[3].sha256 },
+    plan: { path: data.request.inputs[3].path, sha256: data.request.inputs[3].sha256 },
+    shot_list: { path: data.request.inputs[4].path, sha256: data.request.inputs[4].sha256 },
     style: data.planData.plan.style,
     brand: data.planData.plan.brand,
     generation_backend: { ...data.planData.plan.generation_backend, process_cleanup_status: "pass" },

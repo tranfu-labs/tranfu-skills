@@ -14,6 +14,7 @@ import {
   readJson,
   writeJson
 } from './lib.mjs';
+import { validateVisualCoverageSet } from './visual-cardinality.mjs';
 
 const modes = new Set(['plan', 'generate']);
 const backendHints = new Set(['runtime-native', 'configured-api', 'unknown']);
@@ -134,8 +135,6 @@ try {
   }
   const state = await readJson(statePath);
   const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
-  const maxImages = requestedMaxImages === null && bounded ? 8 : requestedMaxImages;
-  if (bounded && maxImages > 8) throw new Error('--max-images must be within 1..8 for bounded-per-image runs.');
   const visual = state.stages?.visual;
   if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'visual'
     || visual?.status !== 'running' || !Number.isInteger(visual?.attempt) || visual.attempt < 1) {
@@ -154,6 +153,15 @@ try {
   }
   if (mode === 'generate' && state.gates?.visual?.status !== 'approved') {
     add(blockers, 'illustration_plan_not_approved', 'Generate mode requires the current visual plan gate to be approved.');
+  }
+  const coverageValidation = await validateVisualCoverageSet(runDir, state);
+  for (const value of coverageValidation.issues) add(blockers, value.code, value.message, value);
+  const coverageRow = coverageValidation.coverages.get(args.platform) || null;
+  const maxImages = coverageRow?.value?.cardinality?.request_max_images ?? null;
+  if (requestedMaxImages !== null && maxImages !== null && requestedMaxImages !== maxImages) {
+    add(blockers, 'illustration_request_max_policy_mismatch',
+      `--max-images must equal the current coverage target (${maxImages}) for ${args.platform}.`,
+      { platform: args.platform, expected: maxImages, actual: requestedMaxImages });
   }
 
   const decisionBinding = state.gates?.titles?.decision_ref;
@@ -231,7 +239,8 @@ try {
   } else {
     const inputs = [
       { role: 'final_draft', path: selection.draft_path, sha256: selection.draft_sha256 },
-      { role: 'title_selection', path: decisionRelative, sha256: decisionBinding.sha256 }
+      { role: 'title_selection', path: decisionRelative, sha256: decisionBinding.sha256 },
+      { role: 'visual_coverage', path: coverageRow.path, sha256: coverageRow.sha256 }
     ];
     if (mode === 'generate') {
       inputs.push(

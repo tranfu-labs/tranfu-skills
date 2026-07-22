@@ -224,8 +224,19 @@ function makeCapabilityConfig(root, { missing = null } = {}) {
       required: true,
       contract: markers[1].split(': ')[1],
       ...(capabilityProfiles[id] ? { profile: capabilityProfiles[id] } : {}),
+      ...(id === 'illustration' ? {
+        adapter_contract: 'illustration-orchestrated-coverage-v1',
+        resources: [
+          join(root, 'skills', id, 'scripts', 'provider-contract.mjs'),
+          join(root, 'skills', id, 'references', 'orchestrated-provider.md')
+        ]
+      } : {}),
       required_markers: markers
     };
+    if (id === 'illustration') {
+      write(capabilities[id].resources[0], '// fixture adapter\n');
+      write(capabilities[id].resources[1], '# Fixture guide\n');
+    }
   }
 
   const config = join(root, 'capabilities.yaml');

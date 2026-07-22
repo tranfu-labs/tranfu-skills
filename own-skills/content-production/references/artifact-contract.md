@@ -200,7 +200,7 @@ completed stage 的同版本 titles 和 matrix。matrix 保存全部候选和确
 
 ## 五套配图
 
-每平台 plan 精确绑定 current visual attempt、winner 正文、titles decision、注册 style、品牌策略、后端、`gpt-image-2` 几何和非空 anchors，状态必须 `READY`、residual risk=`none`。`shot-list.md` 的 task ID、image IDs、核心含义与 plan 完全一致。visual gate 精确绑定五份 plan 和五份 shot-list，批准时 visual stage 仍为 running。
+每个 current visual attempt 先保留一份 policy snapshot 和五份 coverage。coverage 绑定 winner、titles decision 与 platform profile，记录 eligible/required units、唯一 excerpt 及 minimum/target；五个平台 cap 均为 8，小红书固定 4..8 页逐页覆盖。每平台 plan 精确绑定 coverage、注册 style、品牌策略、后端、`gpt-image-2` 几何和非空 anchors，状态必须 `READY`、residual risk=`none`。`shot-list.md` 与 plan 完全一致。唯一 VisualDecision 由脚本生成；visual gate 精确绑定五份 plan 和五份 shot-list，批准时 visual stage 仍为 running。
 
 `bounded-per-image` generate 父 request 另绑定已批准 plan/shot-list，只授权 `bundle.json` 与 provider 原生 `manifest.md`。`07-visual/generation-queue[.vNNN].json` 登记五个平台 suite、共享全局 4/单套 2 的生成租约和独立封面占位；每图 control 位于 `children[/vNNN]/<image-id>/attempt-NN/`，Set QA 位于 `set-qa[/vNNN]/round-NN/`。child request 精确授权自己的 prompt、candidate/source、delivery 和 QA；result 绑定这些文件的哈希、真实几何和选中 attempt。
 

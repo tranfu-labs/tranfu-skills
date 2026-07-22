@@ -6,8 +6,8 @@ uses `contract: content-production-provider/v1`, `capability: illustration`, and
 remain unchanged when no provider marker is present.
 
 The public provider contract remains `illustration-v1`. A run capability snapshot with
-`profile: bounded-per-image` selects the bounded child workflow below; the profile is descriptive
-and does not change the public provider ID.
+`profile: bounded-per-image` and `adapter_contract: illustration-orchestrated-coverage-v1` selects
+the bounded child workflow below; these internal markers do not change the public provider ID.
 
 ## Common Rules
 
@@ -32,7 +32,9 @@ directories.
 
 ## Plan Mode
 
-Plan inputs are exactly `final_draft` and `title_selection`. Run the normal backend preflight,
+Plan inputs are exactly `final_draft`, `title_selection`, and `visual_coverage`. Validate the
+current policy, attempt, platform, source, title, and `request_max_images` bindings before planning.
+Run the normal backend preflight,
 content analysis, registered style selection, brand resolution, geometry resolution, anchor selection,
 and shot-list workflow, but do not compile prompts or generate images.
 
@@ -73,15 +75,18 @@ shot_list = { path, sha256 }
 ```
 
 Use `status: READY`, backend cleanup `not-run`, and `residual_risk: none`. A bounded plan contains
-1-8 anchors. Every source excerpt must exist verbatim in the selected final draft; excerpts and core
-meanings are independently unique. Workflow and Checklist anchors default to `icons_only`; an
-`allowlist` anchor must have non-empty `short_labels`. `max_images=8` is a ceiling, never a quota.
+`coverage.minimum..coverage.target` anchors, never more than the platform Provider cap of 8. Every
+anchor must exactly map a distinct eligible coverage unit, cover every required unit, and remain in
+source ordinal order. Xiaohongshu maps exactly one anchor to each of its 4-8 carousel pages. Workflow
+and Checklist anchors default to `icons_only`; an `allowlist` anchor must have non-empty
+`short_labels`. `max_images` must equal the coverage target and is never a Canary or concurrency value.
 The shot list uses `artifact: IllustrationShotList`, `status: READY`, the plan task ID, and one
 `## <image_id>` section per anchor.
 
 ## Generate Mode
 
-Generate inputs are exactly `final_draft`, `title_selection`, `illustration_plan`, and `shot_list`.
+Generate inputs are exactly `final_draft`, `title_selection`, `visual_coverage`,
+`illustration_plan`, and `shot_list`.
 The visual gate must already bind the current plan and shot-list hashes. In the bounded profile the
 parent request authorizes only the final bundle and native manifest. The orchestrator creates child
 requests and does not let the parent write image files directly.

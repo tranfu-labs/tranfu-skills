@@ -179,7 +179,9 @@ if (entryBlockers.length || missingInputs.length) {
         status: item.status,
         required: item.required,
         contract: item.contract,
-        profile: item.profile
+        profile: item.profile,
+        ...(item.adapter_contract ? { adapter_contract: item.adapter_contract } : {}),
+        ...(item.resources?.length ? { resources: item.resources } : {})
       }]))
     },
     snapshots: {

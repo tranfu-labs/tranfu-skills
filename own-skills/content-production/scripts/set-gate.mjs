@@ -8,6 +8,10 @@ import {
 } from './contracts.mjs';
 import { illustrationPaths, validateIllustrationPlans } from './illustration-contracts.mjs';
 import {
+  decisionPathForAttempt,
+  validateCurrentVisualDecision
+} from './visual-cardinality.mjs';
+import {
   artifactBinding,
   emitJson,
   expandPath,
@@ -189,6 +193,9 @@ if (!runArg || !gateOrder.includes(gate) || !allowedStatuses.includes(status)) {
     }
 
     if (status === 'approved' && gate === 'visual') {
+      if (!nextDecision?.path || nextDecision.path !== decisionPathForAttempt(state)) {
+        throw new Error('Visual approval requires --decision pointing to the canonical current VisualDecision file.');
+      }
       const expected = platforms.flatMap((platform) => {
         const paths = illustrationPaths(state, platform);
         return [paths.plan, paths.shotList];
@@ -202,6 +209,12 @@ if (!runArg || !gateOrder.includes(gate) || !allowedStatuses.includes(status)) {
       const validation = await validateIllustrationPlans(runDir, state);
       if (validation.issues.length) {
         throw Object.assign(new Error('Illustration plans violate the visual approval contract.'), { issues: validation.issues });
+      }
+      const decisionValidation = await validateCurrentVisualDecision(runDir, state, validation.tasks);
+      if (decisionValidation.issues.length || nextDecision.sha256 !== decisionValidation.sha256) {
+        throw Object.assign(new Error('Visual decision is not the canonical current deterministic decision.'), {
+          issues: decisionValidation.issues
+        });
       }
     }
 

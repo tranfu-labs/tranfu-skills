@@ -264,8 +264,8 @@ async function validateRequest(input) {
   }
 
   const roles = request.mode === "plan"
-    ? ["final_draft", "title_selection"]
-    : ["final_draft", "title_selection", "illustration_plan", "shot_list"];
+    ? ["final_draft", "title_selection", "visual_coverage"]
+    : ["final_draft", "title_selection", "visual_coverage", "illustration_plan", "shot_list"];
   if (!Array.isArray(request.inputs) || request.inputs.length !== roles.length
     || !request.inputs.every((item, index) => plain(item) && sameKeys(item, ["role", "path", "sha256"])
       && item.role === roles[index] && typeof item.path === "string" && /^[a-f0-9]{64}$/.test(item.sha256 || ""))) {
@@ -284,6 +284,7 @@ async function validateRequest(input) {
 
   const finalInput = request.inputs?.find((item) => item.role === "final_draft");
   const titleInput = request.inputs?.find((item) => item.role === "title_selection");
+  const coverageInput = request.inputs?.find((item) => item.role === "visual_coverage");
   if (!finalInput || finalInput.path !== request.selection?.draft_path
     || finalInput.sha256 !== request.selection?.draft_sha256) {
     add(context.issues, "invalid_provider_inputs", "final_draft must exactly match selection lineage.");
@@ -305,6 +306,31 @@ async function validateRequest(input) {
       }
     } catch (error) {
       add(context.issues, "title_selection_lineage_mismatch", error.message);
+    }
+  }
+  const coveragePath = context.inputPaths.get("visual_coverage");
+  if (coveragePath) {
+    try {
+      context.coverage = JSON.parse(await readFile(coveragePath, "utf8"));
+      const version = `v${String(request.attempt).padStart(3, "0")}`;
+      const expectedCoveragePath = `07-visual/${request.platform}/coverage.${version}.json`;
+      const expectedPolicyPath = `07-visual/policy.${version}.json`;
+      const policyPath = await safeFile(context, context.coverage.policy_ref?.path, context.issues, "visual_policy_missing");
+      if (!coverageInput || coverageInput.path !== expectedCoveragePath
+        || context.coverage.status !== "READY" || context.coverage.run_id !== context.state?.run_id
+        || context.coverage.visual_attempt !== request.attempt || context.coverage.platform !== request.platform
+        || context.coverage.variant !== request.variant
+        || !sameJson(context.coverage.source, { path: finalInput?.path, sha256: finalInput?.sha256 })
+        || context.coverage.title_selection?.path !== titleInput?.path
+        || context.coverage.title_selection?.sha256 !== titleInput?.sha256
+        || context.coverage.title_selection?.title_id !== request.selection?.title_id
+        || context.coverage.policy_ref?.path !== expectedPolicyPath
+        || !policyPath || await sha256(policyPath) !== context.coverage.policy_ref?.sha256
+        || context.coverage.cardinality?.request_max_images !== request.options?.max_images) {
+        add(context.issues, "visual_coverage_invalid", "visual_coverage must bind the current READY policy, source, title, attempt, and max_images.");
+      }
+    } catch (error) {
+      add(context.issues, "visual_coverage_invalid", error.message);
     }
   }
 
@@ -527,6 +553,35 @@ async function validatePlan(context, { rejectGenerated = true } = {}) {
   if (context.request.options.max_images !== null && plan.image_count > context.request.options.max_images) {
     add(issues, "illustration_count_exceeds_max", "image_count exceeds options.max_images.");
   }
+  const coverage = context.coverage;
+  const eligibleUnits = Array.isArray(coverage?.coverage_units)
+    ? coverage.coverage_units.filter((unit) => unit.eligible) : [];
+  const unitsByExcerpt = new Map(eligibleUnits.map((unit) => [unit.source_excerpt, unit]));
+  const mappedUnits = anchors.map((anchor) => unitsByExcerpt.get(anchor.source_excerpt)).filter(Boolean);
+  const coveredIds = new Set(mappedUnits.map((unit) => unit.unit_id));
+  const requiredIds = eligibleUnits.filter((unit) => unit.required).map((unit) => unit.unit_id);
+  if (!coverage || plan.image_count < coverage.cardinality?.minimum) {
+    add(issues, "visual_image_count_below_policy_min", "image_count is below the current coverage minimum.");
+  }
+  if (coverage && plan.image_count > coverage.cardinality?.target) {
+    add(issues, "visual_image_count_above_policy_max", "image_count exceeds the current coverage target.");
+  }
+  if (mappedUnits.length !== anchors.length) {
+    add(issues, "visual_anchor_coverage_mismatch", "Every anchor source_excerpt must exactly map to one eligible coverage unit.");
+  }
+  if (coveredIds.size !== mappedUnits.length) {
+    add(issues, "visual_anchor_duplicate_coverage", "Different anchors cannot map to the same coverage unit.");
+  }
+  if (requiredIds.some((unitId) => !coveredIds.has(unitId))) {
+    add(issues, "visual_required_coverage_missing", "Plan anchors must cover every required coverage unit.");
+  }
+  if (context.request.platform === "xiaohongshu"
+    && (anchors.length !== eligibleUnits.length || coveredIds.size !== eligibleUnits.length)) {
+    add(issues, "visual_xhs_card_coverage_incomplete", "Xiaohongshu must map exactly one anchor to every carousel page.");
+  }
+  if (mappedUnits.some((unit, index) => index > 0 && mappedUnits[index - 1].ordinal >= unit.ordinal)) {
+    add(issues, "visual_anchor_order_invalid", "Plan anchors must follow source ordinal order.");
+  }
   const sourceText = context.inputPaths.get("final_draft")
     ? await readFile(context.inputPaths.get("final_draft"), "utf8") : "";
   const ids = new Set();
@@ -625,8 +680,8 @@ async function validateGenerate(context, planValidation) {
     || bundle.status !== "PASS" || bundle.platform !== context.request.platform
     || bundle.provider_platform !== context.request.provider_platform || bundle.variant !== context.request.variant
     || !sameJson(bundle.source, context.request.inputs[0]) || !sameJson(bundle.selection, context.request.selection)
-    || !sameJson(bundle.plan, { path: context.spec.plan, sha256: context.request.inputs[2].sha256 })
-    || !sameJson(bundle.shot_list, { path: context.spec.shot, sha256: context.request.inputs[3].sha256 })
+    || !sameJson(bundle.plan, { path: context.spec.plan, sha256: context.request.inputs[3].sha256 })
+    || !sameJson(bundle.shot_list, { path: context.spec.shot, sha256: context.request.inputs[4].sha256 })
     || !sameJson(bundle.style, plan.style) || !sameJson(bundle.brand, plan.brand)
     || !sameJson(bundle.generation_backend, expectedBackend)
     || !sameJson(bundle.generation_geometry, plan.generation_geometry)
