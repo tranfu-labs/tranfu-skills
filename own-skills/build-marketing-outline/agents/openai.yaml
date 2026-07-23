@@ -1,0 +1,4 @@
+interface:
+  display_name: "产品营销大纲"
+  short_description: "从产品 URL 或项目目录生成 TranFu 发布营销策略与六渠道大纲"
+  default_prompt: "使用 $build-marketing-outline 分析这个产品 URL 或项目目录，生成 TranFu 产品发布营销策略和六渠道编辑级内容大纲。"
