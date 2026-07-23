@@ -149,6 +149,32 @@ metadata:
   });
 });
 
+test("parseFrontmatter (unit): lists of maps stay structured", () => {
+  const { data, error } = parseFrontmatter(`---
+prompt_examples:
+  - prompt: Help me use this skill
+    scene: English example
+  - prompt: "Review this input"
+    scene: Review
+---
+`);
+  assert.equal(error, null);
+  assert.deepEqual(data.prompt_examples, [
+    { prompt: "Help me use this skill", scene: "English example" },
+    { prompt: "Review this input", scene: "Review" },
+  ]);
+});
+
+test("parseFrontmatter (unit): URL scalar lists remain string lists", () => {
+  const { data, error } = parseFrontmatter(`---
+sources:
+  - https://example.com/skill
+---
+`);
+  assert.equal(error, null);
+  assert.deepEqual(data.sources, ["https://example.com/skill"]);
+});
+
 test("parseFrontmatter (unit): JSON-compatible scalar types stay typed", () => {
   const { data, error } = parseFrontmatter(
     '---\nenabled: true\ndisabled: false\ntags: ["one", "two"]\nquoted: "true"\n---\n',
