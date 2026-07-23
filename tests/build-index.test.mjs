@@ -69,6 +69,18 @@ function setupTempFixtures() {
     join(tmpDir, "own-skills", "good-skill", "SKILL.md")
   );
   copy(
+    join(FIXTURES_DIR, "own-skills", "good-skill", "README.md"),
+    join(tmpDir, "own-skills", "good-skill", "README.md")
+  );
+  copy(
+    join(FIXTURES_DIR, "own-skills", "good-skill", "README.en.md"),
+    join(tmpDir, "own-skills", "good-skill", "README.en.md")
+  );
+  copy(
+    join(FIXTURES_DIR, "own-skills", "good-skill", "README.zh.md"),
+    join(tmpDir, "own-skills", "good-skill", "README.zh.md")
+  );
+  copy(
     join(FIXTURES_DIR, "own-skills", "bad-skill", "SKILL.md"),
     join(tmpDir, "own-skills", "bad-skill", "SKILL.md")
   );
@@ -79,6 +91,14 @@ function setupTempFixtures() {
   copy(
     join(FIXTURES_DIR, "external-skills", "ext-skill", "SKILL.md"),
     join(tmpDir, "external-skills", "ext-skill", "SKILL.md")
+  );
+  copy(
+    join(FIXTURES_DIR, "external-skills", "ext-skill", "README.md"),
+    join(tmpDir, "external-skills", "ext-skill", "README.md")
+  );
+  copy(
+    join(FIXTURES_DIR, "external-skills", "ext-skill", "README.zh.md"),
+    join(tmpDir, "external-skills", "ext-skill", "README.zh.md")
   );
 
   // Build-index uses `git ls-tree HEAD ...` for sha — set up a minimal git repo
@@ -123,6 +143,18 @@ test("valid frontmatter → skill included in index", () => {
     assert.equal(goodSkill.updated_at, "2026-01-01");
     assert.equal(goodSkill.display_name, "Good Skill");
     assert.equal(goodSkill.display_name_zh, "好技能");
+    assert.equal(goodSkill.description_en, "An English catalog summary from README");
+    assert.equal(goodSkill.description_zh, "README 中的中文目录摘要");
+    assert.deepEqual(goodSkill.prompt_examples_en, [
+      { prompt: "Help me use this skill", scene: "English example" },
+    ]);
+    assert.deepEqual(goodSkill.prompt_examples_zh, [
+      { prompt: "帮我使用这个技能", scene: "中文示例" },
+    ]);
+    assert.deepEqual(goodSkill.readme, {
+      en: "README.md",
+      zh: "README.zh.md",
+    });
     assert.equal(goodSkill.origin, "own");
     assert.equal(goodSkill.recommend_reason, "Useful catalog metadata");
     assert.equal(goodSkill.userInvocable, true);
@@ -139,6 +171,42 @@ test("valid frontmatter → skill included in index", () => {
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/,
       "published_at should be UTC ISO8601"
     );
+
+    const externalSkill = indexJson.skills.find((s) => s.name === "ext-skill");
+    assert.ok(externalSkill, "external skill should be indexed");
+    assert.equal(externalSkill.description_en, undefined);
+    assert.equal(externalSkill.description_zh, undefined);
+    assert.equal(externalSkill.prompt_examples_en, undefined);
+    assert.equal(externalSkill.prompt_examples_zh, undefined);
+    assert.equal(externalSkill.readme, undefined);
+  } finally {
+    cleanupTempDir(tmpDir);
+  }
+});
+
+test("README.en.md with frontmatter takes precedence over README.md", () => {
+  const tmpDir = setupTempFixtures();
+  try {
+    writeFileSync(
+      join(tmpDir, "own-skills", "good-skill", "README.en.md"),
+      `---
+description: Preferred explicit English summary
+prompt_examples:
+  - prompt: Use the explicit English README
+    scene: Explicit locale
+---
+
+# Explicit English README
+`,
+    );
+    const { indexJson, exitCode } = runBuildIndex(tmpDir);
+    assert.equal(exitCode, 0);
+    const goodSkill = indexJson.skills.find((s) => s.name === "good-skill");
+    assert.equal(goodSkill.description_en, "Preferred explicit English summary");
+    assert.deepEqual(goodSkill.prompt_examples_en, [
+      { prompt: "Use the explicit English README", scene: "Explicit locale" },
+    ]);
+    assert.equal(goodSkill.readme.en, "README.en.md");
   } finally {
     cleanupTempDir(tmpDir);
   }

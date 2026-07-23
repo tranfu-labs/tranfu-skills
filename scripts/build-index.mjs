@@ -21,6 +21,57 @@ function listFiles(dir, base = dir) {
   return out;
 }
 
+function readReadmeMetadata(skillDir, type) {
+  // External skills are upstream snapshots/recommendations. Keep their catalog
+  // entries sourced exclusively from SKILL.md instead of imposing our README
+  // localization convention on third-party content.
+  if (type === "external") return {};
+
+  const readme = {};
+  const localized = {};
+  const locales = [
+    { locale: "en", candidates: ["README.en.md", "README.md"] },
+    { locale: "zh", candidates: ["README.zh.md"] },
+  ];
+
+  for (const { locale, candidates } of locales) {
+    const existing = candidates.filter((candidate) => {
+      try {
+        return statSync(join(skillDir, candidate)).isFile();
+      } catch {
+        return false;
+      }
+    });
+    if (existing.length === 0) continue;
+
+    let filename = existing[0];
+    let data = {};
+    for (const candidate of existing) {
+      const markdown = readFileSync(join(skillDir, candidate), "utf8");
+      const parsed = parseFrontmatter(markdown);
+      if (!parsed.error) {
+        filename = candidate;
+        data = parsed.data;
+        break;
+      }
+      if (markdown.startsWith("---")) {
+        console.error(`warn ${join(skillDir, candidate)}: ${parsed.error}`);
+      }
+    }
+
+    readme[locale] = filename;
+    if (data.description !== undefined) localized[`description_${locale}`] = data.description;
+    if (data.prompt_examples !== undefined) {
+      localized[`prompt_examples_${locale}`] = data.prompt_examples;
+    }
+  }
+
+  return {
+    ...(Object.keys(readme).length ? { readme } : {}),
+    ...localized,
+  };
+}
+
 function blobSha(filePath) {
   try {
     return execSync(`git ls-tree HEAD "${filePath}" | awk '{print $3}'`).toString().trim();
@@ -78,9 +129,11 @@ for (const [root, type] of Object.entries(ROOTS)) {
     const frontmatterMetadata = Object.fromEntries(
       Object.entries(fm).filter(([field]) => !GENERATED_FIELDS.has(field)),
     );
+    const readmeMetadata = readReadmeMetadata(skillDir, type);
     const published = publishedAt(skillMd);
     skills.push({
       ...frontmatterMetadata,
+      ...readmeMetadata,
       type,
       ...(published ? { published_at: published } : {}),
       path: skillDir,

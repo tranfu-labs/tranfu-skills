@@ -125,8 +125,29 @@ function parseIndentedBlock(lines, startIndex, parentIndent) {
         value.push(nested.value);
         i = nested.nextIndex;
       } else {
-        value.push(parseScalar(rawItem));
-        i++;
+        const firstEntry = rawItem.match(/^([A-Za-z_][A-Za-z0-9_-]*):(?:\s+(.*))?$/);
+        if (!firstEntry) {
+          value.push(parseScalar(rawItem));
+          i++;
+          continue;
+        }
+
+        const itemValue = {
+          [firstEntry[1]]: parseScalar((firstEntry[2] ?? "").trim()),
+        };
+        const continuation = parseIndentedBlock(lines, i + 1, baseIndent);
+        if (
+          continuation.nextIndex > i + 1 &&
+          continuation.value &&
+          !Array.isArray(continuation.value) &&
+          typeof continuation.value === "object"
+        ) {
+          Object.assign(itemValue, continuation.value);
+          i = continuation.nextIndex;
+        } else {
+          i++;
+        }
+        value.push(itemValue);
       }
       continue;
     }
