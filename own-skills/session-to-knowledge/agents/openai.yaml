@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session to Knowledge"
+  short_description: "将 Agent 会话提炼为可验证、可分享的实战经验文档"
+  default_prompt: "Use $session-to-knowledge to turn the current agent session into a verified, privacy-safe practical knowledge article."
