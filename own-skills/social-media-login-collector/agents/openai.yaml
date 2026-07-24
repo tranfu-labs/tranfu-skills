@@ -1,0 +1,7 @@
+interface:
+  display_name: "社媒登录采集器"
+  short_description: "登录后采集五大社媒后台数据、生成报表并支持看板导入"
+  default_prompt: "使用 $social-media-login-collector 采集指定平台最近30天后台数据，生成并校验报表。"
+
+policy:
+  allow_implicit_invocation: true
