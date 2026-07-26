@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Moebius"
+  short_description: "Release Moebius with verified macOS artifacts"
+  default_prompt: "Use $release-moebius to publish the current main branch as version 0.1.2."
