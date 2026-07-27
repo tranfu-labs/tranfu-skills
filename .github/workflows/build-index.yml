@@ -15,6 +15,10 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+      - name: install dependencies
+        run: npm ci
+      - name: generate Skill icons
+        run: npm run build:icons
       - name: run validator unit tests
         run: npm test
       - name: validate (changed only on PR, all on push)
@@ -43,6 +47,16 @@ jobs:
           path: /tmp/validate.json
           retention-days: 7
       - run: npm run build:index
+      - name: Commit generated Skill icons
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if ! git diff --quiet -- own-skills; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add own-skills
+            git commit -m "chore: generate Skill icons [skip ci]"
+            git push
+          fi
       - name: Publish index.json to rolling `catalog` release
         # 仅 main push 触发. PR 上只跑 build:index 做 sanity check, 不发布.
         # 新 CLI (0.4+) 从 release `catalog` tag 拉 index.json; git 里那份是老 CLI (0.3.x) 兼容快照.

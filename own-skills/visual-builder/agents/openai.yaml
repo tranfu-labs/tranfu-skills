@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Visual Builder"
   short_description: "Turn designed images into reusable debranded visual templates"
   default_prompt: "Use $visual-builder to turn my designed image into a debranded, platform-specific illustration template candidate."

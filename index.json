@@ -1,15 +1,20 @@
 {
   "version": 1,
-  "generated_at": "2026-07-03T10:37:04.859Z",
+  "generated_at": "2026-07-27T10:27:00.775Z",
   "skills": [
     {
       "name": "tranfu-publish",
-      "type": "meta",
+      "display_name": "TranFu Skill Publish",
+      "display_name_zh": "TranFu Skill 发布",
       "description": "当用户说\"发布本地 skill X 到公司库 / 推荐这个外部 skill (URL) 到公司库 / 把当前 skill 提到 tranfu-skills / 给公司库 X 加使用案例\"时, 按 templates/ 起草全部内容 (frontmatter / README §同类对比 / README §使用技巧 / case-file / PR title+body) 后自动切分支 / commit / push / gh pr create —— 触发即视为发布意图, 不再等用户二次确认。不接 search / 装 / 列 / 更新 / 卸载意图 (那走 tranfu-router skill)。",
       "version": "0.4.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-17",
-      "published_at": "2026-05-14T05:10:06.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "meta",
+      "readme": {
+        "en": "README.md"
+      },
+      "type": "meta",
       "path": "meta-skills/tranfu-publish",
       "files": [
         "README.md",
@@ -21,35 +26,80 @@
         "templates/section-使用技巧.md",
         "templates/section-同类对比.md"
       ],
-      "sha": "61381cb6c63b05ab31982d660582b6f164a7d370"
+      "sha": "59bcb57438772d32e65d2265bb9a84e6a7cc5688"
     },
     {
       "name": "tranfu-router",
-      "type": "meta",
+      "display_name": "TranFu Skill Router",
+      "display_name_zh": "TranFu Skill 路由",
       "description": "当用户说\"搜公司 skill 关于 X / 装 X 到 user / project / 列公司库 skill / 列已装的公司 skill / 升级公司 skill / 卸载公司 skill X / 诊断 tfs 环境\"时, 调本地 tranfu-skills CLI (二进制 tfs) 完成. 自动识别当前 runtime (Claude Code / Codex CLI) 通过 --runtime 传给 tfs, 用 --json 解析结果. Do NOT 接发布 / publish / 推 skill 到公司库意图 (那走 tranfu-publish skill).",
       "version": "0.1.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-05-26",
-      "published_at": "2026-05-14T05:10:06.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "meta",
+      "readme": {
+        "en": "README.md"
+      },
+      "type": "meta",
       "path": "meta-skills/tranfu-router",
       "files": [
         "README.md",
         "SKILL.md"
       ],
-      "sha": "d630043de9ddf79138783a0a699b15daa8a21cb8"
+      "sha": "7c01992c59525125cca8b8d4ec2d4d007bb45964"
     },
     {
       "name": "agent-architecture-decision",
-      "type": "own",
+      "display_name": "Agent Architecture Decision",
+      "display_name_zh": "Agent 架构决策",
       "description": "Analyze, design, and review agentic architectures for AI products and complex workflows. Use for requests about agentic 架构, agentic workflow, 多 agent 架构, single agent vs multi-agent, agent 技术栈/工作流程, memory/state/tool planning, LangGraph/CrewAI/OpenAI Agents/PydanticAI selection, or recommending an agentic architecture from project vision and existing technical architecture. Also matches casual asks like '要不要上 agent / 要不要用 LangGraph'、'该不该拆多个 agent'、'这个功能普通 workflow 够不够'、'帮我设计 agent 流程'. Do NOT use for ordinary bug fixes or small code edits (use openspec-driven-development), pure prompt review (use prompt-review), generic UI work, provider smoke tests, deployment-only tasks (use coolify-deploy), or already-scoped implementation unless the user asks to rethink agentic architecture.",
       "version": "0.2.0",
       "author": "griffithkk3-del",
-      "updated_at": "2026-07-03",
-      "published_at": "2026-07-03T09:04:22.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Decide whether a project really needs AI agents and, if it does, design the simplest setup that fits the product and technology.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Should we use agents here, or is a plain workflow enough?",
+          "scene": "Decide whether to use agents"
+        },
+        {
+          "prompt": "Do we need LangGraph, or would a normal deterministic workflow work?",
+          "scene": "Choose a framework"
+        },
+        {
+          "prompt": "Based on the project vision and current stack, recommend an agentic architecture.",
+          "scene": "Plan the architecture"
+        }
+      ],
+      "description_zh": "判断项目是否真的需要 AI Agent；如果需要，就设计最简单、最适合现有产品和技术的方案。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "这个功能到底要不要上 agent, 还是普通 workflow 就够？帮我判一下。",
+          "scene": "判断是否需要 Agent"
+        },
+        {
+          "prompt": "我在纠结 LangGraph 还是普通 workflow, 你觉得哪个更合适？",
+          "scene": "选择技术框架"
+        },
+        {
+          "prompt": "根据项目愿景和现有架构, 推荐一套 agent 技术流程和落地路线。",
+          "scene": "规划整体架构"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/agent-architecture-decision",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
         "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "references/architecture-patterns.md",
         "references/evaluation-gates.md",
         "references/memory-and-state.md",
@@ -57,98 +107,854 @@
         "references/technical-stack-and-workflow.md",
         "references/tool-use-and-safety.md"
       ],
-      "sha": "7e3b67669dbd17c9f54aa01cc6290ed909babdfe"
+      "sha": "9f1df473c7eb00adee97196d0cce1cf118f6735b"
     },
     {
       "name": "ai-opportunity-evaluation",
-      "type": "own",
-      "description": "'当用户说\"判断这个项目怎么样\" / \"立项判断\" / \"这个方向能不能做\" / \"这个产品想法值不值得做\" / \"用 AI机会立项判断 Skill，帮我分析\"时，做 TranFu 产品想法立项会诊，短问后输出一屏以内的立项判断卡。Do NOT trigger when 用户已经明确要求直接开发、修 bug、部署、写代码，或已完成立项并要求写 PRD。'",
+      "display_name": "AI Opportunity Evaluation",
+      "display_name_zh": "AI 机会立项判断",
+      "description": "当用户说\"判断这个项目怎么样\" / \"立项判断\" / \"这个方向能不能做\" / \"这个产品想法值不值得做\" / \"用 AI机会立项判断 Skill，帮我分析\"时，做 TranFu 产品想法立项会诊，短问后输出一屏以内的立项判断卡。Do NOT trigger when 用户已经明确要求直接开发、修 bug、部署、写代码，或已完成立项并要求写 PRD。",
       "version": "0.1.0",
       "author": "06666666",
-      "updated_at": "2026-06-26",
-      "published_at": "2026-06-29T02:56:33.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "A go/no-go gate for TranFu product ideas before PRD or development. Runs a 2-3 round short-question triage on a one-liner idea and outputs a one-screen decision card (Go / Refine first / Don't do).",
+      "prompt_examples_en": [
+        {
+          "prompt": "Evaluate this idea: a WeChat article formatter",
+          "scene": "Evaluate a product idea"
+        },
+        {
+          "prompt": "Run a go/no-go check on this internal tool: personal attention dashboard",
+          "scene": "Review an internal tool"
+        },
+        {
+          "prompt": "Is this direction worth pursuing: AI intelligence subscription platform",
+          "scene": "Assess a new direction"
+        }
+      ],
+      "description_zh": "在 TranFu 团队进入 PRD 或开发前，对一句话产品想法做立项会诊，短问 2-3 轮后输出一屏以内的立项判断卡（建议做 / 优化后再做 / 暂不建议做）。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "判断这个项目怎么样：微信公众号排版工具",
+          "scene": "评估产品想法"
+        },
+        {
+          "prompt": "帮我做个立项判断：个人注意力看板",
+          "scene": "审核内部工具"
+        },
+        {
+          "prompt": "这个方向能不能做：AI 情报订阅平台",
+          "scene": "判断新方向"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/ai-opportunity-evaluation",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "db0c74fcf34f43174cfd9b55e3a0c48fdd46cbf3"
+      "sha": "da4f864ad19af689e72556c5633d6f724021576c"
     },
     {
       "name": "ai-startup-feasibility-check",
-      "type": "own",
+      "display_name": "AI Startup Feasibility Check",
+      "display_name_zh": "AI 创业可行性自检",
       "description": "AI 创业方向可行性强制自检（v2）。在以下任一情境下必须使用此技能：(1) 用户做任何含 AI / 大模型 / LLM / Agent / AIGC / Copilot / 生成式 AI / Claude / GPT / Anthropic / OpenAI / DeepSeek / Qwen / 豆包 / Kimi / MCP / A2A / 模型公司 / 智能体 / 智能驾驶 / 智能座舱 等关键词的市场研究、行业分析、赛道判断、竞争格局分析、行业研报；(2) 用户评估 AI 创业方向、AI 投资机会、AI 项目可行性、AI 创业公司、AI startup；(3) 用户描述一个项目并问\"怎么样 / 值不值得做 / 能不能成 / X 赛道值得进入吗 / X 是不是好生意 / 我想做 X / 评估 X 项目 / 帮我看看 X / 这个项目能做吗\"；(4) 用户分析 AI 创业方向时寻找介入机会、判断生态机会、研究开放平台介入路径；(5) 与 elite-market-researcher / market-analysis 等市场研究技能联合使用做 AI 相关任何研究时（即使用户没明确要求自检，只要话题在 AI 领域内，本技能必须并行触发）。本技能强制对研究目标应用 13 条 AI 创业禁止清单 + 三维评分体系（替代风险 / 杠杆方向 / 单位经济）+ 10 题自检表，产出结构化的可行性诊断报告。与 elite-market-researcher 并用时，本技能产出\"AI 创业可行性自检\"章节作为研报强制附录，禁止省略。本技能优先级高于一般市场研究——在 AI 相关研究中，没有这一层自检的报告视为不合格。",
       "version": "0.1.1",
       "author": "tf-nezha",
-      "updated_at": "2026-05-25",
-      "published_at": "2026-05-25T06:12:07.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Check whether an AI startup idea is viable and return a red, yellow, or green assessment of its main risks and economics.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Check whether 'AI agents for SMB customer support' is worth pursuing",
+          "scene": "Evaluate a startup idea"
+        },
+        {
+          "prompt": "Run a feasibility check on the AI video generation space",
+          "scene": "Assess an AI market"
+        },
+        {
+          "prompt": "Score my project against the 13-item AI startup prohibition list",
+          "scene": "Check major red flags"
+        }
+      ],
+      "description_zh": "检查一个 AI 创业想法是否可行，并用红、黄、绿灯说明主要风险和赚钱能力。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我评估一下'用 AI Agent 做中小企业客服'这个方向能不能做",
+          "scene": "评估创业想法"
+        },
+        {
+          "prompt": "AI 视频生成这个赛道值得进入吗，做一下可行性自检",
+          "scene": "判断 AI 赛道"
+        },
+        {
+          "prompt": "用 13 条 AI 创业禁止清单评估我这个项目",
+          "scene": "排查高风险项"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/ai-startup-feasibility-check",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "cases/1/input/PROMPT.md",
         "references/case-library.md",
         "references/prohibition-list.md",
         "references/three-survivors-framework.md"
       ],
-      "sha": "020f2a0138d13723831e16038e787c42ad776335"
+      "sha": "6d6a537b29267717cd08ccf6c0086c058dfb105d"
     },
     {
       "name": "article-cover-image",
-      "type": "own",
+      "display_name": "Article Cover Image",
+      "display_name_zh": "文章封面图生成",
       "description": "Use when the user provides a title or article and wants one horizontal article, content, video, PPT, or banner cover image, or a prompt for that cover image. Also trigger for Chinese phrasing such as 做个文章封面, 生成公众号封面, 视频封面, PPT 首页图, Banner 封面, 给这个标题配封面. Do NOT trigger when the user wants an icon or symbol; route to black-line-icon-style. Do NOT trigger when the user wants an infographic, knowledge card, comparison table, process diagram, long chart, or formal logo; route to the matching visual workflow. Do NOT trigger when the user only wants article copywriting, non-visual analysis, or a prompt unrelated to cover-image generation; route to the matching writing workflow.",
       "version": "0.2.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-18",
-      "published_at": "2026-06-22T02:52:53.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turns one title (or a full article) into a single 16:9 editorial cover — brand color #E63A46, MiSans-style typography, matte non-plastic finish.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Make a cover for \"AI Agents Are Rewriting the Interface\".",
+          "scene": "Start from a title"
+        },
+        {
+          "prompt": "Here's my article draft — give me one horizontal cover for it.",
+          "scene": "Use the full article"
+        },
+        {
+          "prompt": "I need a 16:9 thumbnail for my YouTube video, here's the title.",
+          "scene": "Make a video thumbnail"
+        }
+      ],
+      "description_zh": "给一个标题或整篇文章, 直接出一张 16:9 横版封面图, 主色 #E63A46, MiSans 风格标题, 材质哑光克制, 拒绝信息图化。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我给「AI Agent 重构入口」配张封面。",
+          "scene": "根据标题出图"
+        },
+        {
+          "prompt": "这是标题加正文, 出一张公众号封面。",
+          "scene": "根据全文出图"
+        },
+        {
+          "prompt": "我这条视频要 16:9 的封面, 标题在这。",
+          "scene": "制作视频封面"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/article-cover-image",
       "files": [
-        "SKILL.md"
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "36570248241e56a98e2b8ed1e68a26449746ddea"
+      "sha": "db9ba66864abb178fb7cf3d9971500c379a25265"
     },
     {
       "name": "black-line-icon-style",
-      "type": "own",
+      "display_name": "Black Line Icon Style",
+      "display_name_zh": "黑白线性图标风",
       "description": "Use when the user wants a minimalist black-and-white line icon, symbol, UI entry icon, logo-like auxiliary mark, empty-state symbol, or abstract technology/workflow icon. Also trigger for Chinese phrasing such as 做个黑白图标, 线性 icon, AI 工作流 icon, 极简符号, UI 入口图标, 空状态图标. Do NOT trigger when the user wants a colorful illustration, realistic image, 3D render, complex poster, article cover, infographic with text, or formal brand logo; route article covers to article-cover-image, infographics to a dedicated infographic workflow, and formal logos to a logo design workflow or human design.",
       "version": "0.2.1",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-22",
-      "published_at": "2026-06-22T06:50:51.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Ask for a minimalist black-and-white line icon — transparent background, thick rounded strokes, single centered subject, no text — and get the image on the first turn.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Make me a minimalist black-and-white icon for AI workflow — abstract.",
+          "scene": "Draw from a concept"
+        },
+        {
+          "prompt": "Need an empty-state icon for the notifications page — clean line, no color.",
+          "scene": "Create an empty-state icon"
+        },
+        {
+          "prompt": "Give me a UI entry icon for goal decomposition, readable at 32px.",
+          "scene": "Make a UI icon"
+        }
+      ],
+      "description_zh": "一句话出一张极简黑白线性图标——透明底、粗黑圆角线条、单主体居中、不带文字, 也可以只要 Prompt。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我出一个「AI 工作流」的极简黑白线性图标, 抽象风格。",
+          "scene": "根据主题出图"
+        },
+        {
+          "prompt": "通知页面需要一个空状态图标, 黑白线条, 别加颜色。",
+          "scene": "制作空状态图标"
+        },
+        {
+          "prompt": "给「目标拆解」出个 UI 入口图标, 缩到 32px 也要看得清。",
+          "scene": "制作界面图标"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/black-line-icon-style",
       "files": [
-        "SKILL.md"
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "adcca502036cd30a806b8602349c4103c5197a4b"
+      "sha": "17443ab079e0c1d1f90cb8a70c088a749070b6c9"
+    },
+    {
+      "name": "build-marketing-outline",
+      "description": "Use when a TranFu product URL, local product project, current project, or URL-plus-source needs an evidence-bound formal-launch marketing strategy and Chinese editor-level outlines for Xiaohongshu, WeChat, Zhihu, Toutiao, Weibo, and the product website. Trigger for product understanding, user-path analysis, marketing positioning, content matrices, launch outlines, and marketing-readiness gates. Do NOT trigger when the user wants finished copy, competitor or market research, generated assets, platform publishing, or product implementation.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-23",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn a product URL or source project into an evidence-bound TranFu launch strategy and six-channel editorial outline pack.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Use $build-marketing-outline to analyze https://example.com and create a formal launch outline pack.",
+          "scene": "Analyze a live product"
+        },
+        {
+          "prompt": "Use $build-marketing-outline on /absolute/project/path and identify the release blockers.",
+          "scene": "Analyze an unpublished project"
+        },
+        {
+          "prompt": "Analyze this product URL together with /absolute/project/path and reconcile runtime and source evidence.",
+          "scene": "Combine runtime and source"
+        }
+      ],
+      "description_zh": "把产品 URL 或源码项目转化为证据绑定的 TranFu 正式发布策略与六渠道编辑大纲。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "使用 $build-marketing-outline 分析 https://example.com，生成正式发布营销大纲执行包。",
+          "scene": "分析已上线产品"
+        },
+        {
+          "prompt": "使用 $build-marketing-outline 分析 /absolute/project/path，并识别发布阻塞项。",
+          "scene": "分析未发布项目"
+        },
+        {
+          "prompt": "同时分析这个产品 URL 和 /absolute/project/path，对照运行态与源码证据。",
+          "scene": "合并运行态与源码"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/build-marketing-outline",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/evidence-and-readiness.md",
+        "references/output-contract.md",
+        "references/tranfu-marketing-framework.md"
+      ],
+      "sha": "541bebfb7bf489d47e3006fc318de6a2b48feec0"
     },
     {
       "name": "business-analysis-pipeline",
-      "type": "own",
+      "display_name": "Business Analysis Pipeline",
+      "display_name_zh": "商业分析流水线",
       "description": "当用户说\"评估 AI 产品商业可行性 / 分析这个产品方向 / 创业方向评估 / 投资尽调 / 出商业分析报告\"时, 走 PEST → 波特五力 → SWOT → BMC → 机会矩阵 → 战略建议 → 执行摘要 7 步 pipeline, 用 KF 编号交叉引用前序模块, 输出 120 分制 (S/A/B/C/D 五级) 结构化商业分析报告.",
       "version": "0.1.0",
       "author": "06666666",
-      "updated_at": "2026-05-13",
-      "published_at": "2026-05-13T13:44:30.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Evaluate an AI product or startup idea with a structured report covering the market, competition, business model, and risks.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Evaluate the commercial viability of this AI product: <product description>.",
+          "scene": "Evaluate a new idea"
+        },
+        {
+          "prompt": "Give me a full business analysis report on this idea.",
+          "scene": "Request a full report"
+        },
+        {
+          "prompt": "Score these two AI startup directions side by side using the same rubric.",
+          "scene": "Compare several directions"
+        }
+      ],
+      "description_zh": "评估一个 AI 产品或创业方向，并整理出市场、竞争、商业模式和风险报告。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "评估这个 AI 产品的商业可行性: <产品描述>",
+          "scene": "评估新想法"
+        },
+        {
+          "prompt": "帮我跑一份完整的商业分析报告",
+          "scene": "生成完整报告"
+        },
+        {
+          "prompt": "两个 AI 创业方向, 用同一套体系横向对比一下",
+          "scene": "对比多个方向"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/business-analysis-pipeline",
       "files": [
         "README.md",
-        "SKILL.md"
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "d353a2526adb54d9f3fb3eb59b3d9878e29e43b2"
+      "sha": "91a56e9b4efa04c0061b8703e4725916218b386b"
+    },
+    {
+      "name": "collect-sources",
+      "display_name": "Source Research and Fact-Checking",
+      "display_name_zh": "素材调研与核查",
+      "description": "Collect and fact-check prewriting sources for Chinese AI and adjacent technology media content. Trigger when the user says \"启动调研\", \"素材收集\", or \"调研这个话题\", asks to research an AI or technology event, supplies URLs/Markdown/TXT/PDF for source enrichment, or requests AI/technology content that needs research first. Covers AI models and products, developer tools, chips, robotics, and internet platforms. Do NOT trigger when the request is for a non-technology topic, an isolated fact lookup with no content-production goal, post-draft fact-checking, rewriting existing copy, title- or outline-only generation, writing from an already approved evidence package, or publishing.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-16",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Research AI and technology topics, verify claims, and save a traceable evidence package before writing begins.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Research the latest open-source AI agent frameworks before I write an article.",
+          "scene": "Research a tech topic"
+        },
+        {
+          "prompt": "Enrich these reports and URLs with independent sources and check their claims.",
+          "scene": "Enrich source materials"
+        },
+        {
+          "prompt": "Find several current AI stories that have enough evidence for a Chinese article.",
+          "scene": "Find current AI stories"
+        }
+      ],
+      "description_zh": "在写作前调研 AI 与科技话题、核实主张，并保存一套可追溯的证据材料。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "写文章前，先帮我调研最近的开源 AI Agent 框架。",
+          "scene": "调研科技话题"
+        },
+        {
+          "prompt": "用独立来源补充这些报告和链接，并核实里面的主张。",
+          "scene": "补充现有材料"
+        },
+        {
+          "prompt": "找几个最近值得写的 AI 话题，要求每个都有可靠证据。",
+          "scene": "发现近期选题"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/collect-sources",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/orchestrated-provider.md",
+        "references/output-contract.md",
+        "references/research-protocol.md",
+        "references/source-verification.md",
+        "scripts/provider-contract.mjs"
+      ],
+      "sha": "93a4ee8f65bcf95242797490ff2a73af55928970"
+    },
+    {
+      "name": "compress-image",
+      "display_name": "Image Compression",
+      "display_name_zh": "图片压缩",
+      "description": "Compress static PNG, JPEG, or WebP files to WebP or lossless PNG. Use when the user asks to compress or optimize an image, reduce image file size, convert an image to WebP or PNG, or says 图片压缩、压缩图片、减小图片体积、转 WebP、转 PNG. Do NOT trigger when the request involves resizing, cropping, retouching, general image editing, animated images, remote URLs, or formats other than PNG, JPEG, and WebP.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-14",
+      "origin": "own",
+      "allow_exec": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Compress local PNG, JPEG, and WebP images with predictable output while keeping the originals unless replacement is authorized.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Compress /work/hero.png to WebP and keep the original file.",
+          "scene": "Compress one image"
+        },
+        {
+          "prompt": "Compress every JPEG in /work/photos without scanning subfolders.",
+          "scene": "Compress a folder"
+        },
+        {
+          "prompt": "Make /work/chart.png smaller but keep it as a lossless PNG.",
+          "scene": "Keep PNG lossless"
+        }
+      ],
+      "description_zh": "稳定压缩本地 PNG、JPEG 和 WebP 图片，除非明确授权替换，否则始终保留原图。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把 /work/hero.png 压成 WebP，并保留原图。",
+          "scene": "压缩单张图片"
+        },
+        {
+          "prompt": "压缩 /work/photos 里的所有 JPEG，不要扫描子目录。",
+          "scene": "批量压缩目录"
+        },
+        {
+          "prompt": "减小 /work/chart.png 的体积，但仍要无损 PNG。",
+          "scene": "保持无损格式"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/compress-image",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "scripts/main.mjs"
+      ],
+      "sha": "b5597f62e3dc185c5b6487dce66592d18141cead"
+    },
+    {
+      "name": "content-production",
+      "display_name": "Multiplatform Content Production Workflow",
+      "display_name_zh": "多平台内容工作流",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-17",
+      "origin": "own",
+      "allow_exec": true,
+      "description": "从一句话创作简述、明确题目或一份 Markdown 大纲自动编排中文多平台内容生产：完成选题与调研、证据化大纲、A/B 母稿、公众号/小红书/知乎/微博/头条十份终稿、34 个标题、五套平台配图、独立公众号封面、图片优化、公众号 HTML 和最终 QA。用于完整写作流水线、多平台内容矩阵、A/B 文风实验或一键内容生产；默认自主运行并保留可审计决策，不发布、不登录平台。Do NOT trigger when 用户只需要单篇轻量润色、只起标题、只配图、只排版、内容发布或发布后运营。",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Run a complete Chinese content workflow from one brief, topic, or outline to audited deliverables for five publishing platforms.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Turn this one-line brief into a complete five-platform content package.",
+          "scene": "Start from a brief"
+        },
+        {
+          "prompt": "Use this chosen topic and run the full A/B content production workflow.",
+          "scene": "Use a chosen topic"
+        },
+        {
+          "prompt": "Build the full content package from this approved Markdown outline.",
+          "scene": "Use an approved outline"
+        }
+      ],
+      "description_zh": "从一句简述、明确题目或大纲出发，完成面向五个平台的中文内容生产与验收。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把这句创作简述跑成完整的五平台内容交付包。",
+          "scene": "从简述开始"
+        },
+        {
+          "prompt": "用这个明确题目跑完整的 A/B 内容生产流程。",
+          "scene": "使用明确题目"
+        },
+        {
+          "prompt": "根据这份已确认的 Markdown 大纲制作完整内容包。",
+          "scene": "使用已有大纲"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/content-production",
+      "files": [
+        ".gitignore",
+        "ASSET_NOTICE.md",
+        "LICENSE",
+        "LICENSES.md",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "capabilities.yaml",
+        "references/artifact-contract.md",
+        "references/capability-contracts.md",
+        "references/core-audience.md",
+        "references/editorial-policy.md",
+        "references/platform-profiles.json",
+        "references/style-b.md",
+        "references/visual-cardinality-policy.json",
+        "references/workflow.md",
+        "runs/.gitkeep",
+        "scripts/aggregate-titles.mjs",
+        "scripts/assemble-publish-packs.mjs",
+        "scripts/backend-lease.mjs",
+        "scripts/backend-runtime.mjs",
+        "scripts/check-capabilities.mjs",
+        "scripts/check-claim-regression.mjs",
+        "scripts/check-provider-result.mjs",
+        "scripts/contracts.mjs",
+        "scripts/create-compression-requests.mjs",
+        "scripts/create-drafting-request.mjs",
+        "scripts/create-illustration-request.mjs",
+        "scripts/create-proofreading-request.mjs",
+        "scripts/create-source-request.mjs",
+        "scripts/create-title-request.mjs",
+        "scripts/create-topic-request.mjs",
+        "scripts/create-visual-coverage.mjs",
+        "scripts/create-visual-decision.mjs",
+        "scripts/create-wechat-cover-request.mjs",
+        "scripts/create-wechat-layout-request.mjs",
+        "scripts/illustration-contracts.mjs",
+        "scripts/illustration-queue.mjs",
+        "scripts/init-run.mjs",
+        "scripts/inspect-run.mjs",
+        "scripts/lib.mjs",
+        "scripts/package-contracts.mjs",
+        "scripts/promote-wechat-layout.mjs",
+        "scripts/run-image-generation.mjs",
+        "scripts/set-gate.mjs",
+        "scripts/set-semantic-review.mjs",
+        "scripts/set-stage.mjs",
+        "scripts/verify-run.mjs",
+        "scripts/visual-cardinality.mjs",
+        "scripts/wechat-cover-contracts.mjs",
+        "scripts/wechat-layout-contracts.mjs",
+        "skills/collect-sources/LICENSE",
+        "skills/collect-sources/NOTICE",
+        "skills/collect-sources/SKILL.md",
+        "skills/collect-sources/agents/openai.yaml",
+        "skills/collect-sources/assets/icon.png",
+        "skills/collect-sources/assets/icon.svg",
+        "skills/collect-sources/references/orchestrated-provider.md",
+        "skills/collect-sources/references/output-contract.md",
+        "skills/collect-sources/references/research-protocol.md",
+        "skills/collect-sources/references/source-verification.md",
+        "skills/collect-sources/scripts/provider-contract.mjs",
+        "skills/compress-image/LICENSE",
+        "skills/compress-image/NOTICE",
+        "skills/compress-image/SKILL.md",
+        "skills/compress-image/agents/openai.yaml",
+        "skills/compress-image/assets/icon.png",
+        "skills/compress-image/assets/icon.svg",
+        "skills/compress-image/references/orchestrated-provider.md",
+        "skills/compress-image/scripts/main.mjs",
+        "skills/compress-image/scripts/provider-contract.mjs",
+        "skills/content-topics/LICENSE",
+        "skills/content-topics/NOTICE",
+        "skills/content-topics/SKILL.md",
+        "skills/content-topics/agents/openai.yaml",
+        "skills/content-topics/assets/icon.png",
+        "skills/content-topics/assets/icon.svg",
+        "skills/content-topics/references/account-profile.md",
+        "skills/content-topics/references/orchestrated-provider.md",
+        "skills/content-topics/references/platform-playbooks.md",
+        "skills/content-topics/references/topic-selection-system.md",
+        "skills/content-topics/scripts/provider-contract.mjs",
+        "skills/draft-content/LICENSE",
+        "skills/draft-content/NOTICE",
+        "skills/draft-content/SKILL.md",
+        "skills/draft-content/agents/openai.yaml",
+        "skills/draft-content/assets/icon.png",
+        "skills/draft-content/assets/icon.svg",
+        "skills/draft-content/references/ab-policy.md",
+        "skills/draft-content/references/editorial-policy.md",
+        "skills/draft-content/references/input-contract.md",
+        "skills/draft-content/references/orchestrated-provider.md",
+        "skills/draft-content/references/outline-contract.md",
+        "skills/draft-content/references/output-contract.md",
+        "skills/draft-content/references/platform-toutiao.md",
+        "skills/draft-content/references/platform-wechat.md",
+        "skills/draft-content/references/platform-weibo.md",
+        "skills/draft-content/references/platform-xiaohongshu.md",
+        "skills/draft-content/references/platform-zhihu.md",
+        "skills/draft-content/references/style-application-policy.md",
+        "skills/draft-content/references/style-b.md",
+        "skills/draft-content/scripts/_lib.mjs",
+        "skills/draft-content/scripts/init-run.mjs",
+        "skills/draft-content/scripts/inspect-run.mjs",
+        "skills/draft-content/scripts/provider-contract.mjs",
+        "skills/draft-content/scripts/set-outline-gate.mjs",
+        "skills/draft-content/scripts/verify-run.mjs",
+        "skills/format-content/LICENSE",
+        "skills/format-content/NOTICE",
+        "skills/format-content/SKILL.md",
+        "skills/format-content/agents/openai.yaml",
+        "skills/format-content/assets/icon.png",
+        "skills/format-content/assets/icon.svg",
+        "skills/format-content/assets/preview-template.html",
+        "skills/format-content/references/common-components.md",
+        "skills/format-content/references/orchestrated-provider.md",
+        "skills/format-content/references/theme-red-white.md",
+        "skills/format-content/scripts/component_lint.py",
+        "skills/format-content/scripts/provider_contract.py",
+        "skills/format-content/scripts/validate_gzh_html.py",
+        "skills/format-content/scripts/wrap_preview.py",
+        "skills/post-illustration-images/LICENSE",
+        "skills/post-illustration-images/SKILL.md",
+        "skills/post-illustration-images/THIRD_PARTY_NOTICES.md",
+        "skills/post-illustration-images/agents/openai.yaml",
+        "skills/post-illustration-images/assets/brand/tranfu-logo-reference.svg",
+        "skills/post-illustration-images/assets/icon.png",
+        "skills/post-illustration-images/assets/icon.svg",
+        "skills/post-illustration-images/assets/style-references/toutiao-luminous-tech.png",
+        "skills/post-illustration-images/assets/style-references/wechat-doodle.png",
+        "skills/post-illustration-images/assets/style-references/weibo-signal-core.png",
+        "skills/post-illustration-images/assets/style-references/xhs-cream-paper.png",
+        "skills/post-illustration-images/assets/style-references/xhs-explainer-notebook.png",
+        "skills/post-illustration-images/assets/style-references/xhs-orange-card.png",
+        "skills/post-illustration-images/assets/style-references/zhihu-tech.png",
+        "skills/post-illustration-images/references/brand.md",
+        "skills/post-illustration-images/references/content-structures.md",
+        "skills/post-illustration-images/references/generation-backends.md",
+        "skills/post-illustration-images/references/gpt-image-2-geometry.spec.json",
+        "skills/post-illustration-images/references/orchestrated-provider.md",
+        "skills/post-illustration-images/references/product-design.md",
+        "skills/post-illustration-images/references/prompt-compiler.md",
+        "skills/post-illustration-images/references/qa-checklist.md",
+        "skills/post-illustration-images/references/style-bundle-contract.md",
+        "skills/post-illustration-images/references/style-index.md",
+        "skills/post-illustration-images/references/style-registry.json",
+        "skills/post-illustration-images/references/styles/toutiao-luminous-tech.md",
+        "skills/post-illustration-images/references/styles/toutiao-luminous-tech.provenance.json",
+        "skills/post-illustration-images/references/styles/toutiao-luminous-tech.spec.json",
+        "skills/post-illustration-images/references/styles/wechat-style-doodle.md",
+        "skills/post-illustration-images/references/styles/wechat-style-doodle.spec.json",
+        "skills/post-illustration-images/references/styles/weibo-signal-core.md",
+        "skills/post-illustration-images/references/styles/weibo-signal-core.spec.json",
+        "skills/post-illustration-images/references/styles/xhs-style-cream-paper.md",
+        "skills/post-illustration-images/references/styles/xhs-style-cream-paper.spec.json",
+        "skills/post-illustration-images/references/styles/xhs-style-explainer-notebook.md",
+        "skills/post-illustration-images/references/styles/xhs-style-explainer-notebook.spec.json",
+        "skills/post-illustration-images/references/styles/xhs-style-orange-card.md",
+        "skills/post-illustration-images/references/styles/xhs-style-orange-card.spec.json",
+        "skills/post-illustration-images/references/styles/zhihu-style-title.md",
+        "skills/post-illustration-images/references/styles/zhihu-style-title.spec.json",
+        "skills/post-illustration-images/scripts/apply-brand-overlay.mjs",
+        "skills/post-illustration-images/scripts/child-contract.mjs",
+        "skills/post-illustration-images/scripts/generate-style-index.mjs",
+        "skills/post-illustration-images/scripts/install-style-bundle.mjs",
+        "skills/post-illustration-images/scripts/provider-contract.mjs",
+        "skills/post-illustration-images/scripts/resolve-brand-policy.mjs",
+        "skills/post-illustration-images/scripts/resolve-generation-geometry.mjs",
+        "skills/post-illustration-images/scripts/set-qa-contract.mjs",
+        "skills/post-illustration-images/scripts/test-brand-overlay.mjs",
+        "skills/post-illustration-images/scripts/validate-style-bundle.mjs",
+        "skills/post-illustration-images/scripts/vendor-resvg-wasm.mjs",
+        "skills/post-illustration-images/tests/brand-policy.test.mjs",
+        "skills/post-illustration-images/tests/generation-geometry.test.mjs",
+        "skills/post-illustration-images/tests/provider-contract.test.mjs",
+        "skills/post-illustration-images/tests/style-bundle.test.mjs",
+        "skills/post-illustration-images/vendor/resvg-wasm/LICENSE",
+        "skills/post-illustration-images/vendor/resvg-wasm/SHA256SUMS",
+        "skills/post-illustration-images/vendor/resvg-wasm/SOURCE.md",
+        "skills/post-illustration-images/vendor/resvg-wasm/VERSION",
+        "skills/post-illustration-images/vendor/resvg-wasm/index.js",
+        "skills/post-illustration-images/vendor/resvg-wasm/index_bg.wasm",
+        "skills/proofread-content/LICENSE",
+        "skills/proofread-content/NOTICE",
+        "skills/proofread-content/SKILL.md",
+        "skills/proofread-content/agents/openai.yaml",
+        "skills/proofread-content/assets/icon.png",
+        "skills/proofread-content/assets/icon.svg",
+        "skills/proofread-content/references/humanizer-zh-24.md",
+        "skills/proofread-content/references/orchestrated-provider.md",
+        "skills/proofread-content/references/platform-registers.md",
+        "skills/proofread-content/scripts/claim-regression.mjs",
+        "skills/proofread-content/scripts/provider-contract.mjs",
+        "skills/title-options/LICENSE",
+        "skills/title-options/NOTICE",
+        "skills/title-options/SKILL.md",
+        "skills/title-options/agents/openai.yaml",
+        "skills/title-options/assets/icon.png",
+        "skills/title-options/assets/icon.svg",
+        "skills/title-options/references/content-routing.md",
+        "skills/title-options/references/orchestrated-provider.md",
+        "skills/title-options/references/platform-playbooks.md",
+        "skills/title-options/references/title-system.md",
+        "skills/title-options/scripts/provider-contract.mjs",
+        "skills/wechat-sketch-cover/LICENSE",
+        "skills/wechat-sketch-cover/NOTICE",
+        "skills/wechat-sketch-cover/SKILL.md",
+        "skills/wechat-sketch-cover/agents/openai.yaml",
+        "skills/wechat-sketch-cover/assets/icon.png",
+        "skills/wechat-sketch-cover/assets/icon.svg",
+        "skills/wechat-sketch-cover/assets/style-reference.png",
+        "skills/wechat-sketch-cover/references/orchestrated-provider.md",
+        "skills/wechat-sketch-cover/references/style-spec.md",
+        "skills/wechat-sketch-cover/scripts/normalize_cover.py",
+        "skills/wechat-sketch-cover/scripts/provider-contract.mjs",
+        "tests/backend-runtime.test.mjs",
+        "tests/compression-orchestration.test.mjs",
+        "tests/content-production.test.mjs",
+        "tests/illustration-orchestration.test.mjs",
+        "tests/visual-cardinality.test.mjs",
+        "tests/wechat-cover-orchestration.test.mjs"
+      ],
+      "sha": "fb5e68d3622e836d7e75b2da2e18dca77bda58a8"
+    },
+    {
+      "name": "content-topics",
+      "display_name": "Cross-Platform Topic Selection",
+      "display_name_zh": "跨平台内容选题",
+      "description": "为固定内容账号做证据驱动的跨平台选题。当用户说“选题”“热点选题”“跨平台选题”“今天写什么”“从调研材料提炼内容方向”或“这批素材能做什么”时使用；读取本地调研/事实库或公开资料，默认同时产出微信公众号、小红书、知乎、微博和今日头条版本。仅负责选题、平台适配与主选题简纲；仅起标题、完整写稿、已有正文改写、单纯调研、内容日历、发布或历史数据分析时不要使用。Do NOT trigger when 用户仅起标题、完整写稿、已有正文改写、单纯调研、内容日历、发布或历史数据分析。",
+      "version": "0.1.1",
+      "author": "BruceL017",
+      "updated_at": "2026-07-16",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn research, fact bases, or current public signals into evidence-backed topic plans tailored to five major Chinese content platforms.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Turn this research folder into cross-platform topic ideas for today.",
+          "scene": "Plan from research"
+        },
+        {
+          "prompt": "Find a timely topic for our account and verify the supporting signals.",
+          "scene": "Find timely topics"
+        },
+        {
+          "prompt": "Adapt the strongest topic for WeChat, Zhihu, and Weibo.",
+          "scene": "Adapt across platforms"
+        }
+      ],
+      "description_zh": "把调研材料、事实库或近期公开信号整理成有证据支撑、适配五大内容平台的选题方案。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "读取这份调研目录，给我整理今天能做的跨平台选题。",
+          "scene": "从材料做选题"
+        },
+        {
+          "prompt": "给这个账号找一个近期热点选题，并核验支撑证据。",
+          "scene": "寻找热点选题"
+        },
+        {
+          "prompt": "把最强选题适配成公众号、知乎和微博版本。",
+          "scene": "适配多个平台"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/content-topics",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/account-profile.md",
+        "references/orchestrated-provider.md",
+        "references/platform-playbooks.md",
+        "references/topic-selection-system.md",
+        "scripts/provider-contract.mjs"
+      ],
+      "sha": "febed10b93d9dc322eb22ade93eb1c0b7d5ef318"
     },
     {
       "name": "credibility-review",
-      "type": "own",
+      "display_name": "Credibility Review",
+      "display_name_zh": "文章可信度审稿",
       "description": "Review a draft 踩坑记 or 养成记 article (for tranfu-site or anywhere following the same rules) by spawning two independent fresh agents in parallel — A 轨 simulates a reader with dual-axis 耐心/信任 scoring, B 轨 runs anti-pattern catalog detection — then composes a tri-state verdict (可发 / 待审查 / 退稿). Trigger when user says 审稿/审一下/检查文章/帮我看下这篇/check this draft/review this article/抓一下问题/看看哪里不对, OR pastes a markdown article tagged 踩坑/养成 and asks for feedback, OR provides a path to such a file in tranfu-site/src/content/posts/. Output combines reader-trajectory + catalog hits — NOT a rewrite. Anchored to tranfu-site/goal-docs/05-design-踩坑记-final.md + 06-design-养成记-final.md.",
       "version": "0.1.2",
       "author": "aquarius-wing",
-      "updated_at": "2026-05-11",
-      "published_at": "2026-05-09T10:06:59.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "published_to": "tranfu-labs/tranfu-skills",
+      "published_version": "0.1.2",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Check whether an article sounds credible or like marketing fluff, then list the problems without rewriting the draft.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Take a look at this draft and tell me if it's ready to ship.",
+          "scene": "Review a pasted draft"
+        },
+        {
+          "prompt": "Review tranfu-site/src/content/posts/pitfall-mcp-not-working.md and flag the problems.",
+          "scene": "Review a file"
+        },
+        {
+          "prompt": "Does this read like a PR puff piece? Are there uplift punchlines or buried sentimental turns? Flag them.",
+          "scene": "Check the writing style"
+        }
+      ],
+      "description_zh": "检查文章是否可信、是否像营销号，并列出问题，但不会直接改稿。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我看下这篇稿子, 看能不能发。",
+          "scene": "审查粘贴草稿"
+        },
+        {
+          "prompt": "审下 tranfu-site/src/content/posts/踩坑-mcp-调不通.md, 抓一下问题。",
+          "scene": "审查指定文件"
+        },
+        {
+          "prompt": "这篇像不像 PR 通稿, 有没有升华金句和藏起来的抒情段, 帮我抓一下。",
+          "scene": "检查写作风格"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/credibility-review",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "examples/EXPECTED.md",
         "examples/bad-养成记-1-空标签.md",
         "examples/bad-养成记-2-hidden-hero.md",
@@ -176,21 +982,61 @@
         "workflow.svg",
         "禁用词.md"
       ],
-      "sha": "246d832348f864f4f51054f77477b3df4b544198"
+      "sha": "cddfff7318b25269c573b26247437c01206ec8fb"
     },
     {
       "name": "daily-report",
-      "type": "own",
+      "display_name": "AI Daily Report",
+      "display_name_zh": "AI 日报图生成",
       "description": "当用户要把 AI 新闻、日报素材或结构化 JSON 渲染成 TranFu 公开发布图片时使用。 Do NOT trigger when: 用户只要纯文本日报、文章改写、通用图片生成或非 AI 主题海报。",
       "version": "0.1.0",
       "author": "griffithkk3-del",
-      "updated_at": "2026-05-18",
-      "published_at": "2026-05-19T02:11:09.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "license": "internal",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn structured AI news into TranFu-branded daily-report images ready for WeChat and community sharing.",
+      "prompt_examples_en": [
+        {
+          "scene": "Render one report",
+          "prompt": "Render report.json into a TranFu daily image using the default research + iceblue style"
+        },
+        {
+          "scene": "Compare all styles",
+          "prompt": "Run --all-variants once to preview every bundled style and palette side by side"
+        },
+        {
+          "scene": "Create a dark dashboard",
+          "prompt": "Switch to dark + steelblue for an intelligence-dashboard feel"
+        }
+      ],
+      "description_zh": "把整理好的 AI 新闻做成 TranFu 品牌日报图片，可直接用于朋友圈、公众号和社群分享。",
+      "prompt_examples_zh": [
+        {
+          "scene": "生成单份日报",
+          "prompt": "把 report.json 渲染成 TranFu 日报图，默认走 research + iceblue 样式"
+        },
+        {
+          "scene": "对比全部样式",
+          "prompt": "用 --all-variants 把所有风格和配色跑一遍，方便挑选"
+        },
+        {
+          "scene": "制作暗色看板",
+          "prompt": "换成 dark + steelblue 样式，做出情报仪表盘的感觉"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/daily-report",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
         "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "assets/logos/tranfu.png",
         "cases/1/input/PROMPT.md",
         "examples/dark-aqua.png",
@@ -205,91 +1051,423 @@
         "references/report-schema.md",
         "scripts/render_daily_report.py"
       ],
-      "sha": "316f52c8986719315e2763f3d9a3b80b2057e4ef"
+      "sha": "8df398688d07185f383b8a68430b2f8a41781cc7"
+    },
+    {
+      "name": "draft-content",
+      "display_name": "Multiplatform Drafting Workflow",
+      "display_name_zh": "多平台写作流程",
+      "description": "Create or improve one shared content outline from approved topic and source materials, pause for approval, then produce A/B masters and complete adaptations for WeChat Official Accounts, Xiaohongshu, Zhihu, Weibo, and Toutiao. Trigger when the request explicitly invokes $draft-content or asks for this complete shared-outline plus A/B five-platform workflow from prepared upstream inputs. Do NOT trigger when the request is ordinary or single-platform writing, fiction, advertising copy, research, topic selection, outline-only advice, title pools, proofreading, AI-detector evasion, images, layout, publishing, scheduling, or post-publication analysis.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-17",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn approved topics and evidence into one shared outline, two master drafts, and ten platform-specific drafts.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Use the approved topic and research package to prepare a shared outline.",
+          "scene": "Prepare a shared outline"
+        },
+        {
+          "prompt": "I approve this outline path and hash; continue with the A/B drafts.",
+          "scene": "Produce A/B drafts"
+        },
+        {
+          "prompt": "Adapt both approved masters for all five supported content platforms.",
+          "scene": "Adapt five platforms"
+        }
+      ],
+      "description_zh": "把已批准的题目和证据整理成一份共享大纲、两份母稿与十份平台初稿。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "根据已批准的题目和调研包，先准备一份共享大纲。",
+          "scene": "准备共享大纲"
+        },
+        {
+          "prompt": "我确认这份大纲的路径和哈希，继续生成 A/B 稿件。",
+          "scene": "生成双版稿件"
+        },
+        {
+          "prompt": "把两份母稿分别适配到五个受支持的内容平台。",
+          "scene": "适配五个平台"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/draft-content",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/ab-policy.md",
+        "references/editorial-policy.md",
+        "references/input-contract.md",
+        "references/orchestrated-provider.md",
+        "references/outline-contract.md",
+        "references/output-contract.md",
+        "references/platform-toutiao.md",
+        "references/platform-wechat.md",
+        "references/platform-weibo.md",
+        "references/platform-xiaohongshu.md",
+        "references/platform-zhihu.md",
+        "references/style-application-policy.md",
+        "references/style-b.md",
+        "scripts/_lib.mjs",
+        "scripts/init-run.mjs",
+        "scripts/inspect-run.mjs",
+        "scripts/provider-contract.mjs",
+        "scripts/set-outline-gate.mjs",
+        "scripts/verify-run.mjs"
+      ],
+      "sha": "5888e27c5585d89185625d4625a25aedc8ad261b"
     },
     {
       "name": "elite-market-researcher",
-      "type": "own",
+      "display_name": "Elite Market Researcher",
+      "display_name_zh": "顶尖市场研究员",
       "description": "顶尖市场研究员模式。当用户要求\"做市场分析\"\"分析XX赛道\"\"研究XX行业\"\"竞争格局分析\"\"投资机会判断\"\"创业方向评估\"\"market research\"\"industry analysis\"\"赛道判断\"\"做行业研报\"\"帮我看看XX市场\"，或任何涉及对一个市场/行业/赛道做严肃决策依据的研究任务时，必须使用此技能。本技能将AI拉入McKinsey合伙人 + 投行首席分析师 + 顶级VC合伙人 + 行业操盘手的复合心智，输出领先行业3-5年视野、具备反共识洞察、可直接支撑亿元级决策的深度研究报告。任何\"了解一下市场\"以上严肃度的研究请求，都应主动触发此技能。可与 market-analysis 技能配合使用（本技能负责心智与质量，market-analysis 负责搜索流程）。",
       "version": "0.1.0",
       "author": "tf-nezha",
-      "updated_at": "2026-05-21",
-      "published_at": "2026-05-21T11:58:07.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Research a market or industry from strategy, investment, and operating angles, then report the strongest opportunities and risks.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Analyze the AI code review market for me.",
+          "scene": "Assess a market"
+        },
+        {
+          "prompt": "What's happening in the AI agent middleware space right now?",
+          "scene": "Map the competitors"
+        },
+        {
+          "prompt": "Evaluate this startup direction from a VC angle — should I write the check?",
+          "scene": "Support an investment decision"
+        }
+      ],
+      "description_zh": "从战略、投资和经营角度深入研究市场或行业，找出最值得关注的机会和风险。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "分析一下 AI 代码审查这条赛道",
+          "scene": "判断市场机会"
+        },
+        {
+          "prompt": "帮我看看 AI Agent 中间件市场现在什么格局",
+          "scene": "分析竞争格局"
+        },
+        {
+          "prompt": "以 VC 视角评估这个创业方向, 我要不要投",
+          "scene": "辅助投资决策"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/elite-market-researcher",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "cases/1/input/PROMPT.md",
         "references/contrarian-thinking-patterns.md",
         "references/quality-checklist-detailed.md",
         "references/six-principles-deep-dive.md"
       ],
-      "sha": "d0bfbbff855f72c19caf33bf9da253744cb421bb"
+      "sha": "f4e20d692c651c2d97dcf0ee16267b382646e7b6"
+    },
+    {
+      "name": "format-content",
+      "display_name": "WeChat Article Formatting",
+      "display_name_zh": "微信文章排版",
+      "description": "Format Markdown text or a readable .md file as WeChat Official Account HTML with the fixed red-and-white theme, producing a validated clean section fragment and a browser preview with a copy button. Use when the user asks for 公众号排版, 微信排版, WeChat Official Account formatting, or Markdown-to-WeChat HTML and supplies Markdown. Do NOT trigger when the request concerns Word, PDF, TXT, rich text, unstructured prose, other themes, ordinary web pages, substantive rewriting, or WeChat publishing/API operations.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-14",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Convert one Markdown article into validated red-and-white WeChat HTML plus a browser preview with one-click copying.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Format this Markdown article for a WeChat Official Account.",
+          "scene": "Format pasted Markdown"
+        },
+        {
+          "prompt": "Turn article.md into validated WeChat HTML and a copyable preview.",
+          "scene": "Format a Markdown file"
+        }
+      ],
+      "description_zh": "把一篇 Markdown 文章排成经过校验的红白主题公众号 HTML，并生成带复制按钮的浏览器预览。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把我粘贴的这篇 Markdown 排成微信公众号文章。",
+          "scene": "排版粘贴文章"
+        },
+        {
+          "prompt": "把 article.md 排成公众号 HTML，并生成可复制预览。",
+          "scene": "排版本地文件"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/format-content",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "assets/preview-template.html",
+        "references/common-components.md",
+        "references/theme-red-white.md",
+        "scripts/component_lint.py",
+        "scripts/validate_gzh_html.py",
+        "scripts/wrap_preview.py"
+      ],
+      "sha": "77e46a30d1d687a8d020f2a10c35ae16edc35381"
     },
     {
       "name": "generate-product-logo",
-      "type": "own",
+      "display_name": "Product Logo Generation",
+      "display_name_zh": "产品 Logo 生成",
       "description": "Generate product-aware logo design rules, visual style directions, and logo/icon concepts. Use when the user asks to create, explore, refine, or export a product logo, app icon, browser icon, favicon, social-preview logo, brand mark, or logo style guide. Also match Chinese requests like \"做个/设计 Logo\", \"做 app icon/favicon\", \"品牌标记\", or \"Logo 设计规范\". Ask for missing product context before visual work. Do NOT trigger when the user only wants generic image generation, non-logo brand copy, trademark/legal clearance, vectorization of an existing final logo, or unrelated UI design.",
       "version": "0.1.0",
       "author": "06666666",
-      "updated_at": "2026-06-15",
-      "published_at": "2026-06-16T08:51:00.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn a product brief into a clear logo direction and a comparable set of logo, app icon, and favicon options.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Explore three logo directions for an AI meeting assistant.",
+          "scene": "Explore a logo direction"
+        },
+        {
+          "prompt": "Turn this product logo into an app icon that still reads clearly at 64px.",
+          "scene": "Create an app icon"
+        },
+        {
+          "prompt": "Create a simple favicon for this developer tool.",
+          "scene": "Create a favicon"
+        }
+      ],
+      "description_zh": "把产品介绍整理成清晰的 Logo 方向，并生成一组可比较的 Logo、应用图标和 favicon 方案。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "给 AI 会议助手探索三种不同的 Logo 方向。",
+          "scene": "探索 Logo 方向"
+        },
+        {
+          "prompt": "把这个产品 Logo 做成缩到 64px 仍然清楚的 App 图标。",
+          "scene": "制作 App 图标"
+        },
+        {
+          "prompt": "给这个开发者工具做一个简洁的网页图标。",
+          "scene": "制作网页图标"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/generate-product-logo",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
         "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "references/style-and-workflow.md"
       ],
-      "sha": "a4ae7652da66a5ccefed40db78e7bfc6344be091"
+      "sha": "6964c4d15aa330fd411d2c060e922a51791f70e4"
     },
     {
       "name": "github-delivery-check",
-      "type": "own",
-      "description": "'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like \"推到 GitHub\", \"创建 GitHub 仓库\", \"首次提交\", \"整理成可部署项目\", or \"用 GitHub交付规范 Skill\". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.'",
+      "display_name": "GitHub Delivery Check",
+      "display_name_zh": "GitHub 交付检查",
+      "description": "Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like \"推到 GitHub\", \"创建 GitHub 仓库\", \"首次提交\", \"整理成可部署项目\", or \"用 GitHub交付规范 Skill\". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.",
       "version": "0.1.3",
       "author": "06666666",
-      "updated_at": "2026-07-01",
-      "published_at": "2026-06-29T09:18:15.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Prepare a product project for GitHub delivery by completing deployment notes, verifying it locally, and pushing it to the main branch.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Push this project to the GitHub main branch.",
+          "scene": "Prepare a delivery"
+        },
+        {
+          "prompt": "This is the product's first commit — create the repo, complete the README, push to main.",
+          "scene": "Create a repository"
+        },
+        {
+          "prompt": "We already have a repo; complete the README deployment section, verify locally, then push.",
+          "scene": "Update a repository"
+        }
+      ],
+      "description_zh": "把产品项目整理成可交付的 GitHub 仓库，补齐部署说明、本地验证并推送到主分支。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把这个项目推到 GitHub 主分支。",
+          "scene": "准备常规交付"
+        },
+        {
+          "prompt": "这个产品首次提交, 帮我建仓库、补 README、推主分支。",
+          "scene": "新建代码仓库"
+        },
+        {
+          "prompt": "已有仓库, 帮我补 README 部署说明、本地验证后推送。",
+          "scene": "更新代码仓库"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/github-delivery-check",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "70bb903b2151bb025ec039ed433567a55be97788"
+      "sha": "76e5a543376905f8394d964ccc37277fe182edab"
     },
     {
       "name": "github-repo-completeness",
-      "type": "own",
+      "display_name": "GitHub Repo Completeness",
+      "display_name_zh": "GitHub 项目完备性",
       "description": "GitHub 项目完备性检查与补全引导。扫描已有 repo，生成缺失清单，按优先级逐项引导用户补全。 不直接生成所有内容，而是引导用户决策后再执行。 Always trigger for: repo completeness, 项目完备性, 项目完善, 项目包装, project packaging, open source ready, 开源准备, github setup, 补全项目, project health, project checklist, 项目清单. Also triggers for: \"这个项目还缺什么\", \"帮我完善项目结构\", \"准备开源\". Do NOT trigger when: 写代码 / 修 bug / code review；从零起草需求或 PRD（走 write-spec）； scaffold 全新空项目骨架（走脚手架类 skill）；发版 / 打包发布版本（走 release）； 发布 skill 到公司库（走 tranfu-publish）；部署上线（走 coolify-deploy）。",
+      "userInvocable": true,
       "version": "0.3.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-15",
-      "published_at": "2026-05-14T11:03:11.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Scans an existing GitHub repo, produces a P0-P3 missing-item checklist, then walks you through each gap one at a time — you approve before it writes anything.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Check what this project is missing before I open source it.",
+          "scene": "Prepare for open source"
+        },
+        {
+          "prompt": "Scan the repo for completeness and give me a P0-P3 checklist first.",
+          "scene": "Audit the repository"
+        },
+        {
+          "prompt": "This repo has no CI or issue templates — add them.",
+          "scene": "Add CI templates"
+        }
+      ],
+      "description_zh": "扫已有 GitHub repo, 出 P0-P3 缺失清单, 按优先级逐项引导补齐——你点头再动手, 绝不一次性代你全生成。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我看看这个项目还缺什么, 准备开源。",
+          "scene": "准备开源发布"
+        },
+        {
+          "prompt": "扫一下项目完备性, 先给我个 P0-P3 清单看看。",
+          "scene": "全面检查仓库"
+        },
+        {
+          "prompt": "这个 repo 缺 CI 和 issue 模板, 帮我补一下。",
+          "scene": "补充 CI 模板"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/github-repo-completeness",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "references/ci-recipes.md",
         "references/contributing-playbook.md",
         "references/gitignore-by-stack.md",
         "references/issue-pr-templates.md",
         "references/readme-playbook.md"
       ],
-      "sha": "f0580c6e251c745703279d427fd22d7a3c35fb54"
+      "sha": "29cc8dcd215e5f18093dd5a88cda249123de5e13"
     },
     {
       "name": "goal-driven-decomposition",
-      "type": "own",
+      "display_name": "Goal-Driven Decomposition",
+      "display_name_zh": "目标驱动分解",
       "description": "Solve \"build/make/design X\" goals AND follow-up edits (\"做一个网站\", \"build a tool\", \"加用户登录\", \"X 偏了改一下\"). State in goal-docs/*.md. Cold-start: prior-weight modal shape+intent, propose 1-layer-deeper true_goal under USER GATE, write roleplay persona with hero/anti-ref screenshots, label each dim's track (enumerate=功能/技术/部署 vs sample=UI/视觉/文案), run track-aware doc-relay (persona-brief → design-draft → persona-reaction Agent MANDATORY → final; sample track MUST render PNGs before sign), then ≤3-iter validation-fix loop with critical blind-compare on sample dims. Iteration mode: scope Agent classifies 新增/修正/画像变更. Fresh Agents + @mention'd docs, no SendMessage. Surface after 3 failed iter. Do NOT trigger when: (a) pure one-shot 零设计维度; (b) goal-docs/ exists but user just asking question, not 改/加/偏; (c) scope of another skill (商业评估→business-analysis-pipeline; 审稿→credibility-review; 发布→tranfu-publish).",
       "version": "0.2.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-05-28",
-      "published_at": "2026-05-17T13:14:12.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Take \\\"build X\\\" goals from a one-liner to a real artifact — commit to the most probable shape first, then verify it against a roleplay-able persona through a doc-relay pipeline.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Help me build a Monte Carlo simulation website — plan it end to end.",
+          "scene": "Plan a new project"
+        },
+        {
+          "prompt": "Thinking of a small budgeting tool. How would you design it? Talk it through first.",
+          "scene": "Discuss an idea first"
+        },
+        {
+          "prompt": "The homepage card list drifted — please fix it. goal-docs/ is already there.",
+          "scene": "Fix an existing project"
+        }
+      ],
+      "description_zh": "把「做一个 X」这类模糊目标, 先押注最可能的形态, 再让画像 Agent 反复核对, 一路推到真产物。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "做一个蒙特卡洛模拟网站，帮我从头规划到能跑起来。",
+          "scene": "规划新项目"
+        },
+        {
+          "prompt": "想搞一个小的记账工具，你会怎么设计？先讨论一下。",
+          "scene": "先讨论方案"
+        },
+        {
+          "prompt": "首页那个卡片列表偏了，帮我改一下，goal-docs/ 已经在。",
+          "scene": "修复现有项目"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/goal-driven-decomposition",
       "files": [
         "HISTORY.md",
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "cases/1/input/PROMPT.md",
         "cases/1/output/00-true-goal-r1.md",
         "cases/1/output/00-用户画像-r1.md",
@@ -297,82 +1475,387 @@
         "cases/1/output/conversation.mdx",
         "cases/1/output/user_goal_surface.md"
       ],
-      "sha": "3f7ca64b2544749bffdac46c3cb6b717e7be3f09"
+      "sha": "2c9e669bfb3c217d0b9316c032f3e52337830668"
+    },
+    {
+      "name": "langgraph-architecture-review",
+      "display_name": "LangGraph Architecture Review",
+      "display_name_zh": "LangGraph 架构审查",
+      "description": "Inspect, explain, visualize, and improve Python LangGraph architecture in an existing project. Use when the user asks to map or draw a LangGraph workflow, understand StateGraph nodes and edges, review state/reducers/persistence/HITL/tool boundaries, compare a graph with current LangGraph guidance, or propose architecture changes for a concrete feature or task. Also matches Chinese requests such as “梳理 LangGraph 架构”, “画节点流程图”, “检查 Agent 工作流”, and “结合业务优化 LangGraph”. Do not use for generic AI architecture selection, ordinary code review without LangGraph, TypeScript-only graphs, or implementing a new graph when no architecture inspection is requested.",
+      "version": "0.1.0",
+      "author": "griffithkk3-del",
+      "updated_at": "2026-07-16",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Inspect a real Python LangGraph project and turn its code into an evidence-backed architecture map, review, and improvement plan.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Map this LangGraph workflow and explain every node and edge.",
+          "scene": "Map the workflow"
+        },
+        {
+          "prompt": "Review our interrupt, checkpointer, and state design for risks.",
+          "scene": "Review graph safety"
+        },
+        {
+          "prompt": "Propose LangGraph changes for this feature using source evidence.",
+          "scene": "Plan graph changes"
+        }
+      ],
+      "description_zh": "检查现有 Python LangGraph 项目，把真实代码整理成有证据支撑的架构图、审查结论和改进方案。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "梳理这个 LangGraph 工作流，并解释每个节点和连线。",
+          "scene": "梳理工作流程"
+        },
+        {
+          "prompt": "检查中断、检查点和状态设计里有没有风险。",
+          "scene": "检查运行安全"
+        },
+        {
+          "prompt": "结合源码，为这个功能提出 LangGraph 架构改法。",
+          "scene": "规划架构改动"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/langgraph-architecture-review",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/review-contract.md",
+        "references/upstream-sources.md",
+        "scripts/inspect_langgraph.py",
+        "scripts/test_inspect_langgraph.py",
+        "scripts/validate_report.py"
+      ],
+      "sha": "4dffd7a9b4607758fb9f790b0ef785a3401a1d0c"
     },
     {
       "name": "lark-safe-write",
-      "type": "own",
-      "description": "\"Lark/Feishu wiki 安全写入流程：强制先备份、再写入、后验证，防止覆盖丢失。支持创建新 wiki 节点和更新现有文档内容。当用户需要向飞书知识库写入、更新、覆盖文档时，必须遵循本 skill 的完整流程。\"",
+      "display_name": "Lark Safe Write",
+      "display_name_zh": "飞书安全写入",
       "version": "1.1.0",
+      "description": "Lark/Feishu wiki 安全写入流程：强制先备份、再写入、后验证，防止覆盖丢失。支持创建新 wiki 节点和更新现有文档内容。当用户需要向飞书知识库写入、更新、覆盖文档时，必须遵循本 skill 的完整流程。",
       "author": "BruceL017",
-      "updated_at": "2026-05-12",
-      "published_at": "2026-05-12T10:15:25.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "metadata": {
+        "requires": {
+          "bins": [
+            "lark-cli"
+          ]
+        },
+        "relatedSkills": [
+          "../lark-wiki/SKILL.md",
+          "../lark-doc/SKILL.md",
+          "../lark-shared/SKILL.md"
+        ]
+      },
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "A safe-write workflow Skill for Lark (Feishu) wiki. Enforces a four-step loop — preflight, backup, write, verify — so a wiki page never gets clobbered or silently fails to update.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Create a new page in this Lark knowledge base.",
+          "scene": "Create a wiki page"
+        },
+        {
+          "prompt": "Update this Lark wiki page without losing the existing content.",
+          "scene": "Update a wiki page"
+        },
+        {
+          "prompt": "Back up this page before writing the new content.",
+          "scene": "Back up before writing"
+        }
+      ],
+      "description_zh": "飞书 wiki 安全写入流程 Skill。强制遵循「先备份、再写入、后验证」四步闭环，防止 wiki 文档被意外覆盖或写入失败导致数据丢失。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "在这个飞书知识库里新建一个页面。",
+          "scene": "新建飞书文档"
+        },
+        {
+          "prompt": "更新这个飞书页面，不要丢失原有内容。",
+          "scene": "更新飞书文档"
+        },
+        {
+          "prompt": "写入新内容之前，先把当前页面备份下来。",
+          "scene": "写入前先备份"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/lark-safe-write",
       "files": [
         "README.en.md",
         "README.md",
-        "SKILL.md"
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "a6ebed28daac7098552e67e636cc74e67a9ff590"
+      "sha": "d3fd19225a20d68c1c7dab14e5bc21c172054947"
     },
     {
       "name": "market-analysis",
-      "type": "own",
+      "display_name": "Market Landscape Analysis",
+      "display_name_zh": "市场全景分析",
       "description": "全景市场分析技能。当用户说\"分析XX市场\"、\"帮我做市场调研\"、\"XX行业市场分析\"、\"竞争格局分析\"、\"市场机会在哪里\"、\"market analysis\"、\"行业研究\"、\"赛道分析\"时，必须使用此技能。该技能通过全网多维度搜索，综合行业报告、竞品动态、用户声音、投融资信息，输出结构化市场分析报告并挖掘机会点。只要涉及市场、行业、赛道、竞争格局相关分析，都应主动触发此技能。",
       "version": "0.1.0",
       "author": "tf-nezha",
-      "updated_at": "2026-05-12",
-      "published_at": "2026-05-21T12:28:56.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Research a market or industry and produce a structured report covering its size, competition, opportunities, and risks.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Analyze the AI customer service SaaS market.",
+          "scene": "Analyze a specific market"
+        },
+        {
+          "prompt": "Do market research on the online education industry.",
+          "scene": "Research an industry"
+        },
+        {
+          "prompt": "Competitive landscape analysis: EV market.",
+          "scene": "Map the competitors"
+        }
+      ],
+      "description_zh": "研究一个市场、行业或赛道，并整理出市场规模、竞争格局、机会和风险。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "分析 AI 客服 SaaS 市场",
+          "scene": "分析具体市场"
+        },
+        {
+          "prompt": "帮我做在线教育行业市场调研",
+          "scene": "调研一个行业"
+        },
+        {
+          "prompt": "竞争格局分析: 新能源汽车赛道",
+          "scene": "分析竞争格局"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/market-analysis",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "cases/1/input/PROMPT.md",
         "references/methodology.md"
       ],
-      "sha": "892028f8769a0d6fcdad99b269d61661840a5e77"
+      "sha": "15c02e62115482ab98c99f475417225157a09994"
     },
     {
       "name": "openspec-driven-development",
-      "type": "own",
-      "description": "在已经采用 OpenSpec 约定的项目里做日常开发执行时使用：把一个开发任务（新功能 / bugfix / 重构 / 加模块 / 改交互 / 排查并修 bug） 跑成「识别并按进场点路由 → 采访或诊断澄清真实目标 → 先在聊天框出方案（改页面给字符图，落到 wireframes.md；含可测逻辑或单文件 diff>200 行给单测+AI验证用例）→ 从最新 main 切 feature 分支并落盘 openspec/changes → 反思方案 → 按 spec 写码 → 反思代码符合度 → 归档（移动 change、合并 spec-delta、若有 wireframes.md 则回流到 docs/wireframes/）→ 更新 AGENTS.md → commit 到 feature 分支 → 有 remote 则推分支并开 PR（body 粘 proposal.md）」的闭环。 触发于「做个功能」「加个 X」「改一下 Y」「重构 / 优化 Z」「开始开发」「开始写代码」「按 openspec 走一遍」等开发执行请求； 也触发于咨询 / 讨论口吻的开发问题：「你会如何做 / 改 X」「能不能加 X」「讨论一下 X」「是不是要做成 Y 呀」「X 做在哪里」； 以及 bug 讨论「为什么 X 不对 / 出问题」和进场点变体「实施 openspec/changes/<X>」「方案实施完了帮我检查是否符合方案 / 有无遗漏」。 即使用户没点名 openspec，只要仓库里已有 openspec/ 目录就应主动用它。 不要用于：非开发任务（纯查询 / 查资料 / 跑命令、以及与具体改动无关的「是否符合规范 / 标准」泛合规审计）； 冷启动从零搭 AGENTS.md+openspec 骨架（那是 project-init-docs）；打 tag / 写 changelog / 版本号策略（那是 release）。",
-      "version": "0.5.1",
+      "display_name": "OpenSpec-Driven Development",
+      "display_name_zh": "OpenSpec 驱动开发",
+      "version": "0.7.0",
+      "description": "在已经采用 openspec/ 约定的仓库中处理功能、修复、重构、交互调整、实施既有 change、按 change 复核实现，以及可能导向仓库改动的开发讨论或故障诊断时触发。它读取项目和团队的可信契约，统一判断实现授权并把任务推进到实现、验证与事实源闭环。Do NOT trigger when 请求是纯查询、资料研究、与具体变更无关的泛合规审计、单独的 git 操作、发版或打 tag。",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-30",
-      "published_at": "2026-06-17T08:46:47.000Z",
+      "updated_at": "2026-07-27",
+      "origin": "own",
+      "userInvocable": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Runs development work inside an OpenSpec repository by loading the project’s own workflow, tracking implementation authority once, and closing the loop through implementation, verification, and source-of-truth updates.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Fix the delete preview bug that lists unrelated operators.",
+          "scene": "Execute a bug fix"
+        },
+        {
+          "prompt": "Let’s discuss how the delete preview should work, but don’t change anything yet.",
+          "scene": "Discuss without implementation"
+        },
+        {
+          "prompt": "Implement openspec/changes/bulk-export.",
+          "scene": "Implement an existing change"
+        }
+      ],
+      "description_zh": "在 OpenSpec 仓库中读取项目自己的开发契约，只判定一次实现授权，并把任务推进到实现、验证和事实源闭环。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "修复删除预览会列出无关操作员的问题。",
+          "scene": "执行缺陷修复"
+        },
+        {
+          "prompt": "先讨论一下删除预览应该怎么设计，暂时不要改。",
+          "scene": "只讨论不实现"
+        },
+        {
+          "prompt": "实施 openspec/changes/bulk-export。",
+          "scene": "实施既有 change"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/openspec-driven-development",
       "files": [
-        "SKILL.md"
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "aec94b6243148613801e4960e0b45c5607634cba"
+      "sha": "0842d7d5fbf38b8f2e1e06c0640da6df3d073151"
+    },
+    {
+      "name": "opportunity-hunter",
+      "display_name": "Startup Opportunity Hunter",
+      "display_name_zh": "创业机会猎手",
+      "description": "创业机会猎法（机会发现与快筛端）。在找创业机会、判断痛点/新闻/政策/新模型是否构成机会、做卖铲子判断或头脑风暴方向时使用。用四猎场定位、why-now 扳机、卖铲子提问和四道杀闸快速淘汰候选；AI 方向存活后衔接 ai-startup-feasibility-check 做深度自检。",
+      "version": "0.1.0",
+      "author": "tf-nezha",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn opportunity hunting from waiting for inspiration into a repeatable drill — four hunting grounds, why-now trigger, pick-and-shovel test, four kill gates.",
+      "prompt_examples_en": [
+        {
+          "prompt": "OpenAI cut prices again. Is this a trigger for infra startups? Walk the chain.",
+          "scene": "Check a market change"
+        },
+        {
+          "prompt": "Building an AI compliance monitor for mid-market SaaS. Run the four kill gates.",
+          "scene": "Test a startup idea"
+        },
+        {
+          "prompt": "I paste product data across 5 platforms daily. Is this a real opportunity?",
+          "scene": "Start from daily friction"
+        }
+      ],
+      "description_zh": "把「找机会」从等灵感变成一套猎法——四猎场定位、why-now 扳机、卖铲子提问、四道杀闸快筛。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "最近 OpenAI 又降价了, 会不会是某类基础设施创业的扳机? 帮我推一下因果链。",
+          "scene": "判断市场变化"
+        },
+        {
+          "prompt": "我在琢磨做一个 AI 合规监控工具卖给中小 SaaS, 帮我用四道杀闸筛一遍。",
+          "scene": "评估创业想法"
+        },
+        {
+          "prompt": "我每天做电商选品要在 5 个平台之间反复切换粘贴数据, 这算不算真机会?",
+          "scene": "从日常麻烦找机会"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/opportunity-hunter",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
+      ],
+      "sha": "7cf7f56bc587bb3eceb79e6259c6adedfdab8180"
     },
     {
       "name": "post-illustration-images",
-      "type": "own",
-      "description": "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, and Zhihu posts. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or the user explicitly names another image-generation skill. Safety boundaries: one suite style, one image per generation, no model-drawn logos or page badges.",
-      "version": "0.1.0",
+      "display_name": "Multiplatform Post Illustrations",
+      "display_name_zh": "多平台文章配图",
+      "description": "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, Zhihu posts, Toutiao posts, and Weibo posts with a registered style through either a runtime-native image tool or an already-configured API backend. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 微博配图, 头条号配图, 今日头条配图, 帮我做配图, or 给文章画几张图. Do NOT trigger when the task is pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or when the user explicitly names another image-generation skill. Safety boundaries: verify the generation backend before production, use one registered suite style, generate and QA one image at a time, preserve accepted native pixels, forbid model-drawn logos/page badges, and resolve deterministic branding from the user override or selected style policy.",
+      "version": "0.5.0",
       "author": "BruceL017",
-      "updated_at": "2026-07-01",
-      "published_at": "2026-07-01T10:54:57.000Z",
+      "updated_at": "2026-07-17",
+      "origin": "own",
+      "allow_exec": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Create consistent, platform-ready illustration sets from article content with registered styles, verified geometry, and optional branding.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Create a set of WeChat body illustrations for this finished article.",
+          "scene": "Illustrate an article"
+        },
+        {
+          "prompt": "Turn this Xiaohongshu note into a consistent cover and image carousel.",
+          "scene": "Create a carousel"
+        },
+        {
+          "prompt": "Add one image to this existing set without regenerating the others.",
+          "scene": "Continue an image set"
+        }
+      ],
+      "description_zh": "根据文章内容和已登记风格生成统一的平台配图，并核实尺寸、品牌与质量。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "为这篇完成的公众号文章生成一套正文配图。",
+          "scene": "为文章制作配图"
+        },
+        {
+          "prompt": "把这篇小红书笔记做成统一的封面和正文组图。",
+          "scene": "制作内容组图"
+        },
+        {
+          "prompt": "给现有图片组补一张图，不要重新生成其他图片。",
+          "scene": "续做现有图片"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/post-illustration-images",
       "files": [
+        ".gitattributes",
+        ".github/workflows/brand-overlay.yml",
         ".gitignore",
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "THIRD_PARTY_NOTICES.md",
         "agents/openai.yaml",
         "assets/brand/tranfu-logo-reference.svg",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "assets/style-references/toutiao-luminous-tech.png",
         "assets/style-references/wechat-doodle.png",
+        "assets/style-references/weibo-signal-core.png",
         "assets/style-references/xhs-cream-paper.png",
         "assets/style-references/xhs-explainer-notebook.png",
         "assets/style-references/xhs-orange-card.png",
         "assets/style-references/zhihu-tech.png",
         "references/brand.md",
         "references/content-structures.md",
+        "references/generation-backends.md",
+        "references/gpt-image-2-geometry.spec.json",
+        "references/orchestrated-provider.md",
         "references/product-design.md",
         "references/prompt-compiler.md",
         "references/qa-checklist.md",
+        "references/style-bundle-contract.md",
         "references/style-index.md",
+        "references/style-registry.json",
+        "references/styles/toutiao-luminous-tech.md",
+        "references/styles/toutiao-luminous-tech.provenance.json",
+        "references/styles/toutiao-luminous-tech.spec.json",
         "references/styles/wechat-style-doodle.md",
         "references/styles/wechat-style-doodle.spec.json",
+        "references/styles/weibo-signal-core.md",
+        "references/styles/weibo-signal-core.spec.json",
         "references/styles/xhs-style-cream-paper.md",
         "references/styles/xhs-style-cream-paper.spec.json",
         "references/styles/xhs-style-explainer-notebook.md",
@@ -382,36 +1865,197 @@
         "references/styles/zhihu-style-title.md",
         "references/styles/zhihu-style-title.spec.json",
         "scripts/apply-brand-overlay.mjs",
-        "scripts/check-rsvg-convert.mjs"
+        "scripts/generate-style-index.mjs",
+        "scripts/install-style-bundle.mjs",
+        "scripts/provider-contract.mjs",
+        "scripts/resolve-brand-policy.mjs",
+        "scripts/resolve-generation-geometry.mjs",
+        "scripts/test-brand-overlay.mjs",
+        "scripts/validate-style-bundle.mjs",
+        "scripts/vendor-resvg-wasm.mjs",
+        "tests/brand-policy.test.mjs",
+        "tests/generation-geometry.test.mjs",
+        "tests/provider-contract.test.mjs",
+        "tests/style-bundle.test.mjs",
+        "vendor/resvg-wasm/LICENSE",
+        "vendor/resvg-wasm/SHA256SUMS",
+        "vendor/resvg-wasm/SOURCE.md",
+        "vendor/resvg-wasm/VERSION",
+        "vendor/resvg-wasm/index.js",
+        "vendor/resvg-wasm/index_bg.wasm",
+        "vendor/resvg-wasm/package.json"
       ],
-      "sha": "dc8c1a6671fdf1839461607df14717dbf3f7d17b"
+      "sha": "d1051948558ed60a82cc53b99dc7ae526f86fca5"
+    },
+    {
+      "name": "prd-to-parallel-loop",
+      "display_name": "PRD Parallel Loop Scaffolding",
+      "display_name_zh": "PRD 并行 Loop 脚手架",
+      "description": "在已有 openspec 惯例的项目里,把一份 PRD / 产品文档 / 里程碑文档搭成「多 git worktree + codex 并行执行 + 主 loop (Claude) 心跳调度」的完整脚手架。**一个 openspec change = 一个并行任务**,每个任务由主 loop 分三段驱动(实施 → 反思 → 归档)。产物包括:N 个 openspec/changes/<change-id>/、~/dev-loops/<project>/<slug>/ 运行时状态目录、以及一段用户复制到新对话就能触发 /loop 的启动语。\n\nTrigger for: 用户说\"把这个 PRD 做出来 / 把 docs/product/pages/xxx.md 落地 / 把这份产品文档实现了 / 把 docs/roadmap/milestone-N-xxx.md 跑起来 / 按这个里程碑并行做 / 从这份 PRD 起搞成并行 loop / 把这批 change 丢到 worktree loop 里跑 / 给这个里程碑做 loop\",或者用户丢来一份 PRD / 里程碑文件路径 + 说\"实现这个 / 做出来 / 落地 / 拆一下 / 跑起来\"。任何\"从产品文档或里程碑到并行 loop\"意图的自然表达都应该触发。\n\nDo NOT trigger when: 用户只想编写或评审 PRD / 里程碑文档(走 credibility-review 或 project-init-docs);项目无 openspec/ 目录且用户也没装 openspec-driven-development(应该提示先建 openspec 惯例);拆出来只有一个 change(那是单个变更,走 openspec-driven-development);runtime.json 已存在且 heartbeats.total > 0 表示 loop 已在跑(要求手动清理旧状态后重来,skill 不做 update);用户只想跑一个 codex 任务没有产品文档起点;用户要求把 PRD 直接编译成代码不经过 openspec change。",
+      "version": "0.3.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-07-21",
+      "origin": "own",
+      "allow_exec": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Splits a PRD or milestone doc into several openspec changes, gives each one its own git worktree and codex session, and hands you a start command you can paste to run them in parallel.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Break down docs/roadmap/milestone-5-main-conversation.md and set it up to run in parallel.",
+          "scene": "Kick off a milestone"
+        },
+        {
+          "prompt": "Let's ship this PRD. Talk me through how you'd split it into changes first.",
+          "scene": "Split a PRD"
+        },
+        {
+          "prompt": "The changes under openspec/changes are already written — just wire up the parallel runtime.",
+          "scene": "Wire up the runtime only"
+        }
+      ],
+      "description_zh": "把一份 PRD 或里程碑文档拆成多个 openspec 变更, 一个变更配一个 git worktree 交给 codex 并行做, 最后给你一段粘贴就能开跑的启动语。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把 docs/roadmap/milestone-5-main-conversation.md 拆一下，并行跑起来。",
+          "scene": "里程碑并行开工"
+        },
+        {
+          "prompt": "这份 PRD 帮我落地，先讨论清楚拆成几个变更再动手。",
+          "scene": "从 PRD 拆变更"
+        },
+        {
+          "prompt": "openspec/changes 下那几个变更我已经写好了，帮我把并行运行时装上。",
+          "scene": "只补运行时"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/prd-to-parallel-loop",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/bin/probe-codex.mjs",
+        "assets/bin/resume-codex.mjs",
+        "assets/bin/spawn-codex.mjs",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "assets/templates/dev-loops/loop-instructions.md.tmpl",
+        "assets/templates/dev-loops/loop-prompt.md.tmpl",
+        "assets/templates/dev-loops/runtime.json.tmpl"
+      ],
+      "sha": "3e7748341274a2011ef70bc34e330c2b6081f719"
     },
     {
       "name": "product-title-generation",
-      "type": "own",
+      "display_name": "Product Title Generation",
+      "display_name_zh": "产品标题生成",
       "description": "Generate concise Chinese product, feature, module, entry, activity-theme, or brand-short titles. Use when the user asks for 产品标题、模块命名、功能入口名、品牌化短标题、中文命名、起名、取名、叫什么、入口标题、产品名、name this feature, or product title, especially 4-6 character product-like titles from product names, feature descriptions, technical capabilities, learning services, launch platforms, observability, or mixed Chinese-English concepts. Do NOT trigger for slogans or long marketing copy -> use copywriting; SEO headlines -> use SEO/content; trademark/legal availability -> use legal review; code identifiers or variable names -> use code naming/refactor; full brand strategy -> use brand strategy.",
-      "version": "\"0.1.5\"",
+      "version": "0.1.5",
       "author": "tranfu",
-      "updated_at": "\"2026-06-29\"",
-      "published_at": "2026-06-24T06:44:14.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn a product, feature, module, campaign theme, or brand short name into 1 recommended + 6 alternate Chinese titles in a single pass — short enough to drop straight into the UI.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Give me a 4-6 character Chinese product title for a team-level Agent observability platform.",
+          "scene": "Name from a use case"
+        },
+        {
+          "prompt": "GitHub Learning Lab · codebase-understanding cockpit — I need a short Chinese title.",
+          "scene": "Name from keywords"
+        },
+        {
+          "prompt": "Name a 30-day Japanese sprint coaching course in Chinese — should feel time-pressured.",
+          "scene": "Name a product category"
+        }
+      ],
+      "description_zh": "给产品、功能、模块、活动主题或品牌短名一次性生成 1 条推荐 + 6 条备选中文标题, 短到能直接贴 UI。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我给一个团队 Agent 可观测性平台起个 4-6 字的产品入口标题。",
+          "scene": "根据用途起名"
+        },
+        {
+          "prompt": "GitHub Learning Lab · 代码库理解驾驶舱, 想要一个短标题。",
+          "scene": "根据关键词起名"
+        },
+        {
+          "prompt": "给一个日语 30 天冲刺陪练课起个产品名, 要有紧迫感。",
+          "scene": "为产品品类起名"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/product-title-generation",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "10b6a5f68dcb92492338deb5824cd11ad58c4ac2"
+      "sha": "e43920b4a7ac9026f135d3b3df8710c8b05b5231"
     },
     {
       "name": "project-init-docs",
-      "type": "own",
-      "description": "当用户在一个代码仓库里说\"初始化\"时，分析真实仓库并一次性搭建 AI 驱动开发所需的知识与规格基线： AGENTS.md（AI 项目操作手册）、CLAUDE.md（指向 AGENTS.md 的一行指针）、 docs/architecture/module-map.md（模块地图）、openspec/specs/<domain>/spec.md（业务域事实规格）、 openspec/changes/（先设计再实现的变更工作区）、docs/adr/（架构决策记录）、 docs/wireframes/（字符图线框，默认生成）。 触发词包括\"初始化\"\"初始化项目\"\"init 一下文档\"\"搭 AI 协作脚手架\"\"建 AGENTS.md 体系\"\"加线框图/页面版式\"， 也覆盖口语化说法，例如\"帮我把项目文档初始化一下\"\"搭一套 AI 能看懂的文档底座\"\"把项目结构和规范记录下来\"， 即使用户只说\"初始化\"也在仓库语境内触发。 内容必须来自对真实仓库的分析而非空白模板，幂等不破坏已存在文件。 任何目录级\"怎么在这工作\"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。 不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、 只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。",
-      "version": "0.4.0",
+      "display_name": "Project Docs Initialization",
+      "display_name_zh": "项目文档初始化",
+      "description": "当用户在一个代码仓库里说\"初始化\"时，分析真实仓库并一次性搭建 AI 驱动开发所需的知识与规格基线： AGENTS.md（AI 项目操作手册）、CLAUDE.md（指向 AGENTS.md 的一行指针）、 DEPLOY.md（部署事实源，供后续 AI 一眼看清部署到哪 / 怎么建 / 怎么发 / 怎么退 / 怎么验）、 docs/architecture/module-map.md（模块地图）、openspec/specs/<domain>/spec.md（业务域事实规格）、 openspec/changes/（先设计再实现的变更工作区）、docs/adr/（架构决策记录）、 docs/wireframes/（字符图线框，默认生成）。 触发词包括\"初始化\"\"初始化项目\"\"init 一下文档\"\"搭 AI 协作脚手架\"\"建 AGENTS.md 体系\"\"加线框图/页面版式\"， 也覆盖口语化说法，例如\"帮我把项目文档初始化一下\"\"搭一套 AI 能看懂的文档底座\"\"把项目结构和规范记录下来\"， 即使用户只说\"初始化\"也在仓库语境内触发。 内容必须来自对真实仓库的分析而非空白模板，幂等不破坏已存在文件。 任何目录级\"怎么在这工作\"的说明一律用 AGENTS.md + CLAUDE.md 指针，绝不用 README。 不要用于代码层初始化（git/npm init、create-react-app、cargo new 等脚手架命令）、 只新建单个文档、编写业务代码，或对已存在文件做局部小修改（那只是普通编辑）。",
+      "version": "0.5.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-20",
-      "published_at": "2026-06-12T10:07:31.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Initialize a repository for AI-assisted work by creating aligned collaboration, deployment, specification, and wireframe documents.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Init this repo.",
+          "scene": "Set up project docs"
+        },
+        {
+          "prompt": "This legacy project still has no AGENTS.md — pin down the project docs in one pass, grounded in real facts.",
+          "scene": "Document existing code"
+        },
+        {
+          "prompt": "Init the project docs and pin down the structure, commands, and business domains in one go.",
+          "scene": "Prepare for AI work"
+        }
+      ],
+      "description_zh": "为代码仓库建立 AI 协作基础，一次生成对齐的协作、部署、需求和线框图文档。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "初始化。",
+          "scene": "初始化项目文档"
+        },
+        {
+          "prompt": "这个老项目还没 AGENTS.md, 帮我按真实事实把项目文档一次沉下来。",
+          "scene": "为现有代码补文档"
+        },
+        {
+          "prompt": "帮我把项目文档初始化一下, 把结构、命令、业务域一起沉下来。",
+          "scene": "准备 AI 协作"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/project-init-docs",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "assets/wireframes/AGENTS.md",
         "assets/wireframes/CLAUDE.md",
         "assets/wireframes/_template/page.md",
@@ -421,21 +2065,60 @@
         "scripts/fill.sh",
         "scripts/probe.sh"
       ],
-      "sha": "6af302b02f6c90812ceb2ce0a6ba9d9fb17a076f"
+      "sha": "eff6df74c081ed7f91973a33b6096580b08b500e"
     },
     {
       "name": "project-scoring",
-      "type": "own",
+      "display_name": "AI Project Scoring",
+      "display_name_zh": "AI 项目评分",
       "description": "Use when user says \"评估这个 AI 项目\" to score AI workflows and produce a decision memo.",
       "version": "0.2.0",
       "author": "griffithkk3-del",
-      "updated_at": "2026-05-21",
-      "published_at": "2026-05-13T07:12:17.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "A restrained project-approval reviewer for AI workflow ideas — asks 3-5 clarification questions first, then produces a decision memo with weighted 10-dimension scoring, hard gates, evidence ledger, risks, a 7-day validation experiment, and exactly one next action. Use before validation, internal investment, reusable skill development, public case development, or co-creation. Not a generic backlog sorter (RICE / ICE / WSJF fit that better).",
+      "prompt_examples_en": [
+        {
+          "prompt": "Use project-scoring to review this internal AI initiative: <one-line idea, target user, current workaround>",
+          "scene": "Review an internal project"
+        },
+        {
+          "prompt": "Help me decide whether this Tranfu skill idea deserves a small-step commitment: <purpose, users, evidence level>",
+          "scene": "Review a reusable skill"
+        },
+        {
+          "prompt": "Run project-scoring on this demo concept; if information is thin, ask me questions first",
+          "scene": "Review a public demo"
+        }
+      ],
+      "description_zh": "面向 AI 工作流点子的克制式立项审核 — 先追问 3-5 个澄清问题, 再产出一份带加权 10 维评分、硬门槛、证据台账、风险、7 天验证实验和唯一下一步的决策备忘. 用在验证、内部投资、可复用 skill 开发、公开案例开发或共创之前. 不是通用的产品待办列表排序器 (RICE / ICE / WSJF 更适合那件事).",
+      "prompt_examples_zh": [
+        {
+          "prompt": "用 project-scoring 帮我审这个内部 AI 项目: <一句话点子、目标用户、当前替代方案>",
+          "scene": "评估内部 AI 项目"
+        },
+        {
+          "prompt": "帮我判断这个 Tranfu skill idea 是否值得小步立项: <用途、用户、证据等级>",
+          "scene": "评估可复用 Skill"
+        },
+        {
+          "prompt": "对这个 demo 概念做立项审核, 信息不足先问我问题",
+          "scene": "评估公开演示项目"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/project-scoring",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
         "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "references/examples.md",
         "references/output-schema.md",
         "references/prompt.md",
@@ -444,161 +2127,886 @@
         "references/scoring-framework.md",
         "scripts/score_project.py"
       ],
-      "sha": "76418b35ce6235cce385318a97204af000e3b3f6"
+      "sha": "3f63256a2ccedc78c2b0a9f7cafbcc7f73221a5f"
     },
     {
       "name": "prompt-review",
-      "type": "own",
+      "display_name": "Prompt Review",
+      "display_name_zh": "提示词审查",
       "description": "当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、 agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、 “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。 不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、 发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。 安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET （direct 型给改法案例、think 型给作者思考的问题）， 从不编辑提示词 / SKILL / 文件；委派工作必须有边界；不要求网络访问。",
       "version": "0.9.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-07-03",
-      "published_at": "2026-05-13T11:03:33.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Review a prompt, skill, or agent definition and explain each problem, why it matters, and how to fix it, without editing the original file.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Review this prompt and point out the engineering problems.",
+          "scene": "Review a prompt"
+        },
+        {
+          "prompt": "Review own-skills/example/SKILL.md and give me actionable findings.",
+          "scene": "Review a skill"
+        },
+        {
+          "prompt": "Check whether this agent definition has conflicting instructions.",
+          "scene": "Review an agent"
+        }
+      ],
+      "description_zh": "检查提示词、skill 或 agent 定义里的问题，逐条说明影响和改法，但不会直接修改原文件。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "检查这段提示词有哪些工程问题。",
+          "scene": "检查提示词"
+        },
+        {
+          "prompt": "检查 own-skills/example/SKILL.md，给我一份可执行的问题清单。",
+          "scene": "检查 Skill"
+        },
+        {
+          "prompt": "检查这个 Agent 定义里有没有互相冲突的指令。",
+          "scene": "检查 Agent"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/prompt-review",
       "files": [
         "README.md",
-        "SKILL.md"
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "e6ee25c77740575f025b496ef46ae655075a49c4"
+      "sha": "34093ce9efbc46cb80eba21e7c82aa754d614824"
+    },
+    {
+      "name": "proofread-content",
+      "display_name": "Chinese Content Proofreading",
+      "display_name_zh": "中文内容审校",
+      "description": "三轮审校简体中文成稿，去除模板化 AI 表达并交付排版净稿。Use when 用户要求去 AI 味或发布前审校。Do NOT trigger when 从零写作、翻译、排版、专业文本、发布或规避检测。",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-16",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Proofread a finished Simplified Chinese article in three passes, reduce formulaic AI phrasing, and deliver a clean layout-ready draft.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Proofread this finished WeChat draft and remove formulaic AI phrasing.",
+          "scene": "Polish pasted draft"
+        },
+        {
+          "prompt": "Proofread article.md in place while preserving every factual value.",
+          "scene": "Polish a local file"
+        },
+        {
+          "prompt": "Keep my voice but make this Xiaohongshu draft read more naturally.",
+          "scene": "Preserve author voice"
+        }
+      ],
+      "description_zh": "对完整简体中文成稿做三轮审校，减少模板化 AI 表达，并交付可直接进入排版的净稿。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "审校这篇公众号成稿，去掉模板化 AI 表达。",
+          "scene": "审校粘贴成稿"
+        },
+        {
+          "prompt": "原地审校 article.md，并保持所有事实数值不变。",
+          "scene": "审校本地文件"
+        },
+        {
+          "prompt": "保留我的语气，让这篇小红书成稿读起来更自然。",
+          "scene": "保留作者语气"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/proofread-content",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/humanizer-zh-24.md",
+        "references/platform-registers.md"
+      ],
+      "sha": "3f27792f313564bb20a92c290b0fe376b6248bd9"
     },
     {
       "name": "reversible-ops",
-      "type": "own",
-      "description": "运维场景的可恢复性硬约束 —— review-only，AI 不替执行任何写命令；命中写操作时改写成 可恢复的等价命令让用户复制执行，命中不可恢复时给四段拒绝输出。范围：本地 bash / Docker / Coolify。 触发短语：删 / 清理 / 改 / 改配置 / 改 .env / 重启 / 重建 / kill / rm / mv 走 / 备份 / docker rm / docker volume rm / docker compose down / docker exec / git reset --hard / git clean / coolify app delete / coolify env / coolify server remove / coolify private-key remove / 加个 cron / 改 /etc/hosts； 口语：「帮我删一下」「清掉这些」「把这台机器从 coolify 摘了」「改一下环境变量」 「写个脚本批量处理」「能跑这条命令吗」。 不要用于：纯查询（ls / cat 非敏感文件 / docker ps / docker inspect / 一次性 docker logs / coolify list / coolify status）—— 默认放行不需要走本 skill；与运维无关的代码任务 （走 openspec-driven-development）；只查文档（直接答即可）；编写部署用的 Dockerfile / compose 本身（走 coolify-deploy）；tranfu 团队 Coolify 业务流程（走 tranfu-coolify-ops，本 skill 是 它的安全底座但不替代它的工作流）。",
+      "display_name": "Reversible Ops",
+      "display_name_zh": "运维可回滚守则",
       "version": "0.7.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-30",
-      "published_at": "2026-06-25T08:33:38.000Z",
+      "origin": "own",
+      "updated_at": "2026-07-10",
+      "description": "运维场景的可恢复性硬约束 —— review-only，AI 不替执行任何写命令；命中写操作时改写成 可恢复的等价命令让用户复制执行，命中不可恢复时给四段拒绝输出。范围：本地 bash / Docker / Coolify。 触发短语：删 / 清理 / 改 / 改配置 / 改 .env / 重启 / 重建 / kill / rm / mv 走 / 备份 / docker rm / docker volume rm / docker compose down / docker exec / git reset --hard / git clean / coolify app delete / coolify env / coolify server remove / coolify private-key remove / 加个 cron / 改 /etc/hosts； 口语：「帮我删一下」「清掉这些」「把这台机器从 coolify 摘了」「改一下环境变量」 「写个脚本批量处理」「能跑这条命令吗」。 不要用于：纯查询（ls / cat 非敏感文件 / docker ps / docker inspect / 一次性 docker logs / coolify list / coolify status）—— 默认放行不需要走本 skill；与运维无关的代码任务 （走 openspec-driven-development）；只查文档（直接答即可）；编写部署用的 Dockerfile / compose 本身（走 coolify-deploy）；tranfu 团队 Coolify 业务流程（走 tranfu-coolify-ops，本 skill 是 它的安全底座但不替代它的工作流）。",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "A review-only safety gate for ops commands — I never execute writes for you, I rewrite reversible ones for you to run manually, and I refuse the irreversible outright.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Can I run `docker compose down -v` on this stack right now?",
+          "scene": "Review a pasted command"
+        },
+        {
+          "prompt": "Clean up the old .log files under /var/log/nginx/ for me.",
+          "scene": "Review a cleanup request"
+        },
+        {
+          "prompt": "Here's a Python cleanup script — walk it line by line before I run it.",
+          "scene": "Review a script"
+        }
+      ],
+      "description_zh": "运维写命令的安全网——默认不替你执行, 可恢复的改写成可恢复命令让你复制着跑, 不可恢复的直接拒。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "我能跑 `docker compose down -v` 吗？",
+          "scene": "检查粘贴的命令"
+        },
+        {
+          "prompt": "帮我把 /var/log/nginx/ 下旧的 access.log 清一下。",
+          "scene": "检查清理操作"
+        },
+        {
+          "prompt": "我写了个 Python 清缓存脚本, 跑之前你先逐条审。",
+          "scene": "检查运行脚本"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/reversible-ops",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "references/test-cases.md"
       ],
-      "sha": "fde82dbb5099996fd26a7a1682f8a2bd4d91079c"
+      "sha": "04a4c5b5bdb0a2ea4db3fdeb5f129c0c12dbfbe4"
+    },
+    {
+      "name": "session-to-knowledge",
+      "display_name": "Session To Knowledge",
+      "display_name_zh": "会话知识沉淀",
+      "description": "Turn the current agent session or a supplied Codex task/transcript into one evidence-grounded, privacy-reviewed practical knowledge article. Trigger when the user explicitly asks for knowledge capture, lessons learned, an experience summary, a session retrospective, a practical case study, “知识沉淀”, “经验总结”, “会话复盘”, “实战经验”, or “知识提炼”. Also trigger in a new session to recover an oversized or HTTP 413-rejected session from a Codex task UUID or transcript path. Do NOT trigger for ordinary chat summaries without explicit knowledge-capture intent, or when an oversized source cannot be processed by isolated workers.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-23",
+      "origin": "own",
+      "readme": {
+        "en": "README.en.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn one agent session into an evidence-grounded practical article with resumable Codex 413 recovery.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Use $session-to-knowledge to capture reusable knowledge from the current session.",
+          "scene": "Capture the current session"
+        },
+        {
+          "prompt": "Use $session-to-knowledge source=<codex-task-uuid> to recover an oversized session.",
+          "scene": "Recover an HTTP 413 session"
+        }
+      ],
+      "description_zh": "将一次 Agent 会话提炼成有证据支撑的实战经验文档，并支持 Codex 413 断点恢复。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "使用 $session-to-knowledge 对当前会话进行知识沉淀。",
+          "scene": "提炼当前会话"
+        },
+        {
+          "prompt": "使用 $session-to-knowledge source=<codex-task-uuid> 恢复超长会话并产出实战经验。",
+          "scene": "恢复 413 会话"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/session-to-knowledge",
+      "files": [
+        "README.en.md",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/oversized-sessions.md",
+        "scripts/session_source.py",
+        "tests/test_session_source.py"
+      ],
+      "sha": "a24576f3a3be13210fddfd6ba3cf128a3cca61a2"
     },
     {
       "name": "skill-content-fit",
-      "type": "own",
+      "display_name": "Skill Content Fit Check",
+      "display_name_zh": "Skill 内容准入评估",
       "description": "Always trigger for: 创建新 Codex skill 前的准入判断、把尚未成型的项目知识/经验教训/执行规则/误差反馈/事故复盘/文档片段转成 skill 前的内容适配评估、判断内容是否值得沉淀成可复用能力。 Also trigger for casual phrasing: \"这个适合写成 skill 吗\", \"能不能固化成 skill\", \"要不要沉淀成能力\", \"这段经验值得做成规则吗\", even if the user does not use the word skill. Do NOT trigger when: 输入已经是 skill、SKILL.md、已安装 skill，或用户是在审查、优化、更新、修复现有 skill。",
       "version": "0.1.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-09",
-      "published_at": "2026-06-01T01:09:34.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Decide whether a document, prompt, or experience is complete enough to turn into a reusable skill, and list what is missing if it is not.",
+      "prompt_examples_en": [
+        {
+          "prompt": "I want to crystallize this postmortem into a skill — is it good enough?",
+          "scene": "Learn from an incident"
+        },
+        {
+          "prompt": "I hit a snag on this project and wrote a summary — is it worth turning into a skill?",
+          "scene": "Capture a lesson"
+        },
+        {
+          "prompt": "This user-preference block in AGENTS.md — can it be crystallized into a skill?",
+          "scene": "Review a document excerpt"
+        }
+      ],
+      "description_zh": "判断一份文档、提示词或经验是否足够完整，可以做成可复用的 skill；不够时会列出缺少的内容。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "这段事故复盘我想沉淀成 skill, 帮我看看够不够格。",
+          "scene": "从事故中提炼"
+        },
+        {
+          "prompt": "我在项目里踩了个坑, 记了一段总结, 值不值得写成 skill?",
+          "scene": "整理经验教训"
+        },
+        {
+          "prompt": "AGENTS.md 里这段用户偏好, 能固化成 skill 吗?",
+          "scene": "检查文档片段"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/skill-content-fit",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "f9a0fbb18cbd1ae3fa48bfac75e824becb24972a"
+      "sha": "093720311aa6b650dc9bf494f3e73cbbbd5d1158"
     },
     {
       "name": "skill-create-workflow",
-      "type": "own",
+      "display_name": "Skill Creation Workflow",
+      "display_name_zh": "Skill 创建工作流",
       "description": "当用户的最终意图是产出一个全新的 Codex / Claude Code skill (一个新的 SKILL.md / skill 目录) 时触发。 \"新\" 包括从零创建, 以及把尚未成型的文档、规则、事故复盘、经验教训、agent 工作流首次封装成 skill。 触发判定按 \"意图 + 上下文\", 不按短语字典匹配: - 任何 \"产生式动词 + skill\" 的表达都算: 创建 / 新建 / 写 / 写成 / 做 / 做成 / 整成 / 封装成 / 包 / 起 / 转成 / 沉淀成 + skill。同义动词由你自己泛化, 不必出现在本说明里。 - 承接确认 算同一个意图: 上一轮对话已经在讨论某段内容是否值得做成 skill, 用户用 \"好 / 行 / 可以 / OK / 那就 / 嗯\" 等承接词 + 产生式表达 (例如「好, 把它写成 skill」「行, 做成 skill 吧」 「那就封装成 skill」) 给出同意时, 视同显式触发, 上文讨论的对象即为源材料。 - 代词指代 (\"它 / 这个 / 那个 / 这段 / 上面那个\") + 产生式表达 已经把意图锚定到上文, 不要因为 \"没指定文件路径\" 而拒绝触发, 应回头解析上下文。 - 英文同理: turn X into a skill / make X a skill / let's skill-ify this / yeah make that a skill 等。 代表性例子 (覆盖正式 / 口语 / 承接三种形态, 其余交给语义泛化): - \"帮我把 docs/postmortem.md 创建成一个 skill\" - \"把它写成 skill\"  (代词承接, 源在上文) - \"好, 那就做成 skill 吧\"  (承接确认 + 产生式动词) Do NOT trigger when: 用户只要 install / list / upgrade / uninstall skills, 创建 plugin, 改普通项目代码, 写非 skill 文档, 或管理自动化任务。",
       "version": "0.3.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-30",
-      "published_at": "2026-06-09T08:35:51.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "userInvocable": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn a reusable idea, postmortem, or prompt into a new skill — three gates (content-fit, naming, prompt review) run before anything hits disk.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Turn docs/postmortem.md into a project-level skill.",
+          "scene": "Build from a source file"
+        },
+        {
+          "prompt": "Yeah, make that a skill.",
+          "scene": "Continue from earlier context"
+        },
+        {
+          "prompt": "Let's skill-ify the release checklist we just talked about.",
+          "scene": "Turn an idea into a skill"
+        }
+      ],
+      "description_zh": "把一段值得复用的经验 / 复盘 / 提示词做成一个新 skill——先过内容准入 / 命名 / 提示词复审三道门, 合格才落盘发布。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把 docs/postmortem.md 沉淀成一个项目内 skill",
+          "scene": "从文件创建 Skill"
+        },
+        {
+          "prompt": "好, 那就做成 skill 吧",
+          "scene": "接着上文创建"
+        },
+        {
+          "prompt": "把刚才聊的发布检查清单封装成 skill",
+          "scene": "把想法做成 Skill"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/skill-create-workflow",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "edfbf4eb36b6f5a9ccb381f75baa1cd27f8af919"
+      "sha": "bc8ea80cf73d4b9c0299c99ac2dc875bb504a037"
     },
     {
       "name": "skill-domain-framing",
-      "type": "own",
-      "description": "在用户要把尚未成型的事故复盘、guardrail 文档、经验片段、issue/PR 记录或普通项目文档创建成新的 Codex skill 前使用，用来先抽象任务域、命名轴、范围边界和验收标准。Always trigger for: 创建新 skill 前的任务域框定、把经验沉淀成能力前的容器命名、从复盘/PR/issue 提炼 skill 范围。Also trigger for casual phrasing: \"这个该做成什么 skill\", \"先帮我定一下 skill 范围\", \"沉淀成能力前先命名\", \"别被事故名词带偏\". Do NOT trigger when: 输入已经是 skill、SKILL.md、已安装 skill，或用户是在审查、优化、更新、修复现有 skill。",
-      "version": "0.2.0",
+      "display_name": "Skill Domain Framing",
+      "display_name_zh": "Skill 任务域框定",
+      "description": "在用户要把尚未成型的事故复盘、guardrail 文档、经验片段、issue/PR 记录或普通项目文档创建成新的 Codex skill 前使用，用来先抽象任务域、命名轴、范围边界和验收标准。命名判据是\"触发对齐\"：名字要落在用户请求这能力时会用的词上；动作/编排型 skill 的动词名（create/improve/review）同样合格，不因\"是动词\"被劝改。Always trigger for: 创建新 skill 前的任务域框定、把经验沉淀成能力前的容器命名、从复盘/PR/issue 提炼 skill 范围。Also trigger for casual phrasing: \"这个该做成什么 skill\", \"先帮我定一下 skill 范围\", \"沉淀成能力前先命名\", \"别被事故名词带偏\". Do NOT trigger when: 输入已经是 skill、SKILL.md、已安装 skill，或用户是在审查、优化、更新、修复现有 skill。",
+      "version": "0.3.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-30",
-      "published_at": "2026-06-01T01:09:34.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Choose the clearest scope and directory name for a new skill based on the source material, without creating the skill itself.",
+      "prompt_examples_en": [
+        {
+          "prompt": "This postmortem — help me frame what kind of skill it should become before I write SKILL.md.",
+          "scene": "Name from a postmortem"
+        },
+        {
+          "prompt": "A rule fell out of this issue thread — what container should this crystallize into?",
+          "scene": "Name from an issue"
+        },
+        {
+          "prompt": "I want to call it cache-debug-fix — score my name against alternatives before I commit.",
+          "scene": "Review a proposed name"
+        }
+      ],
+      "description_zh": "根据原始素材确定新 skill 最清楚的范围和目录名，但不会创建 skill 文件。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "这段事故复盘, 帮我在动 SKILL.md 之前先框一下容器名。",
+          "scene": "根据事故复盘命名"
+        },
+        {
+          "prompt": "issue 里讨论出来的规则, 应该沉淀成什么 skill 容器?",
+          "scene": "根据问题讨论命名"
+        },
+        {
+          "prompt": "我想叫 cache-debug-fix, 帮我打分挑战一下再决定。",
+          "scene": "检查候选名称"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/skill-domain-framing",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "9b14f93841b989c57536df5d3e3c268084b65b2a"
+      "sha": "e2cb450a9d7fc9ca9fec367df270f19ddbac6cec"
+    },
+    {
+      "name": "skill-improve-workflow",
+      "name_zh": "技能提升工作流",
+      "display_name": "Skill Improvement Workflow",
+      "display_name_zh": "Skill 提升工作流",
+      "description": "当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量提升时触发—— 用 skill-create-workflow 创建时的同一套门禁反向检验并把它改到合格: 四门反检出问题后, 确定类改法征同意即改、判断类采访用户拍板。 触发判定按 \"提升 / 审查意图 + 完整 skill 目标\", 不按短语字典匹配: - 任何 \"提升式或审查式动词 + 已有 skill\" 都算: 提升 / 改进 / 完善 / 优化 / 打磨 / 精炼 / 审查 / 审 / 评审 / 检查 / 体检 / 把关 / improve / review / audit + 一个已存在的 skill。 - 口语说法同理: \"帮我把这个 skill 提升一下\"、\"完善下 own-skills/xxx\"、 \"这个 skill 写得怎么样\"、\"这 skill 要不要重构\"、\"它还够格当 skill 吗\"。 - 代词承接同理: 上文在讨论某个已有 skill 时, \"提升一下它 / 审一下它\" 即触发, 目标取上文。 Do NOT trigger when: 创建全新 skill (走 skill-create-workflow); 目标只是一段 prompt / agent 定义文本而非完整 skill 目录 (直接走 prompt-review); 用户点名给 skill 加某功能 / 改某个 具体行为、不要质量审查 (走 skill-create-workflow update / repair); install / list / upgrade / uninstall 已装 skill (走 tranfu-router)。 安全边界: 审查阶段只审不改; 仅在审后修复阶段, 对有确定改法的问题逐条或批量征得用户 同意后才落盘, 判断类问题一律采访用户拍板, NEVER 擅自替用户决定或未经同意改文件。",
+      "version": "0.7.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "userInvocable": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Review an existing skill, identify what is missing or unclear, and fix the issues that have a clear answer.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Improve the own-skills/daily-report skill",
+          "scene": "Improve an existing skill"
+        },
+        {
+          "prompt": "Does own-skills/foo still qualify as a skill?",
+          "scene": "Check whether it should stay"
+        },
+        {
+          "prompt": "Health check own-skills/bar before I merge, fix what fits",
+          "scene": "Check before merging"
+        }
+      ],
+      "description_zh": "检查已有 skill 缺什么、哪里不清楚，并直接修复有明确答案的问题。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我提升下 own-skills/daily-report 这个 skill",
+          "scene": "改进现有 Skill"
+        },
+        {
+          "prompt": "这个 skill 还够格当 skill 吗? own-skills/foo",
+          "scene": "判断是否值得保留"
+        },
+        {
+          "prompt": "合入前给 own-skills/bar 做次体检, 能改的顺手改",
+          "scene": "合并前检查"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/skill-improve-workflow",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
+      ],
+      "sha": "12c05becc9ff54d945978ceed580451254f12311"
+    },
+    {
+      "name": "skill-name-generation",
+      "name_zh": "Skill 名称生成",
+      "display_name": "Skill Display Name Generation",
+      "display_name_zh": "Skill 显示名生成",
+      "description": "给一个已有 skill 的 slug + description 生成人类可读的显示名, 一次配对输出 `display_name` (英文 Title Case 短语) 与 `display_name_zh` (中文 4-8 字), 用于 frontmatter / 展示层。触发于: \"给这个 skill 起个显示名 / 起个中文名 / 起个人类可读名 / 生成 display_name / display name / skill 叫什么 / skill 起名 / skill 命名 / human-readable name / 帮我给 skill X 起个中英文名\"。也覆盖批量回填存量 skill 显示名字段的场景。Do NOT trigger when: 起产品/功能/模块名 (走 product-title-generation) / 给代码变量·函数·类命名 (走 code naming) / 起 skill 的 slug 容器名 (走 skill-domain-framing) / 写 slogan·营销文案·SEO 标题·商标合规。也不改任何 SKILL.md 或 openai.yaml 文件——写不写字段由用户自行决定。",
+      "version": "0.3.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Generate paired English + Chinese display names for an existing skill — 1 recommended + 3 alternates in a single pass, candidates only, no files touched.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Give me an English + Chinese display_name for this skill — I'll paste the description.",
+          "scene": "Name one skill"
+        },
+        {
+          "prompt": "None of the skills under own-skills/ have display_names yet — backfill the whole batch with the same conventions.",
+          "scene": "Name several skills"
+        },
+        {
+          "prompt": "Come up with a display_name and display_name_zh for skill-content-fit.",
+          "scene": "Name a specific skill"
+        }
+      ],
+      "description_zh": "给一个已有 skill 起中英文成对显示名, 一次产 1 推荐 + 3 备选, 只出候选文本, 不动任何文件。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我给这个 skill 起个中英文 display_name，description 我贴给你。",
+          "scene": "为单个 Skill 起名"
+        },
+        {
+          "prompt": "own-skills/ 下这批 skill 都还没 display_name，帮我按同一套规约批量补齐。",
+          "scene": "批量为 Skill 起名"
+        },
+        {
+          "prompt": "给 skill-content-fit 起个 display_name 和 display_name_zh。",
+          "scene": "为指定 Skill 起名"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/skill-name-generation",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
+      ],
+      "sha": "5517827038deae50bb215ec7af426a1cbbcb883c"
+    },
+    {
+      "name": "skill-readme-generation",
+      "name_zh": "Skill README 生成",
+      "display_name": "Skill README Generation",
+      "display_name_zh": "Skill README 生成",
+      "description": "给一个已有 skill 目录 (含 SKILL.md) 生成符合 tranfu-skills README 规范的英文 `README.md` 与中文 `README.zh.md`, 供公司自建官网的 skill 详情页解析与展示。产出 = frontmatter (`description` + 最多 3 条 `prompt_examples`) + 四段正文 (elevator pitch / 什么时候用它 / 它会产出什么 / 前置条件与边界), 不生成中英文切换行。触发于: \"给这个 skill 加个 README / 给 own-skills/xxx 补一份 README / 按 tranfu 规范生成 skill 的 README / 生成 skill README / skill readme generation / 把 SKILL.md 派生一份人可读说明 / 给 skill 加个说明文档 / 跟 skill-name-generation 一样给这个 skill 也做一份 README / 把 own-skills/ 下所有还没 README 的 skill 都补齐\"。也覆盖存量批量补齐场景。Do NOT trigger when: 改现有 README 的某一段 (那是普通编辑) / 从零建 SKILL.md 或整个 skill (那是 `skill-create-workflow`) / 给 skill 起 display_name 或 slug (那是 `skill-name-generation` / `skill-domain-framing`) / 判断某段内容是否适合做成 skill (那是 `skill-content-fit`) / 给非 skill 的普通项目写 README 或项目文档 / CI 校验现有 README frontmatter 是否合规 (那是脚本的活)。产出物仅落盘到目标 skill 目录内的 `README.md` 与 `README.zh.md`, 绝不改动它的 `SKILL.md` 或其他任何仓库文件。",
+      "version": "0.1.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-07-15",
+      "origin": "own",
+      "userInvocable": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn any existing skill's SKILL.md into a bilingual, human-readable pair — English README.md plus Chinese README.zh.md — ready for the internal skill catalog page.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Just finished own-skills/skill-name-generation—generate its companion README too.",
+          "scene": "Document a new skill"
+        },
+        {
+          "prompt": "Backfill READMEs for every skill under own-skills/ that's missing one.",
+          "scene": "Add missing READMEs"
+        },
+        {
+          "prompt": "This README is the old single-language version—regenerate it bilingual, overwrite.",
+          "scene": "Replace an old README"
+        }
+      ],
+      "description_zh": "给已有 skill 的 SKILL.md 派生一对双语人话说明——英文 README.md + 中文 README.zh.md, 直接落到公司自建官网的 skill 详情页。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "刚做完 own-skills/skill-name-generation, 顺手把配套 README 也生成一下",
+          "scene": "为新 Skill 写说明"
+        },
+        {
+          "prompt": "把 own-skills/ 下还没 README 的都批量补齐一份",
+          "scene": "批量补充 README"
+        },
+        {
+          "prompt": "这份 README 是旧版单语中文, 按最新双语规范重生成, 覆盖旧的",
+          "scene": "更新旧版 README"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/skill-readme-generation",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
+      ],
+      "sha": "cda123c733aea95dca9b9a50df6dc122498632e3"
     },
     {
       "name": "skill-reverse-engineer",
-      "type": "own",
+      "display_name": "Skill Reverse Engineering",
+      "display_name_zh": "Skill 逆向工程",
       "description": "Reverse-engineer, audit, and improve AI agent skills. Use when analyzing SKILL.md files, prompt workflows, agent instructions, or skill directories.",
       "version": "0.1.0",
       "author": "BruceL017",
-      "updated_at": "2026-05-12",
-      "published_at": "2026-05-12T09:26:04.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Analyze an existing skill to explain when it runs, how it works, what it produces, and which parts can be reused elsewhere.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Take a quick look at this SKILL.md and tell me what it's really doing.",
+          "scene": "Diagnose a skill quickly"
+        },
+        {
+          "prompt": "Reverse-engineer this skill top to bottom — I want the full structural report.",
+          "scene": "Analyze a skill in depth"
+        },
+        {
+          "prompt": "The trigger on this SKILL.md reads too vague — rewrite it for me.",
+          "scene": "Find improvement areas"
+        }
+      ],
+      "description_zh": "分析一个已有 skill，说明它什么时候运行、怎么工作、会产出什么，以及哪些做法可以复用。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我快速看一下这个 SKILL.md 到底在干嘛。",
+          "scene": "快速诊断 Skill"
+        },
+        {
+          "prompt": "把这个 skill 从头到尾拆一遍, 我要完整逆向报告。",
+          "scene": "深入分析 Skill"
+        },
+        {
+          "prompt": "这个 SKILL.md 的触发写得太糊, 帮我重写一版。",
+          "scene": "查找改进方向"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/skill-reverse-engineer",
       "files": [
         ".gitignore",
         "LICENSE",
-        "README.en.md",
         "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "b111abd39c5a7b028bdb9ce6b49500918e86c8d4"
+      "sha": "31b613c7245c9ff27325e78bbacb13a7f487ee21"
     },
     {
-      "name": "skill-review-workflow",
+      "name": "social-media-login-collector",
+      "description": "Use when the user explicitly asks Codex to log in to, collect, export, or download authenticated analytics from WeChat Official Accounts, Xiaohongshu, Zhihu, Toutiao, or Weibo, including one platform or all supported platforms. The skill performs human-in-the-loop login and read-only collection, validates the result, and emits generic reports plus optional social-media-analytics-app compatibility files. Do NOT trigger when the user asks for public-web research, passive analysis of existing data, publishing or editing content, account changes, engagement actions, authentication bypass, or collection from unsupported platforms.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-24",
+      "origin": "own",
+      "allow_exec": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Collect authenticated analytics from WeChat Official Accounts, Xiaohongshu, Zhihu, Toutiao, and Weibo through the Codex in-app browser, producing validated JSON, CSV, Excel, and optional dashboard-compatible exports.",
+      "description_zh": "登录社交媒体后台后，通过 Codex 内置浏览器只读采集微信公众号、小红书、知乎、今日头条和微博数据，生成经校验的 JSON、CSV、Excel 报告及可选的看板兼容文件。",
       "type": "own",
-      "description": "当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量审查时触发—— 这是 skill-create-workflow 的审查视角: 用创建时的同一套门禁反向检验已有 skill。 触发判定按 \"审查意图 + 完整 skill 目标\", 不按短语字典匹配: - 任何 \"审查式动词 + 已有 skill\" 的表达都算: 审查 / 审 / 评审 / 检查 / 体检 / 把关 / review / audit + 一个已存在的 skill。 - 口语说法同理: \"这个 skill 写得怎么样\"、\"帮我看看 own-skills/xxx 质量\"、 \"这个 skill 要不要重构\"、\"它还够格当 skill 吗\"。 - 代词承接同理: 上文在讨论某个已有 skill 时, \"审一下它\" 即触发, 目标取上文。 Do NOT trigger when: 创建全新 skill (走 skill-create-workflow); 目标只是一段 prompt / agent 定义文本而非完整 skill 目录 (直接走 prompt-review); install / list / upgrade / uninstall skills (走 tranfu-router); 用户拿着审查报告要求动手修改 (走 skill-create-workflow 的 update / repair 模式)。 安全边界: 本 skill 只审不改, NEVER 修改被审 skill 的任何文件。",
-      "version": "0.3.0",
-      "author": "aquarius-wing",
-      "updated_at": "2026-07-03",
-      "published_at": "2026-07-03T10:08:58.000Z",
-      "path": "own-skills/skill-review-workflow",
+      "path": "own-skills/social-media-login-collector",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/dashboard-adapter.md",
+        "references/manifest-schema.md",
+        "references/toutiao.md",
+        "references/wechat.md",
+        "references/weibo.md",
+        "references/xiaohongshu.md",
+        "references/zhihu.md",
+        "scripts/build_dashboard_exports.mjs",
+        "scripts/export_collection.py",
+        "scripts/self_test.py"
       ],
-      "sha": "ea28ecb892c2829f077d95f33d6cb88b7010d8f5"
+      "sha": "7d6c6b1a3c195923bc711e76db90bbb48bf54a99"
     },
     {
       "name": "strategy-first-development",
-      "type": "own",
-      "description": "复杂项目开发前的战略共识、成熟项目调研、技术栈选择、路线图规划和项目控制面文档落地 workflow。Always trigger for: 新产品/MVP、多页面 web app、AI 产品、前后端系统、provider/deployment 选择、架构升级、复杂开发、用户要求先定战略/北极星/路线图/技术栈/参考项目或避免重复造轮子。Do NOT trigger when: 创建/更新/审查 skill 的元任务、单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review、仅安装/部署已有项目且无需重选产品技术路线。",
-      "version": "0.2.0",
+      "display_name": "Strategy-First Development",
+      "display_name_zh": "战略先行开发流程",
+      "description": "复杂项目开发前的战略共识、成熟项目调研、逐能力积木的广候选池技术选型、路线图规划和项目控制面文档落地 workflow。Always trigger for: 新产品/MVP、多页面 web app、AI 产品、前后端系统、首次技术栈选型、provider/deployment 选择、架构升级、复杂开发，或用户要求先定战略/北极星/路线图/参考项目并避免重复造轮子。Do NOT trigger when: 创建/更新/审查 skill 的元任务、单行命令、小文案、翻译、已明确范围的 bug 修复、纯代码 review，或仅安装/部署已有项目且无需重选产品技术路线。",
+      "version": "0.3.0",
       "author": "griffithkk3-del",
-      "updated_at": "2026-06-22",
-      "published_at": "2026-06-15T03:24:30.000Z",
+      "updated_at": "2026-07-14",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Before a major product or engineering project starts, align the strategy, reference solutions, technology choices, roadmap, and project documents.",
+      "prompt_examples_en": [
+        {
+          "prompt": "I am starting a new AI web product. Discuss strategy first, inventory every decision-worthy capability, compare broad candidate pools, and do not write code yet.",
+          "scene": "Plan a greenfield product"
+        },
+        {
+          "prompt": "Before choosing the stack, research mature products and compare each Tier A/B/C building block against current primary evidence.",
+          "scene": "Run first stack selection"
+        },
+        {
+          "prompt": "The existing stack is accepted. Evaluate only the new search subsystem and keep all unrelated ADRs frozen.",
+          "scene": "Make a targeted stack change"
+        }
+      ],
+      "description_zh": "在重大产品或工程项目开始前，先对齐战略、参考方案、技术选择、路线图和项目文档。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "我要做一个新的 AI Web 产品，先讨论战略、盘点所有技术积木、广泛比较候选，不要直接写代码。",
+          "scene": "规划全新产品"
+        },
+        {
+          "prompt": "第一次选技术栈，每个 Tier A/B/C 积木都要基于当前一手证据建立候选池再收敛。",
+          "scene": "运行首次技术选型"
+        },
+        {
+          "prompt": "现有技术栈和 ADR 已接受，只评估新增搜索模块，不要重新选择全栈。",
+          "scene": "局部技术变更"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/strategy-first-development",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/technology-selection-protocol.md"
       ],
-      "sha": "6519f78002cb62ab2e9bc6816d1ce477db3ccd99"
+      "sha": "ec54be2753e5fabfcd6f5dfd6d52dcebf3cd1713"
     },
     {
       "name": "structured-thinking-advisor",
-      "type": "own",
+      "display_name": "Structured Thinking Advisor",
+      "display_name_zh": "结构化思考顾问",
       "description": "当用户说\"帮我审视这份文档 / 优化这段表达 / 重构这个结构 / 这思路对吗 / 帮我深度共创\"时, 以\"结构化思考与系统设计顾问\"介入：拆解结构、校验逻辑、提炼方法论、给 2-3 个不同维度的优化版本, 主动指出问题而非复述.",
       "version": "0.1.0",
       "author": "06666666",
-      "updated_at": "2026-05-13",
-      "published_at": "2026-05-13T12:12:09.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "A skill that switches Claude into \\\"structured-thinking and system-design advisor\\\" mode — a co-creation partner, not an explaining assistant.",
+      "prompt_examples_en": [
+        {
+          "scene": "Review a full document",
+          "prompt": "Review this document for me — what is it actually solving, and where does the logic break?"
+        },
+        {
+          "scene": "Break down the structure",
+          "prompt": "Break down the structure of this piece — modules, hierarchy, logical flow."
+        },
+        {
+          "scene": "Explain one passage",
+          "prompt": "What does this paragraph mean? Explain it with a clear analogy."
+        }
+      ],
+      "description_zh": "一个把 Claude 切换为\\\"结构化思考与系统设计顾问\\\"模式的 skill — 让它做共创伙伴, 而不是解释型助手.",
+      "prompt_examples_zh": [
+        {
+          "scene": "审阅整份文档",
+          "prompt": "帮我审视这份文档 — 它到底在解决什么, 逻辑哪里断了?"
+        },
+        {
+          "scene": "拆解内容结构",
+          "prompt": "拆解一下这篇内容的结构 — 模块、层级、逻辑关系."
+        },
+        {
+          "scene": "解释一段内容",
+          "prompt": "这一段什么意思? 帮我用一个清晰的类比讲清楚."
+        }
+      ],
+      "type": "own",
       "path": "own-skills/structured-thinking-advisor",
       "files": [
         "README.md",
-        "SKILL.md"
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "11a94e09032f8f4ce06a7f87e6f20dbc221f4524"
+      "sha": "1c4f22debb2808cbda1a06cfb9ce1287b5abe31f"
+    },
+    {
+      "name": "title-options",
+      "display_name": "Article Title Generation",
+      "display_name_zh": "文章标题生成",
+      "description": "当用户要为已完成文章起标题、改标题或优化标题时，生成公众号、小红书、知乎、微博和头条号候选。Do NOT trigger when 用户要选题、正文、视频/SEO/广告/邮件标题、落地页文案或命名。",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-16",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Generate fact-faithful title options for finished articles, tailored to WeChat, Xiaohongshu, Zhihu, Weibo, or Toutiao.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Give this finished article ten WeChat title options.",
+          "scene": "Create platform titles"
+        },
+        {
+          "prompt": "Improve this old title without promising more than the article delivers.",
+          "scene": "Improve an old title"
+        },
+        {
+          "prompt": "Create separate title sets for Xiaohongshu, Zhihu, and Weibo.",
+          "scene": "Create multi-platform sets"
+        }
+      ],
+      "description_zh": "根据已完成文章生成忠于事实的标题候选，并分别适配公众号、小红书、知乎、微博或头条号。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "根据这篇成稿，给我十个微信公众号标题。",
+          "scene": "生成平台标题"
+        },
+        {
+          "prompt": "优化这个旧标题，但不要超出正文能够兑现的内容。",
+          "scene": "优化已有标题"
+        },
+        {
+          "prompt": "分别生成小红书、知乎和微博的标题候选。",
+          "scene": "生成多平台标题"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/title-options",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/content-routing.md",
+        "references/platform-playbooks.md",
+        "references/title-system.md"
+      ],
+      "sha": "96b435bda87ac96e25adc231ab6d0ac7a03975f5"
     },
     {
       "name": "tranfu-coolify-ops",
-      "type": "own",
-      "description": "把 tranfu-labs 下的 -app 仓库部署到公司 Coolify 实例。资源走 Application (private-github-app) + build_pack=dockercompose + is_auto_deploy_enabled=false; GitHub App integration 由 ops 一次性手工装, skill 不接管。部署链路: GHA build → push GHCR → POST /api/v1/deploy?uuid=$APP_UUID → Coolify pull GHCR; compose 主 service 只写 image: ghcr.io/..., 禁 build:。Step 1 入口分流: 同名 Application 不存在 → 初始化 (mktemp clone + 四件套合规 subagent 修 + 建 project/Application + GH secrets/environment/vars + autonomous push); 存在 → 更新分支 (A redeploy / B 改域名 / C 改 env / D 改源码或 compose / E 改 GH 配置)。 agent 全程 autonomous 不依赖 user cwd, 收尾验 CI + 30s deploy-start + 5min 公网轮询。 同名硬约束 REPO_NAME == PROJECT_NAME == APP_NAME; 旧 Service 残留 (0.7 历史) skill 不接管。 触发短语: 帮忙部署 / 确认并部署 https://github.com/tranfu-labs/<x>-app、coolify 一下、 改域名/env/compose、redeploy / 重新部署 / 重启、部署挂了、coolify 访问不了。 不要用于: 非 tranfu-labs 仓库; 非公司 Coolify; UI 操作 (挂 GHCR credential / 装 GitHub App); 与部署无关的改动。",
+      "display_name": "Tranfu Coolify Deployment",
+      "display_name_zh": "Tranfu Coolify 部署",
       "version": "0.8.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-30",
-      "published_at": "2026-06-23T08:59:52.000Z",
+      "origin": "own",
+      "updated_at": "2026-07-10",
+      "description": "把 tranfu-labs 下的 -app 仓库部署到公司 Coolify 实例。资源走 Application (private-github-app) + build_pack=dockercompose + is_auto_deploy_enabled=false; GitHub App integration 由 ops 一次性手工装, skill 不接管。部署链路: GHA build → push GHCR → POST /api/v1/deploy?uuid=$APP_UUID → Coolify pull GHCR; compose 主 service 只写 image: ${IMAGE_REF:-ghcr.io/...:latest} + pull_policy: always, 禁 build:；GHA 写 IMAGE_REF=sha-tag 再 deploy。Step 1 入口分流: 同名 Application 不存在 → 初始化 (mktemp clone + 四件套合规 subagent 修 + 建 project/Application + GH secrets/environment/vars + autonomous push); 存在 → 更新分支 (A redeploy / B 改域名 / C 改 env / D 改源码或 compose / E 改 GH 配置)。 agent 全程 autonomous 不依赖 user cwd, 收尾验 CI + 30s deploy-start + 5min 公网轮询。 同名硬约束 REPO_NAME == PROJECT_NAME == APP_NAME; 旧 Service 残留 (0.7 历史) skill 不接管。 触发短语: 帮忙部署 / 确认并部署 https://github.com/tranfu-labs/<x>-app、coolify 一下、 改域名/env/compose、redeploy / 重新部署 / 重启、部署挂了、coolify 访问不了。 不要用于: 非 tranfu-labs 仓库; 非公司 Coolify; UI 操作 (挂 GHCR credential / 装 GitHub App); 与部署无关的改动。",
+      "installed_by": "tranfu-skills",
+      "installed_version": "714089689e076b099b91dbd44a8997c55e23429b",
+      "installed_at": "20260630T132409Z",
+      "installed_source": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Deploy, update, or troubleshoot a tranfu-labs app on the company Coolify service until its public URL works.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Deploy https://github.com/tranfu-labs/markdown-kits-app to Coolify.",
+          "scene": "Deploy for the first time"
+        },
+        {
+          "prompt": "Redeploy markdown-kits-app.",
+          "scene": "Deploy a new version"
+        },
+        {
+          "prompt": "Move markdown-kits-app domain to board.tranfu.com.",
+          "scene": "Change the domain"
+        }
+      ],
+      "description_zh": "在公司 Coolify 上部署、更新或排查 tranfu-labs 应用，直到公网地址可以正常访问。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮忙确认并部署 https://github.com/tranfu-labs/markdown-kits-app",
+          "scene": "首次部署项目"
+        },
+        {
+          "prompt": "markdown-kits-app 重新部署一下。",
+          "scene": "发布新版本"
+        },
+        {
+          "prompt": "markdown-kits-app 改域名到 board.tranfu.com。",
+          "scene": "修改访问域名"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/tranfu-coolify-ops",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
         "assets/deploy.yml.template",
+        "assets/icon.png",
+        "assets/icon.svg",
         "assets/preflight.sh",
         "commands/app.md",
         "commands/application-crud.md",
@@ -611,6 +3019,9 @@
         "commands/project.md",
         "commands/server.md",
         "commands/tranfu-naming.md",
+        "references/application-ghcr-node-deploy-quirks.md",
+        "references/application-identity-and-env-duplicates.md",
+        "references/application-onboard-runtime-env-pitfalls.md",
         "references/archived-coolify-deploy.md",
         "references/coolify-api-fields.md",
         "references/coolify-clear-deployments-and-redeploy.md",
@@ -619,99 +3030,611 @@
         "references/coolify-disk-capacity-and-prune.md",
         "references/coolify-docker-inspection.md",
         "references/coolify-env-redeploy.md",
+        "references/coolify-read-only-inventory.md",
+        "references/coolify-url-entrypoint-and-legacy-application.md",
         "references/file-generation-rules.md",
+        "references/ghcr-pnpm-coolify-deploy-quirks.md",
+        "references/hermes-bearer-header-redaction.md",
+        "references/pnpm-native-dependency-policy.md",
         "references/service-fqdn-trap.md",
         "references/service-vs-application.md",
+        "references/session-2026-07-01-agentreach-image-ref-notes.md",
+        "references/session-2026-07-01-alphaos-app-0-8-notes.md",
+        "references/session-2026-07-01-alphaos-app-url-verification-notes.md",
+        "references/session-2026-07-01-markdown-kits-app-0-8-notes.md",
+        "references/session-2026-07-02-college-fit-app-auto-bootstrap-notes.md",
+        "references/session-2026-07-02-college-fit-app-data-bootstrap-notes.md",
+        "references/session-2026-07-02-college-fit-app-finished-but-unhealthy.md",
+        "references/session-2026-07-02-offerpilot-app-empty-project-onboard-notes.md",
+        "references/session-2026-07-02-offerpilot-app-onboard-notes.md",
+        "references/session-2026-07-02-offerpilot-legacy-service-null-project.md",
+        "references/session-2026-07-03-offerpilot-env-redaction-pitfall.md",
+        "references/session-2026-07-03-social-media-analytics-app-onboard-notes.md",
+        "references/session-2026-07-05-offerpilot-asr-websocket-client.md",
+        "references/session-2026-07-05-tranfu-agents-dev-branch-notes.md",
+        "references/tranfu-agents-volume-and-skills-dashboard-notes.md",
         "references/urls-vs-docker-compose-domains.md",
         "scenarios/reconcile-deployment.md"
       ],
-      "sha": "c49182bf287bfbd12e69f6f43dc259a7aa9467dd"
+      "sha": "bef7317a50f61114f3353aeb14adb7685d4e9aa0"
+    },
+    {
+      "name": "tranfu-layout-systems",
+      "display_name": "TranFu Layout Systems",
+      "display_name_zh": "TranFu 布局系统",
+      "description": "为 TranFu 页面选择、评审并输出合适的布局系统，负责用户主要活动、页面骨架、 信息组织、导航模型、主工作区、Section 顺序、页面框架、页面模式，以及桌面端 与移动端重排。当任务涉及官网布局、B 端 / SaaS、操作台、文档知识库、落地页、 数据看板、表单、向导、详情页或页面结构判断时触发。也匹配“这个页面该用什么布局” “检查页面结构”和“按 TranFu 布局规范做”。Do NOT trigger when 任务是纯文案、Logo 设计、仅调整视觉风格，或不改变页面结构的组件样式；这些视觉实现任务交给 `$tranfu-website-design`。",
+      "version": "0.1.0",
+      "author": "chuanye312-coder",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Choose or review the structural layout for a TranFu page before visual styling or implementation begins.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Choose the right layout system for this SaaS management page.",
+          "scene": "Choose a page layout"
+        },
+        {
+          "prompt": "Review this dashboard structure and flag layout problems.",
+          "scene": "Review page structure"
+        },
+        {
+          "prompt": "Plan how this desktop workspace should reorganize on mobile.",
+          "scene": "Plan responsive structure"
+        }
+      ],
+      "description_zh": "在视觉设计或实现前，为 TranFu 页面选择或评审合适的结构布局。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "为这个 SaaS 管理页面选择合适的布局系统。",
+          "scene": "选择页面布局"
+        },
+        {
+          "prompt": "检查这个数据看板的页面结构，并指出布局问题。",
+          "scene": "评审页面结构"
+        },
+        {
+          "prompt": "规划这个桌面工作台在移动端应该如何重排。",
+          "scene": "规划响应结构"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/tranfu-layout-systems",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/layout-contracts.md"
+      ],
+      "sha": "7c189f131adc33aba00b6e10bd5390ce3395d6b6"
     },
     {
       "name": "tranfu-linear-ui-icon-set",
-      "type": "own",
+      "display_name": "Linear UI Icon Set",
+      "display_name_zh": "线性 UI 图标组",
       "description": "当用户需要生成或描述一组 4 个独立的 64x64px 极简线性 UI 图标时触发；适用于小型 icon set、 带柔和浅色直角底板、统一描边和视觉语言的界面图标。Do NOT trigger when 用户要 logo/品牌标识、 整页 UI、海报、复杂插画、3D/拟物/卡通/像素风图像、透明背景或圆角底板。",
       "version": "0.1.0",
       "author": "chuanye312-coder",
-      "updated_at": "2026-06-29",
-      "published_at": "2026-06-29T03:37:41.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Have AI hand you four style-consistent 64×64 minimal linear UI icons that drop straight into your interface.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Give me 4 dashboard icons — settings, analytics, notifications, users.",
+          "scene": "Add icons to a UI"
+        },
+        {
+          "prompt": "Draw 4 minimal linear UI icons for a payment app.",
+          "scene": "Describe the product area"
+        },
+        {
+          "prompt": "I need a 64×64 icon set, soft pastel backing, 6px stroke, four colors.",
+          "scene": "Set the visual style"
+        }
+      ],
+      "description_zh": "让 AI 一次画出 4 个风格统一的 64×64 极简线性 UI 图标, 直接能塞进界面里用。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "给我 4 个后台 dashboard 用的功能图标: 设置、数据、通知、用户。",
+          "scene": "为界面配图标"
+        },
+        {
+          "prompt": "帮我画一组极简线性 UI 图标, 4 个, 支付相关的。",
+          "scene": "说明产品用途"
+        },
+        {
+          "prompt": "我要一套 64×64 图标, 柔和浅底, 6px 描边, 蓝橙紫绿四色。",
+          "scene": "指定图标风格"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/tranfu-linear-ui-icon-set",
       "files": [
-        "SKILL.md"
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "69a40be8d085a92af47e64b9cf4e82b927bac958"
+      "sha": "a5fe31cd2757f5f4fb279424c6462d052637e04e"
     },
     {
       "name": "tranfu-website-design",
+      "display_name": "TranFu Website & Product UI",
+      "display_name_zh": "TranFu 官网与产品 UI",
+      "description": "Apply TranFu brand and UI rules when creating, modifying, refactoring, reviewing, or visually validating TranFu React/Vite websites and product UIs, including public pages, app shells, consoles, dashboards, forms, components, responsive layouts, tokens, typography, logos, icons, motion, media, and UI-affecting product copy. Trigger for “按 TranFu 风格做页面或组件” “检查这个界面是否符合 TranFu 规范”“重构但保持 TranFu 风格” and equivalent design-to-code or Visual QA work. Do NOT trigger when the product is not TranFu, the change is visually irrelevant, the task is copy-only, logo redesign, a standalone brand book, or a new art direction.",
+      "version": "0.3.0",
+      "author": "chuanye312-coder",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "A rule set that keeps the TranFu website visually consistent — apply the brand system when building UI, or run review / visual QA without touching a line of code.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Add a new \"customer stories\" section to the TranFu homepage, following the site's brand look.",
+          "scene": "Create a page section"
+        },
+        {
+          "prompt": "Change this CTA button to TranFu brand red — but keep the surface neutral, don't paint a red background.",
+          "scene": "Update a component"
+        },
+        {
+          "prompt": "Review src/app/components/Hero.tsx against the TranFu website design rules — findings only, don't edit.",
+          "scene": "Review the design"
+        },
+        {
+          "prompt": "Add responsive behavior to the card component while preserving the original TranFu website style. Adapt the card width, layout, spacing, typography, and stacking behavior across desktop, tablet, and mobile breakpoints.",
+          "scene": "Responsive adaptation"
+        }
+      ],
+      "description_zh": "一份让 TranFu 官网视觉语言保持一致的规则集——加 / 改 / 重构组件时先对齐规范再动手, 审查和视觉 QA 只挑问题不改文件。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我在 TranFu 官网首页加一个「客户案例」区块, 按官网品牌风格来。",
+          "scene": "新建页面区块"
+        },
+        {
+          "prompt": "这个 CTA 按钮改成 TranFu 品牌红, 但底色保持中性, 别弄成大红块。",
+          "scene": "修改现有组件"
+        },
+        {
+          "prompt": "审一下 src/app/components/Hero.tsx 是不是符合 TranFu 官网设计规范, 只挑问题别改文件。",
+          "scene": "检查页面设计"
+        },
+        {
+          "prompt": "为卡片组件补充响应式适配，在保持 TranFu 官网视觉风格不变的前提下，针对桌面端、平板端和移动端自动调整卡片宽度、排列方式、间距与字号。",
+          "scene": "响应式适配"
+        }
+      ],
       "type": "own",
-      "description": "Apply TranFu website brand and UI design rules for create, modify, refactor, review, or visual QA tasks on TranFu React/Vite website UI. Trigger for \"按 TranFu 风格做一个新区块\", \"检查这个页面是否符合 TranFu 网站设计规范\", \"重构这个组件但保持官网风格\", Figma-to-TranFu UI integration, and TranFu layout, color, typography, logo, component, motion, media, or copy-impact UI work. Do NOT trigger when the site is not TranFu, the task is pure copywriting with no UI/brand impact, logo redesign, a standalone brand book, or visual-irrelevant code work.",
-      "version": "0.2.0",
-      "author": "aquarius-wing",
-      "updated_at": "2026-06-22",
-      "published_at": "2026-06-15T06:05:31.000Z",
       "path": "own-skills/tranfu-website-design",
       "files": [
         "INSTALL.md",
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
         "agents/openai.yaml",
         "assets/README.md",
         "assets/app-icon-primary.svg",
+        "assets/icon.png",
+        "assets/icon.svg",
         "assets/logo-lockup-h-en-primary-on-light.svg",
         "assets/logo-symbol-primary.svg",
         "assets/logo-wordmark-primary.svg",
-        "references/design-spec.md"
+        "references/cards.md",
+        "references/design-spec.md",
+        "references/responsive-layout.md",
+        "references/tokens.md",
+        "scripts/verify_reicon_icons.py"
       ],
-      "sha": "b13aa900182655eef5fd6f5babfdb8b30f4adc5c"
+      "sha": "eeb9082b4389bf04aa32e380bc1453fba1de9d31"
+    },
+    {
+      "name": "ui-ecosystem",
+      "display_name": "UI Ecosystem Recommendations",
+      "display_name_zh": "UI 生态推荐",
+      "description": "Use after frontend technical/design choices are complete and Codex is about to build, redesign, polish, or evaluate a UI. Trigger when the user asks UI work to recommend or use stack-matched MCPs, plugins, skills, component libraries, design systems, templates, official examples, or ecosystem tooling to improve frontend beauty and avoid hand-rolled UI. Also match Chinese requests like \"ui 根据前端选型推荐 mcp/插件/skill\", \"前端选型完成后不要手搓\", \"提升前端设计效果/美观\", \"根据技术栈选 UI 生态\". Do NOT trigger before frontend direction exists, for backend-only work, generic docs lookup, pure bug fixes, or UI review that only needs web-design-guidelines.",
+      "version": "0.1.0",
+      "author": "griffithkk3-del",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Match an established frontend direction with compatible UI tools, libraries, examples, and skills before implementation starts.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Recommend the best UI ecosystem for this Next.js and Tailwind dashboard.",
+          "scene": "Recommend UI tools"
+        },
+        {
+          "prompt": "Use compatible ecosystem components to build this settings page.",
+          "scene": "Build with the ecosystem"
+        },
+        {
+          "prompt": "Audit this existing UI for places where we are hand-rolling too much.",
+          "scene": "Audit ecosystem use"
+        }
+      ],
+      "description_zh": "在前端方向已经确定后，为项目匹配合适的 UI 工具、组件库、官方示例和 skill，再进入实现。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "给这个 Next.js 和 Tailwind 仪表盘推荐合适的 UI 生态。",
+          "scene": "推荐界面工具"
+        },
+        {
+          "prompt": "用兼容的生态组件实现这个设置页面。",
+          "scene": "使用生态实现"
+        },
+        {
+          "prompt": "检查现有界面里哪些部分手写过多，适合换成熟组件。",
+          "scene": "检查生态使用"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/ui-ecosystem",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/creation-rationale.md",
+        "references/ecosystem-map.md"
+      ],
+      "sha": "ee745e8c5286123472d790d159ddb856363c780e"
+    },
+    {
+      "name": "url-to-markdown",
+      "display_name": "Public URL Content Capture",
+      "display_name_zh": "公开 URL 内容抓取",
+      "description": "抓取无需登录的公开 URL，保存为 Markdown 或 JSON；适用于 X、YouTube 字幕和 Hacker News。Do NOT trigger when 页面需登录、验证码或人工操作。",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-14",
+      "origin": "own",
+      "allow_exec": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Capture a public webpage through Chrome and save its rendered content as verified Markdown or JSON.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Save this public article as Markdown and download its images.",
+          "scene": "Save a public page"
+        },
+        {
+          "prompt": "Extract the transcript from this public YouTube video as Markdown.",
+          "scene": "Extract a transcript"
+        },
+        {
+          "prompt": "Capture this Hacker News discussion as structured JSON.",
+          "scene": "Capture a discussion"
+        }
+      ],
+      "description_zh": "通过 Chrome 抓取公开网页，并把渲染后的内容保存为经过核实的 Markdown 或 JSON。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把这个公开文章保存成 Markdown，并下载其中的图片。",
+          "scene": "保存公开网页"
+        },
+        {
+          "prompt": "把这个公开 YouTube 视频的字幕提取成 Markdown。",
+          "scene": "提取视频字幕"
+        },
+        {
+          "prompt": "把这条 Hacker News 讨论保存成结构化 JSON。",
+          "scene": "抓取公开讨论"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/url-to-markdown",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/adapters.md",
+        "references/config/first-time-setup.md",
+        "references/quality-gate.md",
+        "scripts/bun.lock",
+        "scripts/lib/adapters/generic/index.ts",
+        "scripts/lib/adapters/hn/index.ts",
+        "scripts/lib/adapters/index.ts",
+        "scripts/lib/adapters/types.ts",
+        "scripts/lib/adapters/x/article.ts",
+        "scripts/lib/adapters/x/index.ts",
+        "scripts/lib/adapters/x/match.ts",
+        "scripts/lib/adapters/x/payloads.ts",
+        "scripts/lib/adapters/x/shared.ts",
+        "scripts/lib/adapters/x/single.ts",
+        "scripts/lib/adapters/x/thread-loader.ts",
+        "scripts/lib/adapters/x/thread.ts",
+        "scripts/lib/adapters/x/types.ts",
+        "scripts/lib/adapters/youtube/index.ts",
+        "scripts/lib/adapters/youtube/transcript.ts",
+        "scripts/lib/adapters/youtube/utils.ts",
+        "scripts/lib/browser/access-blocks.ts",
+        "scripts/lib/browser/cdp-client.ts",
+        "scripts/lib/browser/chrome-launcher.ts",
+        "scripts/lib/browser/network-journal.ts",
+        "scripts/lib/browser/page-snapshot.ts",
+        "scripts/lib/browser/profile.ts",
+        "scripts/lib/browser/session.ts",
+        "scripts/lib/cli.ts",
+        "scripts/lib/commands/convert.ts",
+        "scripts/lib/extract/document.ts",
+        "scripts/lib/extract/html-cleaner.ts",
+        "scripts/lib/extract/html-extractor.ts",
+        "scripts/lib/extract/html-to-markdown.ts",
+        "scripts/lib/extract/markdown-renderer.ts",
+        "scripts/lib/media/default-downloader.ts",
+        "scripts/lib/media/markdown-media.ts",
+        "scripts/lib/media/media-utils.ts",
+        "scripts/lib/media/types.ts",
+        "scripts/lib/types/defuddle-node.d.ts",
+        "scripts/lib/types/shims.d.ts",
+        "scripts/lib/utils/logger.ts",
+        "scripts/lib/utils/url.ts",
+        "scripts/package.json",
+        "scripts/url-to-markdown"
+      ],
+      "sha": "e1a07727618dd7b90f84ec1faee467e2c9dbbb42"
+    },
+    {
+      "name": "visual-builder",
+      "display_name": "Visual Style Bundle Builder",
+      "display_name_zh": "视觉风格包构建",
+      "description": "Convert a user-supplied designed image or an existing visual_dna_system document into a debranded, platform-specific illustration-style candidate bundle. Use when the user asks to extract a reusable visual template, turn a poster, knowledge card, infographic, illustration, or designed interface into a style, compile Visual DNA into a post illustration template, calibrate a new style across multiple content structures, or approve such a candidate for local installation. Do NOT trigger when the request is for ordinary image editing, one-off image generation, natural-photo presets, logo extraction, pixel-identical cloning, or installing an unreviewed style.",
+      "version": "0.1.0",
+      "author": "BruceL017",
+      "updated_at": "2026-07-17",
+      "origin": "own",
+      "allow_exec": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn designed visual evidence into a debranded, reusable illustration-style bundle for one content platform.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Build a reusable Xiaohongshu illustration style from this designed card.",
+          "scene": "Build from a design"
+        },
+        {
+          "prompt": "Compile this visual DNA document into a WeChat style candidate.",
+          "scene": "Compile visual DNA"
+        },
+        {
+          "prompt": "I reviewed the contact sheet; approve this style and install it locally.",
+          "scene": "Approve a style bundle"
+        }
+      ],
+      "description_zh": "把设计作品中的视觉规律提炼成去品牌、可复用的单平台插画风格包。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "根据这张设计卡片构建一个可复用的小红书插画风格。",
+          "scene": "从设计图构建"
+        },
+        {
+          "prompt": "把这份视觉系统文档编译成公众号风格候选包。",
+          "scene": "编译视觉系统"
+        },
+        {
+          "prompt": "我已检查联系表，请批准这个风格并安装到本地。",
+          "scene": "批准风格包"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/visual-builder",
+      "files": [
+        ".gitignore",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/candidate-contract.md",
+        "references/compiler.md",
+        "references/qa.md",
+        "scripts/build-contact-sheet.mjs",
+        "scripts/mark-approved.mjs",
+        "scripts/validate-candidate.mjs",
+        "tests/validate-candidate.test.mjs"
+      ],
+      "sha": "3b27af78fa05e4c04b580ec30b3545cc783bb1d3"
     },
     {
       "name": "visual-design-producer",
-      "type": "own",
-      "description": "'Produce original HTML visual artifacts from a Producer Handoff, Visual DNA Design System, JSON/tokens, or standalone design brief. Use for landing pages, app UIs, dashboards, decks, posters, WeChat visuals, Xiaohongshu cards, product prototypes, or other HTML-based outputs; also match Chinese requests such as \"帮我做一个页面\", \"出一张海报\", \"用这个 DNA 做小红书卡\", or \"产 HTML deck\". Supports optional brand integration when brand context is provided. Do NOT use for: extracting visual DNA from source samples (use visual-dna-system); prompt review (use prompt-review); code review (use code-review); copying source sample brand identity (refuse that part).'",
+      "display_name": "Visual Design Producer",
+      "display_name_zh": "视觉设计产出器",
+      "description": "Produce original HTML visual artifacts from a Producer Handoff, Visual DNA Design System, JSON/tokens, or standalone design brief. Use for landing pages, app UIs, dashboards, decks, posters, WeChat visuals, Xiaohongshu cards, product prototypes, or other HTML-based outputs; also match Chinese requests such as \"帮我做一个页面\", \"出一张海报\", \"用这个 DNA 做小红书卡\", or \"产 HTML deck\". Supports optional brand integration when brand context is provided. Do NOT use for: extracting visual DNA from source samples (use visual-dna-system); prompt review (use prompt-review); code review (use code-review); copying source sample brand identity (refuse that part).",
       "version": "0.1.0",
       "author": "BruceL017",
-      "updated_at": "2026-06-18",
-      "published_at": "2026-06-22T02:31:17.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn a Producer Handoff, a Visual DNA, or a plain brief into an original HTML visual — landing pages, posters, Xiaohongshu cards, dashboards, decks — in a single pass.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Use this Visual DNA to make an HTML landing page for an AI notebook.",
+          "scene": "Build from visual references"
+        },
+        {
+          "prompt": "Design a Xiaohongshu card set for an autumn citywalk guide — cover plus inner pages, HTML.",
+          "scene": "Create a Xiaohongshu card"
+        },
+        {
+          "prompt": "Here is the Producer Handoff for a dashboard — produce the HTML directly from it.",
+          "scene": "Build from a handoff"
+        }
+      ],
+      "description_zh": "用 Producer Handoff / Visual DNA / 独立命题出一份原创 HTML 视觉稿——落地页、海报、小红书卡、数据面板 (dashboard)、幻灯片 (deck) 一次成稿。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "用这份 Visual DNA 帮我做一个 AI 笔记的落地页，出 HTML 就行。",
+          "scene": "根据视觉参考制作"
+        },
+        {
+          "prompt": "出一张小红书卡，主题「秋日 citywalk 攻略」，封面加内页，HTML 版。",
+          "scene": "制作小红书卡片"
+        },
+        {
+          "prompt": "这份 Producer Handoff 是给 dashboard 的，按它直接出 HTML。",
+          "scene": "根据交付说明制作"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/visual-design-producer",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
         "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "references/anti-slop-quality-gate.md",
         "references/artifact-router.md",
         "references/brand-integration-slot.md",
         "references/html-engineering-spec.md"
       ],
-      "sha": "69f6081495a1cbcdd83ada6bbc7c18c35f4a03b6"
+      "sha": "765157789b79b3275b5a4ba42517249befab347f"
     },
     {
       "name": "visual-dna-system",
-      "type": "own",
+      "display_name": "Visual DNA System",
+      "display_name_zh": "视觉 DNA 系统",
       "description": "Extract a reusable, de-branded Visual DNA Design System from visual samples such as websites, screenshots, Figma references, images, decks, posters, app UIs, or HTML/CSS. Use when the user asks to analyze visual style, distill design DNA, create transferable visual tokens, or make a downstream prompt without copying the source. Also trigger for Chinese requests like \"提取这个网站的视觉风格\", \"把这个 UI 抽成可复用设计系统\", \"分析这套海报的视觉 DNA\", \"生成可迁移视觉 tokens\". Do NOT use for producing final websites, dashboards, decks, posters, prototypes, direct brand recreation, prompt review, or code review.",
       "version": "0.1.0",
       "author": "BruceL017",
-      "updated_at": "2026-06-18",
-      "published_at": "2026-06-18T10:07:38.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Extract a de-branded, reusable visual DNA — palette, type, layout rhythm, material, voice — from any visual sample, then hand it off to downstream producers. Never a final page.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Pull the visual DNA out of stripe.com — keep the calm premium feel, drop the brand.",
+          "scene": "Analyze a reference website"
+        },
+        {
+          "prompt": "Distill a design system from this landing-page screenshot, no brand names.",
+          "scene": "Analyze a screenshot"
+        },
+        {
+          "prompt": "Three landing pages attached — synthesize one main DNA or tell me they clash.",
+          "scene": "Combine several references"
+        }
+      ],
+      "description_zh": "从一份视觉样本里抽出可跨项目复用的视觉 DNA——色板、字体、版式节奏、材质、语气, 剥掉源品牌痕迹, 交下游 skill 直接接手。绝不出成品页面。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "提取 stripe.com 的视觉风格, 保留克制的高级感, 别抄 logo。",
+          "scene": "分析参考网站"
+        },
+        {
+          "prompt": "从这张落地页截图里抽套设计系统, 不要带原品牌名。",
+          "scene": "分析参考截图"
+        },
+        {
+          "prompt": "我发了三张落地页截图, 帮我合成一套主 DNA, 或者告诉我风格打架。",
+          "scene": "融合多个参考"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/visual-dna-system",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
         "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "references/example-mini-output.md",
         "references/originality-guardrails.md",
         "references/output-schema.md"
       ],
-      "sha": "3c76ac1effbc0359d591103e096a69b54e9c6e18"
+      "sha": "a96dbde1c27e1974868671d53e0b0350cff98c18"
     },
     {
       "name": "visual-pipeline",
-      "type": "own",
+      "display_name": "Visual Design Pipeline",
+      "display_name_zh": "视觉设计流水线",
       "description": "当用户要设计一个页面 (UI/视觉/产品层, 不是只写代码) 或修改已有视觉设计时, 驱动三段流水线 (显示信息 → 显示框架 → 风格+实践), 每页独立, 先文档后 HTML. 输入 = \"已知用户场景 + 已知要显示什么\", 输出 = 高保真选定版. 不用于: 文案小改 / 单 bug 代码修复 / 纯后端.",
       "version": "0.1.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-05-24",
-      "published_at": "2026-05-24T11:21:23.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "A back-half product-design pipeline: given \\\"user scenario + what to display\\\" as input, drive it to a high-fidelity chosen version.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Design the settings page for our internal review tool.",
+          "scene": "Design a new page"
+        },
+        {
+          "prompt": "The header on the review page doesn't feel right, help me fix it.",
+          "scene": "Improve an existing design"
+        },
+        {
+          "prompt": "Take the dashboard, list, and detail pages of the new product through the pipeline one by one.",
+          "scene": "Design several pages"
+        }
+      ],
+      "description_zh": "产品设计后段流水线: 已知\\\"用户场景 + 要显示什么\\\" → 高保真选定版.",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我设计一下内部评审工具的设置页。",
+          "scene": "设计全新页面"
+        },
+        {
+          "prompt": "评审页的头部感觉不对, 帮我改一下。",
+          "scene": "改进现有设计"
+        },
+        {
+          "prompt": "新产品的仪表盘 / 列表 / 详情三个页面, 一个一个做过来。",
+          "scene": "设计多个页面"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/visual-pipeline",
       "files": [
         "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
         "cases/1/input/PROMPT.md",
         "change-flow.md",
         "examples/_visual-index/01-display-info.md",
@@ -727,206 +3650,519 @@
         "stages/03-style.template.html",
         "stages/03-style.template.md"
       ],
-      "sha": "ee11720f74bd1468bbea8c378d55c28e21f25f4d"
+      "sha": "814512822c9cac28f3674028b16ad652a48d3663"
+    },
+    {
+      "name": "webapp-polish-audit",
+      "display_name": "Web UI Polish Audit",
+      "display_name_zh": "Web UI 打磨审计",
+      "description": "对浏览器最终渲染的 Web UI 做只读打磨审计，输出 DOM、可访问性、计算样式、布局几何和交互状态支持的可验证发现。用于用户要求 audit、review、critique、diagnose、产品感检查、完成度检查、真实产品感、good taste、not demo-like、refined，或明确要求先审查可见 UI bug 的场景。Do NOT trigger when 用户要求实现、修复、改代码、产出比对、大范围重新设计、纯后端/API/数据/CLI/基础设施、产品策略、UX 研究、信息架构或纯文案任务；若请求同时包含审查与实现，本 Skill 只执行审查阶段并把实现留给后续工作流。",
+      "version": "0.9.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-07-21",
+      "origin": "own",
+      "allow_exec": true,
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Run a read-only, evidence-based Web UI polish audit. Verdicts rest on deterministic DOM/geometry/style comparisons rather than screenshots, and destructive paths are surfaced for your approval instead of silently skipped.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Audit https://practice.example.com and flag anything that reads demo-like, not real product.",
+          "scene": "Audit one page"
+        },
+        {
+          "prompt": "Start from https://app.example.com, sample representative child pages, and run the polish audit.",
+          "scene": "Audit several pages"
+        },
+        {
+          "prompt": "The dashboard looks fine at 1440px but collapses on mobile. Run the viewport comparison audit.",
+          "scene": "Check responsive layouts"
+        }
+      ],
+      "description_zh": "对浏览器渲染的 Web UI 做只读、证据驱动的打磨审计。判据基于 DOM/几何/样式向量的确定性比较，默认不看截图；破坏性路径不静默跳过，而是报给你拍板。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "审下 https://practice.example.com，抓一下哪里像 demo、不像正式产品。",
+          "scene": "检查单个页面"
+        },
+        {
+          "prompt": "从 https://app.example.com 开始抽取代表性子页面，再逐页做打磨审查。",
+          "scene": "检查多个页面"
+        },
+        {
+          "prompt": "仪表盘 1440px 看着还行，手机上塌了，帮我做视口对比审查。",
+          "scene": "检查响应式布局"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/webapp-polish-audit",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "references/dimensions/03-interaction-feedback-and-safety.md",
+        "references/dimensions/07-form-completion-confidence.md",
+        "references/dimensions/10-input-and-perception-continuity.md",
+        "references/dimensions/11-responsive-task-continuity.md",
+        "references/dimensions/13-state-and-action-copy-clarity.md",
+        "references/pipeline/14-child-page-tree-discovery.md",
+        "references/pipeline/16-page-exploration-and-capture.md",
+        "references/pipeline/18-final-report-contract.md",
+        "scripts/discover-child-pages.mjs",
+        "scripts/e2e-selection.mjs",
+        "scripts/fit-check.mjs",
+        "scripts/fixtures/danger.html",
+        "scripts/fixtures/fit.html",
+        "scripts/fixtures/real-form.html",
+        "scripts/fixtures/search-only.html",
+        "scripts/fixtures/settings-no-form-tag.html",
+        "scripts/page-evidence-probe.mjs",
+        "scripts/page-inventory-probe.mjs",
+        "scripts/select-references.test.mjs",
+        "scripts/validate-polish-audit-report.mjs",
+        "scripts/validate-polish-audit-report.test.mjs"
+      ],
+      "sha": "b78049cc723806ae84f5375b2355f10d39e1fb4d"
+    },
+    {
+      "name": "wechat-sketch-cover",
+      "display_name": "WeChat Sketch Cover",
+      "display_name_zh": "微信手绘封面",
+      "description": "Generate one fixed 1923x818 warm hand-drawn WeChat Official Account cover from an exact Chinese or Chinese-mixed title or one Markdown article. Use when the user asks for 公众号封面, 微信公众号文章封面, or a warm sketch WeChat article cover. Do NOT trigger when the request is for another platform, style, size, visual-only cover, image editing, body illustrations, prompt-only output, source fetching, or publishing.",
+      "version": "1.1.1",
+      "author": "BruceL017",
+      "updated_at": "2026-07-14",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Create one fixed warm hand-drawn WeChat cover with an exact Chinese title and a verified 1923 × 818 PNG output.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Create a WeChat cover for the title 为什么 AI 工作流总是难以复用？",
+          "scene": "Use an exact title"
+        },
+        {
+          "prompt": "Create the fixed sketch cover from this Markdown article.",
+          "scene": "Use a Markdown article"
+        }
+      ],
+      "description_zh": "用准确中文标题生成一张固定暖色手绘公众号封面，并核实为 1923 × 818 PNG。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "为标题《为什么 AI 工作流总是难以复用？》制作公众号封面。",
+          "scene": "使用准确标题"
+        },
+        {
+          "prompt": "根据这份 Markdown 文章生成固定手绘风公众号封面。",
+          "scene": "使用文章文件"
+        }
+      ],
+      "type": "own",
+      "path": "own-skills/wechat-sketch-cover",
+      "files": [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "assets/style-reference.png",
+        "references/style-spec.md",
+        "scripts/normalize_cover.py"
+      ],
+      "sha": "69913027180d82e9445386489df114ef3f1b02a6"
     },
     {
       "name": "write-social-preview-head",
-      "type": "own",
+      "display_name": "Social Preview Head Writer",
+      "display_name_zh": "社交分享 Head 编写",
       "description": "编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。",
       "version": "0.1.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-01",
-      "published_at": "2026-06-01T01:09:34.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Add the full social-preview head — OG, Twitter, icons, manifest — so Lark, Slack, and WeChat show titles, cards, and icons every time.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Add the full social-preview head to this new landing page for Lark and Slack sharing.",
+          "scene": "Set up a new page"
+        },
+        {
+          "prompt": "The link shared to Lark shows no card image — check what's missing in my head.",
+          "scene": "Fix a missing preview image"
+        },
+        {
+          "prompt": "New logo but platforms keep the old cache — how do I rotate by swapping file names?",
+          "scene": "Refresh cached images"
+        }
+      ],
+      "description_zh": "给页面加一套完整的社交分享 head, 让飞书、Slack、微信等即时通讯场景稳定显示标题、卡片图和 icon。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "给这个新落地页加上飞书 / Slack 分享用的完整 head, 别漏标签。",
+          "scene": "为新页面补分享信息"
+        },
+        {
+          "prompt": "链接发到飞书没有卡片图, 帮我看下 head 哪里漏了。",
+          "scene": "修复分享卡片没图"
+        },
+        {
+          "prompt": "换了新 logo, 平台一直返回旧缓存, 怎么按「换实体文件名」刷一遍?",
+          "scene": "更新分享图缓存"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/write-social-preview-head",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
-        "agents/openai.yaml"
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "a2e57efc471a0a5092d36596b047002759c39930"
+      "sha": "d314535d5f03ec8185ac77b2a94b96486bc71e26"
     },
     {
       "name": "write-spec",
-      "type": "own",
+      "display_name": "Feature Spec Writer",
+      "display_name_zh": "功能规格编写",
       "description": "从模糊想法或功能需求生成结构化 PRD/feature spec，含目标、非目标、用户故事、验收标准、成功指标。触发：写 spec / 写 PRD / 规划功能 / scope 一下",
+      "argument-hint": "<feature or problem statement>",
       "version": "0.1.0",
       "author": "cnrandomgod-jpg",
-      "updated_at": "2026-05-12",
-      "published_at": "2026-05-12T08:47:46.000Z",
+      "updated_at": "2026-07-10",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn a vague idea, problem statement, or user request into a structured PRD — with goals, non-goals, user stories, P0/P1/P2 requirements, acceptance criteria, and success metrics.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Write a PRD for SSO support in our platform.",
+          "scene": "Start from a feature name"
+        },
+        {
+          "prompt": "Enterprise customers keep asking for centralized auth — turn that into a spec.",
+          "scene": "Start from a problem"
+        },
+        {
+          "prompt": "Users want to export their data as CSV. Spec it end-to-end.",
+          "scene": "Start from a user request"
+        }
+      ],
+      "description_zh": "把一个模糊想法 / 问题陈述 / 用户诉求变成一份结构化 PRD——含目标、非目标、用户故事、P0/P1/P2 需求、验收标准、成功指标。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我写个 SSO 功能的 spec。",
+          "scene": "根据功能名写方案"
+        },
+        {
+          "prompt": "企业客户一直在问集中式登录, 把它变成 spec。",
+          "scene": "根据问题写方案"
+        },
+        {
+          "prompt": "用户想要把数据导出成 CSV, 帮我 scope 一下写成 PRD。",
+          "scene": "根据用户需求写方案"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/write-spec",
       "files": [
         "README.md",
-        "SKILL.md"
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "c3cfb6ccc79e32150fce47de1c384a652e6a98bb"
+      "sha": "961d9ecdcb9f9a82094b0ac3d870bba4f8577048"
     },
     {
       "name": "xiaohongshu-card-publish",
-      "type": "own",
-      "description": "把一篇小红书文案变成可发布的 1080×1440 成品配图——用本 skill 自带的卡片模板填充、 组织系列预览、再用 playwright 导出无损 WebP。当用户给一段小红书文案说 「根据这份文档生成预览」「生成卡片」「做成小红书配图」「排成一组卡片」，或对某系列说 「导出」「截图」「按尺寸出图」「批量出图」时，使用这个 skill。 不要用于：改卡片模板本身的版式/CSS 或新增模板主题、定义文案输入格式或分页规则等数据建模、 选型构建工具链、与本仓库无关的通用 HTML 或截图任务。",
+      "display_name": "Xiaohongshu Card Export",
+      "display_name_zh": "小红书卡片出图",
       "version": "0.1.1",
+      "origin": "own",
       "author": "aquarius-wing",
-      "updated_at": "2026-06-17",
-      "published_at": "2026-06-17T02:11:36.000Z",
+      "updated_at": "2026-07-10",
+      "description": "把一篇小红书文案变成可发布的 1080×1440 成品配图——用本 skill 自带的卡片模板填充、 组织系列预览、再用 playwright 导出无损 WebP。当用户给一段小红书文案说 「根据这份文档生成预览」「生成卡片」「做成小红书配图」「排成一组卡片」，或对某系列说 「导出」「截图」「按尺寸出图」「批量出图」时，使用这个 skill。 不要用于：改卡片模板本身的版式/CSS 或新增模板主题、定义文案输入格式或分页规则等数据建模、 选型构建工具链、与本仓库无关的通用 HTML 或截图任务。",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn a Xiaohongshu draft into finished 1080×1440 cards — one pipeline covering template fill, series layout, and playwright lossless WebP export.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Turn this Xiaohongshu draft into a preview card in the claude-code-quick-reference series.",
+          "scene": "Preview from text"
+        },
+        {
+          "prompt": "Arrange these paragraphs into a Xiaohongshu card set, series named claude-code-quick-reference.",
+          "scene": "Start a new series"
+        },
+        {
+          "prompt": "Append a /compact card at the end of the claude-code-quick-reference series.",
+          "scene": "Add one card"
+        }
+      ],
+      "description_zh": "把小红书文案变成 1080×1440 成品配图, 一条流水线走完填模板、排系列、playwright 无损导出。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "帮我按这份文案给 claude-code-quick-reference 系列出一张预览卡片。",
+          "scene": "根据文案预览"
+        },
+        {
+          "prompt": "这几段文案排成一组小红书卡片, 系列英文名叫 claude-code-quick-reference。",
+          "scene": "新建卡片系列"
+        },
+        {
+          "prompt": "在 claude-code-quick-reference 系列后面再加一张 /compact 的卡片。",
+          "scene": "补充一张卡片"
+        }
+      ],
+      "type": "own",
       "path": "own-skills/xiaohongshu-card-publish",
       "files": [
+        "README.md",
+        "README.zh.md",
         "SKILL.md",
+        "agents/openai.yaml",
         "assets/app.html",
         "assets/default.html",
+        "assets/icon.png",
+        "assets/icon.svg",
         "scripts/export.py"
       ],
-      "sha": "2a1adbc6bb1d5d0848f4b5f5a1c3a9e8c15a7b3c"
+      "sha": "a18fdcaf57c8fec453269831b3c624906967a061"
     },
     {
       "name": "andrej-karpathy-skills",
-      "type": "external",
       "description": "基于 Andrej Karpathy 对 LLM 编码陷阱的观察，改善 Claude Code 行为的单文件行为准则。减少过度工程、无关改动和意图偏差。触发：任何 Claude Code 编码对话自动生效。",
       "version": "0.1.0",
       "author": "multica-ai",
       "updated_at": "2026-05-13",
-      "published_at": "2026-05-13T12:03:46.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/multica-ai/andrej-karpathy-skills",
+      "type": "external",
       "path": "external-skills/andrej-karpathy-skills",
       "files": [
         "SKILL.md"
       ],
-      "sha": "fdadf35afb85ab3db3ef2300a6a8610c37696bdc",
-      "source_url": "https://github.com/multica-ai/andrej-karpathy-skills"
+      "sha": "fdadf35afb85ab3db3ef2300a6a8610c37696bdc"
+    },
+    {
+      "name": "animation-vocabulary",
+      "description": "Web animation and motion-effect vocabulary lookup skill。Trigger when 用户描述一个动画效果但不知道专业名称，想知道 “what's it called when...” 或需要用准确术语提示 AI / 设计师，例如 popover 弹出、rubber-banding、shared element transition、stagger、morph。Do NOT trigger when 用户要实际实现动画、审查动画代码、完整 UI 设计系统或性能调优。",
+      "version": "1.0.0",
+      "author": "Emil Kowalski",
+      "updated_at": "2026-07-06",
+      "origin": "external",
+      "source_url": "https://github.com/emilkowalski/skills/tree/main/skills/animation-vocabulary",
+      "type": "external",
+      "path": "external-skills/animation-vocabulary",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "70946791b181d9a16a7b497937ba5c2078fdb479"
     },
     {
       "name": "claude-design-system",
-      "type": "external",
       "description": "Anthropic 内部 Claude 设计制品工具的 system prompt 镜像 (社区抓取), 422 行讲清 Claude 怎么做 HTML 原型 / React 组件 / 幻灯片 / 动画 / 设计系统适配. 当用户问 \"Claude 怎么出高质量设计 / 我要给自己的 Claude 设计 agent 抄一份基线 prompt / 为什么 Claude 输出的 React 总因 const styles 冲突 / Claude 做幻灯片为什么会 1-indexed slide label\" 时, 读这份 prompt 当参考材料. Do NOT trigger when: 用户要真做设计实现 (走 ui-ux-pro-max) / 审 UI 代码 (走 web-design-guidelines) / 只画架构图 (走 fireworks-tech-graph) / 单纯用 Claude.ai 不需要装它.",
       "version": "1.0.0",
       "author": "elder-plinius",
       "updated_at": "2026-05-22",
-      "published_at": "2026-05-22T03:32:04.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Design-Sys-Prompt.txt",
+      "type": "external",
       "path": "external-skills/claude-design-system",
       "files": [
         "README.md",
         "SKILL.md"
       ],
-      "sha": "73a9067601a8d93c67c42ae443666b4f91d79a4f",
-      "source_url": "https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Design-Sys-Prompt.txt"
+      "sha": "73a9067601a8d93c67c42ae443666b4f91d79a4f"
+    },
+    {
+      "name": "emil-design-eng",
+      "description": "Emil Kowalski design engineering philosophy for UI polish, component craft, animation decisions, easing, duration, gesture feel, performance, accessibility, and review format。Trigger when 用户要提升界面质感、设计交互动画、审视组件细节、修正 UI “不够顺 / 不够高级 / motion feels off”。Do NOT trigger when 用户只想命名某个动画效果、只做严格动画代码 review、纯后端改动或无需设计判断的功能实现。",
+      "version": "1.0.0",
+      "author": "Emil Kowalski",
+      "updated_at": "2026-07-06",
+      "origin": "external",
+      "source_url": "https://github.com/emilkowalski/skills/tree/main/skills/emil-design-eng",
+      "type": "external",
+      "path": "external-skills/emil-design-eng",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "9a6937cb444fb7f6ba6d37c9303fb28af7ddfc0b"
     },
     {
       "name": "fireworks-tech-graph",
-      "type": "external",
       "description": "Use when the user wants to create any technical diagram - architecture, data flow, flowchart, sequence, agent/memory, or concept map - and export as SVG+PNG. Trigger on: \"画图\" \"帮我画\" \"生成图\" \"做个图\" \"架构图\" \"流程图\" \"可视化一下\" \"出图\" \"generate diagram\" \"draw diagram\" \"visualize\" or any system/flow description the user wants illustrated.",
       "version": "0.1.0",
       "author": "yizhiyanhua-ai",
       "updated_at": "2026-05-09",
-      "published_at": "2026-05-09T10:52:23.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/yizhiyanhua-ai/fireworks-tech-graph",
+      "recommend_reason": "比较方便把文章、代码等复杂内容梳理出核心框架图绘制成清晰好看的 SVG。",
+      "recommended_by": "aquarius-wing",
+      "type": "external",
       "path": "external-skills/fireworks-tech-graph",
       "files": [
         "SKILL.md"
       ],
-      "sha": "79bed7b8727c49843958c76acdca51a9b1ff11ea",
-      "source_url": "https://github.com/yizhiyanhua-ai/fireworks-tech-graph"
+      "sha": "79bed7b8727c49843958c76acdca51a9b1ff11ea"
+    },
+    {
+      "name": "humanizer-zh",
+      "description": "中文文本 AI 写作痕迹清理与人性化改写 skill。Trigger when 用户要润色、审阅或改写中文 AI 生成文本，让文字更自然、更像真人写作，尤其是去除夸大意义、宣传腔、模糊归因、三段式、AI 词汇、破折号滥用、谄媚语气和通用积极结尾。Do NOT trigger when 用户只要事实核查、翻译、SEO 改写、学术查重规避、伪造真人身份或绕过检测器。",
+      "version": "1.0.0",
+      "author": "op7418",
+      "updated_at": "2026-07-06",
+      "origin": "external",
+      "source_url": "https://github.com/op7418/Humanizer-zh",
+      "type": "external",
+      "path": "external-skills/humanizer-zh",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "c06d8f1fb05b57f9574edc6ab07d80fbaed2a8e4"
     },
     {
       "name": "make-interfaces-feel-better",
-      "type": "external",
       "description": "Design engineering principles for making UI feel polished through typography, radius, shadows, motion, hit areas, image outlines, and micro-interactions. Trigger when building or reviewing frontend UI components, tightening animations, hover/press states, icon transitions, tabular numbers, text wrapping, optical alignment, or when the user says \"make it feel better\" / \"feels off\" / \"UI polish\". Do NOT trigger when: 用户要先做完整设计系统或风格选型 (走 ui-ux-pro-max) / 只审 a11y 合规 (走 web-design-guidelines) / 只做 TranFu 官网品牌规范 (走 tranfu-website-design) / 纯后端或业务逻辑改动.",
       "version": "0.1.0",
       "author": "jakubkrehel",
       "updated_at": "2026-06-26",
-      "published_at": "2026-06-26T02:06:18.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/jakubkrehel/make-interfaces-feel-better/tree/main/skills/make-interfaces-feel-better",
+      "type": "external",
       "path": "external-skills/make-interfaces-feel-better",
       "files": [
         "README.md",
         "SKILL.md"
       ],
-      "sha": "93711b06b89a195aac7d46d6f4a23929fb2b99f7",
-      "source_url": "https://github.com/jakubkrehel/make-interfaces-feel-better/tree/main/skills/make-interfaces-feel-better"
+      "sha": "93711b06b89a195aac7d46d6f4a23929fb2b99f7"
     },
     {
       "name": "openspec",
-      "type": "external",
       "description": "当用户做多轮迭代或长期维护项目时, 用 /opsx:propose → /opsx:apply → /opsx:archive 把每个 change 拆成 proposal/specs/design/tasks 文件夹, archive 后规范沉淀到 specs/, 下次改同一模块 AI 可读历史规范",
       "version": "1.3.1",
       "author": "Fission-AI",
       "updated_at": "2026-05-12",
-      "published_at": "2026-05-12T03:08:13.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/Fission-AI/OpenSpec",
+      "type": "external",
       "path": "external-skills/openspec",
       "files": [
         "SKILL.md"
       ],
-      "sha": "d4f9c0c45823d569a6c9893a8b256a2e6692a822",
-      "source_url": "https://github.com/Fission-AI/OpenSpec"
+      "sha": "d4f9c0c45823d569a6c9893a8b256a2e6692a822"
+    },
+    {
+      "name": "review-animations",
+      "description": "Strict animation and motion-code review skill based on Emil Kowalski's design engineering standards。Trigger when 用户要求 review animation / motion code、检查 easing / duration / transform-origin / GPU-only properties / reduced-motion / hover gating / interruptibility，并希望得到阻塞级发现。Do NOT trigger when 用户要实现新动画、只想命名动效、泛泛 UI 设计建议或非 motion 代码 review。",
+      "version": "1.0.0",
+      "author": "Emil Kowalski",
+      "updated_at": "2026-07-06",
+      "origin": "external",
+      "source_url": "https://github.com/emilkowalski/skills/tree/main/skills/review-animations",
+      "type": "external",
+      "path": "external-skills/review-animations",
+      "files": [
+        "SKILL.md"
+      ],
+      "sha": "39911631de119910e2afd75107ade013434d4bae"
     },
     {
       "name": "seo-audit",
-      "type": "external",
       "description": "Single-page SEO audit skill. Give it a URL, get a structured HTML report covering 20+ checks (robots.txt / sitemap / canonical / hreflang / Schema / E-E-A-T / TDK / H1 / 内链 / 关键词). Script + LLM 混合架构. Trigger when user says \"audit this page\", \"审一下 SEO\", \"查 SEO\", \"SEO 体检\", \"seo audit\", \"技术 SEO 报告\". Do NOT trigger when: 用户要全站爬虫 / 关键词排名追踪 / 反链分析 (这些是 SEO 工具如 Ahrefs/Semrush 的范围, 不是本 skill 范围).",
       "version": "1.0.0",
       "author": "JeffLi1993",
       "updated_at": "2026-05-20",
-      "published_at": "2026-05-21T02:54:54.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/JeffLi1993/seo-audit-skill/tree/main/seo-audit",
+      "type": "external",
       "path": "external-skills/seo-audit",
       "files": [
         "SKILL.md"
       ],
-      "sha": "ccac4056cf90d2cbf3464ff48d508234e4a3dc34",
-      "source_url": "https://github.com/JeffLi1993/seo-audit-skill/tree/main/seo-audit"
+      "sha": "ccac4056cf90d2cbf3464ff48d508234e4a3dc34"
     },
     {
       "name": "seo-audit-full",
-      "type": "external",
       "description": "Deep single-page SEO audit. Basic 20+ checks + Core Web Vitals (CrUX field data) + GSC crawl status + Content E-E-A-T depth + Robots Meta + OG/Social + 竞品 gap. Trigger when user says \"deep SEO audit\", \"完整 SEO 体检\", \"深度 SEO\", \"审一下 Core Web Vitals\", \"GSC 数据 + SEO 综合分析\", \"seo audit full\". Do NOT trigger when: 用户只要快速自查 (走 seo-audit basic) / 全站爬虫 (走 Screaming Frog 类工具) / 关键词追踪 (走 Ahrefs).",
       "version": "1.0.0",
       "author": "JeffLi1993",
       "updated_at": "2026-05-20",
-      "published_at": "2026-05-20T09:36:46.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/JeffLi1993/seo-audit-skill/tree/main/seo-audit-full",
+      "type": "external",
       "path": "external-skills/seo-audit-full",
       "files": [
         "SKILL.md"
       ],
-      "sha": "d8a4be39ab8e23c54e30346f0562e7373d089ea3",
-      "source_url": "https://github.com/JeffLi1993/seo-audit-skill/tree/main/seo-audit-full"
+      "sha": "d8a4be39ab8e23c54e30346f0562e7373d089ea3"
     },
     {
       "name": "superpowers",
-      "type": "external",
       "description": "当你在做复杂编码任务、想用成体系的 agent workflow 提高推进效率时使用",
       "version": "5.1.0",
       "author": "obra",
       "updated_at": "2026-05-12",
-      "published_at": "2026-05-12T23:41:53.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/obra/superpowers",
+      "type": "external",
       "path": "external-skills/superpowers",
       "files": [
         "SKILL.md"
       ],
-      "sha": "381a65c1c92056d1bf2cd935541a00d801f7efe4",
-      "source_url": "https://github.com/obra/superpowers"
+      "sha": "381a65c1c92056d1bf2cd935541a00d801f7efe4"
     },
     {
       "name": "ui-ux-pro-max",
-      "type": "external",
       "description": "AI-powered design intelligence with 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 15+ tech stacks. Trigger when user asks for design system / 配色 / 字体搭配 / UI 风格选型 / 落地页结构 / 图表选型 / UX 守则 / \"帮我做一套设计系统\". Do NOT trigger when: 用户只要写功能代码 / 修 bug / 项目结构包装 (走 github-repo-completeness).",
       "version": "2.5.0",
       "author": "NextLevelBuilder",
       "updated_at": "2026-05-20",
-      "published_at": "2026-05-20T02:34:23.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "type": "external",
       "path": "external-skills/ui-ux-pro-max",
       "files": [
         "SKILL.md"
       ],
-      "sha": "397b451b855c324bb876e0b01df5adf6775f8d31",
-      "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"
+      "sha": "397b451b855c324bb876e0b01df5adf6775f8d31"
     },
     {
       "name": "web-design-guidelines",
-      "type": "external",
       "description": "Review UI code for Web Interface Guidelines compliance (100+ rules: a11y / focus / forms / performance / UX). Trigger when user says \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", \"check my site against best practices\", \"审一下前端\", \"查 a11y\". Do NOT trigger when: 用户想生成设计系统 (走 ui-ux-pro-max) / 审 prompt 而非代码 (走 prompt-review) / 只画架构图 (走 fireworks-tech-graph).",
       "version": "1.0.0",
       "author": "vercel",
       "updated_at": "2026-05-20",
-      "published_at": "2026-05-20T07:59:09.000Z",
+      "origin": "external",
+      "source_url": "https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines",
+      "type": "external",
       "path": "external-skills/web-design-guidelines",
       "files": [
         "SKILL.md"
       ],
-      "sha": "33cc3f798348a1fc7ac92c036d5d8dece29ff736",
-      "source_url": "https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines"
+      "sha": "33cc3f798348a1fc7ac92c036d5d8dece29ff736"
     }
   ]
 }

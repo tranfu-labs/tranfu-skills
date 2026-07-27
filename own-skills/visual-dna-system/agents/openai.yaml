@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Visual DNA System"
   short_description: "Extract reusable de-branded visual systems"
   default_prompt: "Use $visual-dna-system to extract a reusable Visual DNA Design System from this reference without copying the source brand."

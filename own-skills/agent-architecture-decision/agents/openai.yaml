@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Agent Architecture Decision"
   short_description: "Design agentic architectures"
   default_prompt: "Use $agent-architecture-decision to inspect this project and recommend the simplest effective agentic architecture, technical stack, workflow, memory/state model, tool-use design, evaluation gates, and implementation roadmap."
