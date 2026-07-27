@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Tranfu立项评分器"
   short_description: "评审 AI 工作流项目能否进入验证或共创"
   brand_color: "#2563EB"

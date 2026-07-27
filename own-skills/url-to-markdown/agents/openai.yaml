@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "URL to Markdown"
   short_description: "Capture rendered webpages as clean Markdown"
   default_prompt: "Use $url-to-markdown to save this webpage as clean Markdown."

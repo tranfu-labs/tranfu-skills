@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Collect Sources"
   short_description: "Research and verify sources for AI tech content"
   default_prompt: "Use $collect-sources to research this AI technology topic and prepare a sourced editorial brief."

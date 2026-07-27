@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Skill Content Fit"
   short_description: "Gate content before writing it as a skill."
   default_prompt: "Use $skill-content-fit to decide whether this content meets the bar for a reusable skill, or should be rejected with missing requirements."

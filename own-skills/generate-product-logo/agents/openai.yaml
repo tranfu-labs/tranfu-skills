@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Generate Product Logo"
   short_description: "Create product-aware logo style rules and concepts"
   default_prompt: "Use $generate-product-logo to create a logo design specification and logo options for my product after checking the product information."

@@ -1,17 +1,17 @@
 ---
-description: "Have AI hand you four style-consistent 64×64 minimal linear UI icons that drop straight into your interface."
+description: "Have AI hand you four style-consistent 48×48 minimal linear UI icons that drop straight into your interface."
 prompt_examples:
   - prompt: Give me 4 dashboard icons — settings, analytics, notifications, users.
     scene: Add icons to a UI
   - prompt: Draw 4 minimal linear UI icons for a payment app.
     scene: Describe the product area
-  - prompt: I need a 64×64 icon set, soft pastel backing, 6px stroke, four colors.
+  - prompt: I need a 48×48 icon set, soft pastel backing, 2px stroke, four colors.
     scene: Set the visual style
 ---
 
 # Linear UI Icon Set
 
-Have AI hand you four style-consistent 64×64 minimal linear UI icons that drop straight into your interface.
+Have AI hand you four style-consistent 48×48 minimal linear UI icons that drop straight into your interface.
 
 ## When to use it
 
@@ -25,7 +25,7 @@ I describe the domain in one sentence (payments / cloud storage / messaging / ca
 
 **Extend an icon set**:
 
-My interface already uses a soft-pastel + 6px rounded-stroke icon style; new icons must extend that language rather than shift to a different look.
+My interface already uses a soft-pastel + 2px rounded-stroke icon style; new icons must extend that language rather than shift to a different look.
 
 **Limit the colors**:
 
@@ -33,7 +33,7 @@ I want only two colors — say, blue and green — or only warm tones. The whole
 
 **Set size and stroke**:
 
-I've already committed to a 64×64 square backing. Any other canvas size is off-scope.
+I've already committed to a 48×48 square backing. Any other canvas size is off-scope.
 
 **Not for**:
 
@@ -46,8 +46,8 @@ I've already committed to a 64×64 square backing. Any other canvas size is off-
 
 **Always four standalone square icons — never a merged poster, never a full-page UI mock.** That's the whole point.
 
-- **Canvas**: four 64×64px canvases with square (non-rounded) backings; the subject sits centered at ~32–40px with generous margins
-- **Stroke**: uniform 6px linear stroke, rounded caps and rounded joins, matching visual weight across all four
+- **Canvas**: four 48×48px canvases with square (non-rounded) backings; the subject sits centered at ~24–30px with generous margins
+- **Stroke**: uniform 2px linear stroke on the final canvas, rounded caps and rounded joins, matching visual weight across all four
 - **Palette**: each icon pairs one soft pastel background with a deeper matching stroke color — the default pool is `#FFF3E8` orange / `#F1EAFE` purple / `#EAF2FF` blue / `#EAF8F2` green
 - **Graphics**: four distinct metaphors or structures, but stroke, proportion, negative space, and corner handling stay identical
 - **Never does**: add text, digits, letters, watermarks, or logos; apply gradients, shadows, highlights, or textures; render rounded backings or transparent backgrounds
@@ -76,5 +76,5 @@ Any prompt-to-image model (Midjourney, DALL·E, Nano-banana, and so on). This sk
 **Subtle boundaries**:
 
 - Asking for a count other than 4 (3, 6, 8) → not triggered; four is a hard constraint
-- Asking for a canvas other than 64×64 (128×128, 32×32) → not triggered; the size is part of the constraint
+- Asking for a canvas other than 48×48 (128×128, 32×32) → not triggered; the size is part of the constraint
 - Asking for two saturations of the same hue → still triggered, as long as one color per icon holds

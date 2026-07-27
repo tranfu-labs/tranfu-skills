@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Strategy-First Development"
   short_description: "Plans strategy and broad, evidence-backed stack choices."
   default_prompt: "Use $strategy-first-development to align product strategy, inventory every decision-worthy capability, compare broad current candidate pools per block, converge through hard gates and spikes, and materialize strategy docs before coding."

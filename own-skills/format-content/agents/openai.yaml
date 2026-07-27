@@ -1,4 +1,6 @@
 interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
   display_name: "Format Content"
   short_description: "Format Markdown for WeChat in red and white"
   default_prompt: "Use $format-content to format this Markdown for WeChat with the fixed red-and-white theme."
