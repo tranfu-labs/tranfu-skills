@@ -1,74 +1,78 @@
+---
+description: Collect authenticated analytics from WeChat Official Accounts, Xiaohongshu, Zhihu, Toutiao, and Weibo through the Codex in-app browser, producing validated JSON, CSV, Excel, and optional dashboard-compatible exports.
+---
+
 # Social Media Login Collector
 
-**中文** | [English](README_EN.md)
+[中文](README.zh.md) | **English**
 
-一个面向 Codex 的社媒后台登录采集 Skill。它在用户亲自完成登录后，通过 Codex 内置浏览器只读采集微信公众号、小红书、知乎、今日头条头条号和微博的数据，生成经过校验的 JSON、CSV、Excel 报告，并可选生成 `social-media-analytics-app` 兼容文件。
+A Codex Skill for authenticated social-media analytics collection. After the user completes login, it uses the Codex in-app browser to collect read-only analytics from WeChat Official Accounts, Xiaohongshu, Zhihu, Toutiao, and Weibo. It produces validated JSON, CSV, and Excel reports and can optionally generate files compatible with `social-media-analytics-app`.
 
-本项目不会自动登录、保存认证信息或绕过平台验证，也不能保证平台风控概率为零。其目标是把浏览器交互限制在完成采集所需的最小范围，并在出现风险信号时立即停止。
+This project does not automate login, persist authentication material, or bypass platform challenges. It cannot guarantee that a platform will never trigger risk controls. Its goal is to keep browser interaction to the minimum required for collection and stop immediately when a risk signal appears.
 
-## 支持平台
+## Supported Platforms
 
-| 平台 | 账号数据 | 内容数据 | 看板兼容 |
+| Platform | Account analytics | Content analytics | Dashboard compatibility |
 |---|---|---|---|
-| 微信公众号 | 用户增长 | 内容趋势 | 支持 |
-| 小红书 | 曝光、观看趋势 | 笔记累计快照 | 仅账号趋势；内容保留在通用报告 |
-| 知乎 | 作品日报 | 日报作品指标 | 支持 |
-| 今日头条头条号 | 作品趋势、粉丝趋势 | 作品指标 | 支持 |
-| 微博 | 粉丝、阅读、互动趋势 | 基础版可见博文 | 独立工作簿，不进入 SQLite |
+| WeChat Official Accounts | Follower growth | Content trends | Supported |
+| Xiaohongshu | Impressions and view trends | Cumulative note snapshots | Account trends only; content remains in generic reports |
+| Zhihu | Work daily report | Daily work metrics | Supported |
+| Toutiao | Content and follower trends | Content metrics | Supported |
+| Weibo | Follower, readership, and engagement trends | Posts visible on the basic plan | Standalone workbook; never imported into SQLite |
 
-默认范围是 `Asia/Shanghai` 时区内截至昨天的 30 个完整自然日。用户可以明确指定其他范围。
+The default range is the 30 complete calendar days ending yesterday in the `Asia/Shanghai` time zone. Users can explicitly request another range.
 
-## 安全边界
+## Safety Boundary
 
-- 登录、扫码、短信、OTP、验证码和设备确认始终由用户完成。
-- 不读取或保存 Cookie、Token、认证头、密码、手机号、浏览器 Storage 或认证文件。
-- 不调用隐藏接口、不重放 XHR、不构造分页 URL，也不使用代理、指纹伪装或自动化绕过。
-- 不执行发布、删除、关注、点赞、评论、私信、设置修改、购买或试用操作。
-- 同一时间只操作一个平台、一个账号和一个标签页。
-- 遇到 CAPTCHA、滑块、异常登录、访问频繁、403/429、重新认证或非预期跨域跳转时立即停止，不刷新、不重试。
+- Login, QR scanning, SMS, OTP, CAPTCHA, and device confirmation are always completed by the user.
+- The Skill does not read or persist cookies, tokens, authorization headers, passwords, phone numbers, browser storage, or authentication files.
+- It does not call hidden APIs, replay XHR requests, construct pagination URLs, use proxies, spoof fingerprints, or bypass challenges.
+- It does not publish, delete, follow, like, comment, send messages, change settings, purchase products, or start trials.
+- It operates on only one platform, one account, and one tab at a time.
+- It stops immediately on CAPTCHA, sliders, unusual-login prompts, rate limits, 403/429 responses, reauthentication, or unexpected cross-origin navigation. It does not refresh or retry.
 
-完整规则见 [SKILL.md](SKILL.md)。
+See [SKILL.md](SKILL.md) for the complete rules.
 
-## 安装
+## Installation
 
-需要支持 Skill 和内置浏览器控制的 Codex 环境。
+A Codex environment with Skill support and in-app browser control is required.
 
 ```bash
 git clone https://github.com/BruceL017/social-media-login-collector.git \
   ~/.codex/skills/social-media-login-collector
 ```
 
-重新启动 Codex 或刷新 Skill 列表后即可使用。通用 Excel 导出需要 Codex bundled Python 提供的 `openpyxl`。看板兼容导出还需要目标项目已有的 `xlsx` 和 `tsx`。
+Restart Codex or refresh the Skill list after cloning. Generic Excel export requires `openpyxl` from the Codex bundled Python runtime. Dashboard-compatible export also requires the target project to provide `xlsx` and `tsx`.
 
-## 使用
+## Usage
 
-可以在 Codex 中直接提出明确采集请求：
+Make an explicit collection request in Codex, for example:
 
 ```text
-采集微信公众号最近 30 天的后台数据
-采集小红书账号数据和笔记数据
-采集全部五个平台的数据
+Collect the last 30 days of WeChat Official Account analytics
+Collect Xiaohongshu account and note analytics
+Collect analytics from all five platforms
 ```
 
-典型流程：
+Typical workflow:
 
-1. Skill 打开或复用平台官方后台页面。
-2. 未登录时由用户完成登录，并明确回复“已登录”。
-3. Skill 确认账号和日期范围，每个所需数据模块优先使用且最多执行一次平台原生导出。
-4. 原生导出不可用时，才使用平台 reference 定义的最小可见数据回退。
-5. 生成标准 manifest，并执行日期覆盖、来源、汇总和内容唯一性校验。
-6. 输出通用报告；符合条件时再生成看板兼容文件。
-7. 看板文件通过目标解析器验证后仍需用户明确确认，才允许导入 SQLite。
+1. The Skill opens or reuses the official platform backend.
+2. If needed, the user completes login and explicitly confirms that login is complete.
+3. The Skill confirms the account and date range, then prefers and performs at most one native export per required data module.
+4. If native export is unavailable, it uses only the minimal visible-data fallback defined by the platform reference.
+5. It builds the standard manifest and validates date coverage, provenance, reconciliation, and content uniqueness.
+6. It emits generic reports and, when eligible, dashboard-compatible files.
+7. Even after dashboard parser validation succeeds, explicit user confirmation is required before any SQLite import.
 
-## 输出
+## Output
 
-通用模式默认输出到：
+Generic mode writes to:
 
 ```text
 <cwd>/output/social-collections/<run-id>/<platform>/
 ```
 
-每个平台包含：
+Each platform directory contains:
 
 ```text
 collection.json
@@ -78,31 +82,31 @@ collection.xlsx
 collection-report.json
 ```
 
-`collection-report.json` 记录覆盖情况、行数、派生指标、限制和文件 SHA-256。所有 CSV/XLSX 文本都会处理公式注入风险。
+`collection-report.json` records coverage, row counts, derived series, limitations, and file SHA-256 values. All CSV and XLSX text is protected against formula injection.
 
-看板模式输出到独立批次目录：
+Dashboard mode writes to an isolated batch directory:
 
 ```text
 <dashboard-root>/data/imports/<run-id>/
 ```
 
-生成器只接受通用导出器产生且哈希匹配的 `collection.json`。提交前，可导入看板的根目录文件会调用目标项目的 `parseSocialFile()` 做逐日往返校验；微博独立工作簿使用内置校验。生成器不会自动执行数据库导入。
+The builder accepts only a hash-matched `collection.json` created by the generic exporter. Before committing files, dashboard-importable root files are round-trip validated through the target project's `parseSocialFile()`; the standalone Weibo workbook uses built-in validation. The builder never starts a database import automatically.
 
-## 数据完整性
+## Data Completeness
 
-只有满足以下条件才会标记为 `success`：
+A run is marked `success` only when:
 
-- 声明范围内每天恰好一行；
-- 平台必采指标每天非空；
-- 每个指标具有可追溯来源和汇总对账；
-- 内容列表具有末页或空列表证据，并完成去重；
-- 未使用无法证明精度的图形几何估算。
+- every date in the declared range appears exactly once;
+- all platform-required metrics are non-null for every date;
+- every metric has provenance and a reconciled summary;
+- the content list has end-of-list or verified-empty evidence and has been deduplicated;
+- no metric depends on an unverified graphical geometry estimate.
 
-无法证明完整性时使用 `partial`；没有可用数据时使用 `failed`。未知值不会被改写为 `0`。
+When completeness cannot be proven, the status is `partial`. When no usable data is available, the status is `failed`. Unknown values are never rewritten as zero.
 
-## 本地验证
+## Local Validation
 
-所有测试均使用系统临时目录中的合成数据，不访问真实账号：
+All tests use synthetic data in system temporary directories and do not access real accounts:
 
 ```bash
 <bundled-python> scripts/self_test.py
@@ -110,16 +114,16 @@ collection-report.json
 node --check scripts/build_dashboard_exports.mjs
 ```
 
-使用 Codex workspace dependency loader 获取 `<bundled-python>`；该运行时必须提供 `openpyxl`。
+Use the Codex workspace dependency loader to resolve `<bundled-python>`; that runtime must provide `openpyxl`.
 
-当前离线测试覆盖五个平台通用导出、24 个恶意或不完整输入，以及四个平台 6 类看板解析器往返校验。
+The current offline suite covers generic exports for all five platforms, 24 malicious or incomplete inputs, and round-trip validation through six dashboard parsers across four platforms.
 
-## 目录结构
+## Repository Layout
 
 ```text
 .
 ├── README.md
-├── README_EN.md
+├── README.zh.md
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
@@ -137,11 +141,11 @@ node --check scripts/build_dashboard_exports.mjs
     └── weibo.md
 ```
 
-## 已知限制
+## Known Limitations
 
-- 平台页面和原生导出格式可能变化，真实采集前仍需验证当前页面结构。
-- 当前看板解析器无法正确保留小红书内容快照日期和发布时间分钟，因此小红书内容兼容文件保持禁用；通用报告仍保留完整内容。
-- 微博没有当前看板 SQLite 模型，只生成独立工作簿。
-- 本项目不包含真实账号数据、Cookie、Token 或平台原始私有导出。
+- Platform pages and native export formats may change, so current page structure still needs verification before live collection.
+- The current dashboard parser cannot preserve the Xiaohongshu content snapshot date and publication-time minutes correctly. Xiaohongshu content compatibility export therefore remains disabled, while generic reports retain the full content data.
+- The current dashboard has no Weibo SQLite model, so Weibo output remains a standalone workbook.
+- The repository contains no real account data, cookies, tokens, or private native platform exports.
 
-本项目不是上述平台的官方工具。使用者应遵守平台条款、账号权限和适用的数据保护要求。
+This project is not an official tool of any supported platform. Users are responsible for complying with platform terms, account permissions, and applicable data-protection requirements.
