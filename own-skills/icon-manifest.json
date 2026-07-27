@@ -444,6 +444,18 @@
     "stroke_width": 2
   },
   {
+    "slug": "skill-icon-generator",
+    "family": "operations",
+    "lucide_icon": "cloud-cog",
+    "metaphor": "自动匹配：部署运维",
+    "description": "为 tranfu-skills 仓库中的新增或现有 Skill 生成统一的 48×48 SVG 与 PNG 图标。 当用户说“给这个 Skill 生成图标”“根据 name 和 description 选图”“补 assets/icon.svg” “预览 Skill 图标”或要求调整自动选中的 Lucide 图标时使用。仅执行本地分析、选图、生成和预览； 不修改 GitHub Actions、CI、官网同步或部署配置，也不自动提交或推送。",
+    "selection_source": "inferred",
+    "icon_small": "own-skills/skill-icon-generator/assets/icon.svg",
+    "icon_large": "own-skills/skill-icon-generator/assets/icon.png",
+    "dimensions": "48x48",
+    "stroke_width": 2
+  },
+  {
     "slug": "skill-improve-workflow",
     "family": "engineering",
     "lucide_icon": "wrench",

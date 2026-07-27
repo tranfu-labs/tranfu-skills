@@ -1,0 +1,6 @@
+interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
+  display_name: "Skill Icon Generator"
+  short_description: "Generate repository Skill icons from name and description"
+  default_prompt: "Generate and preview a 48×48 icon for this repository Skill."
