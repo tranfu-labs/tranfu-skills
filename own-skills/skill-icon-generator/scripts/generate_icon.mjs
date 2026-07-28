@@ -266,7 +266,9 @@ if (!fs.existsSync(skillFile) || path.basename(skillFile) !== "SKILL.md") {
 }
 const targetDir = path.dirname(skillFile);
 const metadata = frontmatter(fs.readFileSync(skillFile, "utf8"));
-const slug = metadata.name || path.basename(targetDir);
+if (!metadata.name) fail("target SKILL.md frontmatter is missing a non-empty name");
+if (!metadata.description) fail("target SKILL.md frontmatter is missing a non-empty description");
+const slug = metadata.name;
 const inferred = infer({
   slug,
   description: metadata.description || "",
@@ -310,7 +312,7 @@ let sharp;
 try {
   sharp = (await import("sharp")).default;
 } catch {
-  fail(`sharp is not installed; run: npm install --prefix "${skillRoot}"`);
+  fail(`sharp is not installed; run: npm install --prefix "${skillRoot}" --no-package-lock`);
 }
 
 fs.mkdirSync(assetsDir, { recursive: true });

@@ -5,12 +5,14 @@ description: >-
   Skill 的 agents/openai.yaml。用户说“给这个 Skill 生成图标”“补
   assets/icon.svg”“生成同款 Skill 图标”或要求调整自动选择的颜色与 Lucide
   图形时使用。接受一个 Skill 目录或 SKILL.md 路径，可从任意工作目录运行；
-  不扫描仓库、不批量改图标，也不修改 CI、官网或部署配置。Do NOT trigger when
+  支持在新环境、换机器或升级后运行独立自检。不扫描仓库、不批量改图标，也不修改
+  CI、官网或部署配置。Do NOT trigger when
   用户要求批量更新图标、处理非 Skill 图标，或修改 CI、官网与部署配置。
-version: 0.2.2
+version: 0.3.0
 author: chuanye312-coder
 updated_at: 2026-07-28
 origin: own
+allow_exec: true
 ---
 
 # 单个 Skill 图标生成器
@@ -32,20 +34,48 @@ CREATE A TODO LIST FOR THE TASKS BELOW（每个步骤一个 TODO，并随执行�
 6. 首次使用或依赖缺失时，只在生成器 Skill 内安装依赖：
 
    ```bash
-   npm install --prefix "<generator-skill-dir>"
+   npm install --prefix "<generator-skill-dir>" --no-package-lock
    ```
 
    若命令退出码非 0，则展示错误并结束，不宣告生成完成。
 
-7. 根据用户要求构造并运行单目标生成器；只有步骤 5 已确认用户明确要求替换时才追加 `--force`：
+7. 在新环境、换机器、升级后，或用户要求自检时运行：
+
+   ```bash
+   node "<generator-skill-dir>/scripts/self_check.mjs"
+   ```
+
+   若未输出 `SELF_CHECK_PASS` 或退出码非 0，则展示失败检查项并结束。
+
+8. 根据用户要求构造并运行单目标生成器；只有步骤 5 已确认用户明确要求替换时才追加 `--force`：
 
    ```bash
    node "<generator-skill-dir>/scripts/generate_icon.mjs" "<target-skill-dir>"
    ```
 
-8. 若生成命令退出码非 0，则展示错误，报告是否存在部分产物并结束；不得自行追加 `--force` 重试，也不得宣告生成完成。
-9. 检查并展示实际 PNG，验证 SVG、PNG 和 `agents/openai.yaml`。
-10. 产出 `ICON_GENERATION_REPORT`，报告目标 Skill、颜色族、Lucide 名称、视觉隐喻、选择来源和输出路径，然后结束。
+9. 若生成命令退出码非 0，则展示错误，报告是否存在部分产物并结束；不得自行追加 `--force` 重试，也不得宣告生成完成。
+10. 检查并展示实际 PNG，验证 SVG、PNG 和 `agents/openai.yaml`。
+11. 产出 `ICON_GENERATION_REPORT`，报告目标 Skill、颜色族、Lucide 名称、视觉隐喻、选择来源和输出路径，然后结束。
+
+## 环境自检
+
+自检只在系统临时目录创建隔离样本，不修改用户 Skill。它检查：
+
+- Node.js 版本、Skill 本地 Sharp 依赖和运行文件。
+- 60 个 Lucide 母版与公司人工映射的完整性。
+- 旧 Skill 人工映射、新 Skill 关键词匹配、未知场景稳定回退和人工覆盖。
+- 目录路径与 `SKILL.md` 文件路径两种输入。
+- SVG/PNG 尺寸与样式、`openai.yaml` 字段保留、覆盖保护和 `--force`。
+- 缺失目标、无效 frontmatter 等失败路径。
+
+运行：
+
+```bash
+npm install --prefix "<generator-skill-dir>" --no-package-lock
+node "<generator-skill-dir>/scripts/self_check.mjs"
+```
+
+只有输出 `SELF_CHECK_PASS` 且退出码为 0 才表示当前环境可用。
 
 ## 输出
 
