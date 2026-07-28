@@ -1,5 +1,7 @@
 ---
 name: prd-interview
+display_name: PRD Interview
+display_name_zh: PRD 需求采访
 version: 0.1.0
 author: aquarius-wing
 updated_at: 2026-07-28
