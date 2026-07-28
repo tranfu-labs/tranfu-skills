@@ -3,8 +3,18 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import test from "node:test";
 import { inferSkillIcon, resolveSkillIconSpec } from "../scripts/lib/skill-icon-inference.mjs";
+
+// CI 不再 npm ci, 所以 sharp 可能不存在; 只有本地装了依赖才跑真实生成用例.
+const require = createRequire(import.meta.url);
+let hasSharp = true;
+try {
+  require.resolve("sharp");
+} catch {
+  hasSharp = false;
+}
 
 const availableIcons = [
   "book-open-check",
@@ -44,7 +54,7 @@ test("preserves curated mappings for existing skills", () => {
   );
 });
 
-test("generator creates SVG and PNG for a newly added unmapped skill", async () => {
+test("generator creates SVG and PNG for a newly added unmapped skill", { skip: !hasSharp }, async () => {
   const skillsRoot = await mkdtemp(path.join(os.tmpdir(), "tranfu-icon-skill-"));
   const skillDir = path.join(skillsRoot, "customer-market-analysis");
   await mkdir(skillDir, { recursive: true });
