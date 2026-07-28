@@ -1,15 +1,14 @@
 ---
 name: content-production
+display_name: Multiplatform Content Production Workflow
+display_name_zh: 多平台内容工作流
+version: 0.2.0
+author: BruceL017
+updated_at: "2026-07-28"
+origin: own
+allow_exec: true
 description: >-
   从一句话创作简述、明确题目或一份 Markdown 大纲自动编排中文多平台内容生产：完成选题与调研、证据化大纲、A/B 母稿、公众号/小红书/知乎/微博/头条十份终稿、34 个标题、五套平台配图、独立公众号封面、图片优化、公众号 HTML 和最终 QA。用于完整写作流水线、多平台内容矩阵、A/B 文风实验或一键内容生产；默认自主运行并保留可审计决策，不发布、不登录平台。Do NOT trigger when 用户只需要单篇轻量润色、只起标题、只配图、只排版、内容发布或发布后运营。
-metadata:
-  display_name: Multiplatform Content Production Workflow
-  display_name_zh: 多平台内容工作流
-  version: 0.2.0
-  author: BruceL017
-  updated_at: "2026-07-28"
-  origin: own
-  allow_exec: true
 ---
 
 # Content Production
