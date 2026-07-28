@@ -1,0 +1,307 @@
+{
+  "agent-architecture-decision": [
+    "engineering",
+    "workflow",
+    "Agent 工作流架构"
+  ],
+  "ai-opportunity-evaluation": [
+    "strategy",
+    "target",
+    "机会目标判断"
+  ],
+  "ai-startup-feasibility-check": [
+    "strategy",
+    "rocket",
+    "创业方向启航"
+  ],
+  "article-cover-image": [
+    "content",
+    "panel-top",
+    "文章封面区域"
+  ],
+  "black-line-icon-style": [
+    "content",
+    "pen-tool",
+    "线性笔尖"
+  ],
+  "build-marketing-outline": [
+    "strategy",
+    "funnel",
+    "营销漏斗提纲"
+  ],
+  "business-analysis-pipeline": [
+    "strategy",
+    "chart-no-axes-combined",
+    "商业分析组合图"
+  ],
+  "collect-sources": [
+    "content",
+    "library-big",
+    "资料来源集合"
+  ],
+  "compress-image": [
+    "operations",
+    "image-down",
+    "图片体积降低"
+  ],
+  "content-production": [
+    "content",
+    "panels-top-left",
+    "多平台内容生产"
+  ],
+  "content-topics": [
+    "content",
+    "lightbulb",
+    "内容选题灵感"
+  ],
+  "credibility-review": [
+    "content",
+    "shield-check",
+    "可信度核验"
+  ],
+  "daily-report": [
+    "content",
+    "newspaper",
+    "每日资讯报告"
+  ],
+  "draft-content": [
+    "content",
+    "file-pen-line",
+    "内容草稿写作"
+  ],
+  "elite-market-researcher": [
+    "strategy",
+    "telescope",
+    "前瞻市场研究"
+  ],
+  "format-content": [
+    "content",
+    "align-left",
+    "内容格式整理"
+  ],
+  "generate-product-logo": [
+    "content",
+    "gem",
+    "产品品牌标记"
+  ],
+  "github-delivery-check": [
+    "engineering",
+    "package-check",
+    "代码交付检查"
+  ],
+  "github-repo-completeness": [
+    "engineering",
+    "list-checks",
+    "仓库完备清单"
+  ],
+  "goal-driven-decomposition": [
+    "strategy",
+    "git-branch",
+    "目标分支拆解"
+  ],
+  "langgraph-architecture-review": [
+    "engineering",
+    "chart-network",
+    "图架构审查"
+  ],
+  "lark-safe-write": [
+    "operations",
+    "file-lock-2",
+    "文档安全写入"
+  ],
+  "market-analysis": [
+    "strategy",
+    "chart-line",
+    "市场趋势分析"
+  ],
+  "openspec-driven-development": [
+    "engineering",
+    "file-code-2",
+    "规格驱动开发"
+  ],
+  "opportunity-hunter": [
+    "strategy",
+    "radar",
+    "机会雷达"
+  ],
+  "post-illustration-images": [
+    "content",
+    "images",
+    "文章配图组"
+  ],
+  "prd-to-parallel-loop": [
+    "engineering",
+    "git-fork",
+    "PRD 并行分支"
+  ],
+  "product-title-generation": [
+    "content",
+    "tag-plus",
+    "产品标题生成"
+  ],
+  "project-init-docs": [
+    "engineering",
+    "folder-cog",
+    "项目文档初始化"
+  ],
+  "project-scoring": [
+    "strategy",
+    "gauge",
+    "项目评分仪表"
+  ],
+  "prompt-review": [
+    "engineering",
+    "message-square-check",
+    "提示词审查"
+  ],
+  "proofread-content": [
+    "content",
+    "file-check-2",
+    "内容审校"
+  ],
+  "reversible-ops": [
+    "operations",
+    "undo-2",
+    "可恢复操作"
+  ],
+  "session-to-knowledge": [
+    "content",
+    "book-open-text",
+    "会话知识沉淀"
+  ],
+  "skill-content-fit": [
+    "engineering",
+    "scan-search",
+    "Skill 内容适配"
+  ],
+  "skill-create-workflow": [
+    "engineering",
+    "puzzle",
+    "Skill 能力创建"
+  ],
+  "skill-domain-framing": [
+    "engineering",
+    "focus",
+    "Skill 领域框定"
+  ],
+  "skill-icon-generator": [
+    "content",
+    "pen-tool",
+    "Skill 图标矢量生成"
+  ],
+  "skill-improve-workflow": [
+    "engineering",
+    "wrench",
+    "Skill 工作流改进"
+  ],
+  "skill-name-generation": [
+    "engineering",
+    "tags",
+    "Skill 名称生成"
+  ],
+  "skill-readme-generation": [
+    "engineering",
+    "book-open-check",
+    "Skill README 生成"
+  ],
+  "skill-reverse-engineer": [
+    "engineering",
+    "search-code",
+    "Skill 反向解析"
+  ],
+  "social-media-login-collector": [
+    "operations",
+    "key-round",
+    "登录数据采集"
+  ],
+  "strategy-first-development": [
+    "strategy",
+    "compass",
+    "战略优先开发"
+  ],
+  "structured-thinking-advisor": [
+    "strategy",
+    "git-compare-arrows",
+    "结构化比较思考"
+  ],
+  "title-options": [
+    "content",
+    "list",
+    "标题候选列表"
+  ],
+  "tranfu-coolify-ops": [
+    "operations",
+    "cloud-cog",
+    "云端部署运维"
+  ],
+  "tranfu-layout-systems": [
+    "content",
+    "layout-template",
+    "页面布局系统"
+  ],
+  "tranfu-linear-ui-icon-set": [
+    "content",
+    "grid-2x2",
+    "统一线性图标组"
+  ],
+  "tranfu-website-design": [
+    "content",
+    "monitor-cog",
+    "网站设计系统"
+  ],
+  "ui-ecosystem": [
+    "content",
+    "boxes",
+    "UI 组件生态"
+  ],
+  "url-to-markdown": [
+    "operations",
+    "file-down",
+    "网页内容落盘"
+  ],
+  "visual-builder": [
+    "content",
+    "blocks",
+    "视觉模块搭建"
+  ],
+  "visual-design-producer": [
+    "content",
+    "palette",
+    "视觉设计生产"
+  ],
+  "visual-dna-system": [
+    "content",
+    "dna",
+    "视觉基因系统"
+  ],
+  "visual-pipeline": [
+    "content",
+    "waypoints",
+    "视觉生产路径"
+  ],
+  "webapp-polish-audit": [
+    "content",
+    "scan-eye",
+    "Web 界面目检"
+  ],
+  "wechat-sketch-cover": [
+    "content",
+    "gallery-thumbnails",
+    "公众号封面"
+  ],
+  "write-social-preview-head": [
+    "engineering",
+    "share-2",
+    "社交分享预览"
+  ],
+  "write-spec": [
+    "engineering",
+    "clipboard-check",
+    "产品规格文档"
+  ],
+  "xiaohongshu-card-publish": [
+    "content",
+    "gallery-vertical-end",
+    "竖版卡片发布"
+  ]
+}

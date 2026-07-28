@@ -1,0 +1,6 @@
+interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
+  display_name: "Skill Icon Generator"
+  short_description: "Generate matching icons for one target Skill"
+  default_prompt: "Use $skill-icon-generator to generate a 48×48 SVG and PNG icon for one target Skill."

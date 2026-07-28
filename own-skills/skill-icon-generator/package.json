@@ -1,0 +1,15 @@
+{
+  "name": "@tranfu/skill-icon-generator-runtime",
+  "private": true,
+  "version": "0.2.1",
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "generate": "node scripts/generate_icon.mjs"
+  },
+  "dependencies": {
+    "sharp": "0.35.3"
+  }
+}
