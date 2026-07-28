@@ -22,6 +22,7 @@ import {
   policyPathForAttempt,
   validateVisualCoverageSet
 } from './visual-cardinality.mjs';
+import { bodyVisualAttempt } from './visual-state.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const [runInput, ...extra] = args._;
@@ -40,15 +41,17 @@ try {
   const runDir = expandPath(runInput);
   const state = await readJson(join(runDir, 'run.json'));
   const issues = [];
-  if (state.schema_version !== 2 || state.status !== 'running'
-    || state.stages?.visual?.status !== 'running' || state.current_stage !== 'visual') {
+  if (state.schema_version !== 3 || state.status !== 'running'
+    || state.stages?.visual?.status !== 'running'
+    || state.stages?.visual?.body_visual?.status !== 'running'
+    || state.current_stage !== 'visual') {
     add(issues, 'visual_coverage_stage_mismatch', 'Coverage requires a running current visual stage.');
   }
   if (state.gates?.titles?.status !== 'approved') {
     add(issues, 'visual_coverage_titles_gate_missing', 'Coverage requires the approved titles gate.');
   }
 
-  const attempt = state.stages?.visual?.attempt;
+  const attempt = bodyVisualAttempt(state);
   const suffix = attempt === 1 ? '' : `.v${String(attempt).padStart(3, '0')}`;
   for (const platform of selectedPlatforms) {
     const base = `07-visual/${platform}`;
@@ -76,8 +79,8 @@ try {
     const current = await validateVisualCoverageSet(runDir, state);
     if (!current.issues.length || args.platform && current.coverages.has(args.platform)) {
       emitJson({
-        status: 'READY', run_dir: runDir, policy_path: join(runDir, policyPath),
-        coverage_paths: selectedPlatforms.map((platform) => join(runDir, coveragePathForAttempt(state, platform))),
+        status: 'READY', run_id: state.run_id, policy_path: policyPath,
+        coverage_paths: selectedPlatforms.map((platform) => coveragePathForAttempt(state, platform)),
         idempotent: true
       });
       process.exit(0);
@@ -135,7 +138,7 @@ try {
   }
 
   if (issues.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, issues }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, issues }, 2);
   } else {
     if (!fileExists(join(runDir, policyPath))) await writeJson(join(runDir, policyPath), snapshot);
     for (const [platform, contract] of contracts) {
@@ -150,8 +153,8 @@ try {
       }
     }
     emitJson({
-      status: 'READY', run_dir: runDir, policy_path: join(runDir, policyPath),
-      coverage_paths: selectedPlatforms.map((platform) => join(runDir, coveragePathForAttempt(state, platform))),
+      status: 'READY', run_id: state.run_id, policy_path: policyPath,
+      coverage_paths: selectedPlatforms.map((platform) => coveragePathForAttempt(state, platform)),
       idempotent: false
     });
   }

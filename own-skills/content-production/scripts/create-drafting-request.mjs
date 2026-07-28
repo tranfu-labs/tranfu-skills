@@ -317,7 +317,7 @@ try {
   const stage = modeStages[mode];
   const revision = mode === 'outline' ? Math.max(1, (state.gates?.outline?.revision || 0) + 1) : null;
 
-  if (state.schema_version !== 2 || !['brief', 'topic', 'outline'].includes(state.input_mode)) {
+  if (state.schema_version !== 3 || !['brief', 'topic', 'outline'].includes(state.input_mode)) {
     add(issues, mode, 'drafting_request_not_applicable', 'drafting requires a schema v2 brief, topic, or outline run.');
   }
   if (state.status !== 'running' || state.current_stage !== stage
@@ -512,7 +512,7 @@ try {
   await validateOutput(runDir, runRealDir, mode, definition.outputDir, requestPath, definition.expectedArtifacts, issues);
 
   if (issues.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, blockers: issues }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, blockers: issues }, 2);
   } else {
     if (mode === 'adapt') inputs.push(...await renderAudienceSnapshot(runDir, state, platform, variant));
     const options = {
@@ -525,12 +525,11 @@ try {
       ...(platform ? { platform } : {})
     };
     const request = {
-      schema_version: 1,
-      contract: 'content-production-provider/v1',
+      schema_version: 2,
+      contract: 'content-production-provider/v2',
       task_id: taskId(state, mode, variant, platform, revision),
       capability: 'drafting',
       provider_contract: 'drafting-v1',
-      run_dir: runDir,
       run_mode: state.run_mode,
       mode,
       inputs,
@@ -543,7 +542,7 @@ try {
     emitJson({
       status: 'PASS',
       task_id: request.task_id,
-      request_path: requestPath,
+      request_path: runRelative(runDir, requestPath),
       input_count: request.inputs.length
     });
   }

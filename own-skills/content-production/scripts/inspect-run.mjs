@@ -10,6 +10,7 @@ import {
   inspectCapabilities,
   parseArgs,
   readJson,
+  resolveRunPortablePathRef,
   stageOrder,
   verifyQaFingerprints,
   writeJson
@@ -35,26 +36,32 @@ try {
   }
 
   if (issues.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, next_stage: null, issues }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, next_stage: null, issues }, 2);
   } else if (state.status === 'completed' && state.gates?.final?.status === 'approved') {
     const qaPath = join(runDir, '09-qa', 'qa.json');
     const qa = fileExists(qaPath) ? await readJson(qaPath) : null;
     const fingerprintIssues = await verifyQaFingerprints(runDir, qa);
     if (qa?.status !== 'READY' || fingerprintIssues.length) {
-      emitJson({ status: 'BLOCKED', run_dir: runDir, next_stage: 'final_qa', issues: fingerprintIssues.length ? fingerprintIssues : [{ code: 'completed_qa_invalid', message: 'Completed run QA is not READY.' }] }, 2);
+      emitJson({ status: 'BLOCKED', run_id: state.run_id, next_stage: 'final_qa', issues: fingerprintIssues.length ? fingerprintIssues : [{ code: 'completed_qa_invalid', message: 'Completed run QA is not READY.' }] }, 2);
     } else {
-      emitJson({ status: 'COMPLETED', run_dir: runDir, next_stage: null, message: 'Run is complete; resume is a no-op.' });
+      emitJson({ status: 'COMPLETED', run_id: state.run_id, next_stage: null, message: 'Run is complete; resume is a no-op.' });
     }
   } else {
     let capabilityReport = null;
     if (args.refresh_capabilities || state.capabilities?.status !== 'PASS') {
-      capabilityReport = await inspectCapabilities(state.capabilities.config_path);
+      const configPath = resolveRunPortablePathRef(state.capabilities.config_ref, runDir, {
+        workspaceRoot: typeof args.workspace_root === 'string' ? expandPath(args.workspace_root) : null
+      });
+      capabilityReport = await inspectCapabilities(configPath, {
+        workspaceRoot: typeof args.workspace_root === 'string' ? expandPath(args.workspace_root) : null
+      });
       if (args.refresh_capabilities) {
         await writeJson(join(runDir, '00-intake', 'capabilities.json'), capabilityReport);
         state.capabilities.status = capabilityReport.status;
-        state.capabilities.config_sha256 = fileExists(state.capabilities.config_path) ? await fileSha256(state.capabilities.config_path) : null;
+        state.capabilities.config_ref = capabilityReport.config_ref;
+        state.capabilities.config_sha256 = fileExists(configPath) ? await fileSha256(configPath) : null;
         state.capabilities.providers = Object.fromEntries(capabilityReport.capabilities.map((item) => [item.id, {
-          skill_path: item.skill_path,
+          skill_ref: item.skill_ref,
           skill_sha256: item.skill_sha256,
           status: item.status,
           required: item.required,
@@ -91,12 +98,12 @@ try {
     }
 
     if (capabilityReport?.status === 'BLOCKED' || state.capabilities?.status === 'BLOCKED') {
-      emitJson({ status: 'BLOCKED', run_dir: runDir, next_stage: 'init', issues: capabilityReport?.blockers || [], hint: 'Fix the capability mapping, then rerun with --refresh-capabilities.' }, 2);
+      emitJson({ status: 'BLOCKED', run_id: state.run_id, next_stage: 'init', issues: capabilityReport?.blockers || [], hint: 'Fix the capability mapping, then rerun with --refresh-capabilities.' }, 2);
     } else {
       const blockedStage = stageOrder.find((stage) => state.stages?.[stage]?.status === 'blocked');
       if (blockedStage) {
         emitJson({
-          status: 'BLOCKED', run_dir: runDir, run_status: state.status,
+          status: 'BLOCKED', run_id: state.run_id, run_status: state.status,
           next_stage: blockedStage, blocked_stage: blockedStage,
           error: state.stages[blockedStage].error,
           hint: 'Resolve the stage blocker, then set the same stage to running for a new attempt.'
@@ -107,7 +114,7 @@ try {
       const nextStage = waitingGate ? `${waitingGate}_approval` : state.resume?.next_stage || state.current_stage;
       emitJson({
         status: waitingGate ? (state.gates[waitingGate].status === 'blocked' ? 'BLOCKED' : 'AWAITING_APPROVAL') : 'READY_TO_RESUME',
-        run_dir: runDir,
+        run_id: state.run_id,
         run_status: state.status,
         next_stage: nextStage,
         waiting_gate: waitingGate || null

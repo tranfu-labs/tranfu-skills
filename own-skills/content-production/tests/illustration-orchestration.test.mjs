@@ -43,10 +43,23 @@ function sha(path) {
 }
 
 function run(script, args = []) {
-  return spawnSync(process.execPath, [join(scriptsDir, script), ...args], {
+  const result = spawnSync(process.execPath, [join(scriptsDir, script), ...args], {
     cwd: skillDir,
     encoding: 'utf8'
   });
+  if (result.stdout && typeof args[0] === 'string' && args[0].startsWith('/')) {
+    try {
+      const value = JSON.parse(result.stdout);
+      for (const key of ['request_path', 'decision_path']) {
+        if (typeof value[key] === 'string' && !value[key].startsWith('/')) value[key] = join(args[0], value[key]);
+      }
+      for (const key of ['generation_requests', 'qa_requests']) {
+        if (Array.isArray(value[key])) value[key] = value[key].map((path) => path.startsWith('/') ? path : join(args[0], path));
+      }
+      result.stdout = `${JSON.stringify(value)}\n`;
+    } catch {}
+  }
+  return result;
 }
 
 function runProvider(args = []) {
@@ -134,16 +147,14 @@ function completeChild(runDir, requestPath, {
   height = null,
   expectedStatus = 0,
   candidateBytes = null,
-  deliveryBytes = null
+  deliveryBytes = null,
+  readableText = undefined
 } = {}) {
   const request = readJson(requestPath);
-  const labels = request.anchor.text_mode === 'icons_only'
-    ? 'Use icons-only with no readable text.'
-    : `Use only the readable label “${request.anchor.short_labels[0]}”.`;
-  const ratio = request.generation_geometry.target_aspect_ratio === '3:4'
-    ? 'Aspect ratio 0.75. Exclude 2:3 and 1024x1536.'
-    : `Aspect ratio ${request.generation_geometry.target_aspect_ratio}.`;
-  write(join(runDir, request.artifacts.prompt), `Create one clear explainer. ${labels} ${ratio}`);
+  const compiled = spawnSync(process.execPath, [
+    join(providerRoot, 'scripts', 'compile-generation-prompt.mjs'), 'compile', requestPath
+  ], { cwd: providerRoot, encoding: 'utf8' });
+  assert.equal(compiled.status, 0, compiled.stderr || compiled.stdout);
   assert.equal(runChildProvider(['preflight', requestPath]).status, 0);
   const design = request.generation_geometry.design_dimensions;
   const size = { width: width ?? design.width, height: height ?? design.height };
@@ -160,7 +171,12 @@ function completeChild(runDir, requestPath, {
     style_qa_status: 'pass',
     brand_qa_status: request.brand.enabled ? 'pass' : request.brand.disabled_reason,
     failed_gates: [],
-    readable_text: request.anchor.text_mode === 'icons_only' ? [] : [request.anchor.short_labels[0]],
+    readable_text: readableText ?? [
+      request.anchor.text_content[request.text_variant].headline,
+      ...request.anchor.text_content[request.text_variant].labels,
+      request.anchor.text_content[request.text_variant].supporting_copy,
+      request.anchor.text_content[request.text_variant].footer
+    ].filter((value) => value !== null),
     residual_risk: 'none',
     reviewer: 'fixture-reviewer',
     reviewed_at: '2026-07-20T00:00:00.000Z'
@@ -250,9 +266,25 @@ function anchor(index, { bounded = false } = {}) {
     visual_metaphor: ['一道门检查通行条件。', '流程箭头在确认节点等待。', '检查清单控制执行开关。'][index] || `第 ${index + 1} 个视觉隐喻。`,
     main_action: ['流程在门前等待确认。', '箭头通过确认节点。', '逐项勾选后开启执行。'][index] || `主体执行第 ${index + 1} 个动作。`,
     suggested_elements: ['gate', 'workflow arrow', 'check mark'],
-    short_labels: bounded && (index === 1 || index === 2) ? [] : ['边界', '确认', '执行'],
-    qa_risk: '模型可能画出多余品牌标记。',
-    ...(bounded ? { text_mode: index === 1 || index === 2 ? 'icons_only' : 'allowlist' } : {})
+    ...(bounded ? {
+      text_content: {
+        primary: {
+          headline: '确认流程边界',
+          headline_source_terms: ['边界'],
+          labels: ['边界', '执行'],
+          supporting_copy: null,
+          footer: null
+        },
+        compact: {
+          headline: '确认边界',
+          headline_source_terms: ['边界'],
+          labels: ['边界', '执行'],
+          supporting_copy: null,
+          footer: null
+        }
+      }
+    } : { short_labels: ['边界', '确认', '执行'] }),
+    qa_risk: '模型可能画出多余品牌标记。'
   };
 }
 
@@ -288,7 +320,7 @@ function coverageSource(platform, count) {
   ]).flat()].join('\n');
 }
 
-function fixture({ bounded = false, counts = imageCounts, coverage = true, lease = true } = {}) {
+function fixture({ bounded = true, counts = imageCounts, coverage = true, lease = true } = {}) {
   const runDir = mkdtempSync(join(tmpdir(), 'content-production-illustration-'));
   const profilePath = join(runDir, '00-intake', 'platform-profiles.json');
   mkdirSync(dirname(profilePath), { recursive: true });
@@ -327,14 +359,13 @@ function fixture({ bounded = false, counts = imageCounts, coverage = true, lease
   const pendingStage = { status: 'pending', attempt: 0, artifacts: [], error: null };
   const approvedGate = { status: 'approved', revision: 1, decision_ref: null, bound_artifacts: [] };
   const state = {
-    schema_version: 2,
+    schema_version: 3,
     run_id: 'fixture-run',
     run_mode: 'reviewed',
     status: 'running',
     current_stage: 'visual',
     snapshots: {
       platform_profiles: {
-        source_path: join(skillDir, 'references', 'platform-profiles.json'),
         snapshot_path: '00-intake/platform-profiles.json',
         sha256: sha(profilePath)
       }
@@ -345,25 +376,25 @@ function fixture({ bounded = false, counts = imageCounts, coverage = true, lease
         illustration: {
           status: 'PASS',
           contract: 'illustration-v1',
-          ...(bounded ? { profile: 'bounded-per-image' } : {}),
+          ...(bounded ? { profile: 'bounded-per-image-v2' } : {}),
           adapter_contract: 'illustration-orchestrated-coverage-v1',
           resources: [
             {
-              path: join(providerRoot, 'scripts', 'provider-contract.mjs'),
+              ref: { root: 'SKILL_ROOT', path: 'skills/post-illustration-images/scripts/provider-contract.mjs' },
               sha256: sha(join(providerRoot, 'scripts', 'provider-contract.mjs'))
             },
             {
-              path: join(providerRoot, 'references', 'orchestrated-provider.md'),
+              ref: { root: 'SKILL_ROOT', path: 'skills/post-illustration-images/references/orchestrated-provider.md' },
               sha256: sha(join(providerRoot, 'references', 'orchestrated-provider.md'))
             }
           ],
-          skill_path: providerSkill,
-          skill_sha256: 'a'.repeat(64)
+          skill_ref: { root: 'SKILL_ROOT', path: 'skills/post-illustration-images/SKILL.md' },
+          skill_sha256: sha(providerSkill)
         },
         wechat_cover: {
           status: 'PASS',
           contract: 'wechat-cover-v1',
-          skill_path: coverSkill,
+          skill_ref: { root: 'SKILL_ROOT', path: 'skills/wechat-sketch-cover/SKILL.md' },
           skill_sha256: sha(coverSkill)
         }
       }
@@ -377,7 +408,11 @@ function fixture({ bounded = false, counts = imageCounts, coverage = true, lease
       platforms: completedStage,
       editing: completedStage,
       titles: completedStage,
-      visual: { status: 'running', attempt: 1, artifacts: [], error: null },
+      visual: {
+        status: 'running', revision: 1, artifacts: [], error: null,
+        body_visual: { status: 'running', attempt: 1, artifacts: [], error: null },
+        wechat_cover: { status: 'running', attempt: 1, artifacts: [], error: null }
+      },
       package: pendingStage,
       final_qa: pendingStage
     },
@@ -415,6 +450,8 @@ function fixture({ bounded = false, counts = imageCounts, coverage = true, lease
 
 function createPlans(runDir, { counts = imageCounts } = {}) {
   const artifacts = [];
+  const bodyAttempt = readJson(join(runDir, 'run.json')).stages.visual.body_visual.attempt;
+  const version = `v${String(bodyAttempt).padStart(3, '0')}`;
   for (const platform of platforms) {
     const built = run('create-illustration-request.mjs', [
       runDir, 'plan', '--platform', platform,
@@ -424,8 +461,8 @@ function createPlans(runDir, { counts = imageCounts } = {}) {
     const requestPath = JSON.parse(built.stdout).request_path;
     const request = readJson(requestPath);
     const paths = request.expected_artifacts;
-    const bounded = request.options.execution_strategy === 'bounded_per_image';
-    const coverage = readJson(join(runDir, `07-visual/${platform}/coverage.v001.json`));
+    const bounded = request.options.execution_strategy === 'bounded_per_image_v2';
+    const coverage = readJson(join(runDir, `07-visual/${platform}/coverage.${version}.json`));
     const selectedUnits = coverage.coverage_units.filter((unit) => unit.eligible)
       .sort((left, right) => left.selection_rank - right.selection_rank)
       .slice(0, counts[platform])
@@ -446,7 +483,14 @@ function createPlans(runDir, { counts = imageCounts } = {}) {
         `- Visual metaphor: ${item.visual_metaphor}`,
         `- Main actor/object action: ${item.main_action}`,
         `- Suggested elements: ${item.suggested_elements.join(', ')}`,
-        `- Short labels: ${item.short_labels.join(', ')}`,
+        ...(item.text_content ? [
+          `- Primary headline: ${item.text_content.primary.headline}`,
+          `- Primary source terms: ${item.text_content.primary.headline_source_terms.join(', ')}`,
+          `- Primary labels: ${item.text_content.primary.labels.join(', ')}`,
+          `- Compact headline: ${item.text_content.compact.headline}`,
+          `- Compact source terms: ${item.text_content.compact.headline_source_terms.join(', ')}`,
+          `- Compact labels: ${item.text_content.compact.labels.join(', ')}`
+        ] : [`- Short labels: ${item.short_labels.join(', ')}`]),
         `- QA risk: ${item.qa_risk}`, ''
       ])
     ].join('\n');
@@ -861,10 +905,9 @@ test('visual plan approval happens inside the running visual stage', () => {
   }
 });
 
-test('visual completion enters package and reopening preserves title winners only', () => {
+test('aggregate visual rejects direct legacy completion transitions', () => {
   const { runDir, selections } = fixture();
   try {
-    const statePath = join(runDir, 'run.json');
     const plans = createPlans(runDir);
     const decision = createDecision(runDir);
     const approved = run('set-gate.mjs', [
@@ -872,57 +915,13 @@ test('visual completion enters package and reopening preserves title winners onl
       ...plans.flatMap((path) => ['--artifact', path])
     ]);
     assert.equal(approved.status, 0, approved.stderr || approved.stdout);
-    const artifacts = createGeneration(runDir);
-
-    const missingCover = run('set-stage.mjs', [
-      runDir, 'visual', 'completed',
-      ...artifacts.flatMap((path) => ['--artifact', path])
-    ]);
-    assert.equal(missingCover.status, 2);
-    assert.ok(JSON.parse(missingCover.stdout).issues.some((item) => item.code === 'invalid_visual_artifact_binding'));
-
-    artifacts.push(...createCover(runDir));
-    const completed = run('set-stage.mjs', [
-      runDir, 'visual', 'completed',
-      ...artifacts.flatMap((path) => ['--artifact', path])
-    ]);
-    assert.equal(completed.status, 0, completed.stderr || completed.stdout);
-    let current = readJson(statePath);
-    assert.equal(current.current_stage, 'package');
-
-    current.stages.package = { status: 'completed', attempt: 1, artifacts: [], error: null };
-    current.stages.final_qa = { status: 'completed', attempt: 1, artifacts: [], error: null };
-    current.gates.final = { status: 'approved', revision: 1, decision_ref: null, bound_artifacts: [] };
-    current.status = 'running';
-    current.current_stage = 'package';
-    write(statePath, JSON.stringify(current, null, 2));
-
-    const reopened = run('set-stage.mjs', [runDir, 'visual', 'running']);
-    assert.equal(reopened.status, 0, reopened.stderr || reopened.stdout);
-    current = readJson(statePath);
-    assert.equal(current.stages.visual.attempt, 2);
-    assert.deepEqual(current.stages.visual.artifacts, []);
-    assert.equal(current.gates.visual.status, 'pending');
-    assert.equal(current.stages.package.status, 'pending');
-    assert.equal(current.stages.final_qa.status, 'pending');
-    assert.equal(current.gates.final.status, 'pending');
-    assert.equal(current.gates.titles.status, 'approved');
+    const direct = run('set-stage.mjs', [runDir, 'visual', 'completed']);
+    assert.equal(direct.status, 2);
+    assert.ok(JSON.parse(direct.stdout).issues.some((item) => item.code === 'visual_component_transition_required'));
+    const current = readJson(join(runDir, 'run.json'));
+    assert.equal(current.stages.visual.body_visual.attempt, 1);
+    assert.equal(current.stages.visual.wechat_cover.attempt, 1);
     assert.deepEqual(current.platform_selections, Object.fromEntries(selections.map((item) => [item.platform, item])));
-    const blockedNextPlan = run('create-illustration-request.mjs', [runDir, 'plan', '--platform', 'wechat']);
-    assert.equal(blockedNextPlan.status, 2);
-    assert.ok(JSON.parse(blockedNextPlan.stdout).blockers.some((item) => item.code === 'visual_policy_missing'));
-    const nextCoverage = run('create-visual-coverage.mjs', [runDir, '--all']);
-    assert.equal(nextCoverage.status, 0, nextCoverage.stderr || nextCoverage.stdout);
-    const nextLease = run('backend-lease.mjs', [runDir, 'create', '--native-status', 'available']);
-    assert.equal(nextLease.status, 0, nextLease.stderr || nextLease.stdout);
-    const nextPlan = run('create-illustration-request.mjs', [runDir, 'plan', '--platform', 'wechat']);
-    assert.equal(nextPlan.status, 0, nextPlan.stderr || nextPlan.stdout);
-    const nextRequest = readJson(JSON.parse(nextPlan.stdout).request_path);
-    assert.match(JSON.parse(nextPlan.stdout).request_path, /illustration-plan\.v002\.request\.json$/);
-    assert.deepEqual(nextRequest.expected_artifacts, [
-      '07-visual/wechat/plan.v002.json',
-      '07-visual/wechat/shot-list.v002.md'
-    ]);
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }
@@ -959,11 +958,12 @@ test('restarting a blocked visual generation creates a new attempt', () => {
       runDir, 'visual', 'approved', '--decision', decision,
       ...plans.flatMap((path) => ['--artifact', path])
     ]).status, 0);
-    assert.equal(run('set-stage.mjs', [runDir, 'visual', 'blocked', '--error', 'backend unavailable']).status, 0);
-    const restarted = run('set-stage.mjs', [runDir, 'visual', 'running']);
+    assert.equal(run('set-visual-component.mjs', [runDir, 'body_visual', 'blocked', '--error', 'backend unavailable']).status, 0);
+    const restarted = run('set-visual-component.mjs', [runDir, 'body_visual', 'running']);
     assert.equal(restarted.status, 0, restarted.stderr || restarted.stdout);
     const state = readJson(join(runDir, 'run.json'));
-    assert.equal(state.stages.visual.attempt, 2);
+    assert.equal(state.stages.visual.body_visual.attempt, 2);
+    assert.equal(state.stages.visual.wechat_cover.attempt, 1);
     assert.equal(state.gates.visual.status, 'pending');
     assert.equal(state.gates.titles.status, 'approved');
     assert.deepEqual(state.platform_selections, Object.fromEntries(selections.map((item) => [item.platform, item])));
@@ -982,7 +982,7 @@ test('bounded illustration plans derive max_images from coverage without changin
     const request = readJson(JSON.parse(built.stdout).request_path);
     assert.equal(request.provider_contract, 'illustration-v1');
     assert.equal(request.options.max_images, 2);
-    assert.equal(request.options.execution_strategy, 'bounded_per_image');
+    assert.equal(request.options.execution_strategy, 'bounded_per_image_v2');
 
     const tooMany = run('create-illustration-request.mjs', [
       runDir, 'plan', '--platform', 'zhihu', '--max-images', '9'
@@ -1011,13 +1011,13 @@ test('current visual attempt requires one immutable backend lease before provide
     const outputPath = join(runDir, '07-visual', 'wechat', 'images', 'lease-check.png');
     write(promptPath, 'Generate one test image.');
     const native = run('run-image-generation.mjs', [
-      runDir, '--prompt-file', promptPath, '--output', outputPath
+      runDir, '--consumer', 'body_visual', '--prompt-file', promptPath, '--output', outputPath
     ]);
     assert.equal(native.status, 0, native.stderr || native.stdout);
     assert.equal(JSON.parse(native.stdout).status, 'NATIVE_TOOL_CALL_REQUIRED');
     assert.equal(existsSync(outputPath), false);
     const formatMismatch = run('run-image-generation.mjs', [
-      runDir, '--prompt-file', promptPath, '--output', outputPath, '--output-format', 'jpeg'
+      runDir, '--consumer', 'body_visual', '--prompt-file', promptPath, '--output', outputPath, '--output-format', 'jpeg'
     ]);
     assert.equal(formatMismatch.status, 2);
     assert.equal(existsSync(outputPath), false);
@@ -1051,34 +1051,41 @@ test('current visual attempt requires one immutable backend lease before provide
 test('backend outcomes stay on the selected route and only irrecoverable errors block the attempt', () => {
   const { runDir } = fixture({ bounded: true });
   try {
-    const leasePath = join(runDir, '07-visual', 'backend-lease.v001.json');
+    const leasePath = join(runDir, '07-visual', 'backend-lease.body.v001.json');
     const leaseHash = sha(leasePath);
-    const quality = run('backend-lease.mjs', [runDir, 'record', '--outcome', 'quality-failure']);
+    const quality = run('backend-lease.mjs', [runDir, 'record', '--consumer', 'body_visual', '--outcome', 'quality-failure']);
     assert.equal(quality.status, 0, quality.stderr || quality.stdout);
-    assert.deepEqual(JSON.parse(quality.stdout), {
+    assert.deepEqual({
+      status: JSON.parse(quality.stdout).status,
+      action: JSON.parse(quality.stdout).action,
+      retry_backend: JSON.parse(quality.stdout).retry_backend,
+      block_attempt: JSON.parse(quality.stdout).block_attempt
+    }, {
       status: 'PASS', action: 'retry-candidate', retry_backend: 'runtime-native', block_attempt: false
     });
     assert.equal(sha(leasePath), leaseHash);
 
-    const transient = run('backend-lease.mjs', [runDir, 'record', '--outcome', 'transient-error']);
+    const transient = run('backend-lease.mjs', [runDir, 'record', '--consumer', 'body_visual', '--outcome', 'transient-error']);
     assert.equal(transient.status, 0, transient.stderr || transient.stdout);
     assert.equal(JSON.parse(transient.stdout).retry_backend, 'runtime-native');
     assert.equal(sha(leasePath), leaseHash);
 
-    const failed = run('backend-lease.mjs', [runDir, 'record', '--outcome', 'irrecoverable-execution-error']);
+    const failed = run('backend-lease.mjs', [runDir, 'record', '--consumer', 'body_visual', '--outcome', 'irrecoverable-execution-error']);
     assert.equal(failed.status, 2);
     const state = readJson(join(runDir, 'run.json'));
-    assert.equal(state.status, 'blocked');
-    assert.equal(state.stages.visual.status, 'blocked');
-    assert.equal(state.stages.visual.attempt, 1);
+    assert.equal(state.status, 'running');
+    assert.equal(state.stages.visual.status, 'running');
+    assert.equal(state.stages.visual.body_visual.status, 'blocked');
+    assert.equal(state.stages.visual.wechat_cover.status, 'running');
     assert.equal(existsSync(join(runDir, '07-visual', 'wechat', 'illustration-plan.request.json')), false);
     assert.equal(existsSync(join(runDir, '07-visual', 'wechat', 'prompts')), false);
 
-    const restarted = run('set-stage.mjs', [runDir, 'visual', 'running']);
+    const restarted = run('set-visual-component.mjs', [runDir, 'body_visual', 'running']);
     assert.equal(restarted.status, 0, restarted.stderr || restarted.stdout);
     const next = readJson(join(runDir, 'run.json'));
-    assert.equal(next.stages.visual.attempt, 2);
-    assert.equal(existsSync(join(runDir, '07-visual', 'backend-lease.v002.json')), false);
+    assert.equal(next.stages.visual.body_visual.attempt, 2);
+    assert.equal(next.stages.visual.wechat_cover.attempt, 1);
+    assert.equal(existsSync(join(runDir, '07-visual', 'backend-lease.body.v002.json')), false);
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }
@@ -1314,7 +1321,7 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
     ].join('\n'));
     const ordinaryTextCommand = runChildProvider(['preflight', firstPath]);
     assert.equal(ordinaryTextCommand.status, 2);
-    assert.ok(JSON.parse(ordinaryTextCommand.stdout).issues.some((item) => item.code === 'illustration_prompt_text_not_allowed'));
+    assert.ok(JSON.parse(ordinaryTextCommand.stdout).issues.some((item) => item.code === 'illustration_prompt_compile_drift'));
     write(join(runDir, firstRequest.artifacts.prompt), [
       'Create one 3:4 explainer at aspect ratio 0.75.',
       'Use only the readable label “边界”. Footer: 未授权说明。',
@@ -1322,7 +1329,7 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
     ].join('\n'));
     const outsideAllowlist = runChildProvider(['preflight', firstPath]);
     assert.equal(outsideAllowlist.status, 2);
-    assert.ok(JSON.parse(outsideAllowlist.stdout).issues.some((item) => item.code === 'illustration_prompt_text_not_allowed'));
+    assert.ok(JSON.parse(outsideAllowlist.stdout).issues.some((item) => item.code === 'illustration_prompt_compile_drift'));
     write(join(runDir, firstRequest.artifacts.prompt), [
       'Create one 3:4 explainer at aspect ratio 0.75 and render at 2:3.',
       'Use only the readable label “边界”. No other readable text.'
@@ -1330,11 +1337,9 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
     const conflictingRatio = runChildProvider(['preflight', firstPath]);
     assert.equal(conflictingRatio.status, 2);
     assert.ok(JSON.parse(conflictingRatio.stdout).issues.some((item) => item.code === 'illustration_prompt_aspect_conflict'));
-    write(join(runDir, firstRequest.artifacts.prompt), [
-      'Create one 3:4 explainer at aspect ratio 0.75.',
-      'Use only the readable label “边界”.',
-      'Exclude 2:3 and 1024x1536. No other readable text.'
-    ].join('\n'));
+    assert.equal(spawnSync(process.execPath, [
+      join(providerRoot, 'scripts', 'compile-generation-prompt.mjs'), 'compile', firstPath
+    ], { cwd: providerRoot, encoding: 'utf8' }).status, 0);
     const preflight = runChildProvider(['preflight', firstPath]);
     assert.equal(preflight.status, 0, preflight.stderr || preflight.stdout);
     mkdirSync(dirname(join(runDir, firstRequest.artifacts.candidate)), { recursive: true });
@@ -1348,7 +1353,10 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
       style_qa_status: 'pass',
       brand_qa_status: 'pass',
       failed_gates: [],
-      readable_text: ['边界'],
+      readable_text: [
+        firstRequest.anchor.text_content.primary.headline,
+        ...firstRequest.anchor.text_content.primary.labels
+      ],
       residual_risk: 'none',
       reviewer: 'fixture-reviewer',
       reviewed_at: '2026-07-20T00:00:00.000Z'
@@ -1364,11 +1372,9 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
     });
     const secondRequest = readJson(secondPath);
     assert.equal(secondRequest.candidate_attempt, 2);
-    write(join(runDir, secondRequest.artifacts.prompt), [
-      'Create one 3:4 explainer at aspect ratio 0.75.',
-      'Use only the readable label “边界”.',
-      'Exclude 2:3 and 1024x1536. No other readable text.'
-    ].join('\n'));
+    assert.equal(spawnSync(process.execPath, [
+      join(providerRoot, 'scripts', 'compile-generation-prompt.mjs'), 'compile', secondPath
+    ], { cwd: providerRoot, encoding: 'utf8' }).status, 0);
     assert.equal(runChildProvider(['preflight', secondPath]).status, 0);
     mkdirSync(dirname(join(runDir, secondRequest.artifacts.candidate)), { recursive: true });
     mkdirSync(dirname(join(runDir, secondRequest.artifacts.delivery)), { recursive: true });
@@ -1381,7 +1387,10 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
       style_qa_status: 'pass',
       brand_qa_status: 'pass',
       failed_gates: [],
-      readable_text: ['边界'],
+      readable_text: [
+        secondRequest.anchor.text_content.primary.headline,
+        ...secondRequest.anchor.text_content.primary.labels
+      ],
       residual_risk: 'none',
       reviewer: 'fixture-reviewer',
       reviewed_at: '2026-07-20T00:00:01.000Z'
@@ -1389,11 +1398,51 @@ test('bounded child rejects 2:3, retries only that image, and accepts native 108
     assert.equal(runChildProvider(['finalize', secondPath]).status, 0);
     const acceptedHash = sha(join(runDir, secondRequest.artifacts.candidate));
     const thirdDispatch = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
-    assert.ok(thirdDispatch.generation_requests.some((path) => {
+    assert.equal(thirdDispatch.generation_requests.some((path) => {
       const request = readJson(path);
       return request.platform === 'xiaohongshu' && request.anchor.image_id !== firstRequest.anchor.image_id;
-    }));
+    }), false);
     assert.equal(sha(join(runDir, secondRequest.artifacts.candidate)), acceptedHash);
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('compact text remains selected after a later non-text candidate failure', () => {
+  const counts = { wechat: 1, xiaohongshu: 4, zhihu: 1, weibo: 1, toutiao: 1 };
+  const runDir = prepareBoundedVisual(counts, { cover: false });
+  try {
+    const first = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
+    const firstWechatPath = first.generation_requests.find((path) => readJson(path).platform === 'wechat');
+    assert.ok(firstWechatPath);
+    for (const requestPath of first.generation_requests) {
+      if (requestPath === firstWechatPath) {
+        completeChild(runDir, requestPath, { readableText: [], expectedStatus: 2 });
+      } else {
+        completeChild(runDir, requestPath);
+      }
+    }
+
+    const second = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
+    const secondWechatPath = second.generation_requests.find((path) => readJson(path).platform === 'wechat');
+    assert.ok(secondWechatPath);
+    const secondWechat = readJson(secondWechatPath);
+    assert.equal(secondWechat.candidate_attempt, 2);
+    assert.equal(secondWechat.text_variant, 'compact');
+    for (const requestPath of second.generation_requests) {
+      if (requestPath === secondWechatPath) {
+        completeChild(runDir, requestPath, { width: 1024, height: 1536, expectedStatus: 2 });
+      } else {
+        completeChild(runDir, requestPath);
+      }
+    }
+
+    const third = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
+    const thirdWechatPath = third.generation_requests.find((path) => readJson(path).platform === 'wechat');
+    assert.ok(thirdWechatPath);
+    const thirdWechat = readJson(thirdWechatPath);
+    assert.equal(thirdWechat.candidate_attempt, 3);
+    assert.equal(thirdWechat.text_variant, 'compact');
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }
@@ -1455,26 +1504,100 @@ test('set QA retries only named images, preserves frozen hashes, orders bundles,
 
     const noRegeneration = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
     assert.ok(noRegeneration.generation_requests.every((path) => readJson(path).mode !== 'generate_image'));
-    const coverArtifacts = createCover(runDir);
     assert.equal(run('illustration-queue.mjs', [runDir, 'dispatch']).status, 0);
     const visualArtifacts = platforms.flatMap((platform) => [
       `07-visual/${platform}/plan.json`, `07-visual/${platform}/shot-list.md`,
       `07-visual/${platform}/bundle.json`, `07-visual/${platform}/manifest.md`
     ]);
-    visualArtifacts.push(...coverArtifacts);
-    assert.equal(visualArtifacts.length, 22);
     const extraControl = join(runDir, '07-visual/xiaohongshu/children/extra/result.json');
     write(extraControl, '{}');
-    const undeclared = run('set-stage.mjs', [
-      runDir, 'visual', 'completed', ...visualArtifacts.flatMap((path) => ['--artifact', path])
+    const undeclared = run('set-visual-component.mjs', [
+      runDir, 'body_visual', 'completed', ...visualArtifacts.flatMap((path) => ['--artifact', path])
     ]);
     assert.equal(undeclared.status, 2);
     assert.ok(JSON.parse(undeclared.stdout).issues.some((item) => item.code === 'undeclared_illustration_control'));
     rmSync(dirname(extraControl), { recursive: true, force: true });
-    const completed = run('set-stage.mjs', [
-      runDir, 'visual', 'completed', ...visualArtifacts.flatMap((path) => ['--artifact', path])
+    const bodyCompleted = run('set-visual-component.mjs', [
+      runDir, 'body_visual', 'completed', ...visualArtifacts.flatMap((path) => ['--artifact', path])
     ]);
-    assert.equal(completed.status, 0, completed.stderr || completed.stdout);
+    assert.equal(bodyCompleted.status, 0, bodyCompleted.stderr || bodyCompleted.stdout);
+    const frozenBody = readJson(join(runDir, 'run.json')).stages.visual.body_visual;
+    assert.equal(run('set-visual-component.mjs', [
+      runDir, 'wechat_cover', 'blocked', '--error', 'cover generation failed'
+    ]).status, 0);
+    assert.equal(run('set-visual-component.mjs', [runDir, 'wechat_cover', 'running']).status, 0);
+    assert.equal(run('backend-lease.mjs', [
+      runDir, 'create', '--consumer', 'wechat_cover', '--native-status', 'available'
+    ]).status, 0);
+    const afterResume = readJson(join(runDir, 'run.json'));
+    assert.equal(afterResume.stages.visual.body_visual.status, 'completed');
+    assert.equal(afterResume.stages.visual.body_visual.attempt, frozenBody.attempt);
+    assert.deepEqual(afterResume.stages.visual.body_visual.artifacts, frozenBody.artifacts);
+    assert.equal(afterResume.stages.visual.wechat_cover.attempt, 2);
+    const coverArtifacts = createCover(runDir);
+    assert.equal(visualArtifacts.length + coverArtifacts.length, 22);
+    const coverCompleted = run('set-visual-component.mjs', [
+      runDir, 'wechat_cover', 'completed', ...coverArtifacts.flatMap((path) => ['--artifact', path])
+    ]);
+    assert.equal(coverCompleted.status, 0, coverCompleted.stderr || coverCompleted.stdout);
+    const state = readJson(join(runDir, 'run.json'));
+    assert.equal(state.stages.visual.status, 'completed');
+    assert.equal(state.stages.visual.artifacts.length, 22);
+    assert.equal(state.stages.visual.body_visual.attempt, frozenBody.attempt);
+    assert.deepEqual(state.stages.visual.body_visual.artifacts, frozenBody.artifacts);
+    assert.equal(state.stages.visual.wechat_cover.attempt, 2);
+    assert.equal(run('set-stage.mjs', [runDir, 'package', 'running']).status, 0);
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('an unchanged body attempt reuses all PASS pixels and skips generation and Set QA', () => {
+  const counts = { wechat: 1, xiaohongshu: 4, zhihu: 1, weibo: 1, toutiao: 1 };
+  const runDir = prepareBoundedVisual(counts, { cover: false });
+  try {
+    for (let cycle = 0; cycle < 20; cycle += 1) {
+      const output = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
+      for (const requestPath of output.generation_requests) completeChild(runDir, requestPath);
+      for (const requestPath of output.qa_requests) completeSetQa(runDir, requestPath);
+      if (platforms.every((platform) => existsSync(join(runDir, `07-visual/${platform}/bundle.json`)))) break;
+    }
+    const original = Object.fromEntries(platforms.map((platform) => [platform,
+      readJson(join(runDir, `07-visual/${platform}/bundle.json`)).images.map((image) => ({
+        image_id: image.image_id, file: image.file, sha256: image.file_sha256
+      }))
+    ]));
+
+    assert.equal(run('set-visual-component.mjs', [runDir, 'body_visual', 'blocked', '--error', 'resume test']).status, 0);
+    assert.equal(run('set-visual-component.mjs', [runDir, 'body_visual', 'running']).status, 0);
+    assert.equal(run('create-visual-coverage.mjs', [runDir, '--all']).status, 0);
+    assert.equal(run('backend-lease.mjs', [
+      runDir, 'create', '--consumer', 'body_visual', '--native-status', 'available'
+    ]).status, 0);
+    const plans = createPlans(runDir, { counts });
+    const decision = createDecision(runDir);
+    assert.equal(run('set-gate.mjs', [
+      runDir, 'visual', 'approved', '--decision', decision,
+      ...plans.flatMap((path) => ['--artifact', path])
+    ]).status, 0);
+    for (const platform of platforms) {
+      assert.equal(run('create-illustration-request.mjs', [runDir, 'generate', '--platform', platform]).status, 0);
+    }
+
+    const initialized = run('illustration-queue.mjs', [runDir, 'init']);
+    assert.equal(initialized.status, 0, initialized.stderr || initialized.stdout);
+    const dispatched = JSON.parse(run('illustration-queue.mjs', [runDir, 'dispatch']).stdout);
+    assert.deepEqual(dispatched.generation_requests, []);
+    assert.deepEqual(dispatched.qa_requests, []);
+    const queue = readJson(join(runDir, '07-visual/generation-queue.v002.json'));
+    assert.equal(queue.status, 'completed');
+    for (const platform of platforms) {
+      assert.equal(queue.suites[platform].reuse.mode, 'suite');
+      const reused = readJson(join(runDir, `07-visual/${platform}/bundle.v002.json`));
+      assert.deepEqual(reused.images.map((image) => ({
+        image_id: image.image_id, file: image.file, sha256: image.file_sha256
+      })), original[platform]);
+    }
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }

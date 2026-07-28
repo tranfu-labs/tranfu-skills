@@ -57,6 +57,13 @@
     "defaultEnabled": true,
     "userOverrideAllowed": true
   },
+  "textPolicy": {
+    "defaultMode": "allowlist",
+    "iconsOnlyAllowed": false,
+    "headline": { "minCharacters": 2, "maxCharacters": 14 },
+    "labels": { "minItems": 2, "maxItems": 5, "maxCharactersPerItem": 8 }
+  },
+  "generationPrompt": "Create a playful Xiaohongshu explainer notebook page with coral framing, warm paper, bold marker hierarchy, consistent cute icons, and restrained sticker accents.",
   "inputHandling": {
     "preserveNativeOutput": true,
     "ratioTolerance": 0.002,

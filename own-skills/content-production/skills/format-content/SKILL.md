@@ -13,7 +13,7 @@ Convert one Markdown article into WeChat-compatible inline-styled HTML with the 
 
 Before applying the standalone scope guard, inspect the task input for any of these provider markers:
 
-- `contract: content-production-provider/v1`
+- `contract: content-production-provider/v2`
 - `capability: wechat_layout`
 - `provider_contract: wechat-layout-v1`
 - `content-production-provider: wechat-layout-v1`

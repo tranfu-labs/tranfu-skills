@@ -27,18 +27,20 @@ Never ask the user a provider-mode question. Invalid requests, resource/input dr
 source deficiencies return `BLOCKED`. Candidate schema, content, HTML safety, validation, image,
 placeholder, or preview failures return `FAILED`.
 
+The request omits `run_dir`. The provider locates and verifies its owner `run.json` by ascending from
+the canonical request file; every business path below is run-relative POSIX.
+
 ## Request
 
 The exact request envelope is:
 
 ```json
 {
-  "schema_version": 1,
-  "contract": "content-production-provider/v1",
+  "schema_version": 2,
+  "contract": "content-production-provider/v2",
   "task_id": "wechat-layout:<run_id>:wechat:<A|B>:package-001",
   "capability": "wechat_layout",
   "provider_contract": "wechat-layout-v1",
-  "run_dir": "/absolute/run-dir",
   "run_mode": "autonomous",
   "mode": "format_wechat",
   "attempt": 1,

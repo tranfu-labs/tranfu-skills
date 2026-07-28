@@ -11,6 +11,7 @@ import {
   markdownImageRefs,
   readJson,
   readText,
+  resolveRunPortablePathRef,
   sha256
 } from './lib.mjs';
 import { packagePaths, validatePublishPackages } from './package-contracts.mjs';
@@ -19,7 +20,7 @@ const execFileAsync = promisify(execFile);
 const SHA256 = /^[a-f0-9]{64}$/;
 const REQUEST_KEYS = [
   'schema_version', 'contract', 'task_id', 'capability', 'provider_contract',
-  'run_dir', 'run_mode', 'mode', 'attempt', 'platform', 'variant', 'inputs',
+  'run_mode', 'mode', 'attempt', 'platform', 'variant', 'inputs',
   'output_dir', 'expected_artifacts', 'options', 'interaction_policy'
 ];
 const INPUT_KEYS = ['role', 'path', 'sha256'];
@@ -484,8 +485,8 @@ export function wechatLayoutPaths(state) {
 
 export function wechatLayoutProviderRequired(state) {
   const provider = state?.capabilities?.providers?.wechat_layout;
-  return state?.schema_version === 2 && (nonempty(state?.capabilities?.config_path)
-    || provider?.required === true || nonempty(provider?.skill_path));
+  return state?.schema_version === 3 && (state?.capabilities?.config_ref
+    || provider?.required === true || provider?.skill_ref);
 }
 
 async function resourceBindings(providerRoot, providerRootReal, provider, issues) {
@@ -523,7 +524,7 @@ async function loadContext(runDir, state, { requireRunning = false } = {}) {
   }
   const stage = state?.stages?.package;
   const allowed = requireRunning ? ['running'] : ['running', 'completed'];
-  if (state?.schema_version !== 2 || !allowed.includes(stage?.status)
+  if (state?.schema_version !== 3 || !allowed.includes(stage?.status)
     || !Number.isInteger(stage?.attempt) || stage.attempt < 1
     || requireRunning && (state?.status !== 'running' || state?.current_stage !== 'package')) {
     issues.push(issue('layout_stage_mismatch', `WeChat layout requires the current positive package attempt to be ${allowed.join(' or ')}.`));
@@ -533,11 +534,11 @@ async function loadContext(runDir, state, { requireRunning = false } = {}) {
   let providerRootReal = null;
   let resources = {};
   if (provider?.status !== 'PASS' || provider?.contract !== 'wechat-layout-v1'
-    || !nonempty(provider?.skill_path) || !SHA256.test(provider?.skill_sha256 || '')) {
+    || !provider?.skill_ref || !SHA256.test(provider?.skill_sha256 || '')) {
     issues.push(issue('wechat_layout_provider_unavailable', 'The WeChat layout provider snapshot is not PASS, hashed, and registered for wechat-layout-v1.'));
   } else {
     try {
-      const skillPath = resolve(provider.skill_path);
+      const skillPath = resolveRunPortablePathRef(provider.skill_ref, root);
       const stat = await lstat(skillPath);
       if (stat.isSymbolicLink() || !stat.isFile() || await fileSha256(skillPath) !== provider.skill_sha256) {
         throw new Error('layout provider SKILL.md changed after capability preflight');
@@ -576,12 +577,11 @@ function expectedRequest(context) {
     resource_bindings: context.resources
   };
   return {
-    schema_version: 1,
-    contract: 'content-production-provider/v1',
+    schema_version: 2,
+    contract: 'content-production-provider/v2',
     task_id: `wechat-layout:${state.run_id}:wechat:${wechat.metadata.variant}:package-${String(paths.attempt).padStart(3, '0')}`,
     capability: 'wechat_layout',
     provider_contract: 'wechat-layout-v1',
-    run_dir: context.root,
     run_mode: state.run_mode,
     mode: 'format_wechat',
     attempt: paths.attempt,
@@ -796,8 +796,8 @@ export async function validateWechatLayoutProvider(runDir, state) {
     { role: 'preview_html_candidate', path: context.paths.stagedPreview, sha256: await fileSha256(previewPath) }
   ] : [];
   const resultValid = exactKeys(result, RESULT_KEYS)
-    && result.schema_version === 1
-    && result.contract === 'content-production-provider/v1'
+    && result.schema_version === 2
+    && result.contract === 'content-production-provider/v2'
     && result.provider_contract === 'wechat-layout-v1'
     && result.task_id === expected.task_id
     && result.request_sha256 === (requestFile.absolute ? await fileSha256(requestFile.absolute) : null)

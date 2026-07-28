@@ -14,7 +14,7 @@ Build a traceable Chinese research package before AI and technology content is w
 
 默认执行下文的独立模式，维护 `WORKDIR/reference/collect-sources/` 三份 append-only Markdown。
 
-当 request 出现 `contract: content-production-provider/v1`、`capability: source_research` 或 `content-production-provider: source-research-v1` 任一总控标志时，必须切换到总控模式；任一总控标志存在但 request 无效时，返回结构化 `BLOCKED`，不得回退独立模式。总控模式必须完整读取本文件及四份 references，然后严格执行 [`references/orchestrated-provider.md`](references/orchestrated-provider.md)：
+当 request 出现 `contract: content-production-provider/v2`、`capability: source_research` 或 `content-production-provider: source-research-v1` 任一总控标志时，必须切换到总控模式；任一总控标志存在但 request 无效时，返回结构化 `BLOCKED`，不得回退独立模式。总控模式必须完整读取本文件及四份 references，然后严格执行 [`references/orchestrated-provider.md`](references/orchestrated-provider.md)：
 
 ```text
 content-production-provider: source-research-v1

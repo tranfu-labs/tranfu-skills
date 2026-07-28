@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs';
 import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
-const CONTRACT = 'content-production-provider/v1';
+const CONTRACT = 'content-production-provider/v2';
 const PROVIDER_CONTRACT = 'source-research-v1';
 const CAPABILITY = 'source_research';
 const OUTPUT_DIR = '02-research';
@@ -58,6 +58,28 @@ function runRelative(runDir, path) {
   return relative(runDir, path).split('\\').join('/');
 }
 
+async function findRunRoot(requestPath) {
+  const requestReal = await realpath(requestPath);
+  let current = dirname(requestPath);
+  while (true) {
+    const statePath = join(current, 'run.json');
+    if (existsSync(statePath)) {
+      const runStat = await lstat(current);
+      const stateStat = await lstat(statePath);
+      const runReal = await realpath(current);
+      if (runStat.isSymbolicLink() || !runStat.isDirectory() || stateStat.isSymbolicLink() || !stateStat.isFile()
+        || !inside(runReal, requestReal) || await realpath(statePath) !== join(runReal, 'run.json')) {
+        throw new Error('Request ancestry does not resolve to a safe run root.');
+      }
+      return { runDir: current, runRealDir: runReal };
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error('Cannot locate run.json from request ancestry.');
+}
+
 function sameItems(actual, expected) {
   return Array.isArray(actual)
     && actual.length === expected.length
@@ -100,8 +122,8 @@ async function validateRequest(requestInput) {
     return { issues, requestPath, request, runDir: null, inputs: new Map() };
   }
 
-  if (request.schema_version !== 1 || request.contract !== CONTRACT) {
-    addIssue(issues, 'invalid_provider_request', `Request must use ${CONTRACT} schema 1.`);
+  if (request.schema_version !== 2 || request.contract !== CONTRACT || Object.hasOwn(request, 'run_dir')) {
+    addIssue(issues, 'invalid_provider_request', `Request must use ${CONTRACT} schema 2 without run_dir.`);
   }
   if (!request.task_id || request.capability !== CAPABILITY || request.provider_contract !== PROVIDER_CONTRACT) {
     addIssue(issues, 'provider_contract_mismatch', `Request must target ${CAPABILITY} with ${PROVIDER_CONTRACT}.`);
@@ -122,19 +144,12 @@ async function validateRequest(requestInput) {
     addIssue(issues, 'invalid_research_input_mode', 'options.input_mode must be brief, topic, or outline.');
   }
 
-  const runDir = typeof request.run_dir === 'string' && isAbsolute(request.run_dir)
-    ? resolve(request.run_dir)
-    : null;
+  let runDir = null;
   let runRealDir = null;
-  if (!runDir || !existsSync(runDir)) {
-    addIssue(issues, 'invalid_run_dir', 'run_dir must be an existing absolute directory.');
-  } else {
-    const stat = await lstat(runDir);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) {
-      addIssue(issues, 'invalid_run_dir', 'run_dir must be a real directory, not a symbolic link.');
-    } else {
-      runRealDir = await realpath(runDir);
-    }
+  try {
+    ({ runDir, runRealDir } = await findRunRoot(requestPath));
+  } catch (error) {
+    addIssue(issues, 'invalid_run_root', error.message);
   }
 
   const canonicalOutputDir = runDir ? join(runDir, OUTPUT_DIR) : null;
@@ -697,7 +712,7 @@ async function validateArtifacts(context) {
 
 function makeResult(context, status, artifacts, checks, issues, warnings = []) {
   return {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER_CONTRACT,
     task_id: context.request?.task_id || 'unknown',
@@ -833,7 +848,6 @@ async function main() {
     emit({
       status: 'PASS',
       task_id: context.request.task_id,
-      run_dir: context.runDir,
       output_dir: OUTPUT_DIR,
       inputs: Object.fromEntries([...context.inputs].map(([role, input]) => [role, runRelative(context.runDir, input.absolutePath)])),
       issues: []

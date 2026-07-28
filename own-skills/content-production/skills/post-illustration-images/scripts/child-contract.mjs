@@ -4,15 +4,20 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { compileGenerationPrompt, readableTextForVariant } from './compile-generation-prompt.mjs';
 import { readRasterInfo } from './validate-style-bundle.mjs';
+import { findRunDirFromRequest } from '../../../scripts/lib.mjs';
 
-const CONTRACT = 'content-production-provider/v1';
+const SCRIPT_PATH = fileURLToPath(import.meta.url);
+const SKILL_ROOT = resolve(dirname(SCRIPT_PATH), '..');
+const CONTRACT = 'content-production-provider/v2';
 const PROVIDER = 'illustration-v1';
 const PLATFORMS = new Set(['wechat', 'xiaohongshu', 'zhihu', 'weibo', 'toutiao']);
 const REQUEST_KEYS = [
-  'schema_version', 'contract', 'provider_contract', 'capability', 'task_id', 'run_dir',
-  'run_mode', 'mode', 'visual_attempt', 'candidate_attempt', 'platform', 'provider_platform',
-  'variant', 'parent_task_id', 'selection', 'inputs', 'anchor', 'style', 'brand',
+  'schema_version', 'contract', 'provider_contract', 'capability', 'task_id',
+  'run_mode', 'mode', 'body_attempt', 'candidate_attempt', 'platform', 'provider_platform',
+  'variant', 'parent_task_id', 'selection', 'inputs', 'anchor', 'text_variant', 'style', 'brand',
   'generation_backend', 'generation_geometry', 'output_dir', 'artifacts',
   'expected_artifacts', 'interaction_policy'
 ];
@@ -87,11 +92,11 @@ async function validateRequest(input) {
     return context;
   }
   const request = context.request;
-  context.runDir = resolve(request.run_dir || '');
   try {
+    context.runDir = await findRunDirFromRequest(context.requestPath);
     const stat = await lstat(context.runDir);
     context.runReal = await realpath(context.runDir);
-    if (!isAbsolute(request.run_dir || '') || stat.isSymbolicLink() || !stat.isDirectory()
+    if (stat.isSymbolicLink() || !stat.isDirectory()
       || !inside(context.runDir, context.requestPath)) throw new Error('run_dir or request path is unsafe.');
   } catch (error) {
     add(context.issues, 'invalid_illustration_child_run', error.message);
@@ -102,13 +107,14 @@ async function validateRequest(input) {
     add(context.issues, 'invalid_illustration_child_state', error.message);
   }
   const expectedProvider = request.platform === 'xiaohongshu' ? 'xhs' : request.platform;
-  const taskPattern = new RegExp(`^illustration:${state?.run_id || ''}:${request.platform}:${request.variant}:${request.anchor?.image_id}:candidate-${String(request.candidate_attempt).padStart(2, '0')}:visual-${String(request.visual_attempt).padStart(3, '0')}$`);
-  if (!exactKeys(request, REQUEST_KEYS) || request.schema_version !== 1 || request.contract !== CONTRACT
+  const taskPattern = new RegExp(`^illustration:${state?.run_id || ''}:${request.platform}:${request.variant}:${request.anchor?.image_id}:candidate-${String(request.candidate_attempt).padStart(2, '0')}:body-${String(request.body_attempt).padStart(3, '0')}$`);
+  if (!exactKeys(request, REQUEST_KEYS) || request.schema_version !== 2 || request.contract !== CONTRACT
     || request.provider_contract !== PROVIDER || request.capability !== 'illustration'
     || request.mode !== 'generate_image' || request.interaction_policy !== 'return_to_orchestrator'
     || !PLATFORMS.has(request.platform) || request.provider_platform !== expectedProvider
-    || !['A', 'B'].includes(request.variant) || !Number.isInteger(request.visual_attempt)
+    || !['A', 'B'].includes(request.variant) || !Number.isInteger(request.body_attempt)
     || !Number.isInteger(request.candidate_attempt) || request.candidate_attempt < 1 || request.candidate_attempt > 3
+    || !['primary', 'compact'].includes(request.text_variant)
     || !taskPattern.test(request.task_id || '') || !plain(request.anchor)
     || !plain(request.style) || !plain(request.brand) || !plain(request.generation_backend)
     || !plain(request.generation_geometry) || !plain(request.artifacts)
@@ -116,13 +122,15 @@ async function validateRequest(input) {
     || request.output_dir !== `07-visual/${request.platform}`) {
     add(context.issues, 'invalid_illustration_child_request', 'Request does not match the bounded illustration child contract.');
   }
-  if (state?.schema_version !== 2 || state?.status !== 'running' || state?.current_stage !== 'visual'
-    || state?.stages?.visual?.status !== 'running' || state?.stages?.visual?.attempt !== request.visual_attempt
+  if (state?.schema_version !== 3 || state?.status !== 'running' || state?.current_stage !== 'visual'
+    || state?.stages?.visual?.status !== 'running'
+    || state?.stages?.visual?.body_visual?.status !== 'running'
+    || state?.stages?.visual?.body_visual?.attempt !== request.body_attempt
     || state?.gates?.visual?.status !== 'approved'
-    || state?.capabilities?.providers?.illustration?.profile !== 'bounded-per-image') {
+    || state?.capabilities?.providers?.illustration?.profile !== 'bounded-per-image-v2') {
     add(context.issues, 'illustration_child_stage_mismatch', 'Child must target the approved current bounded visual attempt.');
   }
-  const visualVersion = request.visual_attempt === 1 ? '' : `/v${String(request.visual_attempt).padStart(3, '0')}`;
+  const visualVersion = request.body_attempt === 1 ? '' : `/v${String(request.body_attempt).padStart(3, '0')}`;
   const attemptNumber = String(request.candidate_attempt).padStart(2, '0');
   const extension = request.generation_backend?.artifact_format === 'png' ? 'png' : 'jpg';
   const control = `07-visual/${request.platform}/children${visualVersion}/${request.anchor?.image_id}/attempt-${attemptNumber}`;
@@ -182,36 +190,26 @@ async function validateRequest(input) {
     || JSON.stringify(request.generation_geometry) !== JSON.stringify(plan?.generation_geometry)) {
     add(context.issues, 'illustration_child_parent_mismatch', 'Child does not bind its parent task.');
   }
+  try {
+    const styleSpecPath = resolve(SKILL_ROOT, request.style.style_spec || '');
+    if (!inside(SKILL_ROOT, styleSpecPath)) throw new Error('Style Spec escapes the skill root.');
+    const styleSpec = JSON.parse(await readFile(styleSpecPath, 'utf8'));
+    compileGenerationPrompt({
+      styleSpec,
+      anchor: request.anchor,
+      textVariant: request.text_variant,
+      generationGeometry: request.generation_geometry,
+      brand: request.brand
+    });
+  } catch (error) {
+    add(context.issues, 'invalid_illustration_child_text', error.message);
+  }
   context.resultPath = resolve(dirname(context.requestPath), 'result.json');
   if (!inside(resolve(context.runDir, `07-visual/${request.platform}`), context.requestPath)
     || !inside(resolve(context.runDir, `07-visual/${request.platform}`), context.resultPath)) {
     add(context.issues, 'illustration_child_output_escape', 'Child control path escapes its platform output.');
   }
   return context;
-}
-
-function quotedText(prompt) {
-  const values = [];
-  for (const match of prompt.matchAll(/“([^”\n]+)”|"([^"\n]+)"/g)) values.push((match[1] || match[2]).trim());
-  return values;
-}
-
-function declaredText(prompt) {
-  const values = quotedText(prompt);
-  const pattern = /(?:label|footer|caption|title(?:\s+bar)?|heading|conclusion(?:\s+bar)?|标签|页脚|图注|标题条?|结论条)\s*(?::|：|=|\bis\b)\s*([^\n.;。；]+)/gi;
-  for (const match of prompt.matchAll(pattern)) {
-    const value = match[1].trim().replace(/^[“”"']+|[“”"']+$/g, '');
-    if (value && !/^(?:none|no\s+(?:text|label)|empty|无|不要文字|不使用文字)$/i.test(value)) values.push(value);
-  }
-  const command = /(?:render|write|show|display|include|add|put|写上|显示|添加|加入)\s+(?:the\s+)?(?:words?|text|copy|phrase|caption|label|title|文字|文案|短语|图注|标签|标题)\s+([^\n.;。；]+)/gi;
-  for (const match of prompt.matchAll(command)) {
-    const value = match[1].trim()
-      .replace(/^[“”"']+|[“”"']+$/g, '')
-      .replace(/\s+(?:in|on)\s+the\s+image.*$/i, '')
-      .trim();
-    if (value) values.push(value);
-  }
-  return [...new Set(values)];
 }
 
 async function promptPreflight(context) {
@@ -222,17 +220,22 @@ async function promptPreflight(context) {
   if (!safe) return { issues, prompt: null, promptPath };
   const prompt = await readFile(promptPath, 'utf8');
   if (!prompt.trim()) add(issues, 'illustration_prompt_empty', 'Prompt must not be empty.');
-  const labels = request.anchor.short_labels;
-  const readable = declaredText(prompt);
-  if (request.anchor.text_mode === 'icons_only') {
-    const asksForText = /(?:add|include|render|show|display|use|添加|加入|显示|使用).{0,24}(?:text|label|footer|caption|title|文字|标签|页脚|图注|标题)/i.test(prompt)
-      && !/(?:no|without|禁止|不要|不使用).{0,12}(?:readable\s+)?(?:text|文字)/i.test(prompt);
-    if (!/icons-only/i.test(prompt) || readable.length || asksForText) {
-      add(issues, 'illustration_prompt_text_not_allowed', 'icons_only prompts must require icons-only and contain no quoted readable text.');
+  try {
+    const styleSpecPath = resolve(SKILL_ROOT, request.style.style_spec);
+    if (!inside(SKILL_ROOT, styleSpecPath)) throw new Error('Style Spec escapes the skill root.');
+    const styleSpec = JSON.parse(await readFile(styleSpecPath, 'utf8'));
+    const expected = compileGenerationPrompt({
+      styleSpec,
+      anchor: request.anchor,
+      textVariant: request.text_variant,
+      generationGeometry: request.generation_geometry,
+      brand: request.brand
+    });
+    if (prompt !== expected) {
+      add(issues, 'illustration_prompt_compile_drift', 'Prompt differs from deterministic compilation.');
     }
-  } else if (/icons-only|(?:no|without)\s+readable\s+text/i.test(prompt)
-    || readable.some((value) => !labels.includes(value))) {
-    add(issues, 'illustration_prompt_text_not_allowed', 'Prompt conflicts with text_mode or contains readable text outside anchor.short_labels.', { readable });
+  } catch (error) {
+    add(issues, 'illustration_prompt_compile_failed', error.message);
   }
   const ratio = request.generation_geometry.target_aspect_ratio;
   if (ratio === '3:4') {
@@ -261,6 +264,18 @@ async function rasterInfo(path) {
   try { return readRasterInfo(path); } catch { return null; }
 }
 
+export function readableTextIssue(qa, anchor, textVariant) {
+  const expected = readableTextForVariant(anchor, textVariant);
+  const observed = Array.isArray(qa?.readable_text) ? qa.readable_text : [];
+  return JSON.stringify(observed) === JSON.stringify(expected) ? null : {
+    code: 'illustration_candidate_text',
+    message: 'readable_text must exactly match the active text variant.',
+    resume_from: 'visual',
+    expected_readable_text: expected,
+    observed_readable_text: observed
+  };
+}
+
 async function readQa(context, issues) {
   const path = resolve(context.runDir, context.request.artifacts.qa);
   const safe = await safeFile(context, path, issues, 'illustration_candidate_qa');
@@ -270,18 +285,32 @@ async function readQa(context, issues) {
     add(issues, 'illustration_candidate_qa', error.message);
     return null;
   }
+  if (!plain(qa)) {
+    add(issues, 'illustration_candidate_qa', 'Candidate QA must be an object.');
+    return qa;
+  }
   const disabled = context.request.brand.disabled_reason;
   const expectedBrand = context.request.brand.enabled ? 'pass' : disabled;
+  const textIssue = readableTextIssue(qa, context.request.anchor, context.request.text_variant);
+  const textMatches = textIssue === null;
+  const failedGates = Array.isArray(qa.failed_gates) ? qa.failed_gates : [];
   if (!exactKeys(qa, QA_KEYS) || qa.schema_version !== 1 || !['PASS', 'FAILED'].includes(qa.status)
-    || qa.content_qa_status !== 'pass' || qa.style_qa_status !== 'pass'
-    || qa.brand_qa_status !== expectedBrand || !Array.isArray(qa.failed_gates)
-    || !Array.isArray(qa.readable_text) || qa.readable_text.some((value) => !context.request.anchor.short_labels.includes(value))
+    || !['pass', 'failed'].includes(qa.content_qa_status)
+    || !['pass', 'failed'].includes(qa.style_qa_status)
+    || ![expectedBrand, 'failed'].includes(qa.brand_qa_status) || !Array.isArray(qa.failed_gates)
+    || !Array.isArray(qa.readable_text)
     || qa.residual_risk !== 'none' || typeof qa.reviewer !== 'string' || !qa.reviewer.trim()
     || !Number.isFinite(Date.parse(qa.reviewed_at || ''))) {
-    add(issues, 'illustration_candidate_qa', 'Candidate QA is incomplete, failed, or outside the text allowlist.');
+    add(issues, 'illustration_candidate_qa', 'Candidate QA has an invalid schema or status.');
   }
-  if (qa.status !== 'PASS' || qa.failed_gates.length) {
-    add(issues, 'illustration_candidate_qa', 'Candidate failed content, style, or brand QA.', { failed_gates: qa.failed_gates });
+  if (!textMatches) {
+    issues.push(textIssue);
+  }
+  const pass = qa.status === 'PASS' && qa.content_qa_status === 'pass'
+    && qa.style_qa_status === 'pass' && qa.brand_qa_status === expectedBrand
+    && failedGates.length === 0 && textMatches;
+  if (!pass && textMatches) {
+    add(issues, 'illustration_candidate_qa', 'Candidate failed content, style, or brand QA.', { failed_gates: failedGates });
   }
   return qa;
 }
@@ -358,7 +387,7 @@ async function finalize(context) {
     qa
   } : null;
   const result = {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request.task_id,
@@ -385,7 +414,7 @@ async function finalize(context) {
 
 async function block(context, reason) {
   const result = {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request.task_id,
@@ -430,7 +459,9 @@ async function main() {
   emit(result, result.status === 'PASS' ? 0 : 2);
 }
 
-main().catch((error) => emit({
-  status: 'FAILED',
-  issues: [{ code: 'illustration_child_failed', message: error.message, resume_from: 'visual' }]
-}, 2));
+if (process.argv[1] && resolve(process.argv[1]) === SCRIPT_PATH) {
+  main().catch((error) => emit({
+    status: 'FAILED',
+    issues: [{ code: 'illustration_child_failed', message: error.message, resume_from: 'visual' }]
+  }, 2));
+}

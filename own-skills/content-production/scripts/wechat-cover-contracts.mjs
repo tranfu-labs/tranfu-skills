@@ -1,5 +1,6 @@
 import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import {
   fileExists,
@@ -10,10 +11,12 @@ import {
   readJson,
   readText
 } from './lib.mjs';
-import { validateBackendLeaseFile } from './backend-runtime.mjs';
+import * as backendRuntime from './backend-runtime.mjs';
 import { policyPathForAttempt } from './visual-cardinality.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
+const CONTENT_SKILL_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const EMBEDDED_COVER_ROOT = join(CONTENT_SKILL_ROOT, 'skills', 'wechat-sketch-cover');
 const BACKEND_HINTS = new Set(['runtime-native', 'configured-api', 'programmatic', 'unknown']);
 const LIMITATION = 'No deterministic OCR was performed; title exactness is a provider visual observation bound to this artifact hash.';
 const GATES = [
@@ -31,7 +34,7 @@ const GATES = [
 
 const requestKeys = [
   'schema_version', 'contract', 'task_id', 'capability', 'provider_contract',
-  'run_dir', 'run_mode', 'mode', 'attempt', 'platform', 'variant', 'selection',
+  'run_mode', 'mode', 'attempt', 'platform', 'variant', 'selection',
   'inputs', 'output_dir', 'expected_artifacts', 'options', 'interaction_policy'
 ];
 const selectionKeys = [
@@ -144,9 +147,16 @@ async function safeJson(root, rootReal, path, issues, code) {
   }
 }
 
+export function coverAttempt(state) {
+  const nested = state?.stages?.visual?.wechat_cover?.attempt;
+  if (Number.isInteger(nested) && nested > 0) return nested;
+  if (Number.isInteger(state?.cover_attempt) && state.cover_attempt > 0) return state.cover_attempt;
+  const legacy = state?.stages?.visual?.attempt;
+  return Number.isInteger(legacy) && legacy > 0 ? legacy : 1;
+}
+
 export function coverPaths(state) {
-  const attempt = Number.isInteger(state?.stages?.visual?.attempt) && state.stages.visual.attempt > 0
-    ? state.stages.visual.attempt : 1;
+  const attempt = coverAttempt(state);
   const version = `v${String(attempt).padStart(3, '0')}`;
   const suffix = attempt === 1 ? '' : `.${version}`;
   const versionDir = attempt === 1 ? '' : `/${version}`;
@@ -185,27 +195,27 @@ async function loadContext(runDir, state, issues) {
   }
 
   const visual = state?.stages?.visual;
-  if (state?.schema_version !== 2 || !['running', 'completed'].includes(visual?.status)
-    || !Number.isInteger(visual?.attempt) || visual.attempt < 1
-    || visual.status === 'running' && state.current_stage !== 'visual') {
+  const cover = visual?.wechat_cover || visual;
+  if (state?.schema_version !== 3 || !['running', 'completed'].includes(cover?.status)
+    || !Number.isInteger(coverAttempt(state)) || coverAttempt(state) < 1
+    || cover.status === 'running' && state.current_stage !== 'visual') {
     issues.push(issue('wechat_cover_stage_mismatch', 'WeChat cover requires the current positive visual attempt to be running or completed.'));
   }
   if (state?.gates?.titles?.status !== 'approved') {
     issues.push(issue('wechat_cover_titles_gate_missing', 'WeChat cover requires the approved titles gate.'));
   }
-  if (state?.gates?.visual?.status !== 'approved') {
-    issues.push(issue('wechat_cover_visual_gate_missing', 'WeChat cover requires the current visual plan gate to be approved.'));
-  }
 
   const provider = state?.capabilities?.providers?.wechat_cover;
+  const portableProvider = state?.schema_version === 3;
   if (provider?.status !== 'PASS' || provider?.contract !== 'wechat-cover-v1'
-    || !nonempty(provider?.skill_path) || !SHA256.test(provider?.skill_sha256 || '')) {
+    || !portableProvider && (!nonempty(provider?.skill_path) || !SHA256.test(provider?.skill_sha256 || ''))) {
     issues.push(issue('wechat_cover_provider_unavailable', 'The WeChat cover provider snapshot is not PASS, hashed, and registered for wechat-cover-v1.'));
     return { root, runReal, provider: null };
   }
-  const skillPath = resolve(provider.skill_path);
-  const skillRoot = dirname(skillPath);
+  const skillRoot = portableProvider ? EMBEDDED_COVER_ROOT : dirname(resolve(provider.skill_path));
+  const skillPath = join(skillRoot, 'SKILL.md');
   let skillReal;
+  let actualHash;
   try {
     const rootStat = await lstat(skillRoot);
     const skillStat = await lstat(skillPath);
@@ -214,13 +224,15 @@ async function loadContext(runDir, state, issues) {
       || !skillStat.isFile() || !inside(skillReal, await realpath(skillPath))) {
       throw new Error('provider SKILL.md is unsafe');
     }
-    const actualHash = await fileSha256(skillPath);
-    if (actualHash !== provider.skill_sha256) throw new Error('provider SKILL.md changed after capability preflight');
+    actualHash = await fileSha256(skillPath);
+    if (provider.skill_sha256 && actualHash !== provider.skill_sha256) {
+      throw new Error('provider SKILL.md changed after capability preflight');
+    }
   } catch (error) {
     issues.push(issue('wechat_cover_provider_unavailable', error.message));
     return { root, runReal, provider: null };
   }
-  return { root, runReal, provider: { ...provider, skillRoot, skillReal } };
+  return { root, runReal, provider: { ...provider, skill_sha256: actualHash, skillRoot, skillReal } };
 }
 
 async function approvedWinner(context, state, issues) {
@@ -283,10 +295,9 @@ function validateRequest(request, context, state, paths, winner, issues) {
     { role: 'title_selection', path: winner.decisionBinding.path, sha256: winner.decisionBinding.sha256 }
   ] : [];
   const valid = exactKeys(request, requestKeys)
-    && request.schema_version === 1 && request.contract === 'content-production-provider/v1'
+    && request.schema_version === 2 && request.contract === 'content-production-provider/v2'
     && request.task_id === `wechat-cover:${state.run_id}:wechat:${selection?.variant}:attempt-${String(paths.attempt).padStart(3, '0')}`
     && request.capability === 'wechat_cover' && request.provider_contract === 'wechat-cover-v1'
-    && nonempty(request.run_dir) && resolve(request.run_dir) === context.root
     && request.run_mode === state.run_mode
     && request.mode === 'generate_cover' && request.attempt === paths.attempt
     && request.platform === 'wechat' && request.variant === selection?.variant
@@ -422,7 +433,7 @@ async function validateMetadata(metadata, request, context, state, paths, winner
     issues.push(issue('invalid_wechat_cover_backend', 'Cover backend record is invalid or does not bind the request hint.'));
   }
   if (lease && (metadata?.backend?.hint !== lease.backend_kind
-    || metadata?.backend?.method !== lease.adapter.path
+    || metadata?.backend?.method !== lease.adapter.id
     || metadata?.backend?.model !== lease.model)) {
     issues.push(issue('invalid_wechat_cover_backend', 'Cover backend record does not reuse the current BackendLease.'));
   }
@@ -457,7 +468,7 @@ async function validateMetadata(metadata, request, context, state, paths, winner
       && stringArray(row.visible_title_defects)
       && (row.status === 'RETRY_NO_CANDIDATE') === (row.candidate === null);
     if (!rowShape) issues.push(issue('invalid_wechat_cover_attempt', `Invalid generation attempt ${number}.`));
-    if (lease && (row?.backend?.method !== lease.adapter.path || row?.backend?.model !== lease.model)) {
+    if (lease && (row?.backend?.method !== lease.adapter.id || row?.backend?.model !== lease.model)) {
       issues.push(issue('invalid_wechat_cover_backend', `Cover attempt ${number} does not reuse the current BackendLease.`));
     }
     const prompt = await validateBindingFile(context, row?.prompt, promptPath, issues, 'invalid_wechat_cover_prompt');
@@ -542,8 +553,8 @@ async function validateResult(result, request, context, paths, requestHash, dyna
     && checks.mode === 'generate_cover' && checks.attempt === paths.attempt
     && checks.platform === 'wechat' && checks.title_status === 'provider_observed_exact'
     && checks.visual_qa_status === 'PASS' && checks.file_verification_status === 'PASS';
-  const validTop = exactKeys(result, resultKeys) && result.schema_version === 1
-    && result.contract === 'content-production-provider/v1'
+  const validTop = exactKeys(result, resultKeys) && result.schema_version === 2
+    && result.contract === 'content-production-provider/v2'
     && result.provider_contract === 'wechat-cover-v1' && result.task_id === request?.task_id
     && result.request_sha256 === requestHash && result.status === 'PASS'
     && Array.isArray(result.artifacts) && validChecks
@@ -579,9 +590,10 @@ async function validateResult(result, request, context, paths, requestHash, dyna
 }
 
 async function validateCompletedBinding(context, state, paths, issues) {
-  if (state?.stages?.visual?.status !== 'completed') return;
+  const stage = state?.stages?.visual?.wechat_cover || state?.stages?.visual;
+  if (stage?.status !== 'completed') return;
   const expected = expectedWechatCoverStageArtifacts(state);
-  const bindings = (state.stages.visual.artifacts || []).filter((item) =>
+  const bindings = (stage.artifacts || []).filter((item) =>
     item?.path === paths.cover || item?.path === paths.metadata);
   if (bindings.length !== expected.length || !expected.every((path) => bindings.some((item) => item.path === path))) {
     issues.push(issue('invalid_wechat_cover_stage_binding', 'Completed visual stage must bind the current cover PNG and cover metadata alongside illustration artifacts.'));
@@ -599,8 +611,10 @@ export async function validateWechatCover(runDir, state) {
   if (!context) return { issues, request: null, result: null, metadata: null };
   const paths = coverPaths(state);
   const hasCardinalityPolicy = fileExists(join(runDir, policyPathForAttempt(state)));
-  const lease = hasCardinalityPolicy
-    ? await validateBackendLeaseFile(runDir, state) : { issues: [], value: null };
+  const lease = state.schema_version === 3 && typeof backendRuntime.loadBackendLease === 'function'
+    ? await backendRuntime.loadBackendLease(runDir, state, 'wechat_cover')
+    : hasCardinalityPolicy
+      ? await backendRuntime.validateBackendLeaseFile(runDir, state) : { issues: [], value: null };
   issues.push(...lease.issues);
   const winner = await approvedWinner(context, state, issues);
   const requestFile = await safeJson(context.root, context.runReal, paths.request, issues, 'invalid_wechat_cover_request');

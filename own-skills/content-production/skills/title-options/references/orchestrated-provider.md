@@ -1,7 +1,7 @@
 # Content Production Provider Contract
 
 This route handles one orchestrator-issued `{platform, variant}` title task. A complete request uses
-`contract: content-production-provider/v1`, `capability: title_generation`,
+`contract: content-production-provider/v2`, `capability: title_generation`,
 `provider_contract: title-generation-v1`, and `mode: generate_titles`. Any partial or conflicting
 provider marker returns structured `BLOCKED` and never falls back to standalone output.
 

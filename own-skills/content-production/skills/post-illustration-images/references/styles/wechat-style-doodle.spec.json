@@ -50,6 +50,13 @@
     "defaultEnabled": true,
     "userOverrideAllowed": true
   },
+  "textPolicy": {
+    "defaultMode": "allowlist",
+    "iconsOnlyAllowed": false,
+    "headline": { "minCharacters": 2, "maxCharacters": 14 },
+    "labels": { "minItems": 2, "maxItems": 5, "maxCharactersPerItem": 8 }
+  },
+  "generationPrompt": "Create a warm beige hand-drawn editorial explainer with deep-brown ink, muted pastel accents, simple icon metaphors, clear hierarchy, and generous whitespace.",
   "inputHandling": {
     "preserveNativeOutput": true,
     "ratioTolerance": 0.002,

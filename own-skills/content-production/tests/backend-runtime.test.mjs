@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import {
   classifyBackendOutcome,
   createBackendLease,
+  createBackendProfile,
   executeConfiguredGeneration,
   resolveConfiguredBackend,
   selectBackendKind,
@@ -224,14 +226,29 @@ test('configured lease is redacted, remains bound to its attempt, and blocks con
       ...paths, adapterPath: adapter(root), processEnv: {}, outputRoot: join(root, 'output'),
       fetchImpl: server.fetchImpl
     });
-    const state = { run_id: 'lease-run', stages: { visual: { attempt: 2 } } };
-    const lease = createBackendLease({ state, resolved, createdAt: '2026-07-22T00:00:00.000Z' });
-    assert.deepEqual(validateBackendLease(lease, state), []);
+    const state = {
+      run_id: 'lease-run',
+      stages: { visual: {
+        body_visual: { attempt: 2 }, wechat_cover: { attempt: 4 }
+      } }
+    };
+    const profile = createBackendProfile({
+      state, resolved, runDir: root, createdAt: '2026-07-22T00:00:00.000Z'
+    });
+    write(join(root, '07-visual', 'backend-profile.json'), JSON.stringify(profile));
+    const profileSha256 = createHash('sha256').update(readFileSync(join(root, '07-visual', 'backend-profile.json'))).digest('hex');
+    const lease = createBackendLease({
+      state, resolved, profile, profileSha256, consumer: 'body_visual', runDir: root,
+      createdAt: '2026-07-22T00:00:00.000Z'
+    });
+    assert.deepEqual(validateBackendLease(lease, state, 'body_visual', {
+      value: profile, sha256: profileSha256
+    }), []);
     assert.equal(JSON.stringify(lease).includes(secret), false);
     const exposed = structuredClone(lease);
     exposed.configuration.token = secret;
     assert.ok(validateBackendLease(exposed, state).some((item) => item.code === 'backend_lease_secret_exposure'));
-    write(join(root, '07-visual', 'backend-lease.v002.json'), JSON.stringify(lease));
+    write(join(root, '07-visual', 'backend-lease.body.v002.json'), JSON.stringify(lease));
 
     const current = await validateBackendLeaseFile(root, state, { processEnv: {} });
     assert.deepEqual(current.issues, []);

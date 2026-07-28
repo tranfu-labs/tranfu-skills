@@ -98,7 +98,7 @@ try {
   }
   const state = await readJson(statePath);
 
-  if (state.schema_version !== 2 || !['brief', 'topic', 'outline'].includes(state.input_mode)) {
+  if (state.schema_version !== 3 || !['brief', 'topic', 'outline'].includes(state.input_mode)) {
     add(issues, 'source_request_not_applicable', 'source_research requires a schema v2 brief, topic, or outline run.');
   }
   if (state.status !== 'running' || state.current_stage !== 'research'
@@ -220,7 +220,7 @@ try {
   }
 
   if (issues.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, blockers: issues }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, blockers: issues }, 2);
   } else {
     const subject = {
       schema_version: 1,
@@ -235,12 +235,11 @@ try {
       sha256: await fileSha256(subjectPath)
     };
     const request = {
-      schema_version: 1,
-      contract: 'content-production-provider/v1',
+      schema_version: 2,
+      contract: 'content-production-provider/v2',
       task_id: `source-research:${state.run_id}`,
       capability: 'source_research',
       provider_contract: 'source-research-v1',
-      run_dir: runDir,
       run_mode: state.run_mode,
       mode: 'research',
       inputs: [subjectInput, ...inputs, ...modeInputs],
@@ -250,7 +249,12 @@ try {
       interaction_policy: 'return_to_orchestrator'
     };
     await writeJson(requestPath, request);
-    emitJson({ status: 'PASS', task_id: request.task_id, request_path: requestPath, subject_path: subjectPath, input_count: request.inputs.length });
+    emitJson({
+      status: 'PASS', task_id: request.task_id,
+      request_path: runRelative(runDir, requestPath),
+      subject_path: runRelative(runDir, subjectPath),
+      input_count: request.inputs.length
+    });
   }
 } catch (error) {
   emitJson({ status: 'BLOCKED', blockers: [{ code: 'source_request_build_failed', message: error.message, resume_from: 'research' }] }, 2);

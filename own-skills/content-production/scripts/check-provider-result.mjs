@@ -7,6 +7,7 @@ import {
   expandPath,
   fileExists,
   fileSha256,
+  findRunDirFromRequest,
   parseArgs,
   readJson
 } from './lib.mjs';
@@ -37,18 +38,18 @@ try {
   const result = await readJson(resultPath);
   const definition = capabilityDefinitions[request.capability];
   if (!definition) add('unknown_capability', `Unknown capability: ${request.capability}`);
-  if (request.schema_version !== 1 || request.contract !== 'content-production-provider/v1') add('invalid_provider_request', 'Request contract must be content-production-provider/v1 schema 1.');
-  if (!request.task_id || !request.run_dir || !request.output_dir || !Array.isArray(request.inputs) || !Array.isArray(request.expected_artifacts)) add('incomplete_provider_request', 'Request is missing task_id, run_dir, output_dir, inputs, or expected_artifacts.');
+  if (request.schema_version !== 2 || request.contract !== 'content-production-provider/v2') add('invalid_provider_request', 'Request contract must be content-production-provider/v2 schema 2.');
+  if (!request.task_id || Object.hasOwn(request, 'run_dir') || !request.output_dir || !Array.isArray(request.inputs) || !Array.isArray(request.expected_artifacts)) add('incomplete_provider_request', 'Request is missing task_id, output_dir, inputs, or expected_artifacts, or persists run_dir.');
   if (definition && request.provider_contract !== definition.contract) add('provider_contract_mismatch', `Request must use ${definition.contract}.`);
   if (request.interaction_policy !== 'return_to_orchestrator') add('invalid_interaction_policy', 'Provider interaction policy must return decisions to the orchestrator.');
 
-  if (result.schema_version !== 1 || result.contract !== 'content-production-provider/v1') add('invalid_provider_result', 'Result contract must be content-production-provider/v1 schema 1.');
+  if (result.schema_version !== 2 || result.contract !== 'content-production-provider/v2') add('invalid_provider_result', 'Result contract must be content-production-provider/v2 schema 2.');
   if (result.task_id !== request.task_id) add('provider_task_mismatch', 'Result task_id does not match request.');
   if (result.provider_contract !== request.provider_contract) add('provider_contract_mismatch', 'Result provider_contract does not match request.');
   if (!['PASS', 'BLOCKED', 'FAILED'].includes(result.status)) add('invalid_provider_status', `Invalid provider status: ${result.status}`);
   if (!Array.isArray(result.artifacts) || !Array.isArray(result.issues) || !Array.isArray(result.warnings)) add('incomplete_provider_result', 'Result artifacts, issues, and warnings must be arrays.');
 
-  const runDir = expandPath(request.run_dir);
+  const runDir = await findRunDirFromRequest(requestPath);
   const outputDir = expandPath(request.output_dir, runDir);
   let runRealDir = null;
   let outputRealDir = null;
@@ -69,6 +70,7 @@ try {
       if (!runRealDir || !isInside(runRealDir, outputRealDir)) add('provider_output_escape', 'Resolved output_dir escapes run_dir.');
     }
   }
+  if (!isInside(runDir, resultPath)) add('provider_result_escape', 'Provider result must remain inside run_dir.');
 
   const artifactPaths = new Set();
   for (const artifact of result.artifacts || []) {

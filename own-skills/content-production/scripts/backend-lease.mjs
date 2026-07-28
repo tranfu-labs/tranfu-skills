@@ -1,162 +1,228 @@
 #!/usr/bin/env node
 
-import { join } from 'node:path';
+import { rename } from 'node:fs/promises';
 import { homedir } from 'node:os';
+import { join } from 'node:path';
 import {
   backendLeasePathForAttempt,
+  backendProfilePath,
   classifyBackendOutcome,
   createBackendLease,
+  createBackendProfile,
+  loadBackendLease,
+  loadBackendProfile,
   resolveConfiguredBackend,
   resolveNativeBackend,
-  selectBackendKind,
-  validateBackendLeaseFile
+  selectBackendKind
 } from './backend-runtime.mjs';
 import {
   emitJson,
   expandPath,
   fileExists,
+  fileSha256,
   parseArgs,
-  platforms,
   readJson,
   writeJson
 } from './lib.mjs';
-import { validateVisualCoverageSet } from './visual-cardinality.mjs';
+import { aggregateVisualArtifacts, deriveVisualStatus } from './visual-state.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const [runInput, command, ...extra] = args._;
+const consumers = ['body_visual', 'wechat_cover'];
 
-function blocker(code, message) {
-  return { code, message, resume_from: 'visual' };
+function blocker(code, message, consumer = null) {
+  return { code, message, resume_from: 'visual', ...(consumer ? { consumer } : {}) };
+}
+
+function sameProfile(left, right) {
+  return left?.backend_kind === right?.backend_kind && left?.provider === right?.provider
+    && left?.endpoint_source === right?.endpoint_source
+    && left?.endpoint_origin === right?.endpoint_origin
+    && left?.endpoint_sha256 === right?.endpoint_sha256
+    && left?.adapter?.id === right?.adapter?.id && left?.adapter?.sha256 === right?.adapter?.sha256
+    && left?.model === right?.model && left?.artifact_format === right?.artifact_format;
+}
+
+async function resolveRequested(runDir) {
+  const backendKind = selectBackendKind({
+    explicitBackend: args.backend || null,
+    nativeStatus: args.native_status
+  });
+  if (backendKind === 'runtime-native') {
+    return resolveNativeBackend({ nativeStatus: args.native_status });
+  }
+  const codexHome = process.env.CODEX_HOME || join(homedir(), '.codex');
+  return resolveConfiguredBackend({
+    configPath: expandPath(args.config || join(codexHome, 'config.toml')),
+    authPath: expandPath(args.auth || join(codexHome, 'auth.json')),
+    adapterPath: expandPath(args.adapter || join(codexHome, 'skills', '.system', 'imagegen', 'scripts', 'image_gen.py')),
+    explicitBaseUrl: typeof args.base_url === 'string' ? args.base_url : null,
+    model: typeof args.model === 'string' ? args.model : null,
+    outputRoot: join(runDir, '07-visual')
+  });
+}
+
+async function createProfileAndLeases(runDir, state, selectedConsumers) {
+  const absoluteProfile = join(runDir, backendProfilePath());
+  if (fileExists(absoluteProfile) && args.backend) {
+    const existing = await loadBackendProfile(runDir, state);
+    if (!existing.issues.length && existing.value.backend_kind !== args.backend) {
+      return { status: 'BLOCKED', issues: [blocker('backend_switch_forbidden', 'backend endpoint mismatch')] };
+    }
+  }
+  const resolved = await resolveRequested(runDir);
+  if (resolved.issues.length) return { status: 'BLOCKED', issues: resolved.issues };
+  const candidate = createBackendProfile({ state, resolved, runDir });
+  const profilePath = backendProfilePath();
+  let idempotent = fileExists(absoluteProfile);
+  if (idempotent) {
+    const existing = await loadBackendProfile(runDir, state);
+    if (existing.issues.length || !sameProfile(existing.value, candidate)) {
+      return { status: 'BLOCKED', issues: existing.issues.length ? existing.issues
+        : [blocker('backend_switch_forbidden', 'backend endpoint mismatch')] };
+    }
+  } else {
+    await writeJson(absoluteProfile, candidate);
+  }
+  const profile = await loadBackendProfile(runDir, state);
+  if (profile.issues.length) return { status: 'BLOCKED', issues: profile.issues };
+  const leasePaths = [];
+  for (const consumer of selectedConsumers) {
+    const leasePath = backendLeasePathForAttempt(state, consumer);
+    const absolute = join(runDir, leasePath);
+    if (fileExists(absolute)) {
+      const existing = await loadBackendLease(runDir, state, consumer);
+      if (existing.issues.length) return { status: 'BLOCKED', issues: existing.issues };
+      idempotent = true;
+    } else {
+      const lease = createBackendLease({
+        state,
+        resolved,
+        profile: profile.value,
+        profileSha256: profile.sha256,
+        consumer,
+        runDir
+      });
+      await writeJson(absolute, lease);
+    }
+    leasePaths.push(leasePath);
+  }
+  return {
+    status: 'PASS', run_id: state.run_id, backend_kind: profile.value.backend_kind,
+    profile_path: profilePath, lease_paths: leasePaths, idempotent, issues: []
+  };
+}
+
+async function resetBackend(runDir, state, statePath) {
+  if (args.confirm !== 'reset-all-visual') {
+    throw new Error('reset requires --confirm reset-all-visual.');
+  }
+  const now = new Date().toISOString();
+  const profilePath = join(runDir, backendProfilePath());
+  if (fileExists(profilePath)) {
+    const archive = join(runDir, '07-visual', `backend-profile.reset-${Date.now()}.json`);
+    await rename(profilePath, archive);
+  }
+  for (const consumer of consumers) {
+    const component = state.stages.visual[consumer];
+    state.stages.visual[consumer] = {
+      ...component,
+      status: 'running',
+      attempt: (component?.attempt || 0) + 1,
+      artifacts: [],
+      error: null,
+      started_at: now,
+      completed_at: null,
+      updated_at: now
+    };
+  }
+  state.stages.visual.status = 'running';
+  state.stages.visual.revision = (state.stages.visual.revision || 0) + 1;
+  state.stages.visual.artifacts = [];
+  state.stages.visual.error = null;
+  state.gates.visual = {
+    status: 'pending', revision: state.gates.visual?.revision || 0, decision_ref: null,
+    bound_artifacts: [], approval_mode: null, approved_at: null,
+    invalidated_by: 'backend_reset', updated_at: now
+  };
+  for (const stage of ['package', 'final_qa']) {
+    state.stages[stage] = {
+      status: 'pending', attempt: state.stages[stage]?.attempt || 0,
+      artifacts: [], error: null, invalidated_by: 'backend_reset', updated_at: now
+    };
+  }
+  state.status = 'running';
+  state.current_stage = 'visual';
+  state.updated_at = now;
+  state.history = [...(state.history || []), { at: now, event: 'backend_profile_reset' }];
+  await writeJson(statePath, state);
+  return { status: 'PASS', run_id: state.run_id, reset: true, issues: [] };
 }
 
 try {
   const allowed = new Set([
-    '_', 'backend', 'native_status', 'base_url', 'config', 'auth', 'adapter', 'model', 'outcome'
+    '_', 'backend', 'native_status', 'base_url', 'config', 'auth', 'adapter', 'model',
+    'outcome', 'consumer', 'confirm'
   ]);
-  if (!runInput || !['create', 'validate', 'record'].includes(command) || extra.length
+  if (!runInput || !['create', 'validate', 'record', 'reset'].includes(command) || extra.length
     || Object.keys(args).some((key) => !allowed.has(key))) {
-    throw new Error('Usage: backend-lease.mjs <run-dir> create|validate|record [options]');
+    throw new Error('Usage: backend-lease.mjs <run-dir> create|validate|record|reset [options]');
   }
   const runDir = expandPath(runInput);
   const statePath = join(runDir, 'run.json');
   const state = await readJson(statePath);
-  if (state.schema_version !== 2 || state.current_stage !== 'visual'
-    || !Number.isInteger(state.stages?.visual?.attempt) || state.stages.visual.attempt < 1) {
-    throw Object.assign(new Error('BackendLease requires a current visual attempt.'), {
+  if (state.schema_version !== 3 || state.current_stage !== 'visual'
+    || !state.stages?.visual?.body_visual || !state.stages?.visual?.wechat_cover) {
+    throw Object.assign(new Error('Backend controls require a current V3 visual lifecycle.'), {
       issues: [blocker('backend_lease_stage_mismatch', 'backend configuration inaccessible')]
     });
   }
-
-  if (command === 'validate') {
-    const validation = await validateBackendLeaseFile(runDir, state);
-    emitJson({
-      status: validation.issues.length ? 'BLOCKED' : 'PASS',
-      backend_kind: validation.value?.backend_kind || null,
-      backend_context: validation.value?.backend_context || null,
-      issues: validation.issues
-    }, validation.issues.length ? 2 : 0);
-  } else if (command === 'record') {
-    if (!args.outcome) throw new Error('record requires --outcome pass|quality-failure|transient-error|irrecoverable-execution-error');
-    const validation = await validateBackendLeaseFile(runDir, state);
-    if (validation.issues.length) {
-      emitJson({ status: 'BLOCKED', issues: validation.issues }, 2);
-    } else {
-      const result = classifyBackendOutcome(args.outcome, validation.value.backend_kind);
-      if (result.block_attempt) {
-        if (state.stages.visual.status !== 'running') {
-          throw new Error('Only a running visual attempt can be blocked by an irrecoverable backend error.');
-        }
-        const now = new Date().toISOString();
-        state.stages.visual = {
-          ...state.stages.visual,
-          status: 'blocked',
-          error: `${validation.value.backend_kind} irrecoverable execution error`,
-          completed_at: null,
-          updated_at: now
-        };
-        state.status = 'blocked';
-        state.current_stage = 'visual';
-        state.updated_at = now;
-        state.resume = { next_stage: 'visual', reason: 'stage_blocked' };
-        state.history = [
-          ...(state.history || []),
-          {
-            at: now,
-            event: 'backend_attempt_blocked',
-            stage: 'visual',
-            attempt: state.stages.visual.attempt,
-            backend_kind: validation.value.backend_kind
-          }
-        ];
-        await writeJson(statePath, state);
-      }
-      emitJson({ status: result.block_attempt ? 'BLOCKED' : 'PASS', ...result }, result.block_attempt ? 2 : 0);
-    }
+  if (command === 'reset') {
+    emitJson(await resetBackend(runDir, state, statePath));
   } else {
-    if (state.status !== 'running' || state.stages.visual.status !== 'running') {
-      throw Object.assign(new Error('BackendLease creation requires a running visual attempt.'), {
-        issues: [blocker('backend_lease_stage_mismatch', 'backend configuration inaccessible')]
-      });
+    const selected = args.consumer ? [args.consumer] : consumers;
+    if (selected.some((consumer) => !consumers.includes(consumer))) {
+      throw new Error('--consumer must be body_visual or wechat_cover.');
     }
-    const coverage = await validateVisualCoverageSet(runDir, state);
-    if (coverage.issues.length) {
-      throw Object.assign(new Error('BackendLease requires current policy and coverage.'), { issues: coverage.issues });
-    }
-    const attempt = state.stages.visual.attempt;
-    const suffix = attempt === 1 ? '' : `.v${String(attempt).padStart(3, '0')}`;
-    const late = platforms.some((platform) => [
-      `07-visual/${platform}/illustration-plan${suffix}.request.json`,
-      `07-visual/${platform}/illustration-plan${suffix}.result.json`,
-      `07-visual/${platform}/plan${suffix}.json`
-    ].some((path) => fileExists(join(runDir, path))));
-    const leasePath = backendLeasePathForAttempt(state);
-    const existing = fileExists(join(runDir, leasePath));
-    if (late && !existing) {
-      throw Object.assign(new Error('BackendLease cannot be created after current plan artifacts.'), {
-        issues: [blocker('backend_lease_created_too_late', 'backend configuration inaccessible')]
-      });
-    }
-    if (existing) {
-      const validation = await validateBackendLeaseFile(runDir, state);
-      const requestedKind = args.backend || (args.native_status === 'available' ? 'runtime-native' : null);
-      if (validation.issues.length || requestedKind && requestedKind !== validation.value?.backend_kind) {
-        throw Object.assign(new Error('Current BackendLease cannot be replaced or switched.'), {
-          issues: validation.issues.length ? validation.issues
-            : [blocker('backend_switch_forbidden', 'backend endpoint mismatch')]
-        });
-      }
+    if (command === 'create') {
+      const result = await createProfileAndLeases(runDir, state, selected);
+      emitJson(result, result.status === 'PASS' ? 0 : 2);
+    } else if (command === 'validate') {
+      const profile = await loadBackendProfile(runDir, state);
+      const leases = await Promise.all(selected.map((consumer) => loadBackendLease(runDir, state, consumer)));
+      const issues = [...profile.issues, ...leases.flatMap((lease) => lease.issues)];
       emitJson({
-        status: 'PASS', backend_kind: validation.value.backend_kind,
-        backend_context: validation.value.backend_context, idempotent: true
-      });
+        status: issues.length ? 'BLOCKED' : 'PASS', run_id: state.run_id,
+        profile_path: profile.path,
+        lease_paths: leases.map((lease) => lease.path), issues
+      }, issues.length ? 2 : 0);
     } else {
-      const backendKind = selectBackendKind({
-        explicitBackend: args.backend || null,
-        nativeStatus: args.native_status
-      });
-      let resolved;
-      if (backendKind === 'runtime-native') {
-        resolved = resolveNativeBackend({ nativeStatus: args.native_status });
-      } else {
-        const codexHome = process.env.CODEX_HOME || join(homedir(), '.codex');
-        resolved = await resolveConfiguredBackend({
-          configPath: expandPath(args.config || join(codexHome, 'config.toml')),
-          authPath: expandPath(args.auth || join(codexHome, 'auth.json')),
-          adapterPath: expandPath(args.adapter || join(codexHome, 'skills', '.system', 'imagegen', 'scripts', 'image_gen.py')),
-          explicitBaseUrl: typeof args.base_url === 'string' ? args.base_url : null,
-          model: typeof args.model === 'string' ? args.model : null,
-          outputRoot: join(runDir, '07-visual')
-        });
+      if (!args.outcome || selected.length !== 1) {
+        throw new Error('record requires --consumer and --outcome.');
       }
-      if (resolved.issues.length) {
-        emitJson({ status: 'BLOCKED', issues: resolved.issues }, 2);
-      } else {
-        const lease = createBackendLease({ state, resolved });
-        await writeJson(join(runDir, leasePath), lease);
-        emitJson({
-          status: 'PASS', backend_kind: lease.backend_kind,
-          backend_context: lease.backend_context, idempotent: false
-        });
+      const consumer = selected[0];
+      const lease = await loadBackendLease(runDir, state, consumer);
+      if (lease.issues.length) emitJson({ status: 'BLOCKED', issues: lease.issues }, 2);
+      else {
+        const result = classifyBackendOutcome(args.outcome, lease.value.backend_kind);
+        if (result.block_attempt) {
+          const now = new Date().toISOString();
+          state.stages.visual[consumer] = {
+            ...state.stages.visual[consumer], status: 'blocked',
+            error: `${lease.value.backend_kind} irrecoverable execution error`, updated_at: now
+          };
+          state.stages.visual.status = deriveVisualStatus(state.stages.visual);
+          state.stages.visual.artifacts = state.stages.visual.status === 'completed'
+            ? aggregateVisualArtifacts(state.stages.visual) : [];
+          state.status = state.stages.visual.status === 'blocked' ? 'blocked' : 'running';
+          state.updated_at = now;
+          state.history = [...(state.history || []), {
+            at: now, event: 'backend_consumer_blocked', consumer,
+            attempt: state.stages.visual[consumer].attempt, backend_kind: lease.value.backend_kind
+          }];
+          await writeJson(statePath, state);
+        }
+        emitJson({ status: result.block_attempt ? 'BLOCKED' : 'PASS', run_id: state.run_id, ...result }, result.block_attempt ? 2 : 0);
       }
     }
   }

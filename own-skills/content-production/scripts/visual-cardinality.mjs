@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { bodyVisualAttempt } from './visual-state.mjs';
 import {
   fileExists,
   fileSha256,
@@ -14,7 +15,7 @@ import {
 
 const expectedPlatforms = ['wechat', 'xiaohongshu', 'zhihu', 'weibo', 'toutiao'];
 const coverageKeys = [
-  'schema_version', 'artifact', 'run_id', 'visual_attempt', 'platform', 'variant',
+  'schema_version', 'artifact', 'run_id', 'body_attempt', 'platform', 'variant',
   'created_at', 'policy_ref', 'source', 'title_selection', 'platform_profile',
   'requested_output', 'strategy', 'user_directive', 'document_metrics',
   'coverage_units', 'cardinality', 'single_image_exception', 'checks', 'status', 'issues'
@@ -28,10 +29,10 @@ const cardinalityKeys = [
   'mode', 'eligible_unit_count', 'minimum', 'target', 'provider_cap', 'request_max_images'
 ];
 const policySnapshotKeys = [
-  'schema_version', 'artifact', 'run_id', 'visual_attempt', 'created_at', 'policy_source', 'policy'
+  'schema_version', 'artifact', 'run_id', 'body_attempt', 'created_at', 'policy_source', 'policy'
 ];
 const visualDecisionKeys = [
-  'schema_version', 'artifact', 'run_id', 'visual_attempt', 'created_at', 'created_by',
+  'schema_version', 'artifact', 'run_id', 'body_attempt', 'created_at', 'created_by',
   'decision_rule', 'policy_ref', 'title_selection', 'platforms', 'cross_platform_checks',
   'checks', 'issues', 'status'
 ];
@@ -54,8 +55,7 @@ function exactKeys(value, keys) {
 }
 
 function attemptVersion(state) {
-  const attempt = Number.isInteger(state?.stages?.visual?.attempt) && state.stages.visual.attempt > 0
-    ? state.stages.visual.attempt : 1;
+  const attempt = bodyVisualAttempt(state);
   return { attempt, version: `v${String(attempt).padStart(3, '0')}` };
 }
 
@@ -575,7 +575,7 @@ export function createVisualDecision({ state, policyRef, titleBinding, platformR
     schema_version: 1,
     artifact: 'VisualDecision',
     run_id: state.run_id,
-    visual_attempt: state.stages.visual.attempt,
+    body_attempt: bodyVisualAttempt(state),
     created_at: createdAt,
     created_by: 'orchestrator',
     decision_rule: 'content-production-visual-cardinality/1.0.0',
@@ -651,7 +651,6 @@ export async function buildVisualPlatformRows(runDir, tasks, coverages) {
 
 export async function validateCurrentVisualDecision(runDir, state, tasks, coverageValidation = null) {
   const coverage = coverageValidation || await validateVisualCoverageSet(runDir, state);
-  if (coverage.legacy) return { issues: [], path: null, value: null, legacy: true };
   const issues = [...coverage.issues];
   const relativePath = decisionPathForAttempt(state);
   const path = await safeCurrentFile(runDir, relativePath, issues, 'visual_decision_missing');
@@ -677,7 +676,7 @@ export function createPolicySnapshot({ state, policy, policySource, createdAt })
     schema_version: 1,
     artifact: 'VisualCardinalityPolicySnapshot',
     run_id: state.run_id,
-    visual_attempt: state.stages.visual.attempt,
+    body_attempt: bodyVisualAttempt(state),
     created_at: createdAt,
     policy_source: policySource,
     policy
@@ -688,7 +687,7 @@ export function validatePolicySnapshot(value, { state, policy, policySource }) {
   const issues = [];
   if (!exactKeys(value, policySnapshotKeys) || value.schema_version !== 1
     || value.artifact !== 'VisualCardinalityPolicySnapshot'
-    || value.run_id !== state.run_id || value.visual_attempt !== state.stages.visual.attempt
+    || value.run_id !== state.run_id || value.body_attempt !== bodyVisualAttempt(state)
     || !isDeepStrictEqual(value.policy_source, policySource) || !isDeepStrictEqual(value.policy, policy)) {
     issues.push(issue('visual_policy_invalid', 'Current visual cardinality policy snapshot is invalid or stale.'));
   }
@@ -713,7 +712,7 @@ export function deriveCoverageContract({
       schema_version: 1,
       artifact: 'VisualCoverageContract',
       run_id: state.run_id,
-      visual_attempt: state.stages.visual.attempt,
+      body_attempt: bodyVisualAttempt(state),
       platform,
       variant: selection.variant,
       created_at: createdAt,
@@ -788,9 +787,6 @@ async function safeCurrentFile(runDir, relativePath, issues, missingCode) {
 export async function validateVisualCoverageSet(runDir, state) {
   const issues = [];
   const expectedPolicyPath = policyPathForAttempt(state);
-  if (!fileExists(join(runDir, expectedPolicyPath)) && state.stages?.visual?.status === 'completed') {
-    return { issues, policy: null, policyRef: null, coverages: new Map(), legacy: true };
-  }
   const policySourcePath = join(skillDir, 'references', 'visual-cardinality-policy.json');
   const policy = await readJson(policySourcePath);
   const policySource = {

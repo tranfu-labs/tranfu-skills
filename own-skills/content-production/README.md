@@ -43,6 +43,11 @@ This is not for a quick edit, one title, one illustration, layout-only work, pub
 - **External activity**: May research public sources and call validated local providers; all deliverables stay local
 - **Never**: Logs into platforms, creates platform drafts, schedules posts, publishes, or reads performance data
 
+Visual V3 runs body illustrations and the WeChat cover as independent lifecycle components. Body work
+uses a five-platform Canary barrier, bounded concurrency, per-image retries, exact approved text, and
+hash-based PASS reuse; cover failures do not discard completed body pixels. Persisted artifacts use
+run-relative paths or PortablePathRef values and never retain resolved local user paths or credentials.
+
 ## Prerequisites & boundaries
 
 **Prerequisites**

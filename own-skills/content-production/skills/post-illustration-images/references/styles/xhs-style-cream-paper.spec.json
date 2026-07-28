@@ -56,6 +56,13 @@
     "defaultEnabled": true,
     "userOverrideAllowed": true
   },
+  "textPolicy": {
+    "defaultMode": "allowlist",
+    "iconsOnlyAllowed": false,
+    "headline": { "minCharacters": 2, "maxCharacters": 14 },
+    "labels": { "minItems": 2, "maxItems": 5, "maxCharactersPerItem": 8 }
+  },
+  "generationPrompt": "Create a warm cream-paper Xiaohongshu knowledge card with marker typography, pastel brush highlights, friendly hand-drawn icons, clear hierarchy, and notebook texture.",
   "inputHandling": {
     "preserveNativeOutput": true,
     "ratioTolerance": 0.002,

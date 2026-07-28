@@ -57,8 +57,8 @@ def normalize(input_path: Path, output_path: Path) -> dict[str, object]:
         raise
 
     return {
-        "input": str(input_path.resolve()),
-        "output": str(output_path.resolve()),
+        "inputName": input_path.name,
+        "outputName": output_path.name,
         "originalWidth": original_width,
         "originalHeight": original_height,
         "cropBox": list(box),

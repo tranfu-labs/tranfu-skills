@@ -9,16 +9,18 @@ import {
   platforms,
   readJson,
   readText,
+  resolveRunPortablePathRef,
   sha256
 } from './lib.mjs';
 import { expectedVisualStageArtifacts, illustrationPaths } from './illustration-contracts.mjs';
 import { coverPaths, expectedWechatCoverStageArtifacts } from './wechat-cover-contracts.mjs';
+import { bodyVisualAttempt, wechatCoverAttempt } from './visual-state.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const ASSET_ID = /^[a-z0-9][a-z0-9-]*$/;
 const REQUEST_KEYS = [
   'schema_version', 'contract', 'task_id', 'capability', 'provider_contract',
-  'run_dir', 'run_mode', 'mode', 'attempt', 'platform', 'variant', 'asset_id',
+  'run_mode', 'mode', 'attempt', 'platform', 'variant', 'asset_id',
   'asset_kind', 'inputs', 'output_dir', 'expected_artifacts', 'options',
   'interaction_policy'
 ];
@@ -36,7 +38,7 @@ const SELECTION_KEYS = [
   'draft_sha256', 'decision_rule'
 ];
 const PLAN_KEYS = [
-  'schema_version', 'contract', 'run_id', 'package_attempt', 'visual_attempt',
+  'schema_version', 'contract', 'run_id', 'package_attempt', 'body_attempt', 'cover_attempt',
   'task_count', 'tasks'
 ];
 const PLAN_TASK_KEYS = [
@@ -328,8 +330,8 @@ export function compressionPlanPath(state) {
 
 export function compressionProviderRequired(state) {
   const provider = state?.capabilities?.providers?.image_compression;
-  return state?.schema_version === 2 && (nonempty(state?.capabilities?.config_path)
-    || provider?.required === true || nonempty(provider?.skill_path));
+  return state?.schema_version === 3 && (state?.capabilities?.config_ref
+    || provider?.required === true || provider?.skill_ref);
 }
 
 async function loadContext(runDir, state, issues) {
@@ -344,7 +346,7 @@ async function loadContext(runDir, state, issues) {
     return null;
   }
   const stage = state?.stages?.package;
-  if (state?.schema_version !== 2 || !['running', 'completed'].includes(stage?.status)
+  if (state?.schema_version !== 3 || !['running', 'completed'].includes(stage?.status)
     || !Number.isInteger(stage?.attempt) || stage.attempt < 1) {
     issues.push(issue('package_stage_mismatch', 'Package requires a positive running or completed package attempt.'));
   }
@@ -353,12 +355,12 @@ async function loadContext(runDir, state, issues) {
   }
   const provider = state?.capabilities?.providers?.image_compression;
   if (provider?.status !== 'PASS' || provider?.contract !== 'image-compression-v1'
-    || !nonempty(provider?.skill_path) || !SHA256.test(provider?.skill_sha256 || '')) {
+    || !provider?.skill_ref || !SHA256.test(provider?.skill_sha256 || '')) {
     issues.push(issue('compression_provider_unavailable', 'The image compression provider snapshot is not PASS, hashed, and registered for image-compression-v1.'));
     return { root, runReal, provider: null };
   }
   try {
-    const skillPath = resolve(provider.skill_path);
+    const skillPath = resolveRunPortablePathRef(provider.skill_ref, root);
     const stat = await lstat(skillPath);
     if (stat.isSymbolicLink() || !stat.isFile() || await fileSha256(skillPath) !== provider.skill_sha256) {
       throw new Error('compression provider SKILL.md changed after capability preflight');
@@ -441,12 +443,11 @@ function requestOptions(assetKind) {
 function requestFor(context, state, task) {
   const paths = compressionTaskPaths(state, task.platform, task.asset_id, task.target_format);
   const request = {
-    schema_version: 1,
-    contract: 'content-production-provider/v1',
+    schema_version: 2,
+    contract: 'content-production-provider/v2',
     task_id: taskId(state, task),
     capability: 'image_compression',
     provider_contract: 'image-compression-v1',
-    run_dir: context.root,
     run_mode: state.run_mode,
     mode: 'compress_one',
     attempt: task.attempt,
@@ -587,7 +588,8 @@ export async function buildCompressionPlan(runDir, state) {
     contract: 'image-compression-v1',
     run_id: state.run_id,
     package_attempt: state.stages?.package?.attempt,
-    visual_attempt: state.stages?.visual?.attempt,
+    body_attempt: bodyVisualAttempt(state),
+    cover_attempt: wechatCoverAttempt(state),
     task_count: tasks.length,
     tasks: tasks.map(planTask)
   };
@@ -623,8 +625,8 @@ async function validateCompressionTask(context, task, issues) {
     && compression.saved_bytes === task.source.bytes - candidate?.bytes
     && compression.saved_percent === savedPercent(task.source.bytes, candidate?.bytes)
     && compression.recommended_selection === expectedSelection;
-  const resultShape = exactKeys(result, RESULT_KEYS) && result.schema_version === 1
-    && result.contract === 'content-production-provider/v1'
+  const resultShape = exactKeys(result, RESULT_KEYS) && result.schema_version === 2
+    && result.contract === 'content-production-provider/v2'
     && result.provider_contract === 'image-compression-v1'
     && result.task_id === task.request.task_id
     && result.request_sha256 === await fileSha256(requestFile.absolute)

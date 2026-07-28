@@ -14,7 +14,7 @@ Create exactly one fixed-format WeChat article cover. The style, layout, dimensi
 ## Orchestrated provider route
 
 Before the standalone workflow, inspect structured requests. If a request contains any of
-`contract: content-production-provider/v1`, `capability: wechat_cover`,
+`contract: content-production-provider/v2`, `capability: wechat_cover`,
 `provider_contract: wechat-cover-v1`, or `content-production-provider: wechat-cover-v1`, MUST read
 [references/orchestrated-provider.md](references/orchestrated-provider.md) and use
 `scripts/provider-contract.mjs`. A partial, conflicting, or invalid provider marker returns a

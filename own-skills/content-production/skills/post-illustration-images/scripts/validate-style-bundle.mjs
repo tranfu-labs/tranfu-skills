@@ -388,6 +388,29 @@ function validateBrand(spec, candidatePolicy) {
   invariant(spec.generationConstraints?.keepBrandReservedAreaClear === true, "style.spec.json must keep the brand area clear when active");
 }
 
+function validateTextPolicy(spec) {
+  const policy = spec.textPolicy;
+  invariant(policy && typeof policy === "object", "style.spec.json textPolicy is required");
+  invariant(Object.keys(policy).length === 4
+    && ["defaultMode", "iconsOnlyAllowed", "headline", "labels"].every((key) => key in policy),
+  "style.spec.json textPolicy has unexpected fields");
+  invariant(policy.headline && Object.keys(policy.headline).length === 2
+    && ["minCharacters", "maxCharacters"].every((key) => key in policy.headline),
+  "style.spec.json textPolicy.headline has unexpected fields");
+  invariant(policy.labels && Object.keys(policy.labels).length === 3
+    && ["minItems", "maxItems", "maxCharactersPerItem"].every((key) => key in policy.labels),
+  "style.spec.json textPolicy.labels has unexpected fields");
+  invariant(policy.defaultMode === "allowlist", "style.spec.json textPolicy.defaultMode must be allowlist");
+  invariant(policy.iconsOnlyAllowed === false, "style.spec.json textPolicy.iconsOnlyAllowed must be false");
+  invariant(policy.headline?.minCharacters === 2, "style.spec.json textPolicy headline minimum must be 2");
+  invariant(policy.headline?.maxCharacters === 14, "style.spec.json textPolicy headline maximum must be 14");
+  invariant(policy.labels?.minItems === 2, "style.spec.json textPolicy labels minimum must be 2");
+  invariant(policy.labels?.maxItems === 5, "style.spec.json textPolicy labels maximum must be 5");
+  invariant(policy.labels?.maxCharactersPerItem === 8, "style.spec.json textPolicy label length maximum must be 8");
+  invariant(typeof spec.generationPrompt === "string" && spec.generationPrompt.trim()
+    && spec.generationPrompt.length <= 240, "style.spec.json generationPrompt must be a concise non-empty string");
+}
+
 function validateSpec({ spec, style, baseline, enforceBaselineCanvas }) {
   invariant(spec?.id === style.id, "style.spec.json id must match candidate style.id");
   invariant(spec.platform === baseline.specPlatform, `style.spec.json platform must be ${baseline.specPlatform}`);
@@ -410,6 +433,7 @@ function validateSpec({ spec, style, baseline, enforceBaselineCanvas }) {
     validateRect(rect, `style.spec.json layout.${name}`, canvas);
   }
   validateBrand(spec, style.brandPolicy);
+  validateTextPolicy(spec);
   if (enforceBaselineCanvas) {
     invariant(rectEquals(spec.layout.contentSafeArea, baseline.contentSafeArea), "style.spec.json layout.contentSafeArea must match the platform baseline");
     invariant(rectEquals(spec.layout.brandReservedArea, baseline.brandReservedArea), "style.spec.json layout.brandReservedArea must match the platform baseline");

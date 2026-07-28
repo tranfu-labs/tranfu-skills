@@ -160,20 +160,20 @@ canonical provider 文件并拒绝旧 request/result，同时失效 titles 门�
 
 ## 阶段 8：五套配图与公众号封面
 
-1. 把 `visual` 设为 running，运行 `create-visual-coverage.mjs <run-dir> --all`。总控从 titles gate 读取五个平台 winner，原子写 current policy snapshot 和五份 coverage；任一结构、唯一 excerpt、required unit、数量或跨平台检查失败时不写任何 plan request。
-2. 在任何 plan request 前创建当前 attempt 的 BackendLease。用户明确指定后端时先验证指定路径；否则先判断原生生图能力，可调用即选择原生，不可调用才解析当前激活的配置后端。配置 endpoint 只按“本次任务明确设置、激活 provider 的 `base_url/openai_base_url`、进程 `OPENAI_BASE_URL`”取值；credential 只取同一 provider 的 Codex 认证上下文。`model_provider="openai"` 只表示兼容协议，不能推断服务商或官方 endpoint。
-3. 配置后端只做一次非计费预检：adapter、endpoint/credential、图像模型 channel、输出路径/格式与进程清理。预检后不得再次查模型或寻找后端。Lease 与脱敏 BackendContext 不含凭证；adapter、配置或 Lease 漂移一律阻断。只允许四类后端错误：`backend configuration inaccessible`、`backend credentials unavailable to adapter`、`backend endpoint mismatch`、`backend model channel unavailable`。
+1. 用 `set-visual-component.mjs` 分别启动 `body_visual` 与 `wechat_cover`。父 `visual` 只聚合两边状态，不直接用 `set-stage.mjs` 启停或完成。
+2. 在任何 plan 或计费调用前运行 `visual-preflight.mjs`。它一次验证全部 style/spec/reference、封面参考图完整解码、normalizer/compiler、品牌 renderer、geometry、endpoint、credential 和模型 channel；任一失败时不写 plan/request。
+3. 预检通过后冻结不可变 BackendProfile，并为正文与封面分别创建绑定各自 attempt 的 Lease。持久化文件只保存 PortablePathRef、哈希和脱敏上下文。普通恢复禁止隐式切换 profile；只有带确认值的显式 reset 同时失效正文和封面。
 4. 为五个平台分别运行 `create-illustration-request.mjs <run-dir> plan --platform <id>`。`max_images` 只从 coverage target 派生，命令行值只可作相等断言；`backend_hint` 与 `model_preference` 只可断言 Lease，不能选路。provider 消费 `final_draft`、`title_selection`、`visual_coverage`，沿用注册样式、品牌与几何规则，只输出 current plan 和 shot list。计划必须处于 minimum..target、覆盖所有 required unit、禁止重复 anchor；小红书逐页映射 4-8 张。
-5. 五个 provider plan result 全部 PASS 后运行 `create-visual-decision.mjs <run-dir>`。只有该脚本生成的 current `VisualDecision` 可作为 visual gate decision；`set-gate.mjs` 在 visual 仍 running 时复算 policy、coverage、Lease、plan 和跨平台数量并精确验收十件 plan/shot-list。批准后 current stage 仍是 visual。
-6. 批准后为五个平台分别运行 `create-illustration-request.mjs <run-dir> generate --platform <id>`，父 request 只授权最终 bundle/manifest；同时创建独立公众号封面 request。运行 `illustration-queue.mjs <run-dir> init` 后由 queue 派发正文 child 和封面：每套第 1 张实际图片仍是 Canary，PASS 后才派发后续图；全局最多 4 个、同套最多 2 个生成调用，封面占用同一个全局名额。
-7. 每次正文图和封面生成都通过 `run-image-generation.mjs` 复用同一 Lease。原生 Lease 返回原生工具调用要求，Agent 完成后用 `--verify-existing` 复验；配置 Lease 只向固定 `image_gen.py` 子进程注入 `OPENAI_BASE_URL` 和 `OPENAI_API_KEY`，密钥不得进入 argv、Lease、BackendContext、request/result、manifest、日志或错误消息。
-8. 每个 child 只授权自己的 prompt、candidate/source、同尺寸品牌 delivery、QA 和 result。Prompt preflight 检查文字 allowlist 与比例指令；candidate 读取真实 raster 格式、尺寸、比例和最短边。图片质量、文字、风格、品牌或几何失败只在已选后端创建下一 candidate；限流、超时或连接中断只重试同一后端和同一 transport attempt。已通过 child 的文件和哈希保持冻结。
-9. 原生工具不可恢复的执行错误必须运行 `backend-lease.mjs <run-dir> record --outcome irrecoverable-execution-error` 阻断当前 visual attempt，禁止同 attempt 降级。总控开启下一 visual attempt 后，必须重新创建 policy、coverage、Lease、plan request/result、plan、shot list 和 decision，届时才可解析配置后端。配置后端失败不得猜 endpoint、拼接其他凭证或切换 provider。
+5. 五个 provider plan result 全部 PASS 后运行 `create-visual-decision.mjs`。总控 gate 重新读取 style spec，并拒绝任何空 headline、标签不足、超长、无来源或 `icons_only` 的 plan。provider 规划具体文字；总控不得清空、补写或自动生成文字。
+6. 批准后创建五个平台 generate 父 request，并分别初始化 `illustration-queue.mjs` 与 `cover-queue.mjs`。正文先各派发一张 Canary，五张全部 PASS 后才展开其余图片；正文全局 4、单平台 2，封面独立 1。封面阻断不停止正文，单个平台阻断也不停止其他平台。
+7. 每次生成都通过 `run-image-generation.mjs --consumer body_visual|wechat_cover` 使用对应 Lease。原生工具不可观测的模型区间记为 `unobservable`；只分别记录 dispatch、模型调用、落盘、品牌覆盖、单图 QA、Set QA、reconcile 和 idle，不把整个租约误称为模型耗时。
+8. child prompt 只能由确定性 compiler 从已批准 style、geometry、anchor 和 text variant 生成。`readable_text` 必须与完整 allowlist 精确一致；缺字、错字、重复字或额外文字返回 `illustration_candidate_text`。只有文字失败才切换 compact，几何/风格失败仍用原 variant，三次失败后阻断该图，绝不降级为无字。
+9. active 生图/封面 TTL 为 60 分钟，Set QA 为 30 分钟。恢复先 reconcile 已存在 result，再把无结果超时任务标为 `abandoned` 并释放；限流、transport 和 TTL 回收都不消耗新的质量 candidate。
 10. 全部 child PASS 后，每套串行执行 Set QA，检查风格、颜色、密度、重复构图和叙事顺序。失败必须返回具体 image ID 和原因，只解冻被点名图片；无法定位时整套阻断。PASS 后父任务只从已验证 child result 按 plan 顺序聚合 `bundle[.vNNN].json` 与原生 `manifest[.vNNN].md`。公众号正文图不包含发布封面。
-11. `wechat_cover` 保留独立模式的最多三次候选流程；provider 模式复用正文 Lease 与 BackendContext，逐候选生成和归一化，只接受十项视觉门全部 PASS 的结果。标题结论记录为绑定最终封面哈希的 `provider_observed_exact`，并显式记录 `ocr_status=not_performed`；不得把模型视觉检查表述成确定性 OCR。独立模式的 `BEST_EFFORT` 在总控中映射为 `BLOCKED`，不得写 canonical cover。
-12. 用 `set-stage.mjs` 精确绑定五个平台各自的 plan、shot-list、bundle、native manifest 20 件，再绑定当前 attempt 的封面 PNG 与 `cover.json` 2 件，共 22 件。queue、child、Set QA、prompts/images/source/candidates 不直接进入 stage binding，由递归的路径、哈希、QA 和集合校验覆盖。全部通过后进入 package。
+11. `wechat_cover` 只绑定 titles gate、`cover_attempt` 和自己的 Lease，不依赖正文 visual gate。逐候选生成和归一化，只接受十项视觉门全部 PASS；封面恢复或配置漂移不使正文失效。
+12. 分别用 `set-visual-component.mjs` 完成正文 20 件和封面 2 件。父 visual 在两边都 completed 时组合为 22 件并进入 package；`body_attempt` 与 `cover_attempt` 可不同。
 
-首个 visual attempt 使用无版本业务文件；重开 completed visual，或已批准计划/后端后从 blocked 重启，递增 attempt 并重建该 attempt 的 policy、coverage、BackendLease、plan controls、plan、shot list 和 decision，再使用 `.v002` controls/业务文件及 `prompts/v002`、`images/.../v002`。封面同步使用 `wechat-cover.v002.request/result.json`、`source.v002.md`、`cover.v002.png/json`、`prompts/v002/` 和 `candidates/v002/`。旧 attempt 不得覆盖或复用。已完成 legacy run 保持只读，不补写新控制工件。
+正文恢复只递增 `body_attempt`，只派发未 PASS 或复用指纹不匹配的 image ID。完整未变化 suite 复用原 bundle、Set QA 和图片引用；部分变化只复用匹配 child 并重跑 Set QA，不复制或重新编码像素。封面恢复只递增 `cover_attempt`。V2 run 仅允许在 visual pending/running/blocked 时通过 `migrate-v2-to-v3.mjs` 创建非破坏性脱敏副本，源 run 保持不变。
 
 出口：五套非空配图和独立公众号封面均 `PASS`。
 

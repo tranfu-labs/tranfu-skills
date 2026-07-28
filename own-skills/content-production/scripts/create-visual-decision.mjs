@@ -20,8 +20,10 @@ try {
   const runDir = expandPath(runInput);
   const state = await readJson(join(runDir, 'run.json'));
   const issues = [];
-  if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'visual'
-    || state.stages?.visual?.status !== 'running' || state.gates?.titles?.status !== 'approved'
+  if (state.schema_version !== 3 || state.status !== 'running' || state.current_stage !== 'visual'
+    || state.stages?.visual?.status !== 'running'
+    || state.stages?.visual?.body_visual?.status !== 'running'
+    || state.gates?.titles?.status !== 'approved'
     || state.gates?.visual?.status === 'approved') {
     issues.push({
       code: 'visual_decision_stage_mismatch',
@@ -42,7 +44,7 @@ try {
   });
   issues.push(...decision.issues);
   if (issues.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, issues }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, issues }, 2);
   } else {
     const relativePath = decisionPathForAttempt(state);
     const path = join(runDir, relativePath);
@@ -58,10 +60,10 @@ try {
       if (JSON.stringify(existing) !== JSON.stringify(expected)) {
         throw new Error('Refusing to overwrite a different current visual decision.');
       }
-      emitJson({ status: 'PROPOSED', run_dir: runDir, decision_path: path, idempotent: true });
+      emitJson({ status: 'PROPOSED', run_id: state.run_id, decision_path: relativePath, idempotent: true });
     } else {
       await writeJson(path, decision);
-      emitJson({ status: 'PROPOSED', run_dir: runDir, decision_path: path, idempotent: false });
+      emitJson({ status: 'PROPOSED', run_id: state.run_id, decision_path: relativePath, idempotent: false });
     }
   }
 } catch (error) {

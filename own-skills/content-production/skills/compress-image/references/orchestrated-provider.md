@@ -1,7 +1,7 @@
 # Content Production Image Compression Provider
 
 Use this route whenever any content-production provider marker appears. A valid request must contain
-`contract: content-production-provider/v1`, `capability: image_compression`,
+`contract: content-production-provider/v2`, `capability: image_compression`,
 `provider_contract: image-compression-v1`, and `mode: compress_one`; partial or conflicting markers
 must be validated and returned as BLOCKED. Standalone file and directory behavior remains unchanged
 when no provider marker is present.
@@ -22,6 +22,8 @@ when no provider marker is present.
 ## Request Contract
 
 The request binds one `source_image`, one current package attempt, and one staging candidate.
+It omits `run_dir`; the provider locates and verifies `run.json` from request ancestry, and every
+persisted business path is run-relative POSIX.
 Task IDs use:
 
 ```text
@@ -41,7 +43,7 @@ Attempt 2 uses the same layout under `_compression/v002/`. Prior attempts are im
 Top-level request keys are exactly:
 
 ```text
-schema_version, contract, task_id, capability, provider_contract, run_dir, run_mode,
+schema_version, contract, task_id, capability, provider_contract, run_mode,
 mode, attempt, platform, variant, asset_id, asset_kind, inputs, output_dir,
 expected_artifacts, options, interaction_policy
 ```

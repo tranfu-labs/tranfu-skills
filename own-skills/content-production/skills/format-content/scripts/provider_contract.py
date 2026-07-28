@@ -16,13 +16,13 @@ from urllib.parse import urlsplit
 from validate_gzh_html import validate as validate_gzh_html
 
 
-CONTRACT = "content-production-provider/v1"
+CONTRACT = "content-production-provider/v2"
 PROVIDER = "wechat-layout-v1"
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 SHA256 = re.compile(r"^[a-f0-9]{64}$")
 REQUEST_KEYS = {
     "schema_version", "contract", "task_id", "capability", "provider_contract",
-    "run_dir", "run_mode", "mode", "attempt", "platform", "variant", "inputs",
+    "run_mode", "mode", "attempt", "platform", "variant", "inputs",
     "output_dir", "expected_artifacts", "options", "interaction_policy",
 }
 INPUT_KEYS = {"role", "path", "sha256"}
@@ -114,6 +114,24 @@ def has_symlink_component(root, path, include_leaf=True):
         if os.path.lexists(current) and current.is_symlink():
             return True
     return False
+
+
+def find_run_root(request_path):
+    request_real = Path(request_path).resolve(strict=True)
+    current = Path(request_path).absolute().parent
+    while True:
+        state_path = current / "run.json"
+        if os.path.lexists(state_path):
+            run_real = current.resolve(strict=True)
+            if current.is_symlink() or not current.is_dir() or state_path.is_symlink() or not state_path.is_file() \
+                    or not inside(run_real, request_real) \
+                    or state_path.resolve(strict=True) != run_real / "run.json":
+                raise ValueError("Request ancestry does not resolve to a safe run root.")
+            return current, run_real
+        if current.parent == current:
+            break
+        current = current.parent
+    raise ValueError("Cannot locate run.json from request ancestry.")
 
 
 def issue(issues, code, message, **extra):
@@ -494,26 +512,15 @@ def validate_request(request_input):
     if isinstance(attempt, int) and not isinstance(attempt, bool) and attempt > 0:
         context.spec = expected_paths(attempt)
 
-    if not same_keys(request, REQUEST_KEYS) or request.get("schema_version") != 1 \
+    if not same_keys(request, REQUEST_KEYS) or request.get("schema_version") != 2 \
             or request.get("contract") != CONTRACT or request.get("capability") != "wechat_layout" \
             or request.get("provider_contract") != PROVIDER or request.get("mode") != "format_wechat":
         issue(context.issues, "invalid_wechat_layout_request", "Request envelope does not match wechat-layout-v1.")
 
-    run_value = request.get("run_dir")
-    if not isinstance(run_value, str) or not os.path.isabs(run_value):
-        issue(context.issues, "invalid_wechat_layout_run_dir", "run_dir must be absolute.")
-        return context
-    context.run_dir = Path(run_value).absolute()
     try:
-        if context.run_dir.is_symlink() or not context.run_dir.is_dir():
-            raise ValueError("run_dir must be a real directory")
-        context.run_real = context.run_dir.resolve(strict=True)
-        if has_symlink_component(context.run_dir, context.request_path) \
-                or not inside(context.run_dir, context.request_path) \
-                or not inside(context.run_real, context.request_path.resolve(strict=True)):
-            raise ValueError("request must be a real file inside run_dir")
+        context.run_dir, context.run_real = find_run_root(context.request_path)
     except (OSError, ValueError) as error:
-        issue(context.issues, "invalid_wechat_layout_run_dir", str(error))
+        issue(context.issues, "invalid_wechat_layout_run_root", str(error))
         return context
 
     if not context.spec:
@@ -650,7 +657,7 @@ def artifacts_for(context, include_preview=True):
 
 def make_result(context, status, artifacts, checks, issues, warnings=None):
     value = {
-        "schema_version": 1,
+        "schema_version": 2,
         "contract": CONTRACT,
         "provider_contract": PROVIDER,
         "task_id": context.request.get("task_id", "unknown") if isinstance(context.request, dict) else "unknown",
@@ -823,7 +830,6 @@ def main():
         emit({
             "status": "PASS",
             "task_id": context.request["task_id"],
-            "run_dir": str(context.run_dir),
             "output_dir": context.spec["staging"],
             "inputs": {
                 "source_markdown": context.spec["source"],

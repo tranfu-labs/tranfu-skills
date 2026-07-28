@@ -6,7 +6,14 @@ import {
   executeConfiguredGeneration,
   validateBackendLeaseFile
 } from './backend-runtime.mjs';
-import { emitJson, expandPath, fileExists, parseArgs, readJson } from './lib.mjs';
+import {
+  emitJson,
+  expandPath,
+  fileExists,
+  parseArgs,
+  readJson,
+  resolveRunPortablePathRef
+} from './lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const [runInput, ...extra] = args._;
@@ -27,10 +34,11 @@ async function hasSymlinkComponent(root, path) {
 }
 
 try {
-  const allowed = new Set(['_', 'prompt_file', 'output', 'size', 'output_format', 'verify_existing']);
+  const allowed = new Set(['_', 'consumer', 'prompt_file', 'output', 'size', 'output_format', 'verify_existing']);
   if (!runInput || extra.length || Object.keys(args).some((key) => !allowed.has(key))
+    || !['body_visual', 'wechat_cover'].includes(args.consumer)
     || !args.prompt_file || !args.output) {
-    throw new Error('Usage: run-image-generation.mjs <run-dir> --prompt-file <path> --output <path> [--size WxH] [--output-format png] [--verify-existing]');
+    throw new Error('Usage: run-image-generation.mjs <run-dir> --consumer <body_visual|wechat_cover> --prompt-file <path> --output <path> [--size WxH] [--output-format png] [--verify-existing]');
   }
   const runDir = expandPath(runInput);
   const state = await readJson(join(runDir, 'run.json'));
@@ -42,7 +50,7 @@ try {
   if (await hasSymlinkComponent(runDir, promptPath) || await hasSymlinkComponent(runDir, outputPath)) {
     throw new Error('Prompt and output cannot be symbolic links.');
   }
-  const lease = await validateBackendLeaseFile(runDir, state);
+  const lease = await validateBackendLeaseFile(runDir, state, { consumer: args.consumer });
   if (lease.issues.length) {
     emitJson({ status: 'BLOCKED', issues: lease.issues }, 2);
   } else if (args.output_format && args.output_format !== lease.value.backend_context.artifact_format
@@ -78,12 +86,20 @@ try {
     const resolved = {
       kind: lease.value.backend_kind,
       context: lease.value.backend_context,
-      adapter: { ...lease.value.adapter },
-      configuration: lease.value.configuration,
+      adapter: {
+        path: resolveRunPortablePathRef(lease.value.adapter.ref, runDir),
+        sha256: lease.value.adapter.sha256
+      },
+      configuration: {
+        path: resolveRunPortablePathRef(lease.value.configuration.config_ref, runDir),
+        sha256: lease.value.configuration.config_sha256,
+        auth_path: resolveRunPortablePathRef(lease.value.configuration.auth_ref, runDir),
+        endpoint_override: lease.value.configuration.endpoint_override
+      },
       preflight: lease.value.preflight,
       issues: []
     };
-    const result = await executeConfiguredGeneration({ resolved, adapterArgs });
+    const result = await executeConfiguredGeneration({ resolved, runDir, adapterArgs });
     if (result.status === 'PASS' && !fileExists(outputPath)) {
       emitJson({ status: 'BLOCKED', issues: [{ code: 'backend_output_missing', message: 'backend model channel unavailable', resume_from: 'visual' }] }, 2);
     } else {

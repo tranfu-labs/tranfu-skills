@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { lstat, mkdir, readFile, readdir, realpath, rename, writeFile } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 
@@ -21,7 +21,7 @@ export const capabilityDefinitions = {
   illustration: {
     required: true,
     contract: 'illustration-v1',
-    profile: 'bounded-per-image',
+    profile: 'bounded-per-image-v2',
     adapter_contract: 'illustration-orchestrated-coverage-v1'
   },
   wechat_cover: { required: true, contract: 'wechat-cover-v1' },
@@ -30,6 +30,7 @@ export const capabilityDefinitions = {
 };
 export const allCapabilities = Object.keys(capabilityDefinitions);
 export const requiredCapabilities = allCapabilities.filter((id) => capabilityDefinitions[id].required);
+export const portablePathRoots = ['RUN_ROOT', 'SKILL_ROOT', 'CODEX_HOME', 'WORKSPACE_ROOT'];
 
 export function parseArgs(argv) {
   const values = { _: [] };
@@ -156,6 +157,96 @@ export function relativeTo(root, path) {
   return relative(root, path).replaceAll('\\', '/');
 }
 
+export function portablePathRef(root, path) {
+  if (!portablePathRoots.includes(root)) throw new Error(`Unsupported portable path root: ${root}`);
+  if (typeof path !== 'string' || !path || path.includes('\\') || isAbsolute(path)
+    || posix.normalize(path) !== path || path === '..' || path.startsWith('../')
+    || path.split('/').some((part) => !part || part === '.' || part === '..')) {
+    throw new Error(`Portable path must be a safe relative POSIX path: ${path || '(missing)'}`);
+  }
+  return { root, path };
+}
+
+export function resolvePortablePathRef(ref, roots = {}) {
+  if (!ref || typeof ref !== 'object' || Array.isArray(ref)
+    || Object.keys(ref).length !== 2 || !Object.hasOwn(ref, 'root') || !Object.hasOwn(ref, 'path')) {
+    throw new Error('PortablePathRef must contain exactly root and path.');
+  }
+  const valid = portablePathRef(ref.root, ref.path);
+  const base = roots[valid.root];
+  if (!base || !isAbsolute(base)) throw new Error(`Missing absolute runtime root for ${valid.root}.`);
+  const target = resolve(base, valid.path);
+  const rel = relative(resolve(base), target);
+  if (rel === '..' || rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) || isAbsolute(rel)) {
+    throw new Error(`Portable path escapes ${valid.root}: ${valid.path}`);
+  }
+  return target;
+}
+
+export function portableRefForPath(path, roots) {
+  const absolute = resolve(path);
+  for (const root of portablePathRoots) {
+    const base = roots[root];
+    if (!base) continue;
+    const rel = relative(resolve(base), absolute);
+    if (rel && !isAbsolute(rel) && rel !== '..'
+      && !rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)) {
+      return portablePathRef(root, rel.replaceAll('\\', '/'));
+    }
+  }
+  throw new Error(`Path is outside the configured portable roots: ${absolute}`);
+}
+
+export function resolveRunPortablePathRef(ref, runDir, { workspaceRoot = null } = {}) {
+  let effectiveWorkspaceRoot = workspaceRoot || process.env.WORKSPACE_ROOT || null;
+  if (ref?.root === 'WORKSPACE_ROOT' && !effectiveWorkspaceRoot) {
+    let current = resolve(runDir);
+    while (true) {
+      if (fileExists(resolve(current, ref.path || ''))) {
+        effectiveWorkspaceRoot = current;
+        break;
+      }
+      const parent = dirname(current);
+      if (parent === current) break;
+      current = parent;
+    }
+  }
+  return resolvePortablePathRef(ref, {
+    RUN_ROOT: resolve(runDir),
+    SKILL_ROOT: skillDir,
+    CODEX_HOME: process.env.CODEX_HOME || join(homedir(), '.codex'),
+    WORKSPACE_ROOT: effectiveWorkspaceRoot || process.cwd()
+  });
+}
+
+export async function findRunDirFromRequest(input) {
+  const requestPath = resolve(input || '');
+  const requestStat = await lstat(requestPath);
+  if (requestStat.isSymbolicLink() || !requestStat.isFile()) throw new Error('Request must be a real file.');
+  const requestReal = await realpath(requestPath);
+  let current = dirname(requestPath);
+  while (true) {
+    const statePath = join(current, 'run.json');
+    if (fileExists(statePath)) {
+      const runStat = await lstat(current);
+      const stateStat = await lstat(statePath);
+      const runReal = await realpath(current);
+      const stateReal = await realpath(statePath);
+      const requestRel = relative(runReal, requestReal);
+      if (runStat.isSymbolicLink() || !runStat.isDirectory() || stateStat.isSymbolicLink() || !stateStat.isFile()
+        || stateReal !== join(runReal, 'run.json') || isAbsolute(requestRel) || requestRel === '..'
+        || requestRel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)) {
+        throw new Error('Request ancestry does not resolve to a safe run root.');
+      }
+      return current;
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error('Cannot locate run.json from request ancestry.');
+}
+
 export async function artifactBinding(runDir, input) {
   const path = expandPath(input, runDir);
   if (!fileExists(path)) throw new Error(`Cannot bind missing artifact: ${path}`);
@@ -278,11 +369,24 @@ export async function verifyQaFingerprints(runDir, qa) {
   return issues;
 }
 
-export async function inspectCapabilities(configPath) {
-  const report = { status: 'PASS', config_path: configPath, capabilities: [], blockers: [], warnings: [] };
+export async function inspectCapabilities(configPath, { workspaceRoot = null } = {}) {
+  const roots = {
+    SKILL_ROOT: skillDir,
+    CODEX_HOME: process.env.CODEX_HOME || join(homedir(), '.codex'),
+    WORKSPACE_ROOT: workspaceRoot || (resolve(configPath).startsWith(`${skillDir}${process.platform === 'win32' ? '\\' : '/'}`)
+      ? resolve(skillDir, '..', '..') : dirname(resolve(configPath)))
+  };
+  const configRef = portableRefForPath(configPath, roots);
+  const report = {
+    status: 'PASS',
+    config_ref: configRef,
+    capabilities: [],
+    blockers: [],
+    warnings: []
+  };
   if (!fileExists(configPath)) {
     report.status = 'BLOCKED';
-    report.blockers.push({ code: 'missing_capabilities_config', message: `Missing capabilities config: ${configPath}` });
+    report.blockers.push({ code: 'missing_capabilities_config', message: `Missing capabilities config: ${configRef.root}:${configRef.path}` });
     return report;
   }
 
@@ -310,6 +414,7 @@ export async function inspectCapabilities(configPath) {
       continue;
     }
     const path = expandPath(entry.skill_path, dirname(configPath));
+    const skillRef = portableRefForPath(path, roots);
     const item = {
       id,
       required: definition.required,
@@ -317,7 +422,7 @@ export async function inspectCapabilities(configPath) {
       profile: entry.profile || null,
       adapter_contract: entry.adapter_contract || null,
       resources: [],
-      skill_path: path,
+      skill_ref: skillRef,
       skill_sha256: null,
       status: 'PASS',
       missing_markers: []
@@ -339,7 +444,7 @@ export async function inspectCapabilities(configPath) {
       fail({ code: 'capability_adapter_contract_mismatch', capability: id, message: `${id} must declare adapter contract ${definition.adapter_contract}.` });
     }
     if (!fileExists(path)) {
-      fail({ code: 'missing_capability_skill', capability: id, message: `Missing skill file: ${path}` });
+      fail({ code: 'missing_capability_skill', capability: id, message: `Missing skill file: ${skillRef.root}:${skillRef.path}` });
     } else {
       const content = await readText(path);
       item.skill_sha256 = sha256(content);
@@ -354,9 +459,10 @@ export async function inspectCapabilities(configPath) {
     }
     for (const resource of entry.resources || []) {
       const resourcePath = expandPath(resource, dirname(configPath));
-      const resourceItem = { path: resourcePath, sha256: null };
+      const resourceRef = portableRefForPath(resourcePath, roots);
+      const resourceItem = { ref: resourceRef, sha256: null };
       if (!fileExists(resourcePath)) {
-        fail({ code: 'missing_capability_resource', capability: id, message: `Missing capability resource: ${resourcePath}` });
+        fail({ code: 'missing_capability_resource', capability: id, message: `Missing capability resource: ${resourceRef.root}:${resourceRef.path}` });
       } else {
         resourceItem.sha256 = await fileSha256(resourcePath);
       }

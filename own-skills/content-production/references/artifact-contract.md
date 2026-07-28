@@ -200,13 +200,19 @@ completed stage 的同版本 titles 和 matrix。matrix 保存全部候选和确
 
 ## 五套配图
 
-每个 current visual attempt 先保留一份 policy snapshot 和五份 coverage。coverage 绑定 winner、titles decision 与 platform profile，记录 eligible/required units、唯一 excerpt 及 minimum/target；五个平台 cap 均为 8，小红书固定 4..8 页逐页覆盖。每平台 plan 精确绑定 coverage、注册 style、品牌策略、后端、`gpt-image-2` 几何和非空 anchors，状态必须 `READY`、residual risk=`none`。`shot-list.md` 与 plan 完全一致。唯一 VisualDecision 由脚本生成；visual gate 精确绑定五份 plan 和五份 shot-list，批准时 visual stage 仍为 running。
+`visual` 是聚合阶段，包含独立的 `body_visual` 与 `wechat_cover` 状态、attempt、错误和产物。父级只在两者都 completed 时完成；`body_attempt=N` 与 `cover_attempt=M` 可以组合成交付。封面阻断不停止正文，单个平台或单图阻断也不停止其他平台。
 
-同一 attempt 还必须在 plan 前保留一个内部 BackendLease。它绑定 run/visual attempt、backend kind、provider、endpoint 来源、adapter 路径与哈希、model、脱敏 BackendContext 和一次性预检结果；配置后端额外绑定配置路径/哈希及认证上下文路径，但绝不保存凭证、凭证片段或可恢复凭证的信息。BackendLease 不是新 Gate，也不进入运营交付索引；现有 Gate 通过统一 validator 复验它。正文计划、child、公众号封面和最终 QA 必须使用同一 Lease，任一漂移都从 visual 阻断。
+每个 current body attempt 先保留一份 policy snapshot 和五份 coverage。coverage 绑定 winner、titles decision 与 platform profile，记录 eligible/required units、唯一 excerpt 及 minimum/target；五个平台 cap 均为 8，小红书固定 4..8 页逐页覆盖。每平台 plan 精确绑定 coverage、注册 style、品牌策略、后端、`gpt-image-2` 几何和非空 anchors，状态必须 `READY`、residual risk=`none`。`shot-list.md` 与 plan 完全一致。唯一 VisualDecision 由脚本生成；visual gate 只批准正文五份 plan 和 shot-list。
 
-`bounded-per-image` generate 父 request 另绑定已批准 plan/shot-list，只授权 `bundle.json` 与 provider 原生 `manifest.md`。`07-visual/generation-queue[.vNNN].json` 登记五个平台 suite、共享全局 4/单套 2 的生成租约和独立封面占位；每图 control 位于 `children[/vNNN]/<image-id>/attempt-NN/`，Set QA 位于 `set-qa[/vNNN]/round-NN/`。child request 精确授权自己的 prompt、candidate/source、delivery 和 QA；result 绑定这些文件的哈希、真实几何和选中 attempt。
+plan 和任何计费调用前必须先写统一 preflight、一个不可变 BackendProfile，以及正文/封面各自的 Lease。持久化记录只保存 PortablePathRef、哈希和脱敏后端上下文，不保存 endpoint 配置文件、认证文件、adapter 的解析绝对路径或凭证。普通恢复不得切换 BackendProfile；显式 reset 同时失效两边。
+
+`bounded-per-image-v2` generate 父 request 另绑定已批准 plan/shot-list，只授权 `bundle.json` 与 provider 原生 `manifest.md`。`generation-queue[.vNNN].json` 先派发五个平台 Canary，全部 PASS 后才开放非 Canary；正文全局 4、单套 2。封面使用独立 `cover-queue[.vNNN].json` 和 1 个并发名额。active 任务记录 heartbeat/expiry；生图和封面 TTL 为 60 分钟，Set QA 为 30 分钟，无结果超时记为 `abandoned`。
+
+每个 anchor 的 `text_content` 精确包含 primary 与 compact。两者都必须有 2-14 字 headline、至少一个同时逐字存在于 headline 和当前 excerpt 的 source term，以及 2-5 个、每个不超过 8 字的 labels；可选 supporting copy/footer 和全部 labels 必须逐字来自当前终稿或入选标题。总控拒绝空 headline、标签不足、无来源、超长或 `icons_only`，且不得补写或清空文字。确定性 compiler 只编译已批准 style、geometry、anchor 和 variant；QA 的 `readable_text` 必须与该 variant 的完整 allowlist 一致。只有文字 QA 失败才切换 compact，三次失败后阻断该图而不降级为无字。
 
 Set QA PASS 后父任务从已绑定 child result 按 plan 顺序写 `bundle.json`。bundle 精确镜像计划血缘和 image ID 顺序；每张图记录 prompt/source/delivery 路径与哈希、placement、core meaning、structure、visual metaphor、content/style/brand/set QA、原生尺寸、全部几何尝试、选中生成尝试和 residual risk。queue、child controls 与 Set QA 是递归验收控制产物，不进入 visual stage 的 22 件核心绑定。
+
+PASS 复用指纹绑定 draft、title selection、稳定 coverage/anchor 语义、style 文件/spec/reference、文字、品牌资源、BackendProfile、geometry、prompt compiler、QA 和图片哈希。整套未变化时直接复用原 bundle、Set QA 与图片引用；部分变化时复用匹配 child 并重新执行 Set QA。任何复用都不得复制或重新编码像素。
 
 content/style/set QA 必须 `pass`。品牌启用时 brand QA=`pass`、overlay=`applied`；品牌关闭时 brand QA 和 overlay 状态必须等于 `disabled-by-user` 或 `disabled-by-style-default`。生成尝试只能为 1-3，accepted source 与 delivery 尺寸保持一致且符合 Style Spec 比例/最短边，`native_output_preserved=true`、residual risk=`none`。
 

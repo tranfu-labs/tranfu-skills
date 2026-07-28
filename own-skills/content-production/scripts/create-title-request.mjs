@@ -13,6 +13,7 @@ import {
   parseArgs,
   platforms,
   readJson,
+  relativeTo,
   titleCounts,
   variants,
   writeJson
@@ -87,7 +88,7 @@ try {
 
   const state = await readJson(statePath);
   const titles = state.stages?.titles;
-  if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'titles'
+  if (state.schema_version !== 3 || state.status !== 'running' || state.current_stage !== 'titles'
     || titles?.status !== 'running' || !Number.isInteger(titles?.attempt) || titles.attempt < 1) {
     add(blockers, 'title_request_stage_mismatch', 'Run titles stage must be running with a positive attempt.', {
       current_stage: state.current_stage,
@@ -169,16 +170,15 @@ try {
   }
 
   if (blockers.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, blockers }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, blockers }, 2);
   } else {
     const input = { role: 'final_draft', path: sourceRelative, sha256: await fileSha256(sourcePath) };
     const request = {
-      schema_version: 1,
-      contract: 'content-production-provider/v1',
+      schema_version: 2,
+      contract: 'content-production-provider/v2',
       task_id: `title:${state.run_id}:${args.platform}:${args.variant}:attempt-${String(titles.attempt).padStart(3, '0')}`,
       capability: 'title_generation',
       provider_contract: 'title-generation-v1',
-      run_dir: runDir,
       run_mode: state.run_mode,
       mode: 'generate_titles',
       platform: args.platform,
@@ -203,7 +203,7 @@ try {
     emitJson({
       status: 'PASS',
       task_id: request.task_id,
-      request_path: requestPath,
+      request_path: relativeTo(runDir, requestPath),
       input_count: 1,
       target_count: request.options.count
     });

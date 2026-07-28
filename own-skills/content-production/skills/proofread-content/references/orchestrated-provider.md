@@ -1,7 +1,7 @@
 # 总控 Provider 合同
 
 本路由只处理总控签发的单个 `{platform, variant}` 审校任务。完整 request 必须同时包含
-`contract: content-production-provider/v1`、`capability: proofreading`、
+`contract: content-production-provider/v2`、`capability: proofreading`、
 `provider_contract: proofreading-v1`，且 `mode: proofread`。任何 provider 标记不完整或冲突时返回
 结构化 `BLOCKED`，不得回退独立模式。
 

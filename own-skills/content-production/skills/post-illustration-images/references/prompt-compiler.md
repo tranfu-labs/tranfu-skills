@@ -2,6 +2,13 @@
 
 Compile one prompt per image. The selected Style Spec remains the suite-level visual system. The per-image prompt only changes the anchor, structure, metaphor, action, labels, and content elements.
 
+For orchestrated `bounded-per-image-v2` work, do not compose the prompt manually. Run
+`node "<SKILL_ROOT>/scripts/compile-generation-prompt.mjs" compile <child-request.json>`. The compiler
+uses only the registered Style Spec, approved anchor, active `text_variant`, geometry, and brand state;
+`scripts/child-contract.mjs` recompiles the same input and rejects any byte drift before generation.
+The active headline, labels, supporting copy, and footer are a complete readable-text allowlist, not
+suggestions. Never remove all text or introduce `icons_only`.
+
 Do not ask the image model to create fixed brand components. Logos, `TF`, `Tranfu`, watermarks, and page-number badges are not part of model generation.
 
 Resolve Brand Plugin from the explicit user override, then the selected Style Spec's `brandPolicy.defaultEnabled`, then legacy default `true`. The selected Style Spec's top-right `brandSlot`, not the Style Reference, controls the reservation and deterministic overlay when the resolved state is enabled.

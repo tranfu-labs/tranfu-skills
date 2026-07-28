@@ -364,14 +364,14 @@ export async function validateResearchProviderResult(runDir) {
 
   const request = controls.get('request');
   const result = controls.get('result');
-  if (request.schema_version !== 1 || request.contract !== 'content-production-provider/v1'
+  if (request.schema_version !== 2 || request.contract !== 'content-production-provider/v2'
     || request.capability !== 'source_research' || request.provider_contract !== 'source-research-v1'
-    || resolve(request.run_dir || '') !== resolve(runDir) || request.mode !== 'research'
+    || Object.hasOwn(request, 'run_dir') || request.mode !== 'research'
     || request.output_dir !== '02-research' || request.interaction_policy !== 'return_to_orchestrator'
     || !sameItems(request.expected_artifacts, expected)) {
     issues.push(researchIssue('invalid_research_provider_request', 'Canonical source research request does not match this run or contract.'));
   }
-  if (result.schema_version !== 1 || result.contract !== 'content-production-provider/v1'
+  if (result.schema_version !== 2 || result.contract !== 'content-production-provider/v2'
     || result.provider_contract !== 'source-research-v1' || result.task_id !== request.task_id) {
     issues.push(researchIssue('invalid_research_provider_result', 'Canonical source research result does not match its request.'));
   }
@@ -595,9 +595,9 @@ async function validateDraftingProviderTask(runDir, mode, { variant = null, plat
     && (mode === 'outline' || request.options.variant === variant)
     && (mode !== 'adapt' || request.options.platform === platform);
   const expectedTaskId = draftingTaskId(state, mode, variant, platform, revision);
-  if (request.schema_version !== 1 || request.contract !== 'content-production-provider/v1'
+  if (request.schema_version !== 2 || request.contract !== 'content-production-provider/v2'
     || request.capability !== 'drafting' || request.provider_contract !== 'drafting-v1'
-    || resolve(request.run_dir || '') !== resolve(runDir) || request.mode !== mode
+    || Object.hasOwn(request, 'run_dir') || request.mode !== mode
     || (state && request.run_mode !== state.run_mode)
     || request.output_dir !== spec.outputDir || request.interaction_policy !== 'return_to_orchestrator'
     || !sameItems(request.expected_artifacts, spec.expected) || !validOptions
@@ -646,7 +646,7 @@ async function validateDraftingProviderTask(runDir, mode, { variant = null, plat
     if (!inputs.has(role)) issues.push(draftingIssue(spec.stage, 'missing_drafting_provider_input_role', `Drafting ${mode} request is missing input role ${role}.`, { role }));
   }
 
-  if (result.schema_version !== 1 || result.contract !== 'content-production-provider/v1'
+  if (result.schema_version !== 2 || result.contract !== 'content-production-provider/v2'
     || result.provider_contract !== 'drafting-v1' || result.task_id !== request.task_id
     || !plainObject(result.checks) || result.checks.request_valid !== true || result.checks.mode !== mode) {
     issues.push(draftingIssue(spec.stage, 'invalid_drafting_provider_result', `Canonical ${mode} result does not match its request.`, { path: spec.result }));
@@ -1281,9 +1281,9 @@ async function validateProofreadingProviderTask(runDir, state, platform, variant
     && ['parallel_subagents', 'sequential_fallback'].includes(options.execution_strategy)
     && typeof options.model === 'string' && Boolean(options.model.trim())
     && plainObject(options.parameters);
-  if (request.schema_version !== 1 || request.contract !== 'content-production-provider/v1'
+  if (request.schema_version !== 2 || request.contract !== 'content-production-provider/v2'
     || request.capability !== 'proofreading' || request.provider_contract !== 'proofreading-v1'
-    || request.task_id !== expectedTaskId || !isAbsolute(request.run_dir || '') || resolve(request.run_dir || '') !== resolve(runDir)
+    || request.task_id !== expectedTaskId || Object.hasOwn(request, 'run_dir')
     || request.run_mode !== state.run_mode || request.mode !== 'proofread'
     || request.platform !== platform || request.variant !== variant
     || request.output_dir !== spec.base || request.interaction_policy !== 'return_to_orchestrator'
@@ -1305,7 +1305,7 @@ async function validateProofreadingProviderTask(runDir, state, platform, variant
     }
   }
 
-  if (result.schema_version !== 1 || result.contract !== 'content-production-provider/v1'
+  if (result.schema_version !== 2 || result.contract !== 'content-production-provider/v2'
     || result.provider_contract !== 'proofreading-v1' || result.task_id !== request.task_id
     || result.request_sha256 !== await fileSha256(requestPath)
     || result.status !== 'PASS' || !plainObject(result.checks)
@@ -1482,8 +1482,10 @@ async function validateProofreadingRegression(runDir, spec, phase, afterRelative
     let reused = false;
     if (semantic?.review_mode === 'reused' && plainObject(semantic?.reused_from)
       && sameItems(Object.keys(semantic.reused_from), ['path', 'sha256'])) {
-      const sourceRelative = relative(runDir, resolve(semantic.reused_from.path || '')).replaceAll('\\', '/');
-      const sourcePath = inside(runDir, resolve(semantic.reused_from.path || ''))
+      const sourceRelative = semantic.reused_from.path || '';
+      const sourceAbsolute = resolve(runDir, sourceRelative);
+      const sourcePath = sourceRelative && !isAbsolute(sourceRelative) && !sourceRelative.includes('\\')
+        && relativeTo(runDir, sourceAbsolute) === sourceRelative && inside(runDir, sourceAbsolute)
         ? await proofreadingRealFile(runDir, await realpath(runDir), runDir, sourceRelative, issues, 'semantic_reuse_source') : null;
       if (sourcePath && semantic.reused_from.sha256 === await fileSha256(sourcePath)) {
         try {
@@ -1877,15 +1879,14 @@ async function validateTitleProviderTask(runDir, state, platform, variant) {
     && ['parallel_subagents', 'sequential_fallback'].includes(options.execution_strategy)
     && typeof options.model === 'string' && Boolean(options.model.trim()) && plainObject(options.parameters);
   const requestKeys = [
-    'schema_version', 'contract', 'task_id', 'capability', 'provider_contract', 'run_dir',
+    'schema_version', 'contract', 'task_id', 'capability', 'provider_contract',
     'run_mode', 'mode', 'platform', 'variant', 'inputs', 'output_dir', 'expected_artifacts',
     'options', 'interaction_policy'
   ];
   if (!plainObject(request) || !sameItems(Object.keys(request), requestKeys)
-    || request.schema_version !== 1 || request.contract !== 'content-production-provider/v1'
+    || request.schema_version !== 2 || request.contract !== 'content-production-provider/v2'
     || request.capability !== 'title_generation' || request.provider_contract !== 'title-generation-v1'
-    || request.task_id !== titleTaskId(state, platform, variant) || !isAbsolute(request.run_dir || '')
-    || resolve(request.run_dir || '') !== resolve(runDir) || request.run_mode !== state.run_mode
+    || request.task_id !== titleTaskId(state, platform, variant) || request.run_mode !== state.run_mode
     || request.mode !== 'generate_titles' || request.platform !== platform || request.variant !== variant
     || request.output_dir !== spec.base || request.interaction_policy !== 'return_to_orchestrator'
     || !sameItems(request.expected_artifacts, [spec.candidate]) || !validOptions) {
@@ -1912,7 +1913,7 @@ async function validateTitleProviderTask(runDir, state, platform, variant) {
     'status', 'artifacts', 'checks', 'issues', 'warnings'
   ];
   if (!plainObject(result) || !sameItems(Object.keys(result), resultKeys)
-    || result.schema_version !== 1 || result.contract !== 'content-production-provider/v1'
+    || result.schema_version !== 2 || result.contract !== 'content-production-provider/v2'
     || result.provider_contract !== 'title-generation-v1' || result.task_id !== request.task_id
     || result.request_sha256 !== await fileSha256(requestPath) || result.status !== 'PASS'
     || !plainObject(result.checks) || result.checks.request_valid !== true

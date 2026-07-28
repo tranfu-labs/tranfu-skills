@@ -33,12 +33,11 @@ marker 只表示 provider 已实现下述 orchestrated 模式，不是装饰性�
 
 ```json
 {
-  "schema_version": 1,
-  "contract": "content-production-provider/v1",
+  "schema_version": 2,
+  "contract": "content-production-provider/v2",
   "task_id": "proofread:<run_id>:wechat:A:attempt-001",
   "capability": "proofreading",
   "provider_contract": "proofreading-v1",
-  "run_dir": "/absolute/run",
   "run_mode": "autonomous",
   "mode": "proofread",
   "platform": "wechat",
@@ -69,8 +68,8 @@ provider 返回：
 
 ```json
 {
-  "schema_version": 1,
-  "contract": "content-production-provider/v1",
+  "schema_version": 2,
+  "contract": "content-production-provider/v2",
   "provider_contract": "proofreading-v1",
   "task_id": "proofread:<run_id>:wechat:A:attempt-001",
   "status": "PASS",
@@ -96,6 +95,7 @@ provider 返回：
 - provider 不创建 run、门禁、版本决策或偏好文件，不覆盖已批准产物。
 - provider 不直接向用户提问；信息不足时返回 `BLOCKED`。
 - provider 不写 output_dir 外部。运行时依赖缓存是唯一例外，必须在 result 中披露。
+- envelope 不保存 `run_dir`。provider 从 request 文件向上定位并验证所属 `run.json`；所有业务路径都是 run-relative POSIX 路径。外部资源只使用 `{root, path}`，其中 root 限于 `RUN_ROOT|SKILL_ROOT|CODEX_HOME|WORKSPACE_ROOT`。
 - 总控验证 result、文件存在和哈希后才完成阶段。`check-provider-result.mjs` 输出 `contract_status` 与 `provider_status`；只有两者均为 `PASS` 时才可继续，provider 为 `BLOCKED|FAILED` 时脚本以非零退出并透传 issues。
 
 ## `topic_planning`
@@ -287,10 +287,10 @@ attempt 递增，旧 controls 无效，titles 门禁和全部视觉下游失效�
 
 ## `illustration`
 
-必须保留 `post-illustration-images` 原独立对话流程；只有 request 使用 `content-production-provider/v1`、`provider_contract=illustration-v1` 时进入无状态 provider 路由。支持总控 `wechat|xiaohongshu|zhihu|weibo|toutiao`，其中 request 的 `provider_platform` 将 `xiaohongshu` 映射为 `xhs`。
+必须保留 `post-illustration-images` 原独立对话流程；只有 request 使用 `content-production-provider/v2`、`provider_contract=illustration-v1` 时进入无状态 provider 路由。支持总控 `wechat|xiaohongshu|zhihu|weibo|toutiao`，其中 request 的 `provider_platform` 将 `xiaohongshu` 映射为 `xhs`。
 
 公开 provider contract 保持 `illustration-v1`；新 run 的 capability 快照额外声明
-`profile: bounded-per-image` 与内部 `adapter_contract: illustration-orchestrated-coverage-v1`，并绑定 adapter/guide 的路径和 SHA-256；不使用版本化公开 capability 名称。
+`profile: bounded-per-image-v2` 与内部 `adapter_contract: illustration-orchestrated-coverage-v1`，并绑定 adapter/guide 的 PortablePathRef 和 SHA-256；不使用版本化公开 capability 名称。
 
 总控为每个 winner 创建两个隔离任务：
 
@@ -304,17 +304,18 @@ request 固定包含 current visual attempt、canonical platform、provider alia
 - plan：`final_draft`、titles gate 的 `title_selection` decision、current `visual_coverage`。
 - generate：上述三项，加 visual gate 已批准的 `illustration_plan`、`shot_list`。
 
-总控在所有 plan request 前创建当前 visual attempt 的唯一 BackendLease。用户明确指定后端优先；否则原生能力可调用即固定为 `runtime-native`，只有不可调用时才解析 `configured-api`。request 中的 `backend_hint` 与 `model_preference` 是 Lease 相等性断言，不参与选路。plan 的既有 `generation_backend` schema 不变，但所有值必须由 Lease 派生；visual gate、Queue init、visual completion 和 Final QA 都复验同一 Lease。正文图与公众号封面使用相同的脱敏 BackendContext 和统一生成 wrapper。
+总控在所有 plan request 前完成统一 visual preflight，创建不可变 BackendProfile，并为 `body_visual` 和 `wechat_cover` 分别创建 attempt Lease。request 中的 `backend_hint` 与 `model_preference` 是相等性断言，不参与选路。普通恢复不得切换 profile；显式 reset 会同时失效正文和封面。plan 的既有 `generation_backend` schema 不变，但所有值必须由当前正文 Lease 派生。
 
-原生路径成功生产图片后不得自动切换；质量与几何失败创建同路径下一 candidate，transport 错误复用同路径当前 attempt。不可恢复执行错误只阻断当前 visual attempt；下一 attempt 重建全部 visual 控制工件后才允许解析配置后端。同一 attempt 内的后端、adapter 或配置漂移均为阻断错误。
+原生路径成功生产图片后不得自动切换；质量与几何失败创建同路径下一 candidate，transport 错误复用同一 candidate attempt。不可恢复正文错误只阻断正文，封面错误只阻断封面。同一 Lease 内的后端、adapter 或配置漂移均为阻断错误。
 
 plan 前由唯一 cardinality policy 分析五份 winner 并原子写 coverage。`max_images` 必须等于 coverage target；plan 图片数处于 minimum..target，逐字映射不同 eligible unit，覆盖全部 required unit并按源文顺序排列。五个平台 Provider cap 都是 8；小红书合法范围固定 4..8 且逐页一图。plan 只输出 current-attempt `plan[.vNNN].json` 与 `shot-list[.vNNN].md`，禁止出现 current-attempt prompts/images。
 
-五个 plan PASS 后总控脚本确定性创建唯一 current VisualDecision，禁止 Agent 手写 PASS。visual gate 在 stage 仍 running 时复算并精确绑定五份 plan 与五份 shot-list。批准后仍停留在 visual，generate 父任务才可创建。bounded-per-image 父任务只授权最终 `bundle[.vNNN].json` 与 provider 原生 `manifest[.vNNN].md`；Queue init、visual completion 和 Final QA 重用同一 validator。
+五个 plan PASS 后总控脚本确定性创建唯一 current VisualDecision，禁止 Agent 手写 PASS。visual gate 在 stage 仍 running 时复算并精确绑定五份 plan 与五份 shot-list。批准后仍停留在 visual，generate 父任务才可创建。`bounded-per-image-v2` 父任务只授权最终 `bundle[.vNNN].json` 与 provider 原生 `manifest[.vNNN].md`；Queue init、visual completion 和 Final QA 重用同一 validator。
 
 - Child task ID 固定包含 platform、image ID、candidate attempt 和 visual attempt，只授权自己的 prompt、candidate/source、同尺寸品牌 delivery、QA 与 result。
-- 每套只先提交第 1 张 Canary；PASS 后全局最多 4 个、同套最多 2 个生成调用。公众号封面占用同一个全局名额，但保留独立 contract。
-- 单图 candidate 最多 3 次；限流或传输释放复用原 task/attempt。失败只创建该图下一 attempt，已通过 child 的路径和哈希保持冻结。
+- 五个平台先各提交第 1 张 Canary；五张 Canary 全部 PASS 后才展开非 Canary。正文全局最多 4 个、同套最多 2 个生成调用；公众号封面使用独立队列和独立 1 个名额。
+- 单图 candidate 最多 3 次；限流、传输释放和无结果 TTL 回收不消耗新的质量 attempt。失败只创建该图下一 attempt，已通过 child 的路径和哈希保持冻结。
+- 每个 anchor 必须包含预批准 `text_content.primary|compact`。headline 为 2-14 字并绑定 source term，labels 为 2-5 个且每个不超过 8 字；所有可读文字必须来自当前终稿或入选标题。总控拒绝空文字和 `icons_only`，不得清空、补写或降级为无字。
 - Prompt preflight 拦截 allowlist 外文字、互相矛盾的文字/比例要求；3:4 必须声明 `0.75` 并拒绝正向要求 2:3 或 `1024x1536`。
 - 每个 candidate 读取真实 raster 格式、尺寸、比例和最短边；禁止 resize/crop/pad/rotate/stretch/upscale 伪造通过。
 - 全部 child PASS 后串行执行 Set QA。失败必须返回具体 `failed_image_ids` 与原因；无法定位时整套 `BLOCKED`，不得盲目重做。
@@ -324,17 +325,19 @@ plan 前由唯一 cardinality policy 分析五份 winner 并原子写 coverage�
 
 illustration 部分在 visual completed 中绑定五个平台各四个核心业务文件，共 20 件；动态 prompts/images 由 bundle 递归验收。`manifest.md` 属于 illustration provider。发布映射 `manifest.json` 由 package 阶段生成，provider 不创建或覆盖它。公众号此槽只生成正文图；发布封面由 `wechat_cover` 独占。总 visual 完成包还必须加入当前 attempt 的封面 PNG 与 metadata，共 22 件。
 
+正文 PASS 复用按 draft、title selection、coverage/anchor、style/spec/reference、文字、品牌、BackendProfile、geometry、prompt compiler、QA 和图片哈希计算。整套不变时直接复用原 bundle 和像素引用；部分匹配时只复用对应 child 并重跑 Set QA。复用绝不复制或重新编码图片。
+
 ## `wechat_cover`
 
-必须保留 `wechat-sketch-cover` 原独立工作流；只有 request 使用 `content-production-provider/v1`、`provider_contract=wechat-cover-v1` 时进入无状态 provider 路由。visual gate 批准后由总控创建任务：
+必须保留 `wechat-sketch-cover` 原独立工作流；只有 request 使用 `content-production-provider/v2`、`provider_contract=wechat-cover-v1` 时进入无状态 provider 路由。visual gate 批准后由总控创建任务：
 
 ```bash
 node scripts/create-wechat-cover-request.mjs <run-dir> [--backend-hint runtime-native|configured-api|programmatic|unknown]
 ```
 
-request 绑定 current visual attempt、titles gate decision、公众号 winner 全对象及其 `final.md` 路径/哈希。标题只接受含汉字、一个逻辑行、2-35 个非空白字符；调用方不能另传标题。固定输出为 current-attempt `cover[.vNNN].png` 与 `cover[.vNNN].json`，固定样式 `warm-hand-drawn-notebook-v1`、尺寸 `1923x818`、PNG、最多三次、逐候选执行，且 `best_effort_allowed=false`。
+request 绑定独立 `cover_attempt`、titles gate decision、公众号 winner 全对象及其 `final.md` 路径/哈希，不依赖正文 visual gate。标题只接受含汉字、一个逻辑行、2-35 个非空白字符；调用方不能另传标题。固定输出为 current-attempt `cover[.vNNN].png` 与 `cover[.vNNN].json`，固定样式 `warm-hand-drawn-notebook-v1`、尺寸 `1923x818`、PNG、最多三次、逐候选执行，且 `best_effort_allowed=false`。
 
-新 visual attempt 的 cover request 必须继承当前 BackendLease 的 backend kind；每个候选和 top-level backend 记录的 method/model 必须与 Lease 的 adapter/model 一致。封面不得重新解析 endpoint、credential 或 provider，也不得绕开统一 wrapper。
+cover request 必须绑定当前 `wechat_cover` Lease；每个候选和 top-level backend 记录的 method/model 必须与 Lease 的 adapter/model 一致。封面不得重新解析 endpoint、credential 或 provider，也不得绕开统一 wrapper。封面配置漂移只阻断封面，不使已完成正文失效。
 
 provider 可在授权目录写 current-attempt `source[.vNNN].md`、prompts、normalized candidates 和 canonical result。每个候选必须是完整可解码的 `1923x818 PNG`；最终 cover 与入选候选字节一致。十项视觉门必须全部 PASS，无额外可读文字、绝对失败或可见标题缺陷，residual risk=`none`。
 
@@ -344,7 +347,7 @@ provider 可在授权目录写 current-attempt `source[.vNNN].md`、prompts、no
 
 ## `image_compression`
 
-必须保留 `compress-image` 的独立单文件/目录、recursive 和显式 replace 流程；只有 request 使用 `content-production-provider/v1`、`provider_contract=image-compression-v1` 时进入单图 provider 路由。package running 后总控批量创建 current-attempt request：
+必须保留 `compress-image` 的独立单文件/目录、recursive 和显式 replace 流程；只有 request 使用 `content-production-provider/v2`、`provider_contract=image-compression-v1` 时进入单图 provider 路由。package running 后总控批量创建 current-attempt request：
 
 ```bash
 node scripts/create-compression-requests.mjs <run-dir>
@@ -366,7 +369,7 @@ node scripts/assemble-publish-packs.mjs <run-dir>
 
 ## `wechat_layout`
 
-必须保留 `format-content` 的独立 Markdown 输入、固定红白主题、原输出命名和八阶段流程；只有 request 使用 `content-production-provider/v1`、`provider_contract=wechat-layout-v1` 时进入 provider 路由。package 形成 current `N+21` pre-layout 业务产物后运行：
+必须保留 `format-content` 的独立 Markdown 输入、固定红白主题、原输出命名和八阶段流程；只有 request 使用 `content-production-provider/v2`、`provider_contract=wechat-layout-v1` 时进入 provider 路由。package 形成 current `N+21` pre-layout 业务产物后运行：
 
 ```bash
 node scripts/create-wechat-layout-request.mjs <run-dir>

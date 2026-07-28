@@ -59,7 +59,7 @@ if (entryBlockers.length || missingInputs.length) {
     status: 'BLOCKED',
     blockers: [
       ...entryBlockers,
-      ...missingInputs.map(([kind, path]) => ({ code: 'missing_input', kind, path }))
+      ...missingInputs.map(([kind, path]) => ({ code: 'missing_input', kind, path: basename(path) }))
     ]
   }, 2);
 } else {
@@ -109,7 +109,7 @@ if (entryBlockers.length || missingInputs.length) {
     await copyFile(source, target);
     materialItems.push({
       id: `m-${String(index + 1).padStart(3, '0')}`,
-      original_path: source,
+      basename: basename(source),
       snapshot_path: `raw/${targetName}`,
       sha256: await fileSha256(source)
     });
@@ -157,7 +157,7 @@ if (entryBlockers.length || missingInputs.length) {
 
 
   const state = {
-    schema_version: 2,
+    schema_version: 3,
     run_id: basename(runDir),
     slug,
     created_at: now,
@@ -170,11 +170,11 @@ if (entryBlockers.length || missingInputs.length) {
     input_mode: hasOutline ? 'outline' : topic ? 'topic' : 'brief',
     run_mode: runMode,
     capabilities: {
-      config_path: capabilitiesPath,
+      config_ref: capabilityReport.config_ref,
       config_sha256: fileExists(capabilitiesPath) ? await fileSha256(capabilitiesPath) : null,
       status: capabilityReport.status,
       providers: Object.fromEntries(capabilityReport.capabilities.map((item) => [item.id, {
-        skill_path: item.skill_path,
+        skill_ref: item.skill_ref,
         skill_sha256: item.skill_sha256,
         status: item.status,
         required: item.required,
@@ -185,23 +185,20 @@ if (entryBlockers.length || missingInputs.length) {
       }]))
     },
     snapshots: {
-      brief: { source_path: outlinePath, snapshot_path: '00-intake/brief.md', sha256: await fileSha256(briefPath) },
-      core_audience: { source_path: audiencePath, snapshot_path: '00-intake/core-audience.md', sha256: sha256(audience) },
+      brief: { snapshot_path: '00-intake/brief.md', sha256: await fileSha256(briefPath) },
+      core_audience: { snapshot_path: '00-intake/core-audience.md', sha256: sha256(audience) },
       platform_profiles: {
-        source_path: platformProfilesPath,
         snapshot_path: '00-intake/platform-profiles.json',
         sha256: await fileSha256(join(runDir, '00-intake', 'platform-profiles.json')),
         version: platformProfiles.profile_set?.version || null
       },
-      style_b: { source_path: stylePath, snapshot_path: '00-intake/style-b.md', sha256: sha256(style) },
+      style_b: { snapshot_path: '00-intake/style-b.md', sha256: sha256(style) },
       topic_history: {
-        source_path: topicHistoryPath,
         snapshot_path: '00-intake/topic-history.md',
         sha256: await fileSha256(join(runDir, '00-intake', 'topic-history.md')),
         empty: !topicHistoryPath
       },
       article_audience: {
-        source_path: articleAudiencePath,
         snapshot_path: '00-intake/article-audience.md',
         sha256: await fileSha256(join(runDir, '00-intake', 'article-audience.md')),
         empty: !articleAudiencePath
@@ -212,8 +209,12 @@ if (entryBlockers.length || missingInputs.length) {
       status: stage === 'init'
         ? (capabilityReport.status === 'PASS' ? 'completed' : 'blocked')
         : stage === 'discovery' && discoverySkip && capabilityReport.status === 'PASS' ? 'completed' : 'pending',
-      attempt: stage === 'init' ? 1 : 0,
-      artifacts: stage === 'discovery' && discoverySkip && capabilityReport.status === 'PASS' ? [discoverySkip] : [], error: null
+      ...(stage === 'visual' ? { revision: 0 } : { attempt: stage === 'init' ? 1 : 0 }),
+      artifacts: stage === 'discovery' && discoverySkip && capabilityReport.status === 'PASS' ? [discoverySkip] : [], error: null,
+      ...(stage === 'visual' ? {
+        body_visual: { status: 'pending', attempt: 0, artifacts: [], error: null },
+        wechat_cover: { status: 'pending', attempt: 0, artifacts: [], error: null }
+      } : {})
     }])),
     gates,
     platform_selections: {},
@@ -226,5 +227,10 @@ if (entryBlockers.length || missingInputs.length) {
   };
   await writeJson(join(runDir, 'run.json'), state);
 
-  emitJson({ status: state.status.toUpperCase(), run_dir: runDir, capability_status: capabilityReport.status }, capabilityReport.status === 'PASS' ? 0 : 2);
+  emitJson({
+    status: state.status.toUpperCase(),
+    run_id: state.run_id,
+    run_path: state.run_id,
+    capability_status: capabilityReport.status
+  }, capabilityReport.status === 'PASS' ? 0 : 2);
 }

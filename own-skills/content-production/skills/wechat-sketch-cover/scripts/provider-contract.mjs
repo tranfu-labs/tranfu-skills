@@ -10,13 +10,13 @@ import { promisify } from 'node:util';
 
 const SKILL_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const execFileAsync = promisify(execFile);
-const CONTRACT = 'content-production-provider/v1';
+const CONTRACT = 'content-production-provider/v2';
 const PROVIDER = 'wechat-cover-v1';
 const BASE = '07-visual/wechat-cover';
 const BACKEND_HINTS = new Set(['runtime-native', 'configured-api', 'programmatic', 'unknown']);
 const ATTEMPT_STATUSES = new Set(['PASS', 'RETRY', 'RETRY_NO_CANDIDATE', 'SELECT']);
 const LIMITATION = 'No deterministic OCR was performed; title exactness is a provider visual observation bound to this artifact hash.';
-const REQUEST_KEYS = keys('schema_version contract task_id capability provider_contract run_dir run_mode mode attempt platform variant selection inputs output_dir expected_artifacts options interaction_policy');
+const REQUEST_KEYS = keys('schema_version contract task_id capability provider_contract run_mode mode attempt platform variant selection inputs output_dir expected_artifacts options interaction_policy');
 const INPUT_KEYS = keys('role path sha256');
 const SELECTION_KEYS = keys('platform variant title_id title topic_phrase draft_path draft_sha256 decision_rule');
 const OPTION_KEYS = keys('width height format style_id exact_title_required best_effort_allowed max_attempts backend_hint execution_strategy');
@@ -172,7 +172,7 @@ function checks(context, overrides = {}) {
 
 function resultEnvelope(context, status, artifacts, issues, resultChecks) {
   const result = {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request?.task_id || 'unknown',
@@ -187,6 +187,27 @@ function resultEnvelope(context, status, artifacts, issues, resultChecks) {
     throw new Error('Internal provider result schema mismatch.');
   }
   return result;
+}
+
+async function locateRunRoot(requestPath) {
+  const requestReal = await realpath(requestPath);
+  let current = dirname(requestPath);
+  for (let depth = 0; depth < 32; depth += 1) {
+    const statePath = join(current, 'run.json');
+    if (existsSync(statePath)) {
+      const [rootStat, stateStat] = await Promise.all([lstat(current), lstat(statePath)]);
+      const rootReal = await realpath(current);
+      if (!rootStat.isSymbolicLink() && rootStat.isDirectory()
+        && !stateStat.isSymbolicLink() && stateStat.isFile()
+        && inside(rootReal, requestReal) && !await hasSymlinkComponent(current, requestPath)) {
+        return { runDir: current, runRealDir: rootReal };
+      }
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error('Unable to locate a safe owner run.json for the request.');
 }
 
 async function validateRequest(input) {
@@ -210,16 +231,10 @@ async function validateRequest(input) {
   }
 
   const request = context.request;
-  context.runDir = isAbsolute(request.run_dir || '') ? resolve(request.run_dir) : null;
   try {
-    if (!context.runDir) throw new Error('run_dir must be absolute.');
-    const stat = await lstat(context.runDir);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error('run_dir must be a real directory.');
-    context.runRealDir = await realpath(context.runDir);
-    if (!inside(context.runDir, context.requestPath)
-      || await hasSymlinkComponent(context.runDir, context.requestPath)) {
-      throw new Error('Request must remain a real file inside run_dir.');
-    }
+    const owner = await locateRunRoot(context.requestPath);
+    context.runDir = owner.runDir;
+    context.runRealDir = owner.runRealDir;
   } catch (error) {
     add(context.issues, 'invalid_provider_run_dir', error.message);
     return context;
@@ -236,16 +251,22 @@ async function validateRequest(input) {
   }
 
   const visual = context.state?.stages?.visual;
-  const currentAttempt = Number.isInteger(visual?.attempt) && visual.attempt > 0 ? visual.attempt : null;
+  const cover = visual?.wechat_cover || visual;
+  const nestedAttempt = cover?.attempt;
+  const legacyAttempt = context.state?.cover_attempt || visual?.attempt;
+  const currentAttempt = Number.isInteger(nestedAttempt) && nestedAttempt > 0
+    ? nestedAttempt : Number.isInteger(legacyAttempt) && legacyAttempt > 0 ? legacyAttempt : null;
   if (currentAttempt) context.spec = paths(currentAttempt);
-  if (context.state?.schema_version !== 2 || context.state?.status !== 'running'
-    || context.state?.current_stage !== 'visual' || visual?.status !== 'running'
+  if (![2, 3].includes(context.state?.schema_version) || context.state?.status !== 'running'
+    || context.state?.current_stage !== 'visual' || cover?.status !== 'running'
     || request.attempt !== currentAttempt) {
     add(context.issues, 'provider_attempt_mismatch', 'Request must target the current running visual attempt.');
   }
   if (context.state?.gates?.titles?.status !== 'approved'
-    || context.state?.gates?.visual?.status !== 'approved') {
-    add(context.issues, 'provider_gate_mismatch', 'Current titles and visual gates must be approved.');
+    || context.state?.schema_version === 2 && context.state?.gates?.visual?.status !== 'approved') {
+    add(context.issues, 'provider_gate_mismatch', context.state?.schema_version === 3
+      ? 'Current titles gate must be approved.'
+      : 'Current titles and visual gates must be approved.');
   }
   const capability = context.state?.capabilities?.providers?.wechat_cover;
   if (capability?.status !== 'PASS' || capability?.contract !== PROVIDER) {
@@ -279,14 +300,13 @@ async function validateRequest(input) {
     && request.options.max_attempts === 3
     && BACKEND_HINTS.has(request.options.backend_hint)
     && request.options.execution_strategy === 'one_candidate_at_a_time';
-  if (!sameKeys(request, REQUEST_KEYS) || request.schema_version !== 1
+  if (!sameKeys(request, REQUEST_KEYS) || request.schema_version !== 2
     || request.contract !== CONTRACT || request.capability !== 'wechat_cover'
     || request.provider_contract !== PROVIDER || request.mode !== 'generate_cover'
     || !['autonomous', 'reviewed'].includes(request.run_mode)
     || request.platform !== 'wechat' || !['A', 'B'].includes(request.variant)
     || request.task_id !== expectedTask || request.output_dir !== context.spec?.base
-    || request.interaction_policy !== 'return_to_orchestrator'
-    || request.run_dir !== context.runDir || !validOptions
+    || request.interaction_policy !== 'return_to_orchestrator' || !validOptions
     || context.spec && context.requestPath !== resolve(context.runDir, context.spec.request)
     || context.spec && !sameJson(request.expected_artifacts, [context.spec.cover, context.spec.metadata])
     || !sameKeys(request.selection, SELECTION_KEYS)) {
