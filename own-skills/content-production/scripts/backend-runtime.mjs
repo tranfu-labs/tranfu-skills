@@ -5,7 +5,15 @@ import { homedir } from 'node:os';
 import { dirname, extname, join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
-import { fileExists, fileSha256, readJson } from './lib.mjs';
+import {
+  fileExists,
+  fileSha256,
+  portableRefForPath,
+  readJson,
+  resolveRunPortablePathRef,
+  skillDir
+} from './lib.mjs';
+import { componentAttempt } from './visual-state.mjs';
 
 const exactMessages = {
   configuration: 'backend configuration inaccessible',
@@ -13,10 +21,15 @@ const exactMessages = {
   endpoint: 'backend endpoint mismatch',
   model: 'backend model channel unavailable'
 };
+const profileKeys = [
+  'schema_version', 'artifact', 'run_id', 'created_at', 'backend_kind', 'provider',
+  'endpoint_source', 'endpoint_origin', 'endpoint_sha256', 'adapter', 'model',
+  'artifact_format', 'safety_policy', 'profile_fingerprint'
+];
 const leaseKeys = [
-  'schema_version', 'artifact', 'run_id', 'visual_attempt', 'created_at', 'backend_kind',
-  'provider', 'endpoint_source', 'adapter', 'model', 'configuration', 'backend_context',
-  'backend_context_sha256', 'preflight'
+  'schema_version', 'artifact', 'run_id', 'consumer', 'attempt', 'created_at',
+  'profile', 'backend_kind', 'provider', 'endpoint_source', 'adapter', 'model',
+  'configuration', 'backend_context', 'backend_context_sha256', 'preflight'
 ];
 const contextKeys = [
   'provider', 'dialect', 'endpoint_source', 'endpoint_origin', 'endpoint_sha256',
@@ -27,6 +40,7 @@ const preflightCheckKeys = [
   'process_cleanup'
 ];
 const SHA256 = /^[a-f0-9]{64}$/;
+const CONSUMERS = new Set(['body_visual', 'wechat_cover']);
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -52,7 +66,7 @@ function containsSensitiveField(value) {
   }
   return Object.entries(value).some(([key, child]) => {
     const normalized = key.toLowerCase().replace(/-/g, '_');
-    if (!['credential_source', 'endpoint_credential'].includes(normalized)
+    if (!['credential_source', 'credential_persistence', 'endpoint_credential'].includes(normalized)
       && /(?:api_?key|token|password|secret|authorization|credential)/.test(normalized)) return true;
     return containsSensitiveField(child);
   });
@@ -306,10 +320,53 @@ export function classifyBackendOutcome(outcome, backendKind = 'runtime-native') 
   throw new Error('Unsupported backend outcome.');
 }
 
-export function backendLeasePathForAttempt(state) {
-  const attempt = Number.isInteger(state?.stages?.visual?.attempt) && state.stages.visual.attempt > 0
-    ? state.stages.visual.attempt : 1;
-  return `07-visual/backend-lease.v${String(attempt).padStart(3, '0')}.json`;
+export function backendProfilePath() {
+  return '07-visual/backend-profile.json';
+}
+
+export function backendLeasePathForAttempt(state, consumer = 'body_visual') {
+  if (!CONSUMERS.has(consumer)) throw new Error(`Unsupported backend lease consumer: ${consumer}`);
+  const attempt = componentAttempt(state, consumer);
+  const kind = consumer === 'body_visual' ? 'body' : 'cover';
+  return `07-visual/backend-lease.${kind}.v${String(attempt).padStart(3, '0')}.json`;
+}
+
+function runtimeRoots(runDir) {
+  return {
+    RUN_ROOT: resolve(runDir),
+    SKILL_ROOT: skillDir,
+    CODEX_HOME: process.env.CODEX_HOME || join(homedir(), '.codex'),
+    WORKSPACE_ROOT: process.env.WORKSPACE_ROOT || process.cwd()
+  };
+}
+
+function portableId(ref) {
+  return ref ? `${ref.root}:${ref.path}` : null;
+}
+
+function portableResolved(runDir, resolved) {
+  const roots = runtimeRoots(runDir);
+  const native = resolved.kind === 'runtime-native';
+  const adapterRef = native ? null : portableRefForPath(resolved.adapter.path, roots);
+  const configuration = native ? null : {
+    config_ref: portableRefForPath(resolved.configuration.path, roots),
+    config_sha256: resolved.configuration.sha256,
+    auth_ref: portableRefForPath(resolved.configuration.auth_path, roots),
+    endpoint_override: resolved.configuration.endpoint_override
+  };
+  const context = {
+    ...resolved.context,
+    adapter_id: native ? resolved.context.adapter_id : portableId(adapterRef)
+  };
+  return {
+    adapter: {
+      id: native ? resolved.adapter.path : portableId(adapterRef),
+      ref: adapterRef,
+      sha256: resolved.adapter.sha256
+    },
+    configuration,
+    context
+  };
 }
 
 export function resolveNativeBackend({ nativeStatus }) {
@@ -342,37 +399,119 @@ export function resolveNativeBackend({ nativeStatus }) {
   };
 }
 
-export function createBackendLease({ state, resolved, createdAt = new Date().toISOString() }) {
+export function createBackendProfile({ state, resolved, runDir, createdAt = new Date().toISOString() }) {
   if (resolved?.issues?.length || !['runtime-native', 'configured-api'].includes(resolved?.kind)) {
-    throw new Error('Cannot create a BackendLease from a blocked backend resolution.');
+    throw new Error('Cannot create a BackendProfile from a blocked backend resolution.');
   }
-  const backendContext = resolved.context;
-  return {
+  if (!runDir) throw new Error('BackendProfile creation requires its runtime run root.');
+  const portable = portableResolved(runDir, resolved);
+  const profile = {
     schema_version: 1,
-    artifact: 'BackendLease',
+    artifact: 'BackendProfile',
     run_id: state.run_id,
-    visual_attempt: state.stages.visual.attempt,
     created_at: createdAt,
     backend_kind: resolved.kind,
-    provider: backendContext.provider,
-    endpoint_source: backendContext.endpoint_source,
-    adapter: { path: resolved.adapter.path, sha256: resolved.adapter.sha256 },
-    model: backendContext.model,
-    configuration: resolved.configuration,
-    backend_context: backendContext,
-    backend_context_sha256: sha256(canonicalJson(backendContext)),
+    provider: portable.context.provider,
+    endpoint_source: portable.context.endpoint_source,
+    endpoint_origin: portable.context.endpoint_origin,
+    endpoint_sha256: portable.context.endpoint_sha256,
+    adapter: portable.adapter,
+    model: portable.context.model,
+    artifact_format: portable.context.artifact_format,
+    safety_policy: {
+      credential_persistence: 'forbidden',
+      backend_switch: 'explicit-reset-only',
+      native_pixel_policy: 'preserve'
+    },
+    profile_fingerprint: ''
+  };
+  profile.profile_fingerprint = sha256(canonicalJson({ ...profile, profile_fingerprint: undefined }));
+  return profile;
+}
+
+export function validateBackendProfile(value, state) {
+  const issues = [];
+  const configured = value?.backend_kind === 'configured-api';
+  const validAdapter = exactKeys(value?.adapter, ['id', 'ref', 'sha256'])
+    && nonempty(value.adapter.id) && SHA256.test(value.adapter.sha256 || '')
+    && (configured ? value.adapter.ref?.root && value.adapter.id === portableId(value.adapter.ref)
+      : value.adapter.ref === null && value.adapter.id === 'runtime-native:image-generation');
+  const fingerprint = value && sha256(canonicalJson({ ...value, profile_fingerprint: undefined }));
+  if (!exactKeys(value, profileKeys) || value.schema_version !== 1 || value.artifact !== 'BackendProfile'
+    || value.run_id !== state.run_id || !validIsoDate(value.created_at)
+    || !['runtime-native', 'configured-api'].includes(value.backend_kind)
+    || !nonempty(value.provider) || !nonempty(value.endpoint_source)
+    || configured && (!nonempty(value.endpoint_origin) || !SHA256.test(value.endpoint_sha256 || ''))
+    || !configured && (value.endpoint_origin !== null || value.endpoint_sha256 !== null)
+    || !validAdapter || !nonempty(value.model) || value.artifact_format !== 'png'
+    || !exactKeys(value.safety_policy, ['credential_persistence', 'backend_switch', 'native_pixel_policy'])
+    || value.safety_policy.credential_persistence !== 'forbidden'
+    || value.safety_policy.backend_switch !== 'explicit-reset-only'
+    || value.safety_policy.native_pixel_policy !== 'preserve'
+    || value.profile_fingerprint !== fingerprint) {
+    issues.push({ code: 'backend_profile_invalid', message: 'backend configuration inaccessible', resume_from: 'visual' });
+  }
+  if (containsSensitiveField(value)) {
+    issues.push({ code: 'backend_profile_secret_exposure', message: 'backend configuration inaccessible', resume_from: 'visual' });
+  }
+  return issues;
+}
+
+export async function loadBackendProfile(runDir, state) {
+  const path = backendProfilePath();
+  const absolute = join(runDir, path);
+  if (!fileExists(absolute)) {
+    return { issues: [{ code: 'backend_profile_missing', message: 'backend configuration inaccessible', resume_from: 'visual' }], path, value: null };
+  }
+  let value;
+  try { value = await readJson(absolute); } catch {
+    return { issues: [{ code: 'backend_profile_invalid', message: 'backend configuration inaccessible', resume_from: 'visual' }], path, value: null };
+  }
+  return { issues: validateBackendProfile(value, state), path, value, sha256: await fileSha256(absolute) };
+}
+
+export function createBackendLease({
+  state,
+  resolved,
+  profile,
+  profileSha256,
+  consumer,
+  runDir,
+  createdAt = new Date().toISOString()
+}) {
+  if (!CONSUMERS.has(consumer) || resolved?.issues?.length || !profile || !runDir
+    || !SHA256.test(profileSha256 || '')) {
+    throw new Error('Cannot create a BackendLease from an incomplete profile binding.');
+  }
+  const portable = portableResolved(runDir, resolved);
+  return {
+    schema_version: 2,
+    artifact: 'BackendLease',
+    run_id: state.run_id,
+    consumer,
+    attempt: componentAttempt(state, consumer),
+    created_at: createdAt,
+    profile: { path: backendProfilePath(), sha256: profileSha256 },
+    backend_kind: profile.backend_kind,
+    provider: profile.provider,
+    endpoint_source: profile.endpoint_source,
+    adapter: portable.adapter,
+    model: profile.model,
+    configuration: portable.configuration,
+    backend_context: portable.context,
+    backend_context_sha256: sha256(canonicalJson(portable.context)),
     preflight: resolved.preflight
   };
 }
 
-export function validateBackendLease(value, state) {
+export function validateBackendLease(value, state, consumer = 'body_visual', profile = null) {
   const issues = [];
   const context = value?.backend_context;
   const configured = value?.backend_kind === 'configured-api';
   const validConfiguration = configured
-    ? exactKeys(value?.configuration, ['path', 'sha256', 'auth_path', 'endpoint_override'])
-      && nonempty(value.configuration.path) && SHA256.test(value.configuration.sha256 || '')
-      && nonempty(value.configuration.auth_path)
+    ? exactKeys(value?.configuration, ['config_ref', 'config_sha256', 'auth_ref', 'endpoint_override'])
+      && value.configuration.config_ref?.root && SHA256.test(value.configuration.config_sha256 || '')
+      && value.configuration.auth_ref?.root
       && safeEndpointOverride(value.configuration.endpoint_override)
       && (value.endpoint_source === 'user-explicit') === (value.configuration.endpoint_override !== null)
     : value?.configuration === null;
@@ -387,25 +526,34 @@ export function validateBackendLease(value, state) {
     && value.preflight.status === 'PASS' && validIsoDate(value.preflight.checked_at)
     && value.preflight.count === 1 && exactKeys(checks, preflightCheckKeys)
     && preflightCheckKeys.every((key) => checks[key] === 'PASS');
-  if (!exactKeys(value, leaseKeys) || value.schema_version !== 1 || value.artifact !== 'BackendLease'
-    || value.run_id !== state.run_id || value.visual_attempt !== state.stages?.visual?.attempt
+  if (!exactKeys(value, leaseKeys) || value.schema_version !== 2 || value.artifact !== 'BackendLease'
+    || value.run_id !== state.run_id || value.consumer !== consumer
+    || value.attempt !== componentAttempt(state, consumer)
     || !validIsoDate(value.created_at)
     || !['runtime-native', 'configured-api'].includes(value.backend_kind)
-    || !exactKeys(value.adapter, ['path', 'sha256']) || !nonempty(value.adapter.path)
+    || !exactKeys(value.profile, ['path', 'sha256']) || value.profile.path !== backendProfilePath()
+    || !SHA256.test(value.profile.sha256 || '')
+    || !exactKeys(value.adapter, ['id', 'ref', 'sha256']) || !nonempty(value.adapter.id)
     || !SHA256.test(value.adapter.sha256 || '') || !validConfiguration || !validContext
     || value.provider !== context?.provider || value.endpoint_source !== context?.endpoint_source
-    || value.model !== context?.model || value.adapter?.path !== context?.adapter_id
+    || value.model !== context?.model || value.adapter?.id !== context?.adapter_id
     || value.backend_context_sha256 !== sha256(canonicalJson(context)) || !validPreflight) {
     issues.push({ code: 'backend_lease_invalid', message: 'backend configuration inaccessible', resume_from: 'visual' });
   }
   if (containsSensitiveField(value)) {
     issues.push({ code: 'backend_lease_secret_exposure', message: 'backend configuration inaccessible', resume_from: 'visual' });
   }
+  if (profile && (value.profile.sha256 !== profile.sha256
+    || value.backend_kind !== profile.value?.backend_kind || value.provider !== profile.value?.provider
+    || value.endpoint_source !== profile.value?.endpoint_source || value.model !== profile.value?.model
+    || value.adapter.id !== profile.value?.adapter?.id)) {
+    issues.push({ code: 'backend_profile_drift', message: 'backend endpoint mismatch', resume_from: 'visual' });
+  }
   return issues;
 }
 
-export async function validateBackendLeaseFile(runDir, state, { processEnv = process.env } = {}) {
-  const path = backendLeasePathForAttempt(state);
+export async function loadBackendLease(runDir, state, consumer = 'body_visual', { processEnv = process.env } = {}) {
+  const path = backendLeasePathForAttempt(state, consumer);
   const absolute = join(runDir, path);
   if (!fileExists(absolute)) {
     return { issues: [{ code: 'backend_lease_missing', message: 'backend configuration inaccessible', resume_from: 'visual' }], path, value: null };
@@ -414,35 +562,55 @@ export async function validateBackendLeaseFile(runDir, state, { processEnv = pro
   try { value = await readJson(absolute); } catch {
     return { issues: [{ code: 'backend_lease_invalid', message: 'backend configuration inaccessible', resume_from: 'visual' }], path, value: null };
   }
-  const issues = validateBackendLease(value, state);
+  const profile = await loadBackendProfile(runDir, state);
+  const issues = [...profile.issues, ...validateBackendLease(value, state, consumer, profile)];
   if (!issues.length && value.backend_kind === 'configured-api') {
+    let configPath;
+    let authPath;
+    let adapterPath;
+    try {
+      configPath = resolveRunPortablePathRef(value.configuration.config_ref, runDir);
+      authPath = resolveRunPortablePathRef(value.configuration.auth_ref, runDir);
+      adapterPath = resolveRunPortablePathRef(value.adapter.ref, runDir);
+    } catch {
+      issues.push(issue('configuration'));
+    }
     const resolved = {
       kind: value.backend_kind,
       context: value.backend_context,
-      adapter: { ...value.adapter, command: adapterCommand(value.adapter.path).executable },
-      configuration: value.configuration,
+      adapter: { path: adapterPath, sha256: value.adapter.sha256, command: adapterCommand(adapterPath || '').executable },
+      configuration: {
+        path: configPath,
+        sha256: value.configuration.config_sha256,
+        auth_path: authPath,
+        endpoint_override: value.configuration.endpoint_override
+      },
       preflight: value.preflight,
       issues: []
     };
-    const validation = await validateResolvedBackend(resolved, {
-      configPath: value.configuration?.path,
-      authPath: value.configuration?.auth_path,
-      adapterPath: value.adapter.path,
+    const validation = issues.length ? { issues: [] } : await validateResolvedBackend(resolved, {
+      configPath,
+      authPath,
+      adapterPath,
       processEnv
-    });
+    }, { runDir, expectedPortableContext: value.backend_context });
     issues.push(...validation.issues);
   }
   if (!issues.length && value.backend_kind === 'runtime-native'
-    && value.adapter.sha256 !== sha256(value.adapter.path)) {
+    && value.adapter.sha256 !== sha256(value.adapter.id)) {
     issues.push({ code: 'backend_lease_adapter_drift', message: 'backend configuration inaccessible', resume_from: 'visual' });
   }
   return { issues, path, value, sha256: await fileSha256(absolute) };
 }
 
+export async function validateBackendLeaseFile(runDir, state, options = {}) {
+  return loadBackendLease(runDir, state, options.consumer || 'body_visual', options);
+}
+
 export function expectedPlanBackend(lease, geometry) {
   const value = {
     kind: lease.backend_kind,
-    adapter: lease.adapter.path,
+    adapter: lease.adapter.id,
     endpoint_source: lease.backend_kind === 'runtime-native' ? 'runtime-native'
       : lease.endpoint_source === 'user-explicit' ? 'user-confirmed-config' : 'active-runtime-config',
     resolved_model: lease.model,
@@ -484,7 +652,7 @@ export async function resolveConfiguredBackend(options) {
   return result;
 }
 
-export async function validateResolvedBackend(value, options) {
+export async function validateResolvedBackend(value, options, { runDir = null, expectedPortableContext = null } = {}) {
   if (value?.issues?.length || value?.kind !== 'configured-api') return { issues: [issue('configuration')] };
   const current = await resolveContext({
     ...options,
@@ -494,7 +662,9 @@ export async function validateResolvedBackend(value, options) {
     explicitBaseUrl: value.configuration.endpoint_override
   });
   if (current.issues.length) return { issues: current.issues };
-  const matches = isDeepStrictEqual(current.context, value.context)
+  const expectedContext = runDir
+    ? portableResolved(runDir, { ...current, kind: 'configured-api' }).context : value.context;
+  const matches = isDeepStrictEqual(expectedContext, expectedPortableContext || value.context)
     && current.adapter.path === value.adapter.path && current.adapter.sha256 === value.adapter.sha256
     && current.configuration.path === value.configuration.path
     && current.configuration.sha256 === value.configuration.sha256
@@ -507,6 +677,7 @@ export async function executeConfiguredGeneration({
   resolved,
   configPath,
   authPath,
+  runDir = null,
   processEnv = process.env,
   adapterArgs
 }) {
@@ -517,7 +688,9 @@ export async function executeConfiguredGeneration({
     explicitBaseUrl: resolved.configuration.endpoint_override,
     processEnv
   });
-  if (current.issues.length || !isDeepStrictEqual(current.context, resolved.context)
+  const currentContext = runDir && !current.issues.length
+    ? portableResolved(runDir, { ...current, kind: 'configured-api' }).context : current.context;
+  if (current.issues.length || !isDeepStrictEqual(currentContext, resolved.context)
     || current.adapter.sha256 !== resolved.adapter.sha256
     || current.configuration.sha256 !== resolved.configuration.sha256) {
     return { status: 'BLOCKED', issues: current.issues.length ? current.issues : [issue('endpoint')], argv: [] };

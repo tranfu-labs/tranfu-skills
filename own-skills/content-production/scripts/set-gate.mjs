@@ -29,6 +29,7 @@ import {
   verifyQaFingerprints,
   writeJson
 } from './lib.mjs';
+import { resetVisualAggregate } from './visual-state.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const [runArg, gate, status] = args._;
@@ -46,11 +47,11 @@ async function decisionRef(runDir, input, fallback) {
 }
 
 async function defaultArtifacts(runDir, gateName, state) {
-  if (gateName === 'outline' && state?.schema_version === 2
+  if (gateName === 'outline' && state?.schema_version === 3
     && state.stages?.outline?.status === 'completed') {
     return Promise.all((state.stages.outline.artifacts || []).map((binding) => artifactBinding(runDir, binding.path)));
   }
-  if (gateName === 'titles' && state?.schema_version === 2
+  if (gateName === 'titles' && state?.schema_version === 3
     && state.stages?.titles?.status === 'completed') {
     const active = (state.stages.titles.artifacts || []).filter((binding) =>
       /(?:^|\/)titles(?:\.v\d{3})?\.json$/.test(binding.path)
@@ -106,7 +107,7 @@ if (!runArg || !gateOrder.includes(gate) || !allowedStatuses.includes(status)) {
       ? await Promise.all(args.artifact.map((path) => artifactBinding(runDir, path)))
       : previous.bound_artifacts?.length ? previous.bound_artifacts : await defaultArtifacts(runDir, gate, state);
 
-    if (status === 'approved' && gate === 'outline' && state.schema_version === 2 && !nextDecision?.path) {
+    if (status === 'approved' && gate === 'outline' && state.schema_version === 3 && !nextDecision?.path) {
       nextDecision = nextBindings.find((binding) => /^control-outline(?:\.v\d{3})?\.md$/.test(basename(binding.path))) || null;
     }
 
@@ -132,7 +133,7 @@ if (!runArg || !gateOrder.includes(gate) || !allowedStatuses.includes(status)) {
           throw new Error(`Outline approval must bind ${variant}-structure.md or a versioned equivalent.`);
         }
       }
-      if (state.schema_version === 2) {
+      if (state.schema_version === 3) {
         const completed = state.stages?.outline?.artifacts || [];
         const completedByPath = new Map(completed.map((binding) => [binding.path, binding.sha256]));
         const activeByPath = new Map(nextBindings.map((binding) => [binding.path, binding.sha256]));
@@ -171,7 +172,7 @@ if (!runArg || !gateOrder.includes(gate) || !allowedStatuses.includes(status)) {
       const revisionOf = (path) => basename(path).match(/\.v(\d{3})\./)?.[1] || '001';
       if (revisionOf(titlesBinding.path) !== revisionOf(matrices[0].path)) throw new Error('titles JSON and title matrix must use the same revision.');
       if (revisionOf(nextDecision.path) !== revisionOf(titlesBinding.path)) throw new Error('selection decision, titles JSON, and title matrix must use the same revision.');
-      if (state.schema_version === 2) {
+      if (state.schema_version === 3) {
         const expected = titleAggregatePaths(state);
         if (titlesBinding.path !== expected.titles_path || matrices[0].path !== expected.matrix_path
           || nextDecision.path !== expected.selection_path) {
@@ -262,10 +263,12 @@ if (!runArg || !gateOrder.includes(gate) || !allowedStatuses.includes(status)) {
         for (const stage of stageOrder.slice(stageOrder.indexOf(firstStage))) {
           const old = state.stages[stage];
           if (old?.status !== 'pending') stageInvalidated.push({ stage, previous: old });
-          state.stages[stage] = {
-            status: 'pending', attempt: old?.attempt || 0, artifacts: [], error: null,
-            invalidated_by: gate, updated_at: now
-          };
+          state.stages[stage] = stage === 'visual'
+            ? resetVisualAggregate(old, gate, now)
+            : {
+                status: 'pending', attempt: old?.attempt || 0, artifacts: [], error: null,
+                invalidated_by: gate, updated_at: now
+              };
         }
         if (stageInvalidated.length) {
           state.invalidations = [...(state.invalidations || []), { at: now, source_gate: gate, stages: stageInvalidated }];

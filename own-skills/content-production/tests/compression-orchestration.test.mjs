@@ -51,10 +51,23 @@ function bind(runDir, path) {
 }
 
 function run(script, args = []) {
-  return spawnSync(process.execPath, [join(scriptsDir, script), ...args], {
+  const result = spawnSync(process.execPath, [join(scriptsDir, script), ...args], {
     cwd: skillDir,
     encoding: 'utf8'
   });
+  if (result.stdout && typeof args[0] === 'string' && args[0].startsWith('/')) {
+    try {
+      const value = JSON.parse(result.stdout);
+      for (const key of ['plan_path', 'request_path']) {
+        if (typeof value[key] === 'string' && !value[key].startsWith('/')) value[key] = join(args[0], value[key]);
+      }
+      if (Array.isArray(value.request_paths)) {
+        value.request_paths = value.request_paths.map((path) => path.startsWith('/') ? path : join(args[0], path));
+      }
+      result.stdout = `${JSON.stringify(value)}\n`;
+    } catch {}
+  }
+  return result;
 }
 
 function runCompressionProvider(args = []) {
@@ -268,19 +281,21 @@ function fixture({ packageAttempt = 1, symlinkSource = false, orientedJpeg = fal
 
   for (const platform of platforms) mkdirSync(join(runDir, '08-publish-pack', platform, 'images'), { recursive: true });
   const state = {
-    schema_version: 2,
+    schema_version: 3,
     run_id: 'fixture-run',
     run_mode: 'autonomous',
     status: 'running',
     current_stage: 'package',
     capabilities: {
-      config_path: join(skillDir, 'capabilities.yaml'),
+      config_ref: { root: 'SKILL_ROOT', path: 'capabilities.yaml' },
+      config_sha256: sha(join(skillDir, 'capabilities.yaml')),
       status: 'PASS',
       providers: {
         image_compression: {
           status: 'PASS',
           contract: 'image-compression-v1',
-          skill_path: compressionSkill,
+          required: true,
+          skill_ref: { root: 'SKILL_ROOT', path: 'skills/compress-image/SKILL.md' },
           skill_sha256: sha(compressionSkill)
         }
       }
@@ -288,9 +303,16 @@ function fixture({ packageAttempt = 1, symlinkSource = false, orientedJpeg = fal
     stages: {
       titles: { status: 'completed', attempt: 1, artifacts: [] },
       visual: {
-        status: 'completed',
-        attempt: 1,
-        artifacts: visualArtifacts.map((path) => bind(runDir, path))
+        status: 'completed', revision: 1, error: null,
+        artifacts: visualArtifacts.map((path) => bind(runDir, path)),
+        body_visual: {
+          status: 'completed', attempt: 1, error: null,
+          artifacts: visualArtifacts.slice(0, 20).map((path) => bind(runDir, path))
+        },
+        wechat_cover: {
+          status: 'completed', attempt: 1, error: null,
+          artifacts: visualArtifacts.slice(20).map((path) => bind(runDir, path))
+        }
       },
       package: { status: 'running', attempt: packageAttempt, artifacts: [] },
       final_qa: { status: 'pending', attempt: 0, artifacts: [] }
@@ -378,7 +400,8 @@ function installLayoutCapability(runDir) {
   state.capabilities.providers.wechat_layout = {
     status: 'PASS',
     contract: 'wechat-layout-v1',
-    skill_path: layoutSkill,
+    required: true,
+    skill_ref: { root: 'SKILL_ROOT', path: 'skills/format-content/SKILL.md' },
     skill_sha256: sha(layoutSkill)
   };
   write(statePath, JSON.stringify(state, null, 2));
@@ -567,7 +590,7 @@ test('a hashed compression provider cannot complete package through the legacy p
   try {
     const statePath = join(malformed.runDir, 'run.json');
     const state = readJson(statePath);
-    delete state.capabilities.providers.image_compression.skill_path;
+    delete state.capabilities.providers.image_compression.skill_ref;
     write(statePath, JSON.stringify(state, null, 2));
     const result = run('set-stage.mjs', [
       malformed.runDir,
@@ -747,9 +770,11 @@ test('WeChat layout request binds the current publish inputs and all fixed child
     const request = readJson(output.request_path);
     assert.deepEqual(Object.keys(request), [
       'schema_version', 'contract', 'task_id', 'capability', 'provider_contract',
-      'run_dir', 'run_mode', 'mode', 'attempt', 'platform', 'variant', 'inputs',
+      'run_mode', 'mode', 'attempt', 'platform', 'variant', 'inputs',
       'output_dir', 'expected_artifacts', 'options', 'interaction_policy'
     ]);
+    assert.equal(request.schema_version, 2);
+    assert.equal(request.contract, 'content-production-provider/v2');
     assert.equal(request.task_id, 'wechat-layout:fixture-run:wechat:A:package-001');
     assert.equal(request.mode, 'format_wechat');
     assert.deepEqual(request.inputs, [

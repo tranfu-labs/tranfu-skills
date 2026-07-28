@@ -132,7 +132,7 @@ The file title is `# 来源笔记`. Append this structure for every run:
 - 发布日期：YYYY-MM-DD | unknown
 - 更新日期：YYYY-MM-DD | not_shown
 - 访问日期：YYYY-MM-DD
-- 来源定位：https://... | /absolute/local/path
+- 来源定位：https://... | <LOCAL_SOURCE_PATH>
 - 语言：en | zh | other
 - 独立来源组：ORIGIN-###
 - 抓取状态：fetched | blocked | snippet_only

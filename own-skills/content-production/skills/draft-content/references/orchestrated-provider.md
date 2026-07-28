@@ -1,6 +1,6 @@
 # 总控 Provider 合同
 
-request 出现 `contract: content-production-provider/v1`、`capability: drafting`、`provider_contract: drafting-v1` 或 `content-production-provider: drafting-v1` 任一总控标记时即进入本路由；只有完整匹配前三项的 request 才可执行，部分或冲突标记必须结构化阻断，不得回退独立模式。没有任何总控标记的普通 `$draft-content` 请求继续使用独立 run、人工大纲门禁和 `READY_FOR_PROOFREAD` 流程。
+request 出现 `contract: content-production-provider/v2`、`capability: drafting`、`provider_contract: drafting-v1` 或 `content-production-provider: drafting-v1` 任一总控标记时即进入本路由；只有完整匹配前三项的 request 才可执行，部分或冲突标记必须结构化阻断，不得回退独立模式。没有任何总控标记的普通 `$draft-content` 请求继续使用独立 run、人工大纲门禁和 `READY_FOR_PROOFREAD` 流程。
 
 ## 调用顺序
 

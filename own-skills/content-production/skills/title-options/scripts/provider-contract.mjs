@@ -3,9 +3,9 @@
 import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
-const CONTRACT = 'content-production-provider/v1';
+const CONTRACT = 'content-production-provider/v2';
 const PROVIDER = 'title-generation-v1';
 const PLATFORMS = new Set(['wechat', 'xiaohongshu', 'zhihu', 'weibo', 'toutiao']);
 const VARIANTS = new Set(['A', 'B']);
@@ -52,6 +52,28 @@ function inside(root, path) {
 
 function runRelative(runDir, path) {
   return relative(runDir, path).replaceAll('\\', '/');
+}
+
+async function findRunRoot(requestPath) {
+  const requestReal = await realpath(requestPath);
+  let current = dirname(requestPath);
+  while (true) {
+    const statePath = join(current, 'run.json');
+    if (existsSync(statePath)) {
+      const runStat = await lstat(current);
+      const stateStat = await lstat(statePath);
+      const runReal = await realpath(current);
+      if (runStat.isSymbolicLink() || !runStat.isDirectory() || stateStat.isSymbolicLink() || !stateStat.isFile()
+        || !inside(runReal, requestReal) || await realpath(statePath) !== join(runReal, 'run.json')) {
+        throw new Error('Request ancestry does not resolve to a safe run root.');
+      }
+      return { runDir: current, runRealDir: runReal };
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error('Cannot locate run.json from request ancestry.');
 }
 
 async function sha256(path) {
@@ -129,16 +151,10 @@ async function validateRequest(input) {
     return { issues, requestPath, request, requestSha256, runDir, runRealDir, outputDir, outputRealDir, spec };
   }
 
-  runDir = resolve(request.run_dir || '');
   try {
-    const stat = await lstat(runDir);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error('run_dir must be a real directory.');
-    runRealDir = await realpath(runDir);
-    if (!inside(runDir, requestPath) || await hasSymlinkComponent(runDir, requestPath)) {
-      throw new Error('Request must remain inside run_dir.');
-    }
+    ({ runDir, runRealDir } = await findRunRoot(requestPath));
   } catch (error) {
-    add(issues, 'invalid_provider_run_dir', error.message);
+    add(issues, 'invalid_provider_run_root', error.message);
   }
 
   if (!PLATFORMS.has(request.platform) || !VARIANTS.has(request.variant)) {
@@ -175,19 +191,18 @@ async function validateRequest(input) {
     && typeof options.model === 'string' && Boolean(options.model.trim())
     && plainObject(options.parameters);
   const requestKeys = [
-    'schema_version', 'contract', 'task_id', 'capability', 'provider_contract', 'run_dir',
+    'schema_version', 'contract', 'task_id', 'capability', 'provider_contract',
     'run_mode', 'mode', 'platform', 'variant', 'inputs', 'output_dir', 'expected_artifacts',
     'options', 'interaction_policy'
   ];
   if (!plainObject(request) || !sameItems(Object.keys(request), requestKeys)
-    || request.schema_version !== 1 || request.contract !== CONTRACT
+    || request.schema_version !== 2 || request.contract !== CONTRACT
     || request.capability !== 'title_generation' || request.provider_contract !== PROVIDER
     || request.mode !== 'generate_titles' || !['autonomous', 'reviewed'].includes(request.run_mode)
     || request.output_dir !== spec?.base || request.interaction_policy !== 'return_to_orchestrator'
     || typeof request.task_id !== 'string'
     || !new RegExp(`^title:[^:]+:${request.platform}:${request.variant}:attempt-\\d{3}$`).test(request.task_id)
     || !sameItems(request.expected_artifacts, spec ? [spec.candidate] : []) || !validOptions
-    || !isAbsolute(request.run_dir || '') || resolve(request.run_dir || '') !== runDir
     || (spec && requestPath !== resolve(runDir, spec.request))) {
     add(issues, 'invalid_provider_request', 'Request does not match title-generation-v1.');
   }
@@ -298,7 +313,7 @@ async function validateArtifact(context) {
 
 function makeResult(context, status, artifacts, issues, requestValid = true) {
   return {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request?.task_id || 'unknown',
@@ -358,7 +373,7 @@ async function main() {
   }
   if (command === 'validate-request') {
     emit({
-      status: 'PASS', task_id: context.request.task_id, run_dir: context.runDir,
+      status: 'PASS', task_id: context.request.task_id,
       output_dir: context.spec.base, inputs: { final_draft: context.request.inputs[0].path }, issues: []
     });
     return;

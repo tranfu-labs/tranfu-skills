@@ -47,6 +47,13 @@
     "defaultEnabled": true,
     "userOverrideAllowed": true
   },
+  "textPolicy": {
+    "defaultMode": "allowlist",
+    "iconsOnlyAllowed": false,
+    "headline": { "minCharacters": 2, "maxCharacters": 14 },
+    "labels": { "minItems": 2, "maxItems": 5, "maxCharactersPerItem": 8 }
+  },
+  "generationPrompt": "Create a vertical dark technical explainer with warm-white hierarchy, one controlled red signal, compact panels, monoline icons, and semantic connectors.",
   "inputHandling": {
     "preserveNativeOutput": true,
     "ratioTolerance": 0.002,

@@ -6,14 +6,14 @@
 
 只要结构化 request 出现 `contract`、`capability` 或 `provider_contract` 中任一总控标志，就路由到总控校验，禁止回落独立模式。只有同时满足以下条件才进入总控执行：
 
-- `schema_version: 1`
-- `contract: content-production-provider/v1`
+- `schema_version: 2`
+- `contract: content-production-provider/v2`
 - `capability: topic_planning`
 - `provider_contract: topic-planning-v1`
 - `mode: plan`
 - `interaction_policy: return_to_orchestrator`
 
-缺少任一条件时不执行选题，但仍是一次被拒绝的总控调用。`validate-request` 在 `run_dir` 可安全定位时，把完整 canonical `BLOCKED` result 写到 `01-discovery/provider-result.json`；连合法 run root 都无法确定时，向 stdout 返回同结构诊断。两种情况都不得创建独立产物。
+缺少任一条件时不执行选题，但仍是一次被拒绝的总控调用。request 不含 `run_dir`；`validate-request` 从 canonical request 向上定位并验证 `run.json`，成功时把完整 canonical `BLOCKED` result 写到 `01-discovery/provider-result.json`，无法确定合法 run root 时向 stdout 返回同结构诊断。两种情况都不得创建独立产物。
 
 ## 输入与权限
 

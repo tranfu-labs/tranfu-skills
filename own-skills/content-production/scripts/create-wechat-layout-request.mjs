@@ -120,9 +120,10 @@ try {
 
   emitJson({
     status: 'PASS',
+    run_id: state.run_id,
     package_attempt: built.paths.attempt,
-    request_path: requestPath,
-    output_dir: resolve(runDir, built.paths.staging),
+    request_path: built.paths.request,
+    output_dir: built.paths.staging,
     expected_artifacts: built.request.expected_artifacts
   });
 } catch (error) {

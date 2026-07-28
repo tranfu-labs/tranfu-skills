@@ -109,7 +109,7 @@ try {
   }
   const state = await readJson(statePath);
   const titleStage = state.stages?.titles;
-  if (state.schema_version !== 2 || state.status !== 'running'
+  if (state.schema_version !== 3 || state.status !== 'running'
     || state.current_stage !== 'titles' || titleStage?.status !== 'running'
     || !Number.isInteger(titleStage.attempt) || titleStage.attempt < 1) {
     fail('Run titles stage must be running with a positive attempt.', [{
@@ -220,12 +220,12 @@ try {
 
   emitJson({
     status: 'PASS',
-    run_dir: runDir,
+    run_id: state.run_id,
     attempt: titleStage.attempt,
     total_candidates: 34,
-    titles_path: outputPaths.titles_path,
-    selection_path: outputPaths.selection_path,
-    matrix_path: outputPaths.matrix_path
+    titles_path: aggregatePaths.titles_path,
+    selection_path: aggregatePaths.selection_path,
+    matrix_path: aggregatePaths.matrix_path
   });
 } catch (error) {
   emitJson({

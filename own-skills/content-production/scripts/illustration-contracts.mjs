@@ -7,7 +7,8 @@ import {
   fileSha256,
   platforms,
   readJson,
-  readText
+  readText,
+  resolveRunPortablePathRef
 } from './lib.mjs';
 import {
   evaluatePlatformCardinality,
@@ -15,9 +16,11 @@ import {
   validateVisualCoverageSet
 } from './visual-cardinality.mjs';
 import { expectedPlanBackend, validateBackendLeaseFile } from './backend-runtime.mjs';
+import { bodyVisualAttempt } from './visual-state.mjs';
+import { validReuseFingerprint } from './visual-reuse.mjs';
 
 const requestKeys = [
-  'schema_version', 'contract', 'task_id', 'capability', 'provider_contract', 'run_dir',
+  'schema_version', 'contract', 'task_id', 'capability', 'provider_contract',
   'run_mode', 'mode', 'attempt', 'platform', 'provider_platform', 'variant', 'selection',
   'inputs', 'output_dir', 'expected_artifacts', 'options', 'interaction_policy'
 ];
@@ -27,7 +30,7 @@ const resultKeys = [
 ];
 const optionKeys = [
   'requested_output', 'publishing_path', 'style_id', 'max_images', 'brand_override',
-  'backend_hint', 'model_preference', 'execution_strategy'
+  'backend_hint', 'model_preference', 'execution_strategy', 'text_policy', 'prompt_compiler'
 ];
 const selectionKeys = [
   'platform', 'variant', 'title_id', 'title', 'topic_phrase', 'draft_path',
@@ -42,7 +45,14 @@ const anchorKeys = [
   'image_id', 'placement', 'source_excerpt', 'core_meaning', 'structure',
   'visual_metaphor', 'main_action', 'suggested_elements', 'short_labels', 'qa_risk'
 ];
-const boundedAnchorKeys = [...anchorKeys, 'text_mode'];
+const boundedAnchorKeys = [
+  'image_id', 'placement', 'source_excerpt', 'core_meaning', 'structure',
+  'visual_metaphor', 'main_action', 'suggested_elements', 'text_content', 'qa_risk'
+];
+const textContentKeys = ['primary', 'compact'];
+const textVariantKeys = [
+  'headline', 'headline_source_terms', 'labels', 'supporting_copy', 'footer'
+];
 const bundleKeys = [
   'schema_version', 'task_id', 'status', 'platform', 'provider_platform', 'variant',
   'source', 'selection', 'plan', 'shot_list', 'style', 'brand', 'generation_backend',
@@ -108,6 +118,38 @@ function stringArray(value) {
   return Array.isArray(value) && value.every(nonempty) && new Set(value).size === value.length;
 }
 
+function characterCount(value) {
+  return [...value].length;
+}
+
+function validTextVariant(value, policy, anchor, sourceText, selectedTitle) {
+  if (!exactKeys(value, textVariantKeys) || !nonempty(value.headline)
+    || value.headline !== value.headline.trim()
+    || characterCount(value.headline) < policy.headline?.minCharacters
+    || characterCount(value.headline) > policy.headline?.maxCharacters
+    || !stringArray(value.headline_source_terms) || value.headline_source_terms.length === 0
+    || !value.headline_source_terms.some((term) => value.headline.includes(term)
+      && anchor.source_excerpt.includes(term))
+    || !stringArray(value.labels)
+    || value.labels.length < policy.labels?.minItems || value.labels.length > policy.labels?.maxItems
+    || value.labels.some((label) => characterCount(label) > policy.labels?.maxCharactersPerItem)
+    || ![value.supporting_copy, value.footer].every((item) => item === null
+      || nonempty(item) && item === item.trim())) return false;
+  const readable = [value.headline, ...value.labels, value.supporting_copy, value.footer]
+    .filter((item) => item !== null);
+  if (new Set(readable).size !== readable.length) return false;
+  const grounded = `${sourceText}\n${selectedTitle}`;
+  return [...value.labels, value.supporting_copy, value.footer]
+    .filter((item) => item !== null).every((item) => grounded.includes(item));
+}
+
+function validTextContent(value, policy, anchor, sourceText, selectedTitle) {
+  return exactKeys(value, textContentKeys) && policy?.defaultMode === 'allowlist'
+    && policy.iconsOnlyAllowed === false
+    && validTextVariant(value.primary, policy, anchor, sourceText, selectedTitle)
+    && validTextVariant(value.compact, policy, anchor, sourceText, selectedTitle);
+}
+
 function inside(root, path) {
   const rel = relative(root, path);
   return rel === '' || (!isAbsolute(rel) && rel !== '..'
@@ -149,8 +191,7 @@ function taskId(state, platform, variant, mode, attempt) {
 }
 
 export function illustrationPaths(state, platform) {
-  const attempt = Number.isInteger(state?.stages?.visual?.attempt) && state.stages.visual.attempt > 0
-    ? state.stages.visual.attempt : 1;
+  const attempt = bodyVisualAttempt(state);
   const version = `v${String(attempt).padStart(3, '0')}`;
   const suffix = attempt === 1 ? '' : `.${version}`;
   const versionDir = attempt === 1 ? '' : `${version}/`;
@@ -192,15 +233,18 @@ async function loadRunContext(runDir, state, issues) {
     return null;
   }
   const provider = state?.capabilities?.providers?.illustration;
-  const legacyProvider = state.stages?.visual?.status === 'completed' && !provider?.adapter_contract;
   if (provider?.status !== 'PASS' || provider?.contract !== 'illustration-v1'
-    || !legacyProvider && (provider?.adapter_contract !== 'illustration-orchestrated-coverage-v1'
-      || !Array.isArray(provider?.resources) || provider.resources.length !== 2)
-    || !nonempty(provider?.skill_path)) {
+    || provider?.adapter_contract !== 'illustration-orchestrated-coverage-v1'
+    || !Array.isArray(provider?.resources) || provider.resources.length !== 2
+    || !provider?.skill_ref) {
     issues.push(issue('illustration_provider_unavailable', 'The illustration provider snapshot is not PASS for illustration-v1.'));
     return { runReal, provider: null };
   }
-  const skillPath = resolve(provider.skill_path);
+  let skillPath;
+  try { skillPath = resolveRunPortablePathRef(provider.skill_ref, runDir); } catch {
+    issues.push(issue('illustration_provider_unavailable', 'The illustration provider path reference is invalid.'));
+    return { runReal, provider: null };
+  }
   const skillRoot = dirname(skillPath);
   let skillReal;
   try {
@@ -214,9 +258,11 @@ async function loadRunContext(runDir, state, issues) {
     return { runReal, provider: null };
   }
   for (const resource of provider.resources || []) {
-    if (!exactKeys(resource, ['path', 'sha256']) || !nonempty(resource.path)
-      || !/^[a-f0-9]{64}$/.test(resource.sha256 || '') || !fileExists(resource.path)
-      || await fileSha256(resource.path) !== resource.sha256) {
+    let resourcePath = null;
+    try { resourcePath = resolveRunPortablePathRef(resource.ref, runDir); } catch {}
+    if (!exactKeys(resource, ['ref', 'sha256']) || !resourcePath
+      || !/^[a-f0-9]{64}$/.test(resource.sha256 || '') || !fileExists(resourcePath)
+      || await fileSha256(resourcePath) !== resource.sha256) {
       issues.push(issue('illustration_provider_unavailable', 'The illustration adapter resource snapshot is missing or stale.'));
     }
   }
@@ -293,7 +339,9 @@ function expectedOptions(platform, options, bounded = false) {
     && [null, 'enabled', 'disabled'].includes(options.brand_override)
     && ['runtime-native', 'configured-api', 'unknown'].includes(options.backend_hint)
     && (options.model_preference === null || nonempty(options.model_preference))
-    && options.execution_strategy === (bounded ? 'bounded_per_image' : 'one_image_at_a_time');
+    && options.execution_strategy === (bounded ? 'bounded_per_image_v2' : 'one_image_at_a_time')
+    && options.text_policy === 'required_from_selected_style'
+    && options.prompt_compiler === 'deterministic-v1';
 }
 
 function expectedStyle(styleContext) {
@@ -341,20 +389,16 @@ function expectedGeometry(styleContext) {
 
 function validateRequest(request, state, platform, mode, selection, titleBinding, coverageBinding, paths, issues) {
   const attempt = paths.attempt;
-  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
-  const legacy = state.stages?.visual?.status === 'completed' && !coverageBinding;
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image-v2';
   const expectedInputs = [
     { role: 'final_draft', path: selection?.draft_path, sha256: selection?.draft_sha256 },
     { role: 'title_selection', path: titleBinding?.path, sha256: titleBinding?.sha256 }
   ];
-  if (!legacy) expectedInputs.push(
-    { role: 'visual_coverage', path: coverageBinding?.path, sha256: coverageBinding?.sha256 }
-  );
-  if (!exactKeys(request, requestKeys) || request.schema_version !== 1
-    || request.contract !== 'content-production-provider/v1' || request.capability !== 'illustration'
+  expectedInputs.push({ role: 'visual_coverage', path: coverageBinding?.path, sha256: coverageBinding?.sha256 });
+  if (!exactKeys(request, requestKeys) || request.schema_version !== 2
+    || request.contract !== 'content-production-provider/v2' || request.capability !== 'illustration'
     || request.provider_contract !== 'illustration-v1'
     || request.task_id !== taskId(state, platform, selection?.variant, mode, attempt)
-    || !isAbsolute(request.run_dir || '') || resolve(request.run_dir || '') !== resolve(state.__runDir)
     || request.run_mode !== state.run_mode || request.mode !== mode || request.attempt !== attempt
     || request.platform !== platform || request.provider_platform !== providerPlatform(platform)
     || request.variant !== selection?.variant || !isDeepStrictEqual(request.selection, selection)
@@ -378,8 +422,8 @@ async function validateResult(runDir, requestPath, result, request, expectedArti
     && result.artifacts.every((artifact, index) => exactKeys(artifact, ['role', 'path', 'sha256'])
       && artifact.role === expectedRoles[index] && artifact.path === expectedArtifacts[index]
       && /^[a-f0-9]{64}$/.test(artifact.sha256 || ''));
-  if (!exactKeys(result, resultKeys) || result.schema_version !== 1
-    || result.contract !== 'content-production-provider/v1'
+  if (!exactKeys(result, resultKeys) || result.schema_version !== 2
+    || result.contract !== 'content-production-provider/v2'
     || result.provider_contract !== 'illustration-v1' || result.task_id !== request?.task_id
     || result.request_sha256 !== await fileSha256(requestPath) || result.status !== 'PASS'
     || !exactKeys(result.checks, ['request_valid', 'mode', 'attempt', 'platform', 'provider_platform'])
@@ -416,7 +460,14 @@ function validateShotList(text, plan, issues, platform) {
         issues.push(issue('invalid_illustration_shot_list', `${platform}/${anchor.image_id} shot list omits ${label}.`));
       }
     }
-    for (const value of [...anchor.suggested_elements, ...anchor.short_labels]) {
+    const textValues = anchor.text_content
+      ? textContentKeys.flatMap((variant) => {
+          const value = anchor.text_content[variant];
+          return value ? [value.headline, ...value.headline_source_terms, ...value.labels,
+            value.supporting_copy, value.footer].filter((item) => item !== null) : [];
+        })
+      : anchor.short_labels;
+    for (const value of [...anchor.suggested_elements, ...(textValues || [])]) {
       if (!text.includes(value)) issues.push(issue('invalid_illustration_shot_list', `${platform}/${anchor.image_id} shot list omits ${value}.`));
     }
   }
@@ -500,7 +551,7 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
   const expectedBrandValue = styleContext ? expectedBrand(styleContext, request.options.brand_override) : null;
   const expectedGeometryValue = styleContext ? expectedGeometry(styleContext) : null;
   const backend = plan.generation_backend;
-  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image-v2';
   const leaseBackend = lease ? expectedPlanBackend(
     lease,
     bounded ? plan.generation_geometry?.requested_dimensions : null
@@ -528,11 +579,8 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
       && /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(anchor.image_id || '')
       && ['placement', 'source_excerpt', 'core_meaning', 'structure', 'visual_metaphor', 'main_action', 'qa_risk'].every((key) => nonempty(anchor[key]))
       && stringList(anchor.suggested_elements) && (bounded
-        ? ['icons_only', 'allowlist'].includes(anchor.text_mode)
-          && stringArray(anchor.short_labels)
-          && (anchor.text_mode !== 'icons_only' || anchor.short_labels.length === 0)
-          && (anchor.text_mode !== 'allowlist' || anchor.short_labels.length > 0)
-          && (!/(?:workflow|process|checklist)/i.test(anchor.structure) || anchor.text_mode === 'icons_only')
+        ? validTextContent(anchor.text_content, styleContext?.spec?.textPolicy, anchor,
+            sourceText, selection?.title || '')
         : stringList(anchor.short_labels))
       && sourceText.includes(anchor.source_excerpt));
   const validPlan = exactKeys(plan, planKeys) && plan.schema_version === 1
@@ -553,6 +601,11 @@ async function validatePlanTask(runDir, context, state, platform, selection, tit
     && plan.shot_list.path === paths.shotList && /^[a-f0-9]{64}$/.test(plan.shot_list.sha256 || '')
     && plan.shot_list.sha256 === await fileSha256(shotPath) && plan.residual_risk === 'none';
   if (!validPlan) issues.push(issue('invalid_illustration_plan', `${platform} plan does not match its request, style, geometry, or source anchors.`));
+  if (bounded && anchors.some((anchor) => !validTextContent(
+    anchor?.text_content, styleContext?.spec?.textPolicy, anchor, sourceText, selection?.title || ''
+  ))) {
+    issues.push(issue('illustration_text_policy_violation', `${platform} plan contains empty, ungrounded, or out-of-policy visual text.`));
+  }
   if (request.options.max_images !== null && plan.image_count > request.options.max_images) {
     issues.push(issue('illustration_count_exceeds_max', `${platform} plan exceeds max_images.`));
   }
@@ -601,19 +654,17 @@ async function validateVisualGate(runDir, state, tasks, issues) {
 
 export async function validateIllustrationPlans(runDir, state) {
   const issues = [];
-  const workingState = { ...state, __runDir: resolve(runDir) };
   const context = await loadRunContext(runDir, state, issues);
   if (!context) return { issues, tasks: [] };
   const title = await approvedSelections(runDir, context.runReal, state, issues);
   const coverage = await validateVisualCoverageSet(runDir, state);
   issues.push(...coverage.issues);
-  const lease = coverage.legacy ? { issues: [], value: null }
-    : await validateBackendLeaseFile(runDir, state);
+  const lease = await validateBackendLeaseFile(runDir, state, { consumer: 'body_visual' });
   issues.push(...lease.issues);
   const tasks = [];
   for (const platform of platforms) {
     const task = await validatePlanTask(
-      runDir, context, workingState, platform, title.selections.get(platform), title.binding,
+      runDir, context, state, platform, title.selections.get(platform), title.binding,
       coverage.coverages.get(platform), lease.value
     );
     tasks.push({ platform, ...task });
@@ -827,11 +878,36 @@ async function validateGenerateTask(runDir, runReal, state, task) {
 }
 
 function boundedQueuePath(state) {
-  const attempt = state.stages.visual.attempt;
+  const attempt = bodyVisualAttempt(state);
   return `07-visual/generation-queue${attempt === 1 ? '' : `.v${String(attempt).padStart(3, '0')}`}.json`;
 }
 
 async function validateBoundedChild(runDir, runReal, state, task, suite, anchor, child, issues) {
+  if (child?.status === 'pass' && child.selected_attempt === null && child.reuse) {
+    const row = child.reuse;
+    const requestPath = await safeFile(runDir, runReal, row.request_path, issues, 'missing_illustration_reuse_control');
+    const resultPath = await safeFile(runDir, runReal, row.result_path, issues, 'missing_illustration_reuse_control');
+    const qaPath = await safeFile(runDir, runReal, row.qa?.path, issues, 'missing_illustration_reuse_qa');
+    const imagePath = await safeFile(runDir, runReal, row.image?.path, issues, 'missing_illustration_reuse_image');
+    if (!requestPath || !resultPath || !qaPath || !imagePath) return null;
+    const [request, result] = await Promise.all([readJson(requestPath), readJson(resultPath)]);
+    const valid = validReuseFingerprint(row.reuse_fingerprint)
+      && row.reuse_fingerprint.input_sha256 === child.reuse_input_sha256
+      && row.reuse_fingerprint.qa_sha256 === await fileSha256(qaPath)
+      && row.reuse_fingerprint.image_sha256 === await fileSha256(imagePath)
+      && row.result_sha256 === await fileSha256(resultPath)
+      && row.qa.sha256 === await fileSha256(qaPath)
+      && row.image.sha256 === await fileSha256(imagePath)
+      && result.status === 'PASS' && result.image?.image_id === anchor.image_id
+      && result.image?.delivery?.path === row.image.path
+      && result.image?.delivery?.sha256 === row.image.sha256
+      && request.anchor?.text_content && !Object.hasOwn(request.anchor, 'text_mode');
+    if (!valid) {
+      issues.push(issue('invalid_illustration_reuse', `${task.platform}/${anchor.image_id} reuse fingerprint or PASS artifacts are stale.`));
+      return null;
+    }
+    return { row, request, result, reused: true };
+  }
   if (!child || child.status !== 'pass' || !Number.isInteger(child.selected_attempt)
     || child.selected_attempt < 1 || child.selected_attempt > 3
     || !Array.isArray(child.attempts) || child.attempts.length !== child.selected_attempt) {
@@ -853,16 +929,27 @@ async function validateBoundedChild(runDir, runReal, state, task, suite, anchor,
     }
     if (!request || !result) continue;
     const attempt = index + 1;
-    const expectedTask = `illustration:${state.run_id}:${task.platform}:${task.plan.variant}:${anchor.image_id}:candidate-${String(attempt).padStart(2, '0')}:visual-${String(state.stages.visual.attempt).padStart(3, '0')}`;
+    const expectedTask = `illustration:${state.run_id}:${task.platform}:${task.plan.variant}:${anchor.image_id}:candidate-${String(attempt).padStart(2, '0')}:body-${String(bodyVisualAttempt(state)).padStart(3, '0')}`;
     const artifactPaths = [...new Set(Object.values(request.artifacts || {}))];
     const artifactsValid = Array.isArray(result.artifacts)
       && result.artifacts.length === artifactPaths.length
       && result.artifacts.every((artifact) => artifactPaths.includes(artifact?.path)
         && /^[a-f0-9]{64}$/.test(artifact?.sha256 || ''));
-    if (row.attempt !== attempt || request.task_id !== expectedTask || row.task_id !== expectedTask
+    const priorResult = index > 0 && fileExists(join(runDir, child.attempts[index - 1].result_path))
+      ? await readJson(join(runDir, child.attempts[index - 1].result_path)) : null;
+    const priorRequest = index > 0 && fileExists(join(runDir, child.attempts[index - 1].request_path))
+      ? await readJson(join(runDir, child.attempts[index - 1].request_path)) : null;
+    const expectedTextVariant = priorResult?.issues?.some((item) => item.code === 'illustration_candidate_text')
+      ? 'compact' : priorRequest?.text_variant || 'primary';
+    if (row.attempt !== attempt || request.schema_version !== 2
+      || request.contract !== 'content-production-provider/v2'
+      || Object.hasOwn(request, 'run_dir') || request.body_attempt !== bodyVisualAttempt(state)
+      || request.text_variant !== expectedTextVariant
+      || result.schema_version !== 2 || result.contract !== 'content-production-provider/v2'
+      || request.task_id !== expectedTask || row.task_id !== expectedTask
       || request.mode !== 'generate_image' || request.candidate_attempt !== attempt
       || request.platform !== task.platform || request.anchor?.image_id !== anchor.image_id
-      || request.parent_task_id !== `illustration:${state.run_id}:${task.platform}:${task.plan.variant}:generate:attempt-${String(state.stages.visual.attempt).padStart(3, '0')}`
+      || request.parent_task_id !== `illustration:${state.run_id}:${task.platform}:${task.plan.variant}:generate:attempt-${String(bodyVisualAttempt(state)).padStart(3, '0')}`
       || !isDeepStrictEqual(request.anchor, anchor)
       || !isDeepStrictEqual(request.style, task.plan.style)
       || !isDeepStrictEqual(request.brand, task.plan.brand)
@@ -996,6 +1083,7 @@ async function validateBoundedGenerateTask(runDir, runReal, state, task, queue) 
     issues.push(issue('undeclared_illustration_artifact', `${platform} bounded attempt contains missing or undeclared prompts/images.`));
   }
   for (const qaRow of suite.set_qa_rounds || []) {
+    if (qaRow.reused) continue;
     declaredControls.add(qaRow.request_path);
     declaredControls.add(qaRow.result_path);
     if (fileExists(join(runDir, qaRow.request_path))) {
@@ -1017,14 +1105,23 @@ async function validateBoundedGenerateTask(runDir, runReal, state, task, queue) 
   } else {
     const qaRequest = await readJson(qaRequestPath);
     const qaResult = await readJson(qaResultPath);
-    const expectedQaInputs = selected.map((value, index) => ({
+    const expectedQaInputs = selected.every(Boolean) ? selected.map((value, index) => ({
       role: 'illustration_child_result',
       image_id: plan.anchors[index].image_id,
       path: value.row.result_path,
       sha256: value.row.result_sha256
-    }));
-    if (qaRequest.mode !== 'set_qa' || qaRequest.parent_task_id !== request.task_id
-      || !isDeepStrictEqual(qaRequest.inputs, expectedQaInputs)
+    })) : null;
+    const currentQa = !lastQa.reused && qaRequest.body_attempt === bodyVisualAttempt(state)
+      && qaRequest.parent_task_id === request.task_id
+      && expectedQaInputs !== null && isDeepStrictEqual(qaRequest.inputs, expectedQaInputs);
+    const reusedQa = lastQa.reused === true && suite.reuse?.mode === 'suite'
+      && lastQa.source_body_attempt === suite.reuse.source_body_attempt
+      && suite.reuse.source_set_qa?.request?.path === lastQa.request_path
+      && suite.reuse.source_set_qa?.result?.path === lastQa.result_path;
+    if (qaRequest.schema_version !== 2 || qaRequest.contract !== 'content-production-provider/v2'
+      || Object.hasOwn(qaRequest, 'run_dir') || !currentQa && !reusedQa
+      || qaResult.schema_version !== 2 || qaResult.contract !== 'content-production-provider/v2'
+      || qaRequest.mode !== 'set_qa'
       || qaResult.status !== 'PASS' || qaResult.set_qa?.status !== 'PASS'
       || qaResult.request_sha256 !== await fileSha256(qaRequestPath)
       || lastQa.result_sha256 !== await fileSha256(qaResultPath)
@@ -1072,7 +1169,7 @@ export async function validateIllustrationGeneration(runDir, state) {
   const issues = [...planValidation.issues];
   const decisionValidation = await validateCurrentVisualDecision(runDir, state, planValidation.tasks);
   issues.push(...decisionValidation.issues);
-  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image-v2';
   if (state.gates?.visual?.status !== 'approved') {
     issues.push(issue('visual_plan_not_approved', 'Illustration generation requires the current visual plan gate to be approved.'));
   }
@@ -1092,27 +1189,47 @@ export async function validateIllustrationGeneration(runDir, state) {
       event?.event !== 'queue_dispatched' || Number.isInteger(event.active_generation_count)
         && event.active_generation_count <= 4
         && Object.values(event.active_generation_by_suite || {}).every((count) => Number.isInteger(count) && count <= 2));
-    if (queue?.schema_version !== 1 || queue.profile !== 'bounded-per-image'
-      || queue.run_id !== state.run_id || queue.visual_attempt !== state.stages.visual.attempt
+    if (queue?.schema_version !== 2 || queue.profile !== 'bounded-per-image-v2'
+      || queue.run_id !== state.run_id || queue.body_attempt !== bodyVisualAttempt(state)
       || queue.global_limit !== 4 || queue.suite_limit !== 2 || queue.status !== 'completed'
-      || queue.cover?.status !== 'pass' || !validEvents) {
+      || Object.hasOwn(queue, 'cover') || !validEvents) {
       issues.push(issue('invalid_illustration_queue', 'Bounded illustration queue is not a terminal 4-global/2-suite PASS.'));
     }
     for (const [platform, suite] of Object.entries(queue?.suites || {})) {
       const canary = suite.children?.[suite.canary_id];
-      const canaryComplete = canary?.attempts?.find((row) => row.attempt === canary.selected_attempt)?.completed_at;
+      const canaryComplete = canary?.reuse ? queue.created_at
+        : canary?.attempts?.find((row) => row.attempt === canary.selected_attempt)?.completed_at;
       const laterStarts = (suite.image_order || []).slice(1).flatMap((imageId) =>
         suite.children?.[imageId]?.attempts?.map((row) => row.started_at) || []).filter(Boolean);
       if (!canaryComplete || laterStarts.some((startedAt) => Date.parse(startedAt) < Date.parse(canaryComplete))) {
         issues.push(issue('illustration_canary_order_invalid', `${platform} dispatched non-canary images before its canary passed.`));
       }
     }
+    const canaryCompletedAt = Object.values(queue?.suites || {}).map((suite) => {
+      const canary = suite.children?.[suite.canary_id];
+      return canary?.reuse ? queue.created_at
+        : canary?.attempts?.find((row) => row.attempt === canary.selected_attempt)?.completed_at;
+    });
+    const globalBarrierAt = canaryCompletedAt.every(Boolean)
+      ? Math.max(...canaryCompletedAt.map((value) => Date.parse(value))) : null;
+    const nonCanaryStarts = [];
+    for (const suite of Object.values(queue?.suites || {})) {
+      for (const imageId of (suite.image_order || []).slice(1)) {
+        for (const row of suite.children?.[imageId]?.attempts || []) {
+          nonCanaryStarts.push(...(row.leases?.map((lease) => lease.started_at) || [row.started_at]));
+        }
+      }
+    }
+    if (globalBarrierAt === null
+      || nonCanaryStarts.some((startedAt) => Date.parse(startedAt) < globalBarrierAt)) {
+      issues.push(issue('illustration_global_canary_barrier_invalid', 'Non-canary work started before all five Canary images passed.'));
+    }
   }
   const tasks = [];
   for (const task of planValidation.tasks) {
     const generation = bounded
-      ? await validateBoundedGenerateTask(runDir, runReal, { ...state, __runDir: resolve(runDir) }, task, queue)
-      : await validateGenerateTask(runDir, runReal, { ...state, __runDir: resolve(runDir) }, task);
+      ? await validateBoundedGenerateTask(runDir, runReal, state, task, queue)
+      : await validateGenerateTask(runDir, runReal, state, task);
     tasks.push({ ...task, generation });
     issues.push(...generation.issues);
   }

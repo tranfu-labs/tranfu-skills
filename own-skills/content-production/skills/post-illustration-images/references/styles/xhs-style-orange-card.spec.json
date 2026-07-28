@@ -94,6 +94,13 @@
     "defaultEnabled": true,
     "userOverrideAllowed": true
   },
+  "textPolicy": {
+    "defaultMode": "allowlist",
+    "iconsOnlyAllowed": false,
+    "headline": { "minCharacters": 2, "maxCharacters": 14 },
+    "labels": { "minItems": 2, "maxItems": 5, "maxCharactersPerItem": 8 }
+  },
+  "generationPrompt": "Create a warm orange Xiaohongshu knowledge card with a cream torn-paper center, bold black hierarchy, restrained green and yellow accents, and simple hand-drawn icons.",
   "inputHandling": {
     "preserveNativeOutput": true,
     "ratioTolerance": 0.002,

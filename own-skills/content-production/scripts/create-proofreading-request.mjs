@@ -88,7 +88,7 @@ try {
   }
   const state = await readJson(statePath);
   const editing = state.stages?.editing;
-  if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'editing'
+  if (state.schema_version !== 3 || state.status !== 'running' || state.current_stage !== 'editing'
     || editing?.status !== 'running' || !Number.isInteger(editing?.attempt) || editing.attempt < 1) {
     add(blockers, 'proofreading_request_stage_mismatch', 'Run editing stage must be running with a positive attempt.', {
       current_stage: state.current_stage,
@@ -157,17 +157,16 @@ try {
   }
 
   if (blockers.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, blockers }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, blockers }, 2);
   } else {
     await ensureDir(reviewsDir);
     const input = { role: 'draft', path: draftRelative, sha256: await fileSha256(draftPath) };
     const request = {
-      schema_version: 1,
-      contract: 'content-production-provider/v1',
+      schema_version: 2,
+      contract: 'content-production-provider/v2',
       task_id: `proofread:${state.run_id}:${args.platform}:${args.variant}:attempt-${String(editing.attempt).padStart(3, '0')}`,
       capability: 'proofreading',
       provider_contract: 'proofreading-v1',
-      run_dir: runDir,
       run_mode: state.run_mode,
       mode: 'proofread',
       platform: args.platform,
@@ -179,7 +178,7 @@ try {
       interaction_policy: 'return_to_orchestrator'
     };
     await writeJson(requestPath, request);
-    emitJson({ status: 'PASS', task_id: request.task_id, request_path: requestPath, input_count: 1 });
+    emitJson({ status: 'PASS', task_id: request.task_id, request_path: relativeTo(runDir, requestPath), input_count: 1 });
   }
 } catch (error) {
   emitJson({ status: 'BLOCKED', blockers: [{ code: 'proofreading_request_build_failed', message: error.message, resume_from: 'editing' }] }, 2);

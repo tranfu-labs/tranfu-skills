@@ -4,12 +4,13 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { findRunDirFromRequest } from '../../../scripts/lib.mjs';
 
-const CONTRACT = 'content-production-provider/v1';
+const CONTRACT = 'content-production-provider/v2';
 const PROVIDER = 'illustration-v1';
 const REQUEST_KEYS = [
-  'schema_version', 'contract', 'provider_contract', 'capability', 'task_id', 'run_dir',
-  'run_mode', 'mode', 'visual_attempt', 'round', 'platform', 'provider_platform',
+  'schema_version', 'contract', 'provider_contract', 'capability', 'task_id',
+  'run_mode', 'mode', 'body_attempt', 'round', 'platform', 'provider_platform',
   'variant', 'parent_task_id', 'inputs', 'output_dir', 'review_path',
   'expected_artifacts', 'interaction_policy'
 ];
@@ -87,11 +88,11 @@ async function validateRequest(input) {
     return context;
   }
   const request = context.request;
-  context.runDir = resolve(request.run_dir || '');
   try {
+    context.runDir = await findRunDirFromRequest(context.requestPath);
     const stat = await lstat(context.runDir);
     context.runReal = await realpath(context.runDir);
-    if (!isAbsolute(request.run_dir || '') || stat.isSymbolicLink() || !stat.isDirectory()
+    if (stat.isSymbolicLink() || !stat.isDirectory()
       || !inside(context.runDir, context.requestPath)) throw new Error('run_dir or request path is unsafe.');
   } catch (error) {
     context.issues.push(issue('invalid_illustration_set_qa_run', error.message));
@@ -102,11 +103,11 @@ async function validateRequest(input) {
     context.issues.push(issue('invalid_illustration_set_qa_state', error.message));
   }
   const expectedProvider = request.platform === 'xiaohongshu' ? 'xhs' : request.platform;
-  const expectedTask = `illustration:${state?.run_id || ''}:${request.platform}:${request.variant}:set-qa:round-${String(request.round).padStart(2, '0')}:visual-${String(request.visual_attempt).padStart(3, '0')}`;
-  const visualVersion = request.visual_attempt === 1 ? '' : `/v${String(request.visual_attempt).padStart(3, '0')}`;
+  const expectedTask = `illustration:${state?.run_id || ''}:${request.platform}:${request.variant}:set-qa:round-${String(request.round).padStart(2, '0')}:body-${String(request.body_attempt).padStart(3, '0')}`;
+  const visualVersion = request.body_attempt === 1 ? '' : `/v${String(request.body_attempt).padStart(3, '0')}`;
   const control = `07-visual/${request.platform}/set-qa${visualVersion}/round-${String(request.round).padStart(2, '0')}`;
   const requestRelative = relative(context.runDir, context.requestPath).replaceAll('\\', '/');
-  const parentSuffix = request.visual_attempt === 1 ? '' : `.v${String(request.visual_attempt).padStart(3, '0')}`;
+  const parentSuffix = request.body_attempt === 1 ? '' : `.v${String(request.body_attempt).padStart(3, '0')}`;
   const parentPath = resolve(context.runDir, `07-visual/${request.platform}/illustration-generate${parentSuffix}.request.json`);
   let parent = null;
   let plan = null;
@@ -122,12 +123,12 @@ async function validateRequest(input) {
   } catch (error) {
     context.issues.push(issue('illustration_set_qa_parent_invalid', error.message));
   }
-  if (!exactKeys(request, REQUEST_KEYS) || request.schema_version !== 1 || request.contract !== CONTRACT
+  if (!exactKeys(request, REQUEST_KEYS) || request.schema_version !== 2 || request.contract !== CONTRACT
     || request.provider_contract !== PROVIDER || request.capability !== 'illustration'
     || request.mode !== 'set_qa' || request.interaction_policy !== 'return_to_orchestrator'
     || !['wechat', 'xiaohongshu', 'zhihu', 'weibo', 'toutiao'].includes(request.platform)
     || request.provider_platform !== expectedProvider || !['A', 'B'].includes(request.variant)
-    || !Number.isInteger(request.visual_attempt) || !Number.isInteger(request.round) || request.round < 1
+    || !Number.isInteger(request.body_attempt) || !Number.isInteger(request.round) || request.round < 1
     || request.task_id !== expectedTask || request.parent_task_id !== parent?.task_id
     || !Array.isArray(request.inputs) || !request.inputs.length
     || request.output_dir !== `07-visual/${request.platform}`
@@ -135,10 +136,12 @@ async function validateRequest(input) {
     || JSON.stringify(request.expected_artifacts) !== JSON.stringify([request.review_path])) {
     context.issues.push(issue('invalid_illustration_set_qa_request', 'Request does not match the bounded illustration set QA contract.'));
   }
-  if (state?.schema_version !== 2 || state?.status !== 'running' || state?.current_stage !== 'visual'
-    || state?.stages?.visual?.status !== 'running' || state?.stages?.visual?.attempt !== request.visual_attempt
+  if (state?.schema_version !== 3 || state?.status !== 'running' || state?.current_stage !== 'visual'
+    || state?.stages?.visual?.status !== 'running'
+    || state?.stages?.visual?.body_visual?.status !== 'running'
+    || state?.stages?.visual?.body_visual?.attempt !== request.body_attempt
     || state?.gates?.visual?.status !== 'approved'
-    || state?.capabilities?.providers?.illustration?.profile !== 'bounded-per-image') {
+    || state?.capabilities?.providers?.illustration?.profile !== 'bounded-per-image-v2') {
     context.issues.push(issue('illustration_set_qa_stage_mismatch', 'Set QA must target the approved current bounded visual attempt.'));
   }
   const ids = [];
@@ -215,7 +218,7 @@ async function finalize(context) {
   }
   const status = issues.length ? 'BLOCKED' : review.status;
   const result = {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request.task_id,
@@ -241,7 +244,7 @@ async function finalize(context) {
 
 async function block(context, reason) {
   const result = {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request.task_id,

@@ -49,7 +49,7 @@ try {
   const runRealDir = await realpath(runDir);
   const state = await readJson(statePath);
 
-  if (state.schema_version !== 2 || state.input_mode !== 'brief' || state.mode !== 'brief') {
+  if (state.schema_version !== 3 || state.input_mode !== 'brief' || state.mode !== 'brief') {
     add(issues, 'topic_request_not_applicable', 'topic_planning request is only valid for a schema v2 brief run.');
   }
   if (state.status !== 'running' || state.current_stage !== 'discovery' || state.gates?.topic?.status !== 'pending') {
@@ -142,15 +142,14 @@ try {
   }
 
   if (issues.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, blockers: issues }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, blockers: issues }, 2);
   } else {
     const request = {
-      schema_version: 1,
-      contract: 'content-production-provider/v1',
+      schema_version: 2,
+      contract: 'content-production-provider/v2',
       task_id: `topic-planning:${state.run_id}`,
       capability: 'topic_planning',
       provider_contract: 'topic-planning-v1',
-      run_dir: runDir,
       run_mode: state.run_mode,
       mode: 'plan',
       inputs,
@@ -160,7 +159,10 @@ try {
       interaction_policy: 'return_to_orchestrator'
     };
     await writeJson(outputPath, request);
-    emitJson({ status: 'PASS', task_id: request.task_id, request_path: outputPath, input_count: inputs.length });
+    emitJson({
+      status: 'PASS', task_id: request.task_id,
+      request_path: relative(runDir, outputPath).replaceAll('\\', '/'), input_count: inputs.length
+    });
   }
 } catch (error) {
   emitJson({ status: 'BLOCKED', blockers: [{ code: 'topic_request_build_failed', message: error.message, resume_from: 'discovery' }] }, 2);

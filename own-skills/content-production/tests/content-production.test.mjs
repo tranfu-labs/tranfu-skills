@@ -35,7 +35,7 @@ const capabilityMarkers = {
   wechat_layout: ['name: format-content', 'content-production-provider: wechat-layout-v1']
 };
 const capabilityIds = Object.keys(capabilityMarkers);
-const capabilityProfiles = { proofreading: 'markdown-alignment', illustration: 'bounded-per-image' };
+const capabilityProfiles = { proofreading: 'markdown-alignment', illustration: 'bounded-per-image-v2' };
 
 function tempDir(name) {
   return mkdtempSync(join(tmpdir(), `content-production-${name}-`));
@@ -167,12 +167,11 @@ function writeResearchProviderEnvelope(runDir, { status = 'PASS', issue = null }
   const request = existsSync(requestPath)
     ? readJson(requestPath)
     : {
-        schema_version: 1,
-        contract: 'content-production-provider/v1',
+        schema_version: 2,
+        contract: 'content-production-provider/v2',
         task_id: `source-research:${state.run_id}`,
         capability: 'source_research',
         provider_contract: 'source-research-v1',
-        run_dir: runDir,
         run_mode: state.run_mode,
         mode: 'research',
         inputs: [],
@@ -183,8 +182,8 @@ function writeResearchProviderEnvelope(runDir, { status = 'PASS', issue = null }
       };
   write(requestPath, JSON.stringify(request, null, 2));
   write(join(runDir, '02-research', 'provider-result.json'), JSON.stringify({
-    schema_version: 1,
-    contract: 'content-production-provider/v1',
+    schema_version: 2,
+    contract: 'content-production-provider/v2',
     provider_contract: 'source-research-v1',
     task_id: request.task_id,
     status,
@@ -198,10 +197,26 @@ function writeResearchProviderEnvelope(runDir, { status = 'PASS', issue = null }
 }
 
 function run(script, args = []) {
-  return spawnSync(process.execPath, [join(scriptsDir, script), ...args], {
+  const result = spawnSync(process.execPath, [join(scriptsDir, script), ...args], {
     cwd: skillDir,
     encoding: 'utf8'
   });
+  if (result.stdout) {
+    try {
+      const value = JSON.parse(result.stdout);
+      const rootIndex = args.indexOf('--root');
+      if (typeof value.run_path === 'string' && rootIndex >= 0) {
+        value.run_dir = join(args[rootIndex + 1], value.run_path);
+      }
+      if (typeof args[0] === 'string' && args[0].startsWith('/')) {
+        for (const key of ['request_path', 'decision_path']) {
+          if (typeof value[key] === 'string' && !value[key].startsWith('/')) value[key] = join(args[0], value[key]);
+        }
+      }
+      result.stdout = `${JSON.stringify(value)}\n`;
+    } catch {}
+  }
+  return result;
 }
 
 function runCoverProvider(args = []) {
@@ -356,12 +371,11 @@ ${section.repeat(4)}`;
         `${baseRelative}/reviews/proofread-result.json`
       ];
       const proofreadRequest = {
-        schema_version: 1,
-        contract: 'content-production-provider/v1',
+        schema_version: 2,
+        contract: 'content-production-provider/v2',
         task_id: `proofread:fixture-run:${platform}:${variant}:attempt-001`,
         capability: 'proofreading',
         provider_contract: 'proofreading-v1',
-        run_dir: runDir,
         run_mode: runMode,
         mode: 'proofread',
         platform,
@@ -379,8 +393,8 @@ ${section.repeat(4)}`;
         'logic_review', 'humanize_review', 'detail_review', 'proofread_result'
       ];
       write(join(base, 'reviews', 'proofreading.result.json'), JSON.stringify({
-        schema_version: 1,
-        contract: 'content-production-provider/v1',
+        schema_version: 2,
+        contract: 'content-production-provider/v2',
         provider_contract: 'proofreading-v1',
         task_id: proofreadRequest.task_id,
         request_sha256: sha(join(base, 'reviews', 'proofreading.request.json')),
@@ -409,12 +423,11 @@ ${section.repeat(4)}`;
       }
       const titleOutputDir = `06-selection/providers/${platform}/${variant}`;
       const titleRequest = {
-        schema_version: 1,
-        contract: 'content-production-provider/v1',
+        schema_version: 2,
+        contract: 'content-production-provider/v2',
         task_id: `title:fixture-run:${platform}:${variant}:attempt-001`,
         capability: 'title_generation',
         provider_contract: 'title-generation-v1',
-        run_dir: runDir,
         run_mode: runMode,
         mode: 'generate_titles',
         platform,
@@ -434,8 +447,8 @@ ${section.repeat(4)}`;
       write(titleRequestPath, JSON.stringify(titleRequest, null, 2));
       const titleCandidatePath = writeTitleProviderArtifact(runDir, titleRequest);
       write(titleResultPath, JSON.stringify({
-        schema_version: 1,
-        contract: 'content-production-provider/v1',
+        schema_version: 2,
+        contract: 'content-production-provider/v2',
         provider_contract: 'title-generation-v1',
         task_id: titleRequest.task_id,
         request_sha256: sha(titleRequestPath),
@@ -844,16 +857,16 @@ test('provider result validator enforces task, output ownership, expected artifa
   const runDir = join(root, 'run');
   const outputDir = join(runDir, '02-research');
   const artifactPath = join(outputDir, 'brief.md');
-  const requestPath = join(root, 'request.json');
-  const resultPath = join(root, 'result.json');
+  const requestPath = join(runDir, 'controls', 'request.json');
+  const resultPath = join(runDir, 'controls', 'result.json');
+  write(join(runDir, 'run.json'), JSON.stringify({ schema_version: 3, run_id: 'run' }, null, 2));
   write(artifactPath, '# Research brief\n\nVerified.');
   write(requestPath, JSON.stringify({
-    schema_version: 1,
-    contract: 'content-production-provider/v1',
+    schema_version: 2,
+    contract: 'content-production-provider/v2',
     task_id: 'research:main',
     capability: 'source_research',
     provider_contract: 'source-research-v1',
-    run_dir: runDir,
     run_mode: 'autonomous',
     mode: 'research',
     inputs: [],
@@ -862,8 +875,8 @@ test('provider result validator enforces task, output ownership, expected artifa
     interaction_policy: 'return_to_orchestrator'
   }, null, 2));
   write(resultPath, JSON.stringify({
-    schema_version: 1,
-    contract: 'content-production-provider/v1',
+    schema_version: 2,
+    contract: 'content-production-provider/v2',
     provider_contract: 'source-research-v1',
     task_id: 'research:main',
     status: 'PASS',
@@ -894,8 +907,8 @@ test('provider result validator enforces task, output ownership, expected artifa
   assert.ok(JSON.parse(symlinked.stdout).issues.some((item) => item.code === 'provider_artifact_symlink'));
 
   write(resultPath, JSON.stringify({
-    schema_version: 1,
-    contract: 'content-production-provider/v1',
+    schema_version: 2,
+    contract: 'content-production-provider/v2',
     provider_contract: 'source-research-v1',
     task_id: 'research:main',
     status: 'BLOCKED',
@@ -1594,7 +1607,7 @@ test('semantic review reuses only an identical engine and hash tuple', () => {
   const report = readJson(targetReport);
   assert.equal(report.semantic_review.review_mode, 'reused');
   assert.equal(report.semantic_review.reviewer, 'fixture-reviewer');
-  assert.equal(report.semantic_review.reused_from.path, sourceReport);
+  assert.equal(report.semantic_review.reused_from.path, 'source.json');
   assert.equal(report.semantic_review.reused_from.sha256, sha(sourceReport));
 });
 
@@ -1677,18 +1690,14 @@ test('final verification accepts a complete package and rejects a broken image r
   assert.ok(report.issues.some((item) => item.code === 'completed_artifact_drift'));
 });
 
-test('final verification accepts provider-owned WeChat cover metadata without package fields', () => {
+test('a completed V2 run cannot start a new V3 provider-owned cover attempt', () => {
   const root = tempDir('provider-cover');
   const runDir = join(root, 'run');
   baseRun(runDir);
-  const metadataPath = replaceLegacyCoverWithProvider(runDir);
-  const metadata = readJson(join(runDir, metadataPath));
-  assert.equal(Object.hasOwn(metadata, 'publish_file'), false);
-  assert.equal(Object.hasOwn(metadata, 'optimization'), false);
-
-  const result = run('verify-run.mjs', [runDir]);
-  assert.equal(result.status, 0, result.stdout);
-  assert.equal(JSON.parse(result.stdout).status, 'READY');
+  const result = run('create-wechat-cover-request.mjs', [runDir]);
+  assert.equal(result.status, 2, result.stdout);
+  const codes = JSON.parse(result.stdout).blockers.map((item) => item.code);
+  assert.ok(codes.includes('wechat_cover_stage_mismatch'));
 });
 
 test('final verification requires the completed editing stage to retain exact 90-file bindings', () => {
@@ -1965,13 +1974,19 @@ function prepareTitleStageRun(runDir) {
   baseRun(runDir);
   const statePath = join(runDir, 'run.json');
   const state = readJson(statePath);
+  state.schema_version = 3;
   state.status = 'running';
   state.current_stage = 'titles';
   state.resume = { next_stage: 'titles', reason: 'stage_pending' };
   state.stages.titles = { status: 'pending', attempt: 0, artifacts: [], error: null };
-  for (const stage of ['visual', 'package', 'final_qa']) {
+  for (const stage of ['package', 'final_qa']) {
     state.stages[stage] = { status: 'pending', attempt: state.stages[stage]?.attempt || 0, artifacts: [], error: null };
   }
+  state.stages.visual = {
+    status: 'pending', revision: state.stages.visual?.revision || 0, artifacts: [], error: null,
+    body_visual: { status: 'pending', attempt: 0, artifacts: [], error: null },
+    wechat_cover: { status: 'pending', attempt: 0, artifacts: [], error: null }
+  };
   for (const gate of ['titles', 'visual', 'final']) {
     state.gates[gate] = { status: 'pending', revision: state.gates[gate]?.revision || 0, decision_ref: null, bound_artifacts: [] };
   }
@@ -2345,8 +2360,8 @@ test('title requests aggregate ten isolated provider tasks into 34 candidates an
   assert.equal(aggregated.status, 0, aggregated.stderr || aggregated.stdout);
   const aggregateResult = JSON.parse(aggregated.stdout);
   assert.equal(aggregateResult.total_candidates, 34);
-  const titles = readJson(aggregateResult.titles_path);
-  const selection = readJson(aggregateResult.selection_path);
+  const titles = readJson(join(runDir, aggregateResult.titles_path));
+  const selection = readJson(join(runDir, aggregateResult.selection_path));
   assert.equal(selection.selections.length, 5);
   assert.ok(selection.selections.every((item) => item.variant === 'A' && item.title_id.endsWith('-A-1')));
   assert.ok(titles.platforms.weibo.A.candidates.every((item) => !item.title.includes('#') && /^#[^#]+#$/.test(item.topic_phrase)));

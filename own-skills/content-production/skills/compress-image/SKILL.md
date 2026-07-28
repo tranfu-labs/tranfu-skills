@@ -12,7 +12,7 @@ Compress one local image or a local directory with the bundled deterministic CLI
 ## Orchestrated provider
 
 Before the standalone workflow, inspect any structured request for
-`contract: content-production-provider/v1`, `capability: image_compression`,
+`contract: content-production-provider/v2`, `capability: image_compression`,
 `provider_contract: image-compression-v1`, or the marker below:
 
 ```text
@@ -49,7 +49,7 @@ CREATE A TODO LIST FOR THE TASKS BELOW, then execute the steps in order.
 3. Run the CLI with an absolute input path and `--json`:
 
    ```bash
-   node "<SKILL_ROOT>/scripts/main.mjs" "/absolute/input" --format webp --quality 80 --json
+   node "<SKILL_ROOT>/scripts/main.mjs" "<INPUT_PATH>" --format webp --quality 80 --json
    ```
 
 4. Inspect the exit status and JSON. If the exit status is nonzero or `failures` is non-empty, report both successful and failed files and do not claim complete success.
@@ -77,8 +77,8 @@ With `--json`, stdout MUST contain one report with this field structure:
 {
   "files": [
     {
-      "input": "/absolute/input.png",
-      "output": "/absolute/input-compressed.webp",
+      "input": "<INPUT_PATH>/input.png",
+      "output": "<OUTPUT_PATH>/input-compressed.webp",
       "inputBytes": 1000,
       "outputBytes": 600,
       "savedBytes": 400,

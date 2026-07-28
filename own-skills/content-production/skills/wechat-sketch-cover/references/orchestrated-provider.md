@@ -1,6 +1,6 @@
 # Content Production WeChat Cover Provider
 
-Use this route only for an orchestrator request with `contract: content-production-provider/v1`,
+Use this route only for an orchestrator request with `contract: content-production-provider/v2`,
 `capability: wechat_cover`, `provider_contract: wechat-cover-v1`, and `mode: generate_cover`.
 Standalone output ownership and its human delivery record remain unchanged when no provider marker
 is present.
@@ -27,7 +27,9 @@ The provider never edits the draft, decision, `run.json`, a gate, a package, or 
 
 ## Paths And Attempts
 
-The task ID is `wechat-cover:<run-id>:wechat:<variant>:attempt-NNN`. Visual attempt 1 uses:
+The request omits `run_dir`; the provider locates and verifies its owner `run.json` by ascending from
+the canonical request file. The task ID is `wechat-cover:<run-id>:wechat:<variant>:attempt-NNN`.
+WeChat cover attempt 1 uses:
 
 ```text
 07-visual/wechat-cover/wechat-cover.request.json
@@ -39,7 +41,7 @@ The task ID is `wechat-cover:<run-id>:wechat:<variant>:attempt-NNN`. Visual atte
 07-visual/wechat-cover/cover.json
 ```
 
-Visual attempt 2 preserves attempt 1 and uses `.v002` controls/core files plus
+WeChat cover attempt 2 preserves attempt 1 and uses `.v002` controls/core files plus
 `prompts/v002/attempt-01.md` and `candidates/v002/attempt-01.png`. The internal candidate number
 always restarts at 01 and is contiguous through at most 03. `RETRY_NO_CANDIDATE` has a prompt and no
 candidate; every other recorded attempt has one normalized candidate.

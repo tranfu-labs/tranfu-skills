@@ -119,6 +119,25 @@ Every installed spec keeps valid top-right brand geometry even when branding def
 
 At runtime, brand resolution is: explicit user choice, then template default, then compatibility default `true` for an older spec without `brandPolicy`. When the resolved value is false, the reserved area is not active, but its geometry remains valid.
 
+## Text contract
+
+Every installed spec must include a concise non-empty `generationPrompt` and this exact production
+policy:
+
+```json
+{
+  "textPolicy": {
+    "defaultMode": "allowlist",
+    "iconsOnlyAllowed": false,
+    "headline": { "minCharacters": 2, "maxCharacters": 14 },
+    "labels": { "minItems": 2, "maxItems": 5, "maxCharactersPerItem": 8 }
+  }
+}
+```
+
+The generation prompt describes only the reusable visual system. It must not contain a topic, title,
+claim, local path, or fixed content. Provider plans supply grounded readable text separately.
+
 ## QA contract
 
 `qa.json` contains `schemaVersion: 1`, top-level `hard_gates`, `dimension_averages`, and exactly three `calibration_images` with IDs `concept`, `process`, and `checklist`. The seven required dimensions are `color`, `typography`, `texture`, `illustration`, `spacing`, `composition`, and `cross_content_adaptability`.

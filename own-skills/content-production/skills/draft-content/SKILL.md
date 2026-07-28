@@ -33,7 +33,7 @@ facts and safety > approved outline > platform contract > audience > B style
 
 Contract marker: `content-production-provider: drafting-v1`.
 
-Before starting the independent workflow, inspect any supplied structured request. If it contains any provider marker (`contract: content-production-provider/v1`, `capability: drafting`, `provider_contract: drafting-v1`, or `content-production-provider: drafting-v1`), immediately follow `references/orchestrated-provider.md` and use `scripts/provider-contract.mjs`; validation still requires the complete matching tuple. The provider route is stateless: do not initialize a nested run, create an independent outline gate, ask the user questions, or write the independent `03-内容创作/` tree. An invalid or partial provider request must return its structured failure and must never fall through to the independent workflow.
+Before starting the independent workflow, inspect any supplied structured request. If it contains any provider marker (`contract: content-production-provider/v2`, `capability: drafting`, `provider_contract: drafting-v1`, or `content-production-provider: drafting-v1`), immediately follow `references/orchestrated-provider.md` and use `scripts/provider-contract.mjs`; validation still requires the complete matching tuple. The provider route is stateless: do not initialize a nested run, create an independent outline gate, ask the user questions, or write the independent `03-内容创作/` tree. An invalid or partial provider request must return its structured failure and must never fall through to the independent workflow.
 
 For every other request, ignore the provider route and preserve the independent procedure below unchanged.
 

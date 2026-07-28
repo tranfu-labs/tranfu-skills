@@ -41,7 +41,10 @@ function runCoverProvider(args = []) {
   });
 }
 
-function fixture({ title = '我们为什么把模拟面试做成了一个复盘工作台？', attempt = 1, visualApproved = true } = {}) {
+function fixture({
+  title = '我们为什么把模拟面试做成了一个复盘工作台？', attempt = 1,
+  visualApproved = true, schemaVersion = 3, bodyAttempt = attempt
+} = {}) {
   const runDir = mkdtempSync(join(tmpdir(), 'content-production-cover-'));
   const selections = platforms.map((platform) => {
     const variant = 'A';
@@ -72,7 +75,7 @@ function fixture({ title = '我们为什么把模拟面试做成了一个复盘�
   }, null, 2));
   const bind = (path) => ({ path, sha256: sha(join(runDir, path)) });
   write(join(runDir, 'run.json'), JSON.stringify({
-    schema_version: 2,
+    schema_version: schemaVersion,
     run_id: 'fixture-run',
     run_mode: 'reviewed',
     status: 'running',
@@ -82,13 +85,18 @@ function fixture({ title = '我们为什么把模拟面试做成了一个复盘�
       providers: {
         wechat_cover: {
           status: 'PASS', contract: 'wechat-cover-v1',
-          skill_path: coverSkill, skill_sha256: sha(coverSkill)
+          skill_ref: { root: 'SKILL_ROOT', path: 'skills/wechat-sketch-cover/SKILL.md' },
+          skill_sha256: sha(coverSkill)
         }
       }
     },
     stages: {
       titles: { status: 'completed', attempt: 1, artifacts: [] },
-      visual: { status: 'running', attempt, artifacts: [] },
+      visual: schemaVersion === 3 ? {
+        status: 'running', revision: 1, artifacts: [],
+        body_visual: { status: 'running', attempt: bodyAttempt, artifacts: [], error: null },
+        wechat_cover: { status: 'running', attempt, artifacts: [], error: null }
+      } : { status: 'running', attempt, artifacts: [] },
       package: { status: 'pending', attempt: 0, artifacts: [] },
       final_qa: { status: 'pending', attempt: 0, artifacts: [] }
     },
@@ -112,13 +120,16 @@ function fixture({ title = '我们为什么把模拟面试做成了一个复盘�
     invalidations: [],
     history: []
   }, null, 2));
+  const lease = run('backend-lease.mjs', [runDir, 'create', '--native-status', 'available']);
+  assert.equal(lease.status, 0, lease.stderr || lease.stdout);
   return { runDir, selection: selections[0], decisionPath };
 }
 
-function createValidCover(runDir, { backendHint = 'configured-api' } = {}) {
+function createValidCover(runDir, { backendHint = 'runtime-native' } = {}) {
   const built = run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', backendHint]);
   assert.equal(built.status, 0, built.stderr || built.stdout);
-  const requestPath = JSON.parse(built.stdout).request_path;
+  const requestRelative = JSON.parse(built.stdout).request_path;
+  const requestPath = join(runDir, requestRelative);
   const request = readJson(requestPath);
   const suffix = request.attempt === 1 ? '' : `.v${String(request.attempt).padStart(3, '0')}`;
   const versionDir = request.attempt === 1 ? '' : `v${String(request.attempt).padStart(3, '0')}/`;
@@ -148,7 +159,7 @@ function createValidCover(runDir, { backendHint = 'configured-api' } = {}) {
     attempt: request.attempt,
     platform: 'wechat',
     variant: request.variant,
-    request: { path: requestPath.slice(runDir.length + 1), sha256: sha(requestPath) },
+    request: { path: requestRelative, sha256: sha(requestPath) },
     selection: request.selection,
     inputs: request.inputs,
     style: {
@@ -159,7 +170,11 @@ function createValidCover(runDir, { backendHint = 'configured-api' } = {}) {
       normalizer: resource('scripts/normalize_cover.py')
     },
     source: { path: sourcePath, sha256: sha(join(runDir, sourcePath)) },
-    backend: { hint: backendHint, method: 'fixture-renderer', model: null },
+    backend: {
+      hint: backendHint,
+      method: backendHint === 'runtime-native' ? 'runtime-native:image-generation' : 'fixture-renderer',
+      model: backendHint === 'runtime-native' ? 'gpt-image-2' : null
+    },
     generation: {
       max_attempts: 3,
       attempt_count: 1,
@@ -172,7 +187,10 @@ function createValidCover(runDir, { backendHint = 'configured-api' } = {}) {
           sha256: sha(join(runDir, candidatePath)),
           format: 'png', width: 1923, height: 818
         },
-        backend: { method: 'fixture-renderer', model: null },
+        backend: {
+          method: backendHint === 'runtime-native' ? 'runtime-native:image-generation' : 'fixture-renderer',
+          model: backendHint === 'runtime-native' ? 'gpt-image-2' : null
+        },
         status: 'PASS',
         failed_gates: [], absolute_failures: [], visible_title_defects: []
       }],
@@ -221,10 +239,13 @@ function createValidCover(runDir, { backendHint = 'configured-api' } = {}) {
 test('WeChat cover request binds the approved exact title and fixed cover contract', () => {
   const { runDir, selection, decisionPath } = fixture();
   try {
-    const result = run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'configured-api']);
+    const result = run('create-wechat-cover-request.mjs', [runDir, '--backend-hint', 'runtime-native']);
     assert.equal(result.status, 0, result.stderr || result.stdout);
     const output = JSON.parse(result.stdout);
-    const request = readJson(output.request_path);
+    const request = readJson(join(runDir, output.request_path));
+    assert.equal(request.schema_version, 2);
+    assert.equal(request.contract, 'content-production-provider/v2');
+    assert.equal(Object.hasOwn(request, 'run_dir'), false);
     assert.equal(request.task_id, 'wechat-cover:fixture-run:wechat:A:attempt-001');
     assert.equal(request.capability, 'wechat_cover');
     assert.equal(request.provider_contract, 'wechat-cover-v1');
@@ -250,7 +271,7 @@ test('WeChat cover request binds the approved exact title and fixed cover contra
       exact_title_required: true,
       best_effort_allowed: false,
       max_attempts: 3,
-      backend_hint: 'configured-api',
+      backend_hint: 'runtime-native',
       execution_strategy: 'one_candidate_at_a_time'
     });
   } finally {
@@ -258,12 +279,14 @@ test('WeChat cover request binds the approved exact title and fixed cover contra
   }
 });
 
-test('WeChat cover request rejects unsupported titles and versions a reopened visual attempt', () => {
+test('WeChat cover is independent from the body visual gate, rejects unsupported titles, and versions its own attempt', () => {
   const early = fixture({ visualApproved: false });
   try {
-    const blocked = run('create-wechat-cover-request.mjs', [early.runDir]);
-    assert.equal(blocked.status, 2);
-    assert.ok(JSON.parse(blocked.stdout).blockers.some((item) => item.code === 'wechat_cover_visual_gate_missing'));
+    const allowed = run('create-wechat-cover-request.mjs', [early.runDir]);
+    assert.equal(allowed.status, 0, allowed.stderr || allowed.stdout);
+    const requestPath = join(early.runDir, JSON.parse(allowed.stdout).request_path);
+    const validation = runCoverProvider(['validate-request', requestPath]);
+    assert.equal(validation.status, 0, validation.stderr || validation.stdout);
   } finally {
     rmSync(early.runDir, { recursive: true, force: true });
   }
@@ -277,12 +300,12 @@ test('WeChat cover request rejects unsupported titles and versions a reopened vi
     rmSync(invalid.runDir, { recursive: true, force: true });
   }
 
-  const versioned = fixture({ attempt: 2 });
+  const versioned = fixture({ schemaVersion: 3, attempt: 2, bodyAttempt: 7 });
   try {
     const result = run('create-wechat-cover-request.mjs', [versioned.runDir]);
     assert.equal(result.status, 0, result.stderr || result.stdout);
     const output = JSON.parse(result.stdout);
-    const request = readJson(output.request_path);
+    const request = readJson(join(versioned.runDir, output.request_path));
     assert.match(output.request_path, /wechat-cover\.v002\.request\.json$/);
     assert.deepEqual(request.expected_artifacts, [
       '07-visual/wechat-cover/cover.v002.png',

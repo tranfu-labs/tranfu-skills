@@ -2,9 +2,9 @@
 name: content-production
 display_name: Multiplatform Content Production Workflow
 display_name_zh: 多平台内容工作流
-version: 0.1.0
+version: 0.2.0
 author: BruceL017
-updated_at: "2026-07-17"
+updated_at: "2026-07-28"
 origin: own
 allow_exec: true
 description: >-
@@ -92,7 +92,7 @@ node scripts/init-run.mjs <slug> --outline <path> [--material <path>]
 5. 调用 drafting provider 生成 A/B 母稿和十份平台初稿。
 6. 对十份稿分别调用 proofreading provider；provider 在单稿 PASS 前运行 `markdown-alignment`，总控再绑定 claims 并完成两份 regression report 与六项 semantic review。
 7. 对十份终稿调用 title provider，聚合精确 34 个候选并选择五个平台赢家。
-8. 只为五个赢家先生成 current policy snapshot 与五份 coverage，再按“用户指定 > 原生能力 > 当前激活配置”确定本 visual attempt 的唯一 BackendLease。按内容结构规划 `minimum..target` 张有独立正文锚点的配图；小红书固定 4-8 页且逐页覆盖。由脚本生成唯一 VisualDecision 并批准五份 plan 后，正文图和封面复用同一后端，bounded-per-image 队列执行 Canary、逐图生成、Set QA 和定向重试，最终精确验收 22 件视觉核心产物。
+8. 只为五个赢家生成 current policy snapshot 与五份 coverage。先完成统一 visual preflight，再冻结一个 BackendProfile，并为 `body_visual`、`wechat_cover` 分别创建 Lease。正文按 `bounded-per-image-v2` 先通过五平台全局 Canary 屏障，再以全局 4、单平台 2 执行逐图生成、Set QA 和定向重试；封面使用独立队列和 1 个并发名额。两者独立恢复，最终组合为精确 22 件视觉核心产物。
 9. 为全部正文图和封面生成压缩 candidate，总控按 strict-smaller 规则组装五个平台发布包；再为公众号排版创建受限 request，由 `format-content` 生成 staging clean HTML/预览，经过总控复验和晋级后才完成 package。
 10. 运行确定性 QA；自主模式通过后直接完成，reviewed 模式等待 final 门禁。
 
@@ -107,13 +107,17 @@ node scripts/create-proofreading-request.mjs <run-dir> --platform <id> --variant
 node scripts/create-title-request.mjs <run-dir> --platform <id> --variant <A|B> [--model <id>] [--parameters-json '<json>'] [--execution-strategy parallel_subagents|sequential_fallback]
 node scripts/aggregate-titles.mjs <run-dir>
 node scripts/create-visual-coverage.mjs <run-dir> --all
-node scripts/backend-lease.mjs <run-dir> create [--backend runtime-native|configured-api] [--native-status available|unavailable] [--base-url <url>] [--config <path>] [--auth <path>] [--adapter <path>] [--model <id>]
-node scripts/backend-lease.mjs <run-dir> <validate|record> [--outcome pass|quality-failure|transient-error|irrecoverable-execution-error]
+node scripts/visual-preflight.mjs <run-dir>
+node scripts/backend-lease.mjs <run-dir> create [--consumer body_visual|wechat_cover] [--backend runtime-native|configured-api] [--native-status available|unavailable] [--base-url <url>] [--config <path>] [--auth <path>] [--adapter <path>] [--model <id>]
+node scripts/backend-lease.mjs <run-dir> <validate|record> --consumer <body_visual|wechat_cover> [--outcome pass|quality-failure|transient-error|irrecoverable-execution-error]
+node scripts/backend-lease.mjs <run-dir> reset --confirm reset-all-visual
 node scripts/create-illustration-request.mjs <run-dir> <plan|generate> --platform <id> [--style-id <id>] [--max-images <N>] [--brand-override enabled|disabled] [--backend-hint runtime-native|configured-api|unknown] [--model-preference <id>]
-node scripts/run-image-generation.mjs <run-dir> --prompt-file <path> --output <path> [--size <WxH>] [--output-format png] [--verify-existing]
-node scripts/illustration-queue.mjs <run-dir> <init|dispatch|inspect>
+node scripts/run-image-generation.mjs <run-dir> --consumer <body_visual|wechat_cover> --prompt-file <path> --output <path> [--size <WxH>] [--output-format png] [--verify-existing]
+node scripts/illustration-queue.mjs <run-dir> <init|dispatch|inspect|heartbeat>
 node scripts/illustration-queue.mjs <run-dir> release --task-id <id> --reason rate_limit|transport
 node scripts/create-wechat-cover-request.mjs <run-dir> [--backend-hint runtime-native|configured-api|programmatic|unknown]
+node scripts/cover-queue.mjs <run-dir> <init|dispatch|inspect|heartbeat>
+node scripts/set-visual-component.mjs <run-dir> <body_visual|wechat_cover> <running|blocked|completed> [--artifact <path>] [--error <reason>]
 node scripts/create-compression-requests.mjs <run-dir>
 node scripts/assemble-publish-packs.mjs <run-dir>
 node scripts/create-wechat-layout-request.mjs <run-dir>
@@ -125,6 +129,8 @@ node scripts/set-stage.mjs <run-dir> <stage> completed --artifact <path>
 node scripts/set-stage.mjs <run-dir> <stage> blocked --error <reason>
 node scripts/set-gate.mjs <run-dir> <gate> approved --decision <path-or-value> --actor orchestrator --approval-mode autonomous
 node scripts/check-provider-result.mjs <request.json> <result.json>
+node scripts/migrate-v2-to-v3.mjs <v2-run> [--apply --output-root <directory>]
+node scripts/scan-path-leaks.mjs <run-dir-or-json>
 ```
 
 自主模式不得设置 `awaiting_approval`。reviewed 模式按 `workflow.md` 暂停并报告唯一待确认决策。
@@ -135,10 +141,10 @@ node scripts/check-provider-result.mjs <request.json> <result.json>
 - 十个平台适配任务可以并行，每个任务只能读取自己的母稿版本。
 - 十份审校可以并行；单稿的三轮审校必须串行。
 - 十个标题任务可以并行；同平台 A/B 使用相同模型和参数，聚合、阶段完成和门禁批准串行。
-- 五个平台视觉由 bounded-per-image 队列调度：每套第 1 张 Canary PASS 前不得提交后续图片；之后全局最多 4 个、同套最多 2 个生成调用。
-- 当前 visual attempt 的 BackendLease 在任何 plan request 前确定。原生能力一旦选中，质量、文字、风格、品牌、几何或瞬时传输失败都只能在原生路径内重试；不可恢复执行错误阻断当前 attempt，只有总控开启下一 attempt 后才能重新解析配置后端。同一 attempt 禁止静默切换。
-- 正文图与公众号封面必须通过同一 Lease 和脱敏 BackendContext 调用 `run-image-generation.mjs`。配置后端只使用当前激活 provider 的 endpoint 与 Codex 认证上下文，凭证只进入 `image_gen.py` 子进程环境。
-- visual gate 批准后，公众号封面与正文 child 共享全局 4 个名额；封面保持独立 provider，必须读取 titles gate 的公众号赢家，不接受调用方另传标题。
+- 五个平台先各派发一张 Canary；五张全部 PASS 后才开放非 Canary。正文全局最多 4 个、单平台最多 2 个生成调用；封面队列独立且并发固定为 1，任何一边阻断都不停止另一边。
+- BackendProfile 在任何 plan 或计费调用前冻结 provider、endpoint、model 和安全策略；正文与封面各自绑定 attempt Lease。普通恢复禁止切换 profile，只有显式 `reset` 同时失效两边。
+- active 生图/封面 Lease 默认 60 分钟，Set QA 默认 30 分钟，均记录 heartbeat 与 expiry。恢复时先 reconcile 已有 result，再把无结果超时任务标为 `abandoned`；传输释放和租约回收不消耗新的质量候选次数。
+- 每个注册 style 都要求 `textPolicy.defaultMode=allowlist`、`iconsOnlyAllowed=false`。总控只验证 provider 规划的 `text_content.primary|compact`，不得清空、补写或自动降级成无字图；仅文字 QA 失败时才切换 compact。
 - 全部 child PASS 后每套串行执行 Set QA；失败必须点名 image ID，只为被点名图片创建下一 candidate，未被点名的 PASS child 继续冻结。
 - 压缩 provider 首次运行可能安装固定 Sharp runtime；先串行执行一个任务完成 warm-up，再并行其余 current-attempt request。发布包聚合保持串行。
 
@@ -162,7 +168,8 @@ node scripts/check-provider-result.mjs <request.json> <result.json>
 - provider 返回 `BLOCKED` 或 `FAILED` 时，把完整 issue 写入阶段状态并从其 `resume_from` 恢复。
 - 关键 claim 冲突或无来源时停在研究，不写正文。
 - 标题不足 34 个时停在标题，不能用未通过事实门的候选补数。
-- visual completed 或已批准计划后的 blocked visual 重新进入 running 时递增 attempt，只失效 visual 门禁、package、final QA；标题门禁和五个平台赢家保留。
+- `visual` 是 `body_visual` 与 `wechat_cover` 的聚合状态。正文恢复只递增 `body_attempt`，封面恢复只递增 `cover_attempt`；已完成的另一组件及其文件、哈希和 gate 保持冻结。父级仅在两者都 completed 时完成，package 继续等待两者。
+- 正文恢复只派发未 PASS 或复用指纹不匹配的 image ID。完全不变的 suite 复用原 bundle 和像素引用；部分复用必须重跑 Set QA。单图三次失败只阻断该 image ID，不自动改成无字图。
 - package completed 重新进入 running，或 package blocked 后重试时递增 attempt；completed 重开只失效 final QA/final 门禁，visual、titles 和五个平台赢家保留。压缩/layout controls 与发布业务文件使用 `_compression/vNNN`、`_layout/vNNN`、`.vNNN`/`images/vNNN/`。
 - 任何平台配图、独立封面、优化记录、manifest、标题 H1 或 HTML 血缘不一致时，从最早失效阶段恢复。
 - completed run 再次执行是只读；任何 QA 后漂移都视为阻断。

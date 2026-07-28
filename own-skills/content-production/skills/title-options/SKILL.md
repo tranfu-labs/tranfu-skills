@@ -15,7 +15,7 @@ Generate article titles only from finished content. Permit tension in wording, b
 ## Orchestrated Provider Route / 总控 Provider 路由
 
 Before the standalone workflow, inspect structured requests. If a request contains any of
-`contract: content-production-provider/v1`, `capability: title_generation`,
+`contract: content-production-provider/v2`, `capability: title_generation`,
 `provider_contract: title-generation-v1`, or `content-production-provider: title-generation-v1`,
 MUST use [references/orchestrated-provider.md](references/orchestrated-provider.md) and
 `scripts/provider-contract.mjs`. A partial, conflicting, or invalid marker MUST return structured

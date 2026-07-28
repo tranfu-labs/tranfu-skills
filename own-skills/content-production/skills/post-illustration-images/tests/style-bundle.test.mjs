@@ -212,6 +212,13 @@ function createBundle(t, id = "xhs-test-template", { platform = "xhs", makeDefau
       brandSlot: { enabled: true, anchor: "top-right", ...fixture.brandSlot, assetFit: "contain" }
     },
     brandPolicy: { defaultEnabled: true, userOverrideAllowed: true },
+    textPolicy: {
+      defaultMode: "allowlist",
+      iconsOnlyAllowed: false,
+      headline: { minCharacters: 2, maxCharacters: 14 },
+      labels: { minItems: 2, maxItems: 5, maxCharactersPerItem: 8 }
+    },
+    generationPrompt: "Use a warm hand-drawn notebook style with clear hierarchy and concise readable text.",
     inputHandling: fixture.inputHandling ?? {
       preserveNativeOutput: true,
       ratioTolerance: 0.002,
@@ -319,11 +326,33 @@ test("existing registry covers all valid production styles and renders determini
   assert.equal(renderStyleIndex(registry), renderStyleIndex(structuredClone(registry)));
 });
 
+test("every installed style requires grounded readable text", () => {
+  const registry = json(resolve(repositoryRoot, "references/style-registry.json"));
+  for (const style of registry.styles) {
+    const spec = json(resolve(repositoryRoot, style.specFile));
+    assert.deepEqual(spec.textPolicy, {
+      defaultMode: "allowlist",
+      iconsOnlyAllowed: false,
+      headline: { minCharacters: 2, maxCharacters: 14 },
+      labels: { minItems: 2, maxItems: 5, maxCharactersPerItem: 8 }
+    });
+    assert.equal(typeof spec.generationPrompt, "string");
+    assert.ok(spec.generationPrompt.trim().length > 0);
+  }
+});
+
 test("valid approved bundle passes", (t) => {
   const skillRoot = createSkillRoot(t);
   const bundleDir = createBundle(t);
   const result = validateStyleBundle({ bundleDir, skillRoot });
   assert.equal(result.candidate.style.id, "xhs-test-template");
+});
+
+test("style bundle rejects an icons-only text policy", (t) => {
+  const skillRoot = createSkillRoot(t);
+  const bundleDir = createBundle(t);
+  mutateJson(resolve(bundleDir, "style.spec.json"), (spec) => { spec.textPolicy.iconsOnlyAllowed = true; });
+  assert.throws(() => validateStyleBundle({ bundleDir, skillRoot }), /iconsOnlyAllowed must be false/);
 });
 
 test("valid XHS bundle preserves native 1086x1448 calibration output", (t) => {

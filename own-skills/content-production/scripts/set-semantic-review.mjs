@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { emitJson, expandPath, fileExists, fileSha256, parseArgs, readJson, writeJson } from './lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
@@ -12,6 +13,25 @@ const checks = {
   proper_noun_drift: args.proper_noun_drift
 };
 const allowed = ['PASS', 'BLOCKED'];
+
+function provenanceRoot(path) {
+  let current = dirname(resolve(path));
+  while (true) {
+    if (fileExists(resolve(current, 'run.json'))) return current;
+    const parent = dirname(current);
+    if (parent === current) return dirname(resolve(path));
+    current = parent;
+  }
+}
+
+function relativeProvenancePath(reportPath, sourcePath) {
+  const root = provenanceRoot(reportPath);
+  const value = relative(root, resolve(sourcePath)).replaceAll('\\', '/');
+  if (!value || isAbsolute(value) || value === '..' || value.startsWith('../')) {
+    throw new Error('Reusable semantic review must be inside the same run.');
+  }
+  return value;
+}
 
 async function assertCurrent(report) {
   if (report.automatic_status !== 'PASS' || report.blockers?.length) {
@@ -46,7 +66,7 @@ try {
     report.semantic_review = {
       ...source.semantic_review,
       review_mode: 'reused',
-      reused_from: { path: reusePath, sha256: await fileSha256(reusePath) }
+      reused_from: { path: relativeProvenancePath(reportPath, reusePath), sha256: await fileSha256(reusePath) }
     };
     report.status = 'PASS';
     await writeJson(reportPath, report);

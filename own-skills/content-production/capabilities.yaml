@@ -36,7 +36,7 @@
     "illustration": {
       "required": true,
       "contract": "illustration-v1",
-      "profile": "bounded-per-image",
+      "profile": "bounded-per-image-v2",
       "adapter_contract": "illustration-orchestrated-coverage-v1",
       "resources": [
         "skills/post-illustration-images/scripts/provider-contract.mjs",

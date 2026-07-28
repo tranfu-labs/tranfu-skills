@@ -43,6 +43,7 @@ import {
   stageOrder,
   writeJson
 } from './lib.mjs';
+import { initialVisualComponent, resetVisualAggregate } from './visual-state.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const [runArg, stage, status] = args._;
@@ -97,14 +98,16 @@ function invalidateDraftingDownstream(state, stageName, now) {
     if (previous && (previous.status !== 'pending' || previous.artifacts?.length)) {
       invalidatedStages.push({ stage: downstream, previous });
     }
-    state.stages[downstream] = {
-      status: 'pending',
-      attempt: previous?.attempt || 0,
-      artifacts: [],
-      error: null,
-      invalidated_by: stageName,
-      updated_at: now
-    };
+    state.stages[downstream] = downstream === 'visual'
+      ? resetVisualAggregate(previous, stageName, now)
+      : {
+          status: 'pending',
+          attempt: previous?.attempt || 0,
+          artifacts: [],
+          error: null,
+          invalidated_by: stageName,
+          updated_at: now
+        };
   }
 
   const invalidatedGates = [];
@@ -215,6 +218,15 @@ if (!runArg || !stageOrder.includes(stage) || !allowedStatuses.includes(status))
     }
 
     const previous = state.stages?.[stage] || { status: 'pending', attempt: 0, artifacts: [], error: null };
+    if (stage === 'visual' && (status !== 'running' || previous.status !== 'pending')) {
+      throw Object.assign(new Error('Visual is an aggregate stage; only its initial start uses set-stage.'), {
+        issues: [{
+          code: 'visual_component_transition_required',
+          message: 'Use set-visual-component.mjs to block, complete, or resume body_visual and wechat_cover independently.',
+          resume_from: 'visual'
+        }]
+      });
+    }
     if (['editing', 'titles', 'visual', 'package'].includes(stage) && previous.status === 'completed' && !['completed', 'running'].includes(status)) {
       throw Object.assign(new Error(`Completed ${stage} must be reopened through running before its status can change.`), {
         issues: [{ code: `invalid_${stage}_transition`, message: `Use ${stage} running to reopen, increment attempt, and invalidate downstream work.`, resume_from: stage }]
@@ -417,8 +429,7 @@ if (!runArg || !stageOrder.includes(stage) || !allowedStatuses.includes(status))
     }
     const now = new Date().toISOString();
     const reopening = status === 'running'
-      && (previous.status === 'completed' && ['outline', 'masters', 'platforms', 'editing', 'titles', 'visual', 'package'].includes(stage)
-        || stage === 'visual' && previous.status === 'blocked');
+      && previous.status === 'completed' && ['outline', 'masters', 'platforms', 'editing', 'titles', 'package'].includes(stage);
     const invalidation = reopening
       ? stage === 'visual'
         ? invalidateVisualDownstream(state, now)
@@ -434,15 +445,39 @@ if (!runArg || !stageOrder.includes(stage) || !allowedStatuses.includes(status))
     }
     const attempt = status === 'running' && previous.status !== 'running' ? (previous.attempt || 0) + 1 : previous.attempt || 0;
     state.stages = state.stages || {};
-    state.stages[stage] = {
-      status,
-      attempt,
-      artifacts,
-      error: status === 'blocked' ? args.error || 'stage_blocked' : null,
-      started_at: status === 'running' ? now : previous.started_at || null,
-      completed_at: status === 'completed' ? now : null,
-      updated_at: now
-    };
+    if (stage === 'visual') {
+      const start = (component) => ({
+        ...(component || initialVisualComponent()),
+        status: 'running',
+        attempt: (component?.attempt || 0) + 1,
+        artifacts: [],
+        error: null,
+        started_at: now,
+        completed_at: null,
+        updated_at: now
+      });
+      state.stages.visual = {
+        status: 'running',
+        revision: (previous.revision || 0) + 1,
+        artifacts: [],
+        error: null,
+        body_visual: start(previous.body_visual),
+        wechat_cover: start(previous.wechat_cover),
+        started_at: now,
+        completed_at: null,
+        updated_at: now
+      };
+    } else {
+      state.stages[stage] = {
+        status,
+        attempt,
+        artifacts,
+        error: status === 'blocked' ? args.error || 'stage_blocked' : null,
+        started_at: status === 'running' ? now : previous.started_at || null,
+        completed_at: status === 'completed' ? now : null,
+        updated_at: now
+      };
+    }
     state.updated_at = now;
     state.status = status === 'blocked' ? 'blocked' : 'running';
     state.current_stage = status === 'completed' ? nextStage(state, stage) : stage;
@@ -459,10 +494,23 @@ if (!runArg || !stageOrder.includes(stage) || !allowedStatuses.includes(status))
         invalidated_stages: invalidation.stages.map((item) => item.stage),
         invalidated_gates: invalidation.gates.map((item) => item.gate)
       }] : []),
-      { at: now, event: 'stage_updated', stage, from: previous.status, to: status, attempt }
+      {
+        at: now, event: 'stage_updated', stage, from: previous.status, to: status,
+        ...(stage === 'visual' ? {
+          body_attempt: state.stages.visual.body_visual.attempt,
+          cover_attempt: state.stages.visual.wechat_cover.attempt
+        } : { attempt })
+      }
     ];
     await writeJson(statePath, state);
-    emitJson({ status: 'PASS', stage, stage_status: status, run_status: state.status, next_stage: state.current_stage, attempt });
+    emitJson({
+      status: 'PASS', stage, stage_status: status, run_status: state.status,
+      next_stage: state.current_stage,
+      ...(stage === 'visual' ? {
+        body_attempt: state.stages.visual.body_visual.attempt,
+        cover_attempt: state.stages.visual.wechat_cover.attempt
+      } : { attempt })
+    });
   } catch (error) {
     emitJson({ status: 'BLOCKED', message: error.message, issues: error.issues || [] }, 2);
   }

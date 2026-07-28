@@ -1,6 +1,6 @@
 # Orchestrated Source Research Provider
 
-本契约只适用于 `content-production-provider/v1` 的 `source_research` 调用，provider contract 为 `source-research-v1`。独立运行仍使用原三份 reference 和 append-only 输出。
+本契约只适用于 `content-production-provider/v2` 的 `source_research` 调用，provider contract 为 `source-research-v1`。独立运行仍使用原三份 reference 和 append-only 输出。
 
 ## 1. 调用与交互
 
@@ -90,4 +90,4 @@ node scripts/provider-contract.mjs validate-request <request.json>
 node scripts/provider-contract.mjs finalize <request.json> [result.json]
 ```
 
-result 固定符合 `content-production-provider/v1`，只登记实际存在且哈希匹配的 canonical 四件套，并使用 `return_to_orchestrator` 结束。
+result 固定符合 `content-production-provider/v2`，只登记实际存在且哈希匹配的 canonical 四件套，并使用 `return_to_orchestrator` 结束。

@@ -139,14 +139,14 @@ test('cross-platform checks reject uniform singleton and four-platform collapse'
   assert.equal(issues.some((item) => item.code === 'visual_cardinality_collapse'), true);
 });
 
-test('completed historical runs remain read-only when no policy snapshot exists', async () => {
+test('V3 visual validation blocks when the current policy snapshot is missing', async () => {
   const runDir = mkdtempSync(join(tmpdir(), 'visual-cardinality-history-'));
   try {
     const result = await validateVisualCoverageSet(runDir, {
-      stages: { visual: { status: 'completed', attempt: 1 } }
+      schema_version: 3,
+      stages: { visual: { status: 'running', body_visual: { status: 'running', attempt: 1 } } }
     });
-    assert.equal(result.legacy, true);
-    assert.deepEqual(result.issues, []);
+    assert.equal(result.issues.some((item) => item.code === 'visual_policy_missing'), true);
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }

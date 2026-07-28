@@ -122,8 +122,9 @@ try {
 
   emitJson({
     status: 'PASS',
-    plan_path: planAbsolute,
-    request_paths: built.tasks.map((task) => resolve(runDir, task.paths.request)),
+    run_id: state.run_id,
+    plan_path: planRelative,
+    request_paths: built.tasks.map((task) => task.paths.request),
     task_count: built.tasks.length
   });
 } catch (error) {

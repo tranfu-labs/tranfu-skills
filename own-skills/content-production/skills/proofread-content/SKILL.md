@@ -18,7 +18,7 @@ description: >-
 
 ## 总控 Provider 路由
 
-执行独立流程前先检查结构化请求。请求只要出现 `contract: content-production-provider/v1`、
+执行独立流程前先检查结构化请求。请求只要出现 `contract: content-production-provider/v2`、
 `capability: proofreading`、`provider_contract: proofreading-v1` 或
 `content-production-provider: proofreading-v1` 任一标记，就必须改走
 `references/orchestrated-provider.md` 并使用 `scripts/provider-contract.mjs`。完整合同仍要求前三项

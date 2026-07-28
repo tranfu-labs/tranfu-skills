@@ -11,12 +11,12 @@ import { promisify } from "node:util";
 const SKILL_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MAIN = join(SKILL_ROOT, "scripts", "main.mjs");
 const execFileAsync = promisify(execFile);
-const CONTRACT = "content-production-provider/v1";
+const CONTRACT = "content-production-provider/v2";
 const PROVIDER = "image-compression-v1";
 const PLATFORMS = new Set(["wechat", "xiaohongshu", "zhihu", "weibo", "toutiao"]);
 const RUN_MODES = new Set(["autonomous", "reviewed"]);
 const SOURCE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
-const REQUEST_KEYS = keys("schema_version contract task_id capability provider_contract run_dir run_mode mode attempt platform variant asset_id asset_kind inputs output_dir expected_artifacts options interaction_policy");
+const REQUEST_KEYS = keys("schema_version contract task_id capability provider_contract run_mode mode attempt platform variant asset_id asset_kind inputs output_dir expected_artifacts options interaction_policy");
 const INPUT_KEYS = keys("role path sha256");
 const OPTION_KEYS = keys("format quality lossless preserve_source preserve_display_dimensions selection_policy");
 const RESULT_KEYS = keys("schema_version contract provider_contract task_id request_sha256 status artifacts checks compression issues warnings");
@@ -87,6 +87,28 @@ async function hasSymlinkComponent(root, path, includeLeaf = true) {
   return false;
 }
 
+async function findRunRoot(requestPath) {
+  const requestReal = await realpath(requestPath);
+  let current = dirname(requestPath);
+  while (true) {
+    const statePath = join(current, "run.json");
+    if (existsSync(statePath)) {
+      const runStat = await lstat(current);
+      const stateStat = await lstat(statePath);
+      const runReal = await realpath(current);
+      if (runStat.isSymbolicLink() || !runStat.isDirectory() || stateStat.isSymbolicLink() || !stateStat.isFile()
+        || !inside(runReal, requestReal) || await realpath(statePath) !== join(runReal, "run.json")) {
+        throw new Error("Request ancestry does not resolve to a safe run root.");
+      }
+      return { runDir: current, runRealDir: runReal };
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error("Cannot locate run.json from request ancestry.");
+}
+
 function expectedPaths(request) {
   const version = request.attempt === 1 ? "" : `/v${String(request.attempt).padStart(3, "0")}`;
   const base = `08-publish-pack/_compression${version}/${request.platform}/${request.asset_id}`;
@@ -126,7 +148,7 @@ function validOptions(request) {
 function resultEnvelope(context, status, artifacts, compression, issues, warnings = []) {
   const { request } = context;
   const result = {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: request.task_id,
@@ -187,7 +209,7 @@ async function validateRequest(input) {
   }
 
   const request = context.request;
-  if (!sameKeys(request, REQUEST_KEYS) || request.schema_version !== 1
+  if (!sameKeys(request, REQUEST_KEYS) || request.schema_version !== 2
     || request.contract !== CONTRACT || request.capability !== "image_compression"
     || request.provider_contract !== PROVIDER || request.mode !== "compress_one") {
     add(context.issues, "invalid_image_compression_request", "Request envelope does not match image-compression-v1.");
@@ -216,22 +238,12 @@ async function validateRequest(input) {
     add(context.issues, "invalid_image_compression_input", "Request must bind exactly one relative source_image path and SHA-256.");
   }
 
-  if (!isAbsolute(request.run_dir || "")) {
-    add(context.issues, "invalid_compression_run_dir", "run_dir must be absolute.");
-    return context;
-  }
-  context.runDir = resolve(request.run_dir);
   try {
-    const runStat = await lstat(context.runDir);
-    if (runStat.isSymbolicLink() || !runStat.isDirectory()) throw new Error("run_dir must be a real directory");
-    context.runRealDir = await realpath(context.runDir);
-    if (!inside(context.runDir, context.requestPath)
-      || await hasSymlinkComponent(context.runDir, context.requestPath)
-      || !inside(context.runRealDir, await realpath(context.requestPath))) {
-      throw new Error("request must be a real file inside run_dir");
-    }
+    const root = await findRunRoot(context.requestPath);
+    context.runDir = root.runDir;
+    context.runRealDir = root.runRealDir;
   } catch (error) {
-    add(context.issues, "invalid_compression_run_dir", error.message);
+    add(context.issues, "invalid_compression_run_root", error.message);
     return context;
   }
 

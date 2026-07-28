@@ -1,12 +1,12 @@
 ---
 name: post-illustration-images
-display_name: Multiplatform Post Illustrations
-display_name_zh: 多平台文章配图
 description: "Generate stable platform-ready AI illustrations for WeChat official account articles, Xiaohongshu notes, Zhihu posts, Toutiao posts, and Weibo posts with a registered style through either a runtime-native image tool or an already-configured API backend. Use when the user asks for post/article/note illustrations, content images, explainer images, cover/content cards, 公众号配图, 小红书组图, 知乎配图, 微博配图, 头条号配图, 今日头条配图, 帮我做配图, or 给文章画几张图. Do NOT trigger for pure photography, portrait/product retouching, photoreal brand campaigns, exact long text inside images, or when the user explicitly names another image-generation skill. Safety boundaries: verify the generation backend before production, use one registered suite style, isolate and QA every image task, preserve accepted native pixels, forbid model-drawn logos/page badges, and resolve deterministic branding from the user override or selected style policy."
 metadata:
-  version: "0.6.0"
+  display_name: Multiplatform Post Illustrations
+  display_name_zh: 多平台文章配图
+  version: "0.7.0"
   author: BruceL017
-  updated_at: "2026-07-20"
+  updated_at: "2026-07-27"
   origin: own
   allow_exec: true
 ---
@@ -15,7 +15,7 @@ metadata:
 
 ## Orchestrated Provider Route
 
-Before the standalone workflow, inspect any structured request for `contract: content-production-provider/v1`,
+Before the standalone workflow, inspect any structured request for `contract: content-production-provider/v2`,
 `capability: illustration`, `provider_contract: illustration-v1`, or the marker below:
 
 ```text
@@ -29,11 +29,16 @@ plan-only pass or an approved generate pass, returns control to the orchestrator
 `post-illustration-output/<content-slug>/`.
 
 The public provider ID remains `illustration-v1`. When the run capability snapshot also declares
-`profile: bounded-per-image`, use a parent suite plus isolated image children: validate parent
+`profile: bounded-per-image-v2`, use a parent suite plus isolated image children: validate parent
 plan/generate requests with `scripts/provider-contract.mjs`, each child with
 `scripts/child-contract.mjs`, and serial set review with `scripts/set-qa-contract.mjs`. The
 orchestrator owns queue leases and final aggregation; this skill never invents a versioned public
 provider name.
+
+Every bounded anchor carries approved `text_content.primary` and `text_content.compact` variants.
+The orchestrator must preserve them exactly and declare one active `text_variant` per child. Compile
+that child prompt only with `scripts/compile-generation-prompt.mjs`; empty text and `icons_only` are
+invalid for every registered production style.
 
 When no provider marker is present, keep the independent workflow below unchanged.
 
@@ -80,6 +85,7 @@ Terminology:
 - `generation_backend`: a verified runtime-native image tool or already-configured API backend; it is not another image-generation skill.
 - `BackendContext`: `{ kind, adapter, endpoint_source, api_dialect?, model_preference?, model_preference_source, resolved_model, model_resolution_note, artifact_format, credential_access, model_check, process_cleanup_plan, process_cleanup_status }`.
 - `GenerationGeometry`: `{ geometry_profile, resolved_model, requested_dimensions, target_aspect_ratio, design_dimensions, delivery_dimensions, ratio_tolerance, minimum_short_edge?, native_output_policy, post_generation_resize }`.
+- `text_content`: `{ primary, compact }`, where each variant contains a grounded headline, headline source terms, 2-5 grounded labels, and nullable supporting copy/footer.
 
 ## Architecture Boundary
 
@@ -520,7 +526,7 @@ Final response must include:
 - MUST ignore Style Reference watermark state for production branding and apply the real brand SVG overlay before delivery when branding is enabled.
 - MUST NOT let Brand Plugin define the visual system or let the image model draw brand logos, page-number badges, placeholder frames, reserve boxes, or visible brand-slot markers.
 - MUST isolate and QA every image independently. Standalone runs submit one image at a time;
-  orchestrated `bounded-per-image` runs may submit up to two children in one suite only after its
+  orchestrated `bounded-per-image-v2` runs may submit up to two children in one suite only after its
   Canary passes, under the orchestrator's global queue.
 - MUST record requested, actual source, and delivery geometry; permit same-dimension format/byte adaptation only for a known publishing path through a verified exporter, otherwise block; reject sources outside ratio tolerance without resizing, cropping, padding, rotating, stretching, or upscaling.
 - MUST save `shot-list.md`, `prompts/*.md`, and `manifest.md` for every completed production run. On an earlier blocker, save only artifacts whose workflow stage was actually reached; never fabricate later-stage files or QA passes.

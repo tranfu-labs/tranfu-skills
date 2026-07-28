@@ -48,6 +48,13 @@
     "defaultEnabled": true,
     "userOverrideAllowed": true
   },
+  "textPolicy": {
+    "defaultMode": "allowlist",
+    "iconsOnlyAllowed": false,
+    "headline": { "minCharacters": 2, "maxCharacters": 14 },
+    "labels": { "minItems": 2, "maxItems": 5, "maxCharactersPerItem": 8 }
+  },
+  "generationPrompt": "Create a spacious premium AI product infographic with a pale blue-gray field, bold charcoal hierarchy, white decision cards, fine connectors, and restrained orange-red accents.",
   "inputHandling": {
     "preserveNativeOutput": true,
     "ratioTolerance": 0.002,

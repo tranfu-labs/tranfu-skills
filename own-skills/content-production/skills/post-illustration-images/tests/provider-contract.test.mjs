@@ -20,7 +20,7 @@ import { deflateSync } from "node:zlib";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = join(ROOT, "scripts/provider-contract.mjs");
-const CONTRACT = "content-production-provider/v1";
+const CONTRACT = "content-production-provider/v2";
 const PROVIDER = "illustration-v1";
 
 function crc32(buffer) {
@@ -68,6 +68,10 @@ const PLAN_KEYS = [
 const ANCHOR_KEYS = [
   "image_id", "placement", "source_excerpt", "core_meaning", "structure",
   "visual_metaphor", "main_action", "suggested_elements", "short_labels", "qa_risk"
+];
+const BOUNDED_ANCHOR_KEYS = [
+  "image_id", "placement", "source_excerpt", "core_meaning", "structure",
+  "visual_metaphor", "main_action", "suggested_elements", "text_content", "qa_risk"
 ];
 const BUNDLE_KEYS = [
   "schema_version", "task_id", "status", "platform", "provider_platform", "variant",
@@ -220,11 +224,13 @@ function options(platform) {
     brand_override: null,
     backend_hint: "configured-api",
     model_preference: null,
-    execution_strategy: "one_image_at_a_time"
+    execution_strategy: "one_image_at_a_time",
+    text_policy: "required_from_selected_style",
+    prompt_compiler: "deterministic-v1"
   };
 }
 
-async function fixture(t, { platform = "wechat", attempt = 1 } = {}) {
+async function fixture(t, { platform = "wechat", attempt = 1, bounded = false } = {}) {
   const runDir = await mkdtemp(join(tmpdir(), "illustration-provider-"));
   t.after(() => rm(runDir, { recursive: true, force: true }));
   const variant = "A";
@@ -255,12 +261,17 @@ async function fixture(t, { platform = "wechat", attempt = 1 } = {}) {
   await mkdir(join(runDir, pathSet.base), { recursive: true });
   const runId = "fixture-run";
   const state = {
-    schema_version: 2,
+    schema_version: 3,
     run_id: runId,
     run_mode: "autonomous",
     status: "running",
     current_stage: "visual",
-    stages: { visual: { status: "running", attempt, artifacts: [] } },
+    stages: { visual: {
+      status: "running", revision: 1, artifacts: [],
+      body_visual: { status: "running", attempt, artifacts: [], error: null },
+      wechat_cover: { status: "running", attempt: 1, artifacts: [], error: null }
+    } },
+    ...(bounded ? { capabilities: { providers: { illustration: { profile: "bounded-per-image-v2" } } } } : {}),
     gates: {
       titles: {
         status: "approved",
@@ -280,7 +291,7 @@ async function fixture(t, { platform = "wechat", attempt = 1 } = {}) {
   const coverageFile = await put(runDir, coveragePath, `${JSON.stringify({
     status: "READY",
     run_id: runId,
-    visual_attempt: attempt,
+    body_attempt: attempt,
     platform,
     variant,
     source: { path: input.path, sha256: input.sha256 },
@@ -294,12 +305,11 @@ async function fixture(t, { platform = "wechat", attempt = 1 } = {}) {
   }, null, 2)}\n`);
   const coverageInput = { role: "visual_coverage", path: coveragePath, sha256: await digest(coverageFile) };
   const request = {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     task_id: `illustration:${runId}:${platform}:${variant}:plan:attempt-${String(attempt).padStart(3, "0")}`,
     capability: "illustration",
     provider_contract: PROVIDER,
-    run_dir: runDir,
     run_mode: "autonomous",
     mode: "plan",
     attempt,
@@ -310,11 +320,14 @@ async function fixture(t, { platform = "wechat", attempt = 1 } = {}) {
     inputs: [input, titleInput, coverageInput],
     output_dir: pathSet.base,
     expected_artifacts: [pathSet.plan, pathSet.shot],
-    options: options(platform),
+    options: {
+      ...options(platform),
+      ...(bounded ? { execution_strategy: "bounded_per_image_v2" } : {})
+    },
     interaction_policy: "return_to_orchestrator"
   };
   const requestPath = await put(runDir, pathSet.request, `${JSON.stringify(request, null, 2)}\n`);
-  return { runDir, runId, platform, variant, pathSet, request, requestPath, sourceFile, sourceText, selection, state };
+  return { runDir, runId, platform, variant, bounded, pathSet, request, requestPath, sourceFile, sourceText, selection, state };
 }
 
 async function writePlan(data, mutate) {
@@ -328,10 +341,30 @@ async function writePlan(data, mutate) {
     visual_metaphor: "一道门在自动执行前检查通行条件。",
     main_action: "流程箭头在门前等待确认。",
     suggested_elements: ["gate", "workflow arrow", "check mark"],
-    short_labels: ["边界", "确认", "执行"],
+    ...(data.bounded ? {
+      text_content: {
+        primary: {
+          headline: "先确认边界",
+          headline_source_terms: ["确认", "边界"],
+          labels: ["边界", "确认", "执行"],
+          supporting_copy: "跨系统写入前",
+          footer: null
+        },
+        compact: {
+          headline: "确认边界",
+          headline_source_terms: ["确认", "边界"],
+          labels: ["边界", "确认"],
+          supporting_copy: null,
+          footer: null
+        }
+      }
+    } : { short_labels: ["边界", "确认", "执行"] }),
     qa_risk: "模型可能画出多余品牌标记。"
   };
-  const shot = `---\nartifact: IllustrationShotList\nstatus: READY\ntask_id: ${data.request.task_id}\n---\n\n# 配图镜头表\n\n## ${anchor.image_id}\n\n- Placement or sequence: ${anchor.placement}\n- One core meaning: ${anchor.core_meaning}\n- Content expression structure: ${anchor.structure}\n- Visual metaphor: ${anchor.visual_metaphor}\n- Main actor/object action: ${anchor.main_action}\n- Suggested elements: ${anchor.suggested_elements.join(", ")}\n- Short labels: ${anchor.short_labels.join(", ")}\n- QA risk: ${anchor.qa_risk}\n`;
+  const textLine = data.bounded
+    ? `- Text content: ${JSON.stringify(anchor.text_content)}`
+    : `- Short labels: ${anchor.short_labels.join(", ")}`;
+  const shot = `---\nartifact: IllustrationShotList\nstatus: READY\ntask_id: ${data.request.task_id}\n---\n\n# 配图镜头表\n\n## ${anchor.image_id}\n\n- Placement or sequence: ${anchor.placement}\n- One core meaning: ${anchor.core_meaning}\n- Content expression structure: ${anchor.structure}\n- Visual metaphor: ${anchor.visual_metaphor}\n- Main actor/object action: ${anchor.main_action}\n- Suggested elements: ${anchor.suggested_elements.join(", ")}\n${textLine}\n- QA risk: ${anchor.qa_risk}\n`;
   const shotPath = await put(data.runDir, data.pathSet.shot, shot);
   const plan = {
     schema_version: 1,
@@ -359,7 +392,11 @@ async function writePlan(data, mutate) {
       credential_access: "pass",
       model_check: "pass",
       process_cleanup_plan: "verify-request-process-exit",
-      process_cleanup_status: "not-run"
+      process_cleanup_status: "not-run",
+      ...(data.bounded ? {
+        aspect_control: "hard_parameter",
+        structured_size: style.geometry.requested_dimensions
+      } : {})
     },
     generation_geometry: style.geometry,
     image_count: 1,
@@ -511,6 +548,26 @@ test("plan validates and finalizes exactly plan plus shot list without touching 
   sameKeys(finalized.json, RESULT_KEYS);
   assert.deepEqual(finalized.json.artifacts.map((item) => item.role), ["illustration_plan", "shot_list"]);
   assert.equal(await digest(data.sourceFile), sourceHash);
+});
+
+test("bounded plan requires grounded primary and compact readable text", async (t) => {
+  const data = await fixture(t, { bounded: true });
+  const { plan } = await writePlan(data);
+  sameKeys(plan.anchors[0], BOUNDED_ANCHOR_KEYS);
+  const finalized = await run(["finalize", data.requestPath]);
+  assert.equal(finalized.code, 0, finalized.stderr || finalized.stdout);
+
+  plan.anchors[0] = {
+    ...plan.anchors[0],
+    text_mode: "icons_only",
+    short_labels: [],
+    text_content: undefined
+  };
+  delete plan.anchors[0].text_content;
+  await put(data.runDir, data.pathSet.plan, `${JSON.stringify(plan, null, 2)}\n`);
+  const rejected = await run(["finalize", data.requestPath]);
+  assert.equal(rejected.code, 2);
+  assert.ok(rejected.json.issues.some((item) => item.code === "illustration_text_policy_violation"));
 });
 
 test("request validation rejects extra inputs, wrong aliases, stale attempts, and symlink inputs", async (t) => {

@@ -16,6 +16,8 @@ import {
 } from './lib.mjs';
 import { validateVisualCoverageSet } from './visual-cardinality.mjs';
 import { validateBackendLeaseFile } from './backend-runtime.mjs';
+import { bodyVisualAttempt } from './visual-state.mjs';
+import { ensureVisualPreflight } from './visual-preflight.mjs';
 
 const modes = new Set(['plan', 'generate']);
 const backendHints = new Set(['runtime-native', 'configured-api', 'unknown']);
@@ -135,10 +137,12 @@ try {
     throw new Error('run.json must be a real file inside run-dir.');
   }
   const state = await readJson(statePath);
-  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image';
+  const bounded = state.capabilities?.providers?.illustration?.profile === 'bounded-per-image-v2';
   const visual = state.stages?.visual;
-  if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'visual'
-    || visual?.status !== 'running' || !Number.isInteger(visual?.attempt) || visual.attempt < 1) {
+  const bodyVisual = visual?.body_visual;
+  if (state.schema_version !== 3 || state.status !== 'running' || state.current_stage !== 'visual'
+    || visual?.status !== 'running' || bodyVisual?.status !== 'running'
+    || !Number.isInteger(bodyVisual?.attempt) || bodyVisual.attempt < 1) {
     add(blockers, 'illustration_request_stage_mismatch', 'Run visual stage must be running with a positive attempt.');
   }
   if (state.gates?.titles?.status !== 'approved') {
@@ -155,9 +159,13 @@ try {
   if (mode === 'generate' && state.gates?.visual?.status !== 'approved') {
     add(blockers, 'illustration_plan_not_approved', 'Generate mode requires the current visual plan gate to be approved.');
   }
+  if (!blockers.length) {
+    const preflight = await ensureVisualPreflight(runDir, state, { consumers: ['body_visual'] });
+    for (const value of preflight.issues) add(blockers, value.code, value.message, value);
+  }
   const coverageValidation = await validateVisualCoverageSet(runDir, state);
   for (const value of coverageValidation.issues) add(blockers, value.code, value.message, value);
-  const leaseValidation = await validateBackendLeaseFile(runDir, state);
+  const leaseValidation = await validateBackendLeaseFile(runDir, state, { consumer: 'body_visual' });
   for (const value of leaseValidation.issues) add(blockers, value.code, value.message, value);
   const backendHint = leaseValidation.value?.backend_kind || requestedBackendHint || 'unknown';
   if (requestedBackendHint !== null && leaseValidation.value
@@ -206,7 +214,7 @@ try {
     add(blockers, 'illustration_selection_drift', `Approved ${args.platform} winner is missing or stale.`);
   }
 
-  const attempt = visual?.attempt || 1;
+  const attempt = bodyVisualAttempt(state);
   const paths = attemptNames(attempt, args.platform);
   const outputDir = resolve(runDir, paths.base);
   if (!inside(runDir, outputDir) || await hasSymlinkComponent(runDir, outputDir, false)) {
@@ -247,7 +255,7 @@ try {
   }
 
   if (blockers.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, blockers }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, blockers }, 2);
   } else {
     const inputs = [
       { role: 'final_draft', path: selection.draft_path, sha256: selection.draft_sha256 },
@@ -261,12 +269,11 @@ try {
       );
     }
     const request = {
-      schema_version: 1,
-      contract: 'content-production-provider/v1',
+      schema_version: 2,
+      contract: 'content-production-provider/v2',
       task_id: `illustration:${state.run_id}:${args.platform}:${selection.variant}:${mode}:attempt-${String(attempt).padStart(3, '0')}`,
       capability: 'illustration',
       provider_contract: 'illustration-v1',
-      run_dir: runDir,
       run_mode: state.run_mode,
       mode,
       attempt,
@@ -285,7 +292,9 @@ try {
         brand_override: brandOverride,
         backend_hint: backendHint,
         model_preference: modelPreference,
-        execution_strategy: bounded ? 'bounded_per_image' : 'one_image_at_a_time'
+        execution_strategy: bounded ? 'bounded_per_image_v2' : 'one_image_at_a_time',
+        text_policy: 'required_from_selected_style',
+        prompt_compiler: 'deterministic-v1'
       },
       interaction_policy: 'return_to_orchestrator'
     };
@@ -304,7 +313,8 @@ try {
       status: 'PASS',
       mode,
       task_id: request.task_id,
-      request_path: requestPath,
+      run_id: state.run_id,
+      request_path: requestRelative,
       expected_artifact_count: expectedArtifacts.length
     });
   }

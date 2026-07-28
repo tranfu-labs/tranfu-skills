@@ -23,7 +23,7 @@ origin: own
 
 content-production-provider: topic-planning-v1
 
-只要结构化 request 出现 `contract: content-production-provider/v1`、`capability: topic_planning` 或 `provider_contract: topic-planning-v1` 任一总控标志，就进入总控校验；只有完全没有这些标志时才使用独立模式。进入执行还必须同时满足三项标志和 `interaction_policy: return_to_orchestrator`。显式总控 request 无效时写 canonical `BLOCKED` result 并结束，绝不回退独立模式或创建 `02-选题方案.md`。
+只要结构化 request 出现 `contract: content-production-provider/v2`、`capability: topic_planning` 或 `provider_contract: topic-planning-v1` 任一总控标志，就进入总控校验；只有完全没有这些标志时才使用独立模式。进入执行还必须同时满足三项标志和 `interaction_policy: return_to_orchestrator`。显式总控 request 无效时写 canonical `BLOCKED` result 并结束，绝不回退独立模式或创建 `02-选题方案.md`。
 
 进入总控模式后：
 

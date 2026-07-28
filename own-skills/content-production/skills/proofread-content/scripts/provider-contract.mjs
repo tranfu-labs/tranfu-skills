@@ -6,7 +6,7 @@ import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { analyzeClaimRegression, ENGINE_VERSION } from './claim-regression.mjs';
 
-const CONTRACT = 'content-production-provider/v1';
+const CONTRACT = 'content-production-provider/v2';
 const PROVIDER = 'proofreading-v1';
 const PLATFORMS = new Set(['wechat', 'xiaohongshu', 'zhihu', 'weibo', 'toutiao']);
 const VARIANTS = new Set(['A', 'B']);
@@ -42,6 +42,28 @@ function inside(root, path) {
 
 function runRelative(runDir, path) {
   return relative(runDir, path).replaceAll('\\', '/');
+}
+
+async function findRunRoot(requestPath) {
+  const requestReal = await realpath(requestPath);
+  let current = dirname(requestPath);
+  while (true) {
+    const statePath = join(current, 'run.json');
+    if (existsSync(statePath)) {
+      const runStat = await lstat(current);
+      const stateStat = await lstat(statePath);
+      const runReal = await realpath(current);
+      if (runStat.isSymbolicLink() || !runStat.isDirectory() || stateStat.isSymbolicLink() || !stateStat.isFile()
+        || !inside(runReal, requestReal) || await realpath(statePath) !== join(runReal, 'run.json')) {
+        throw new Error('Request ancestry does not resolve to a safe run root.');
+      }
+      return { runDir: current, runRealDir: runReal };
+    }
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error('Cannot locate run.json from request ancestry.');
 }
 
 async function sha256(path) {
@@ -123,14 +145,10 @@ async function validateRequest(input) {
     return { issues, requestPath, request, requestSha256, runDir, runRealDir, outputDir, outputRealDir, spec };
   }
 
-  runDir = resolve(request.run_dir || '');
   try {
-    const stat = await lstat(runDir);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error('run_dir must be a real directory.');
-    runRealDir = await realpath(runDir);
-    if (!inside(runDir, requestPath) || await hasSymlinkComponent(runDir, requestPath)) throw new Error('Request must remain inside run_dir.');
+    ({ runDir, runRealDir } = await findRunRoot(requestPath));
   } catch (error) {
-    add(issues, 'invalid_provider_run_dir', error.message);
+    add(issues, 'invalid_provider_run_root', error.message);
   }
 
   if (!PLATFORMS.has(request.platform) || !VARIANTS.has(request.variant)) {
@@ -156,13 +174,12 @@ async function validateRequest(input) {
     && STRATEGIES.has(options.execution_strategy)
     && typeof options.model === 'string' && Boolean(options.model.trim())
     && plainObject(options.parameters);
-  if (request.schema_version !== 1 || request.contract !== CONTRACT
+  if (request.schema_version !== 2 || request.contract !== CONTRACT || Object.hasOwn(request, 'run_dir')
     || request.capability !== 'proofreading' || request.provider_contract !== PROVIDER
     || request.mode !== 'proofread' || !['autonomous', 'reviewed'].includes(request.run_mode)
     || request.output_dir !== spec?.base || request.interaction_policy !== 'return_to_orchestrator'
     || typeof request.task_id !== 'string' || !request.task_id
     || !sameItems(request.expected_artifacts, spec?.expected || []) || !validOptions
-    || !isAbsolute(request.run_dir || '') || resolve(request.run_dir || '') !== runDir
     || (spec && requestPath !== resolve(runDir, spec.request))) {
     add(issues, 'invalid_provider_request', 'Request does not match proofreading-v1.');
   }
@@ -413,7 +430,7 @@ async function validateArtifacts(context) {
 
 function makeResult(context, status, artifacts, issues, requestValid = true) {
   return {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request?.task_id || 'unknown',
@@ -475,7 +492,7 @@ async function main() {
     return;
   }
   if (command === 'validate-request') {
-    emit({ status: 'PASS', task_id: context.request.task_id, run_dir: context.runDir, output_dir: context.spec.base,
+    emit({ status: 'PASS', task_id: context.request.task_id, output_dir: context.spec.base,
       inputs: { draft: context.request.inputs[0].path }, issues: [] });
     return;
   }

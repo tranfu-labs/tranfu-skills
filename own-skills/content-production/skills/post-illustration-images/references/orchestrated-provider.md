@@ -1,12 +1,12 @@
 # Content Production Illustration Provider
 
 This route adapts the existing illustration workflow to one orchestrator-issued platform winner. It
-uses `contract: content-production-provider/v1`, `capability: illustration`, and
+uses `contract: content-production-provider/v2`, `capability: illustration`, and
 `provider_contract: illustration-v1`. Standalone behavior and `post-illustration-output/` ownership
 remain unchanged when no provider marker is present.
 
 The public provider contract remains `illustration-v1`. A run capability snapshot with
-`profile: bounded-per-image` and `adapter_contract: illustration-orchestrated-coverage-v1` selects
+`profile: bounded-per-image-v2` and `adapter_contract: illustration-orchestrated-coverage-v1` selects
 the bounded child workflow below; these internal markers do not change the public provider ID.
 
 ## Common Rules
@@ -69,7 +69,11 @@ generation_geometry = {
 }
 anchor = {
   image_id, placement, source_excerpt, core_meaning, structure, visual_metaphor,
-  main_action, suggested_elements, short_labels, qa_risk, text_mode
+  main_action, suggested_elements, text_content, qa_risk
+}
+text_content = { primary, compact }
+primary|compact = {
+  headline, headline_source_terms, labels, supporting_copy, footer
 }
 shot_list = { path, sha256 }
 ```
@@ -77,9 +81,13 @@ shot_list = { path, sha256 }
 Use `status: READY`, backend cleanup `not-run`, and `residual_risk: none`. A bounded plan contains
 `coverage.minimum..coverage.target` anchors, never more than the platform Provider cap of 8. Every
 anchor must exactly map a distinct eligible coverage unit, cover every required unit, and remain in
-source ordinal order. Xiaohongshu maps exactly one anchor to each of its 4-8 carousel pages. Workflow
-and Checklist anchors default to `icons_only`; an `allowlist` anchor must have non-empty
-`short_labels`. `max_images` must equal the coverage target and is never a Canary or concurrency value.
+source ordinal order. Xiaohongshu maps exactly one anchor to each of its 4-8 carousel pages. Every
+registered style requires allowlist text and forbids `icons_only`. Both text variants require a
+2-14-character headline, at least one headline source term present in both the headline and current
+anchor excerpt, and 2-5 unique labels of at most 8 characters. Labels, optional supporting copy, and
+optional footer must occur verbatim in the final draft or selected title. The orchestrator must not
+clear, synthesize, or rewrite provider-planned text. `max_images` must equal the coverage target and is
+never a Canary or concurrency value.
 The shot list uses `artifact: IllustrationShotList`, `status: READY`, the plan task ID, and one
 `## <image_id>` section per anchor.
 
@@ -89,14 +97,22 @@ Generate inputs are exactly `final_draft`, `title_selection`, `visual_coverage`,
 `illustration_plan`, and `shot_list`.
 The visual gate must already bind the current plan and shot-list hashes. In the bounded profile the
 parent request authorizes only the final bundle and native manifest. The orchestrator creates child
-requests and does not let the parent write image files directly.
+requests and does not let the parent write image files directly. Parent request options bind
+`text_policy: required_from_selected_style` and `prompt_compiler: deterministic-v1`.
 
-Each child task ID includes platform, image ID, candidate attempt, and visual attempt. Validate it
-with `scripts/child-contract.mjs`, run prompt preflight before generation, and authorize only that
-child's prompt, candidate/source, same-size delivery, and QA. Text is `icons_only` or limited to the
-anchor's `short_labels`; a 3:4 prompt states `0.75` and must not positively request 2:3 or
-`1024x1536`. A hard backend size must equal `requested_dimensions`; `prompt_only` still undergoes
+Each child task ID includes platform, image ID, candidate attempt, and visual attempt. The child
+request preserves the complete approved anchor and adds `text_variant: primary|compact`. Compile its
+prompt with `node "<SKILL_ROOT>/scripts/compile-generation-prompt.mjs" compile <child-request.json>`,
+then validate it with `scripts/child-contract.mjs` before generation. Preflight recompiles the prompt
+and requires a byte-identical result. A 3:4 prompt states `0.75` and must not positively request 2:3
+or `1024x1536`. A hard backend size must equal `requested_dimensions`; `prompt_only` still undergoes
 post-generation geometry checks.
+
+Candidate QA `readable_text` must exactly equal the active variant in this order: headline, labels,
+non-null supporting copy, non-null footer. Missing, misspelled, duplicated, or extra text returns
+`illustration_candidate_text`. Only that issue code permits the next child request to select
+`compact`; geometry, style, content, or brand failure keeps the same text variant. Three failed
+candidates block the image and never fall back to no text.
 
 The first child is the suite Canary. Do not submit another child until its content, style, brand,
 and native geometry checks pass. The orchestrator then permits at most two active children in the
@@ -162,5 +178,5 @@ Parent artifact roles are `illustration_plan`, `shot_list`, `illustration_bundle
 `native_manifest`. Child results bind their own prompt/source/delivery/QA roles, and Set QA binds its
 review. Only `PASS` is deliverable. Invalid requests and explicit blockers return `BLOCKED`;
 malformed, incomplete, unsafe, drifted, or failed output returns `FAILED`. Paths must remain real
-files inside `run_dir`; symlinks, stale hashes, extra inputs, extra outputs, old attempts, and
+files inside the request's verified run root; symlinks, stale hashes, extra inputs, extra outputs, old attempts, and
 overwritten approved plans are rejected.

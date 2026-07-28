@@ -14,8 +14,9 @@ import {
   readJson,
   writeJson
 } from './lib.mjs';
-import { validateBackendLeaseFile } from './backend-runtime.mjs';
-import { policyPathForAttempt } from './visual-cardinality.mjs';
+import * as backendRuntime from './backend-runtime.mjs';
+import { coverAttempt } from './wechat-cover-contracts.mjs';
+import { ensureVisualPreflight } from './visual-preflight.mjs';
 
 const backendHints = new Set(['runtime-native', 'configured-api', 'programmatic', 'unknown']);
 
@@ -85,9 +86,7 @@ try {
     throw new Error('run.json must be a real file inside run-dir.');
   }
   const state = await readJson(statePath);
-  const hasCardinalityPolicy = fileExists(join(runDir, policyPathForAttempt(state)));
-  const leaseValidation = hasCardinalityPolicy
-    ? await validateBackendLeaseFile(runDir, state) : { issues: [], value: null };
+  const leaseValidation = await backendRuntime.loadBackendLease(runDir, state, 'wechat_cover');
   for (const value of leaseValidation.issues) add(blockers, value.code, value.message, value);
   const backendHint = leaseValidation.value?.backend_kind || requestedBackendHint || 'unknown';
   if (requestedBackendHint !== null && leaseValidation.value
@@ -95,15 +94,13 @@ try {
     add(blockers, 'backend_switch_forbidden', 'backend endpoint mismatch');
   }
   const visual = state.stages?.visual;
-  if (state.schema_version !== 2 || state.status !== 'running' || state.current_stage !== 'visual'
-    || visual?.status !== 'running' || !Number.isInteger(visual?.attempt) || visual.attempt < 1) {
+  const cover = visual?.wechat_cover || visual;
+  if (state.schema_version !== 3 || state.status !== 'running' || state.current_stage !== 'visual'
+    || cover?.status !== 'running' || !Number.isInteger(coverAttempt(state)) || coverAttempt(state) < 1) {
     add(blockers, 'wechat_cover_stage_mismatch', 'Run visual stage must be running with a positive attempt.');
   }
   if (state.gates?.titles?.status !== 'approved') {
     add(blockers, 'wechat_cover_titles_gate_missing', 'WeChat cover generation requires the approved titles gate.');
-  }
-  if (state.gates?.visual?.status !== 'approved') {
-    add(blockers, 'wechat_cover_visual_gate_missing', 'WeChat cover generation starts only after the current visual plans are approved.');
   }
   if (state.capabilities?.providers?.wechat_cover?.status !== 'PASS'
     || state.capabilities?.providers?.wechat_cover?.contract !== 'wechat-cover-v1') {
@@ -111,6 +108,10 @@ try {
   }
   for (const issue of await gateIntegrity(runDir, state)) {
     add(blockers, issue.code, 'An approved artifact changed or disappeared.', issue);
+  }
+  if (!blockers.length) {
+    const preflight = await ensureVisualPreflight(runDir, state, { consumers: ['wechat_cover'] });
+    for (const value of preflight.issues) add(blockers, value.code, value.message, value);
   }
 
   const decisionBinding = state.gates?.titles?.decision_ref;
@@ -146,7 +147,7 @@ try {
     add(blockers, 'wechat_cover_selection_drift', 'Approved WeChat winner is missing or stale.');
   }
 
-  const attempt = visual?.attempt || 1;
+  const attempt = coverAttempt(state);
   const paths = coverPaths(attempt);
   const outputDir = resolve(runDir, paths.base);
   if (!inside(runDir, outputDir) || await hasSymlinkComponent(runDir, outputDir, false)) {
@@ -166,15 +167,14 @@ try {
   }
 
   if (blockers.length) {
-    emitJson({ status: 'BLOCKED', run_dir: runDir, blockers }, 2);
+    emitJson({ status: 'BLOCKED', run_id: state.run_id, blockers }, 2);
   } else {
     const request = {
-      schema_version: 1,
-      contract: 'content-production-provider/v1',
+      schema_version: 2,
+      contract: 'content-production-provider/v2',
       task_id: `wechat-cover:${state.run_id}:wechat:${selection.variant}:attempt-${String(attempt).padStart(3, '0')}`,
       capability: 'wechat_cover',
       provider_contract: 'wechat-cover-v1',
-      run_dir: runDir,
       run_mode: state.run_mode,
       mode: 'generate_cover',
       attempt,
@@ -215,7 +215,7 @@ try {
     emitJson({
       status: 'PASS',
       task_id: request.task_id,
-      request_path: requestPath,
+      request_path: paths.request,
       expected_artifact_count: request.expected_artifacts.length
     });
   }

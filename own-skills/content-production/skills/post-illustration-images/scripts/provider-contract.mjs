@@ -6,15 +6,16 @@ import { lstat, readFile, readdir, realpath, writeFile } from "node:fs/promises"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readRasterInfo } from "./validate-style-bundle.mjs";
+import { findRunDirFromRequest } from "../../../scripts/lib.mjs";
 
 const SKILL_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const CONTRACT = "content-production-provider/v1";
+const CONTRACT = "content-production-provider/v2";
 const PROVIDER = "illustration-v1";
 const PLATFORMS = new Set(["wechat", "xiaohongshu", "zhihu", "weibo", "toutiao"]);
 const VARIANTS = new Set(["A", "B"]);
 const keys = (value) => value.split(" ");
-const REQUEST_KEYS = keys("schema_version contract task_id capability provider_contract run_dir run_mode mode attempt platform provider_platform variant selection inputs output_dir expected_artifacts options interaction_policy");
-const OPTION_KEYS = keys("requested_output publishing_path style_id max_images brand_override backend_hint model_preference execution_strategy");
+const REQUEST_KEYS = keys("schema_version contract task_id capability provider_contract run_mode mode attempt platform provider_platform variant selection inputs output_dir expected_artifacts options interaction_policy");
+const OPTION_KEYS = keys("requested_output publishing_path style_id max_images brand_override backend_hint model_preference execution_strategy text_policy prompt_compiler");
 const SELECTION_KEYS = keys("platform variant title_id title topic_phrase draft_path draft_sha256 decision_rule");
 const PLAN_KEYS = keys("schema_version task_id status platform provider_platform variant source selection options analysis style brand generation_backend generation_geometry image_count anchors shot_list residual_risk");
 const ANALYSIS_KEYS = keys("main_line content_type expression_need");
@@ -24,7 +25,9 @@ const BACKEND_KEYS = keys("kind adapter endpoint_source resolved_model artifact_
 const BOUNDED_BACKEND_KEYS = [...BACKEND_KEYS, "aspect_control", "structured_size"];
 const GEOMETRY_KEYS = keys("geometry_profile resolved_model requested_dimensions target_aspect_ratio design_dimensions delivery_dimensions ratio_tolerance minimum_short_edge native_output_policy post_generation_resize");
 const ANCHOR_KEYS = keys("image_id placement source_excerpt core_meaning structure visual_metaphor main_action suggested_elements short_labels qa_risk");
-const BOUNDED_ANCHOR_KEYS = [...ANCHOR_KEYS, "text_mode"];
+const BOUNDED_ANCHOR_KEYS = keys("image_id placement source_excerpt core_meaning structure visual_metaphor main_action suggested_elements text_content qa_risk");
+const TEXT_CONTENT_KEYS = keys("primary compact");
+const TEXT_VARIANT_KEYS = keys("headline headline_source_terms labels supporting_copy footer");
 const BUNDLE_KEYS = keys("schema_version task_id status platform provider_platform variant source selection plan shot_list style brand generation_backend generation_geometry image_count manifest images residual_risk");
 const IMAGE_KEYS = keys("image_id file file_sha256 source_file source_sha256 prompt_path prompt_sha256 placement core_meaning structure visual_metaphor content_qa_status style_qa_status brand_qa_status set_qa_status brand_overlay_status size_check_status generation_attempt requested_dimensions source_dimensions source_aspect_ratio source_artifact delivery_dimensions delivery_artifact native_output_preserved post_generation_actions geometry_attempts residual_risk");
 const REF_KEYS = keys("path sha256");
@@ -157,7 +160,9 @@ function validOptions(options, platform, bounded = false) {
     && ["runtime-native", "configured-api", "unknown"].includes(options.backend_hint)
     && (options.model_preference === null
       || typeof options.model_preference === "string" && Boolean(options.model_preference.trim()))
-    && options.execution_strategy === (bounded ? "bounded_per_image" : "one_image_at_a_time");
+    && options.execution_strategy === (bounded ? "bounded_per_image_v2" : "one_image_at_a_time")
+    && options.text_policy === "required_from_selected_style"
+    && options.prompt_compiler === "deterministic-v1";
 }
 
 function validSelection(selection, platform, variant) {
@@ -191,11 +196,10 @@ async function validateRequest(input) {
   }
 
   const request = context.request;
-  context.runDir = typeof request.run_dir === "string" && isAbsolute(request.run_dir)
-    ? resolve(request.run_dir) : null;
   try {
+    context.runDir = await findRunDirFromRequest(context.requestPath);
     const runStat = await lstat(context.runDir || "");
-    if (runStat.isSymbolicLink() || !runStat.isDirectory()) throw new Error("run_dir must be a real directory.");
+    if (runStat.isSymbolicLink() || !runStat.isDirectory()) throw new Error("run root must be a real directory.");
     context.runRealDir = await realpath(context.runDir);
     if (!inside(context.runDir, context.requestPath)
       || await hasSymlinkComponent(context.runDir, context.requestPath)) {
@@ -223,9 +227,10 @@ async function validateRequest(input) {
   }
   if (context.state) {
     const visual = context.state.stages?.visual;
-    if (context.state.schema_version !== 2 || typeof context.state.run_id !== "string"
+    if (context.state.schema_version !== 3 || typeof context.state.run_id !== "string"
       || context.state.status !== "running" || context.state.current_stage !== "visual"
-      || visual?.status !== "running" || visual?.attempt !== request.attempt) {
+      || visual?.status !== "running" || visual?.body_visual?.status !== "running"
+      || visual?.body_visual?.attempt !== request.attempt) {
       add(context.issues, "provider_attempt_mismatch", "Request must target the current running visual attempt.");
     }
     if (request.run_mode !== context.state.run_mode) {
@@ -237,7 +242,7 @@ async function validateRequest(input) {
     }
   }
 
-  const bounded = context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image";
+  const bounded = context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image-v2";
 
   if (context.spec && context.runDir) {
     context.outputDir = resolve(context.runDir, context.spec.base);
@@ -254,7 +259,7 @@ async function validateRequest(input) {
     }
   }
 
-  if (!sameKeys(request, REQUEST_KEYS) || request.schema_version !== 1 || request.contract !== CONTRACT
+  if (!sameKeys(request, REQUEST_KEYS) || request.schema_version !== 2 || request.contract !== CONTRACT
     || request.capability !== "illustration" || request.provider_contract !== PROVIDER
     || !["autonomous", "reviewed"].includes(request.run_mode) || !modeValid
     || request.interaction_policy !== "return_to_orchestrator" || request.output_dir !== context.spec?.base
@@ -318,7 +323,7 @@ async function validateRequest(input) {
       const policyPath = await safeFile(context, context.coverage.policy_ref?.path, context.issues, "visual_policy_missing");
       if (!coverageInput || coverageInput.path !== expectedCoveragePath
         || context.coverage.status !== "READY" || context.coverage.run_id !== context.state?.run_id
-        || context.coverage.visual_attempt !== request.attempt || context.coverage.platform !== request.platform
+        || context.coverage.body_attempt !== request.attempt || context.coverage.platform !== request.platform
         || context.coverage.variant !== request.variant
         || !sameJson(context.coverage.source, { path: finalInput?.path, sha256: finalInput?.sha256 })
         || context.coverage.title_selection?.path !== titleInput?.path
@@ -379,7 +384,7 @@ async function validateRequest(input) {
 
 function expectedGenerateArtifacts(context, plan) {
   if (!Array.isArray(plan?.anchors) || !context.spec) return [];
-  if (context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image") {
+  if (context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image-v2") {
     return [context.spec.bundle, context.spec.manifest];
   }
   const images = expectedImagePaths(context, plan);
@@ -473,6 +478,38 @@ function validOptionalStringArray(value) {
     && value.every((item) => typeof item === "string" && Boolean(item.trim()));
 }
 
+function characterCount(value) {
+  return [...value].length;
+}
+
+function validTextVariant(value, policy, anchor, sourceText, selectedTitle) {
+  if (!sameKeys(value, TEXT_VARIANT_KEYS) || typeof value.headline !== "string"
+    || value.headline !== value.headline.trim()
+    || characterCount(value.headline) < policy.headline?.minCharacters
+    || characterCount(value.headline) > policy.headline?.maxCharacters
+    || !validOptionalStringArray(value.headline_source_terms) || value.headline_source_terms.length === 0
+    || !value.headline_source_terms.some((term) => value.headline.includes(term)
+      && anchor.source_excerpt.includes(term))
+    || !validOptionalStringArray(value.labels)
+    || value.labels.length < policy.labels?.minItems || value.labels.length > policy.labels?.maxItems
+    || value.labels.some((label) => characterCount(label) > policy.labels?.maxCharactersPerItem)
+    || ![value.supporting_copy, value.footer].every((item) => item === null
+      || typeof item === "string" && item === item.trim() && Boolean(item))) return false;
+  const readable = [value.headline, ...value.labels, value.supporting_copy, value.footer]
+    .filter((item) => item !== null);
+  if (new Set(readable).size !== readable.length) return false;
+  const grounded = `${sourceText}\n${selectedTitle}`;
+  return [...value.labels, value.supporting_copy, value.footer]
+    .filter((item) => item !== null).every((item) => grounded.includes(item));
+}
+
+function validTextContent(value, policy, anchor, sourceText, selectedTitle) {
+  return sameKeys(value, TEXT_CONTENT_KEYS) && policy?.defaultMode === "allowlist"
+    && policy.iconsOnlyAllowed === false
+    && validTextVariant(value.primary, policy, anchor, sourceText, selectedTitle)
+    && validTextVariant(value.compact, policy, anchor, sourceText, selectedTitle);
+}
+
 async function currentGeneratedFiles(context) {
   const output = [];
   const version = `v${String(context.request.attempt).padStart(3, "0")}`;
@@ -524,7 +561,7 @@ async function validatePlan(context, { rejectGenerated = true } = {}) {
     || !EXPRESSIONS.has(plan.analysis?.expression_need)) {
     add(issues, "invalid_illustration_analysis", "Plan analysis is incomplete.");
   }
-  const bounded = context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image";
+  const bounded = context.state?.capabilities?.providers?.illustration?.profile === "bounded-per-image-v2";
   if (!sameKeys(plan.style, STYLE_KEYS) || !sameKeys(plan.brand, BRAND_KEYS)
     || !sameKeys(plan.generation_geometry, GEOMETRY_KEYS)
     || !validBackend(plan.generation_backend, "not-run", bounded, plan.generation_geometry)) {
@@ -590,18 +627,18 @@ async function validatePlan(context, { rejectGenerated = true } = {}) {
   for (const anchor of anchors) {
     const excerpt = anchor?.source_excerpt?.replace(/\s+/g, " ").trim();
     const meaning = anchor?.core_meaning?.replace(/\s+/g, " ").trim();
+    const textValid = !bounded || registered
+      && validTextContent(anchor?.text_content, registered.spec.textPolicy, anchor, sourceText, plan.selection?.title || "");
     if (!sameKeys(anchor, bounded ? BOUNDED_ANCHOR_KEYS : ANCHOR_KEYS) || !/^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(anchor.image_id || "")
       || ids.has(anchor.image_id) || bounded && (excerpts.has(excerpt) || meanings.has(meaning)) || ![anchor.placement, anchor.source_excerpt, anchor.core_meaning,
         anchor.structure, anchor.visual_metaphor, anchor.main_action, anchor.qa_risk]
         .every((item) => typeof item === "string" && Boolean(item.trim()))
-      || !validStringArray(anchor.suggested_elements) || (bounded
-        ? !["icons_only", "allowlist"].includes(anchor.text_mode)
-          || !validOptionalStringArray(anchor.short_labels)
-          || anchor.text_mode === "icons_only" && anchor.short_labels.length !== 0
-          || anchor.text_mode === "allowlist" && anchor.short_labels.length === 0
-          || /(?:workflow|process|checklist)/i.test(anchor.structure) && anchor.text_mode !== "icons_only"
-        : !validStringArray(anchor.short_labels))) {
+      || !validStringArray(anchor.suggested_elements) || bounded && !textValid
+      || !bounded && !validStringArray(anchor.short_labels)) {
       add(issues, "invalid_illustration_anchor", `Invalid anchor: ${anchor?.image_id || "(missing)"}.`);
+      if (bounded && !textValid) {
+        add(issues, "illustration_text_policy_violation", `Anchor text_content violates the selected Style Spec: ${anchor?.image_id || "(missing)"}.`);
+      }
       continue;
     }
     ids.add(anchor.image_id);
@@ -838,7 +875,7 @@ async function collectPlanArtifacts(context, validation) {
 
 function makeResult(context, status, artifacts, issues, requestValid = true) {
   return {
-    schema_version: 1,
+    schema_version: 2,
     contract: CONTRACT,
     provider_contract: PROVIDER,
     task_id: context.request?.task_id || "unknown",
@@ -895,7 +932,6 @@ async function main() {
     emit({
       status: "PASS",
       task_id: context.request.task_id,
-      run_dir: context.runDir,
       output_dir: context.spec.base,
       mode: context.request.mode,
       attempt: context.request.attempt,
