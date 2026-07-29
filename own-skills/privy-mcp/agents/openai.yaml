@@ -1,0 +1,12 @@
+interface:
+  display_name: "Privy MCP"
+  short_description: "Query Privy docs and build verified integrations"
+  default_prompt: "Use $privy-mcp to research the official Privy docs and implement this integration safely."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "privy"
+      description: "Official public Privy documentation MCP server"
+      transport: "streamable_http"
+      url: "https://docs.privy.io/mcp"
