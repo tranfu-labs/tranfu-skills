@@ -76,8 +76,8 @@
   ],
   "format-content": [
     "content",
-    "align-left",
-    "内容格式整理"
+    "brand-wechat",
+    "WeChat/微信品牌标志"
   ],
   "generate-product-logo": [
     "content",
@@ -86,13 +86,13 @@
   ],
   "github-delivery-check": [
     "engineering",
-    "package-check",
-    "代码交付检查"
+    "brand-github",
+    "GitHub 品牌标志"
   ],
   "github-repo-completeness": [
     "engineering",
-    "list-checks",
-    "仓库完备清单"
+    "brand-github",
+    "GitHub 品牌标志"
   ],
   "goal-driven-decomposition": [
     "strategy",
@@ -106,8 +106,8 @@
   ],
   "lark-safe-write": [
     "operations",
-    "file-lock-2",
-    "文档安全写入"
+    "brand-lark",
+    "Lark/飞书品牌标志"
   ],
   "market-analysis": [
     "strategy",
@@ -133,6 +133,11 @@
     "engineering",
     "git-fork",
     "PRD 并行分支"
+  ],
+  "privy-mcp": [
+    "engineering",
+    "brand-privy",
+    "Privy 品牌标志"
   ],
   "product-title-generation": [
     "content",
@@ -186,8 +191,8 @@
   ],
   "skill-icon-generator": [
     "content",
-    "pen-tool",
-    "Skill 图标矢量生成"
+    "wand-sparkles",
+    "Skill 图标生成"
   ],
   "skill-improve-workflow": [
     "engineering",
@@ -211,8 +216,8 @@
   ],
   "social-media-login-collector": [
     "operations",
-    "key-round",
-    "登录数据采集"
+    "user-round-key",
+    "社媒账户登录采集"
   ],
   "strategy-first-development": [
     "strategy",
@@ -231,8 +236,8 @@
   ],
   "tranfu-coolify-ops": [
     "operations",
-    "cloud-cog",
-    "云端部署运维"
+    "brand-coolify",
+    "Coolify 品牌标志"
   ],
   "tranfu-layout-systems": [
     "content",
@@ -241,8 +246,8 @@
   ],
   "tranfu-linear-ui-icon-set": [
     "content",
-    "grid-2x2",
-    "统一线性图标组"
+    "shapes",
+    "统一线性图形集合"
   ],
   "tranfu-website-design": [
     "content",
@@ -286,8 +291,13 @@
   ],
   "wechat-sketch-cover": [
     "content",
-    "gallery-thumbnails",
-    "公众号封面"
+    "brand-wechat",
+    "WeChat/微信品牌标志"
+  ],
+  "weibo-notes": [
+    "content",
+    "brand-sina-weibo",
+    "Sina Weibo 品牌标志"
   ],
   "write-social-preview-head": [
     "engineering",
@@ -301,7 +311,12 @@
   ],
   "xiaohongshu-card-publish": [
     "content",
-    "gallery-vertical-end",
-    "竖版卡片发布"
+    "brand-xiaohongshu",
+    "小红书品牌标志"
+  ],
+  "xiaohongshu-writing": [
+    "content",
+    "brand-xiaohongshu",
+    "小红书品牌标志"
   ]
 }

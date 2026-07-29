@@ -4,11 +4,17 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import {
+  compareCandidateIcon,
+  formatSimilarity,
+  MAX_ICON_SIMILARITY,
+} from "./icon_similarity.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const skillRoot = path.resolve(scriptDir, "..");
 const iconRoot = path.join(skillRoot, "assets", "lucide");
 const curatedSpecsFile = path.join(skillRoot, "assets", "curated-specs.json");
+const brandRegistryFile = path.join(skillRoot, "assets", "brand-registry.json");
 
 const families = {
   strategy: ["#FFF3E8", "#EA580C"],
@@ -18,6 +24,7 @@ const families = {
 };
 
 const keywordRules = [
+  { keywords: ["mcp", "model context protocol", "模型上下文协议"], family: "engineering", icon: "server-cog", metaphor: "MCP 服务连接" },
   { keywords: ["growth", "acquisition", "retention", "增长", "获客", "拉新", "留存"], family: "strategy", icon: "chart-no-axes-combined", metaphor: "用户增长曲线" },
   { keywords: ["deploy", "cloud", "coolify", "发布", "部署", "运维"], family: "operations", icon: "cloud-cog", metaphor: "部署运维" },
   { keywords: ["security", "safe", "lock", "安全", "权限", "隐私"], family: "operations", icon: "file-lock-2", metaphor: "安全保护" },
@@ -43,11 +50,11 @@ function usage() {
 
 Options:
   --family <name>    strategy | content | engineering | operations
-  --icon <name>      bundled Lucide icon name
+  --icon <name>      bundled Lucide or brand-* mark name
   --metaphor <text>  semantic description for the selected icon
   --force            overwrite existing icon.svg or icon.png
   --dry-run          print the selection without writing files
-  --list-icons       list bundled Lucide icon names
+  --list-icons       list bundled Lucide and brand mark names
   --help             show this help`;
 }
 
@@ -118,6 +125,17 @@ function loadCuratedSpecs() {
   }
 }
 
+function loadBrandRegistry() {
+  if (!fs.existsSync(brandRegistryFile)) {
+    fail(`brand registry is missing: ${brandRegistryFile}`);
+  }
+  try {
+    return JSON.parse(fs.readFileSync(brandRegistryFile, "utf8"));
+  } catch (error) {
+    fail(`invalid brand registry: ${error.message}`);
+  }
+}
+
 function stableHash(value) {
   let hash = 2166136261;
   for (const char of value) {
@@ -150,12 +168,38 @@ function frontmatter(source) {
   return result;
 }
 
-function infer({ slug, description, icons, curatedSpecs }) {
+function infer({ slug, description, icons, curatedSpecs, brandRegistry }) {
   if (curatedSpecs[slug]) {
     const [family, icon, metaphor] = curatedSpecs[slug];
     if (!families[family]) fail(`curated mapping for ${slug} has unknown family ${family}`);
     if (!icons.includes(icon)) fail(`curated mapping for ${slug} has unknown icon ${icon}`);
     return { family, icon, metaphor, source: "curated" };
+  }
+  const normalizedSlug = slug.replace(/[-_]/g, " ").toLowerCase();
+  const brandMatches = Object.entries(brandRegistry).filter(([, spec]) =>
+    spec.aliases.some((alias) => normalizedSlug.includes(alias.toLowerCase())),
+  );
+  if (brandMatches.length > 1) {
+    fail(
+      `target Skill name matches multiple brands: ${brandMatches
+        .map(([brand]) => brand)
+        .join(", ")}; add a curated mapping`,
+    );
+  }
+  if (brandMatches.length === 1) {
+    const [brand, spec] = brandMatches[0];
+    if (!families[spec.default_family]) {
+      fail(`brand registry entry ${brand} has unknown family ${spec.default_family}`);
+    }
+    if (!icons.includes(spec.default_icon)) {
+      fail(`brand registry entry ${brand} has unknown icon ${spec.default_icon}`);
+    }
+    return {
+      family: spec.default_family,
+      icon: spec.default_icon,
+      metaphor: spec.metaphor,
+      source: "brand-registry",
+    };
   }
   const searchable = `${slug.replace(/[-_]/g, " ")} ${description}`.toLowerCase();
   const matched = keywordRules.find(
@@ -173,10 +217,17 @@ function infer({ slug, description, icons, curatedSpecs }) {
   }
   const hash = stableHash(`${slug}\n${description}`);
   const familyNames = Object.keys(families);
+  const reservedIcons = new Set(Object.values(curatedSpecs).map((spec) => spec[1]));
+  const fallbackIcons = icons.filter(
+    (icon) => !icon.startsWith("brand-") && !reservedIcons.has(icon),
+  );
+  if (fallbackIcons.length === 0) {
+    fail("no unreserved Lucide icon is available for stable fallback");
+  }
   return {
-    family: familyNames[Math.floor(hash / icons.length) % familyNames.length],
-    icon: icons[hash % icons.length],
-    metaphor: `稳定回退：${icons[hash % icons.length]}`,
+    family: familyNames[Math.floor(hash / fallbackIcons.length) % familyNames.length],
+    icon: fallbackIcons[hash % fallbackIcons.length],
+    metaphor: `稳定回退：${fallbackIcons[hash % fallbackIcons.length]}`,
     source: "stable-hash",
   };
 }
@@ -185,16 +236,47 @@ function lucideChildren(name) {
   const file = path.join(iconRoot, `${name}.svg`);
   if (!fs.existsSync(file)) fail(`unknown bundled Lucide icon: ${name}`);
   const source = fs.readFileSync(file, "utf8");
+  for (const forbidden of ["<script", "<text", "<filter", "<linearGradient", "<image", "<foreignObject"]) {
+    if (source.includes(forbidden)) fail(`bundled mark ${name} contains forbidden element ${forbidden}`);
+  }
+  if (name.startsWith("brand-") && !/viewBox=["']0 0 24 24["']/.test(source)) {
+    fail(`brand mark ${name} must use viewBox="0 0 24 24"`);
+  }
   const match = source.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);
   if (!match) fail(`invalid bundled Lucide SVG: ${name}`);
   return match[1].trim();
 }
 
-function makeSvg(family, icon) {
-  const [background, stroke] = families[family];
+function brandSource(name) {
+  if (!name.startsWith("brand-")) return null;
+  const source = fs.readFileSync(path.join(iconRoot, `${name}.svg`), "utf8");
+  const match = source.match(/<!--\s*brand-source:\s*([\s\S]*?)\s*-->/);
+  if (!match) fail(`brand mark ${name} is missing a brand-source comment`);
+  return match[1].trim();
+}
+
+function brandSpecForIcon(icon, brandRegistry) {
+  const match = Object.entries(brandRegistry).find(
+    ([, spec]) => spec.default_icon === icon,
+  );
+  return match ? { name: match[0], ...match[1] } : null;
+}
+
+function makeSvg(family, icon, brandRegistry) {
+  const isBrandMark = icon.startsWith("brand-");
+  const brandSpec = isBrandMark ? brandSpecForIcon(icon, brandRegistry) : null;
+  if (isBrandMark && !brandSpec) {
+    fail(`brand mark ${icon} is not registered in assets/brand-registry.json`);
+  }
+  const [background, stroke] = isBrandMark
+    ? [brandSpec.background, brandSpec.foreground]
+    : families[family];
+  const markStyle = isBrandMark
+    ? `color="${stroke}" fill="${stroke}" stroke="none"`
+    : `fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
   <rect width="48" height="48" fill="${background}"/>
-  <g transform="translate(9 9) scale(1.25)" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(9 9) scale(1.25)" ${markStyle}>
     ${lucideChildren(icon)}
   </g>
 </svg>
@@ -246,6 +328,7 @@ function pngIs48(file) {
 const options = parseArgs(process.argv.slice(2));
 const icons = availableIcons();
 const curatedSpecs = loadCuratedSpecs();
+const brandRegistry = loadBrandRegistry();
 if (options.help) {
   console.log(usage());
   process.exit(0);
@@ -274,6 +357,7 @@ const inferred = infer({
   description: metadata.description || "",
   icons,
   curatedSpecs,
+  brandRegistry,
 });
 const selection = {
   family: options.family || inferred.family,
@@ -288,15 +372,54 @@ if (!icons.includes(selection.icon)) {
   fail(`unknown icon ${selection.icon}; run with --list-icons`);
 }
 
+let sharp;
+try {
+  sharp = (await import("sharp")).default;
+} catch {
+  fail(`sharp is not installed; run: npm install --prefix "${skillRoot}" --no-package-lock`);
+}
+const similarityComparisons = await compareCandidateIcon({
+  slug,
+  icon: selection.icon,
+  curatedSpecs,
+  iconRoot,
+  sharp,
+});
+const closestMatch = similarityComparisons[0] || null;
+if (closestMatch && closestMatch.similarity > MAX_ICON_SIMILARITY) {
+  fail(
+    `icon ${selection.icon} is ${formatSimilarity(closestMatch.similarity)} perceptually similar ` +
+      `to ${closestMatch.slug}/${closestMatch.icon}; maximum allowed is ` +
+      `${formatSimilarity(MAX_ICON_SIMILARITY)}. Choose a semantically correct bundled mark that passes the gate.`,
+  );
+}
+
 const assetsDir = path.join(targetDir, "assets");
 const svgFile = path.join(assetsDir, "icon.svg");
 const pngFile = path.join(assetsDir, "icon.png");
+const selectedBrand = selection.icon.startsWith("brand-")
+  ? brandSpecForIcon(selection.icon, brandRegistry)
+  : null;
 const summary = {
   skill: slug,
   family: selection.family,
+  mark_type: selection.icon.startsWith("brand-") ? "brand" : "lucide",
+  brand_source: brandSource(selection.icon),
+  brand_name: selectedBrand?.name || null,
+  foreground_color: selectedBrand?.foreground || families[selection.family][1],
+  background_color: selectedBrand?.background || families[selection.family][0],
   lucide_icon: selection.icon,
   metaphor: selection.metaphor,
   selection_source: selection.source,
+  similarity_method: "normalized-phash",
+  similarity_limit: MAX_ICON_SIMILARITY,
+  closest_match: closestMatch
+    ? {
+        skill: closestMatch.slug,
+        lucide_icon: closestMatch.icon,
+        similarity: Number(closestMatch.similarity.toFixed(4)),
+      }
+    : null,
   icon_small: svgFile,
   icon_large: pngFile,
 };
@@ -308,15 +431,8 @@ if (!options.force && (fs.existsSync(svgFile) || fs.existsSync(pngFile))) {
   fail("target already has icon.svg or icon.png; rerun with --force only when replacement is intended");
 }
 
-let sharp;
-try {
-  sharp = (await import("sharp")).default;
-} catch {
-  fail(`sharp is not installed; run: npm install --prefix "${skillRoot}" --no-package-lock`);
-}
-
 fs.mkdirSync(assetsDir, { recursive: true });
-const svgSource = makeSvg(selection.family, selection.icon);
+const svgSource = makeSvg(selection.family, selection.icon, brandRegistry);
 const tempPng = path.join(assetsDir, `.icon-${process.pid}.png`);
 await sharp(Buffer.from(svgSource)).resize(48, 48).png().toFile(tempPng);
 if (!pngIs48(tempPng)) {

@@ -1,7 +1,7 @@
 {
   "name": "@tranfu/skill-icon-generator-runtime",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.6.0",
   "type": "module",
   "engines": {
     "node": ">=20.9.0"

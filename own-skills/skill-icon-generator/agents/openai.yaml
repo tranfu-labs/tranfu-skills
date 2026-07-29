@@ -2,5 +2,5 @@ interface:
   icon_large: "./assets/icon.png"
   icon_small: "./assets/icon.svg"
   display_name: "Skill Icon Generator"
-  short_description: "Generate matching icons for one target Skill"
-  default_prompt: "Use $skill-icon-generator to generate a 48×48 SVG and PNG icon for one target Skill."
+  short_description: "Generate semantic Skill icons with official brand colors"
+  default_prompt: "Use $skill-icon-generator to generate a 48×48 SVG and PNG icon, using one verified canonical logo in its official brand color on a #F0F0F0 background for brand-bound Skills."
