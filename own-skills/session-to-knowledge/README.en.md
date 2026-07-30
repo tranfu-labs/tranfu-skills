@@ -1,5 +1,5 @@
 ---
-description: Turn one agent session into an evidence-grounded practical article with resumable Codex 413 recovery.
+description: Filter one agent session into evidence-grounded local and Lark practical knowledge.
 prompt_examples:
   - prompt: Use $session-to-knowledge to capture reusable knowledge from the current session.
     scene: Capture the current session
@@ -41,8 +41,10 @@ Only the Codex integration is natively validated. The other entries are adaptati
 - [x] Save redacted checkpoints and resume failed runs
 - [x] Exclude system instructions, hidden reasoning, environment snapshots, and internal agent communication
 - [x] Redact common high-risk content locally before workers receive it
+- [x] Exclude Web3, digital-asset, blockchain, and cryptography content throughout the pipeline
 - [x] Require evidence of the problem, action, and successful result
 - [x] Validate article structure, evidence coverage, and privacy before publication
+- [x] Publish the local final article as a recoverable Lark Wiki child document
 
 ## Prerequisites
 
@@ -52,6 +54,7 @@ Only the Codex integration is natively validated. The other entries are adaptati
 - Read access to the source transcript
 - Write access to the target project's `session-knowledge/` directory
 - An agent host with isolated workers that do not inherit the original context for oversized sources
+- Optional: `lark-cli` 1.0.77 or newer and an existing writable Wiki Docx parent
 
 Transcript filtering, chunking, and initial redaction use a local Python standard-library script. Model access for workers is still provided by the agent host.
 
@@ -124,6 +127,18 @@ $session-to-knowledge source=/path/to/transcript.jsonl
 
 Supported inputs include `.jsonl`, `.json`, `.md`, `.txt`, and plain log text.
 
+### Configure Lark Publishing
+
+The first invocation probes `lark-cli`. When the CLI is available but no destination is bound, the skill asks for `user` or `bot` identity and an existing Wiki Docx parent:
+
+```bash
+python3 scripts/lark_publish.py status
+python3 scripts/lark_publish.py configure \
+  --identity user --parent <wiki-url-or-token>
+```
+
+`user` can access a personal library or an authorized team Wiki; a missing login uses split-flow authorization for the Docs, Drive, and Wiki domains. `bot` can use only a team Wiki available to that application. Configuration is stored under `${XDG_CONFIG_HOME:-~/.config}/session-to-knowledge/`; it contains no access token, secret, or article body. Changing the parent requires explicit `--replace`, and the skill never runs `keychain-downgrade` automatically.
+
 ## Output
 
 The default destination is:
@@ -139,7 +154,7 @@ The project root is selected in this order:
 3. The current Git repository root
 4. The current working directory
 
-Every invocation creates a new document and never overwrites an existing file. Each article contains: Outcome Summary, Background and Constraints, Problem Symptoms, Diagnosis, Key Failures, Root Cause, Solution, Verification Evidence, Transferable Methods, and Action Checklist.
+Every invocation creates a new local document and never overwrites an existing file. Each article contains: Outcome Summary, Background and Constraints, Problem Symptoms, Diagnosis, Key Failures, Root Cause, Solution, Verification Evidence, Transferable Methods, and Action Checklist. Once Lark is configured, the local H1 becomes the Wiki page title and the validated body after that heading is written unchanged through stdin, without a model rewrite. Remote failure never deletes or rolls back the local file.
 
 ## HTTP 413 Recovery Boundary
 
@@ -169,15 +184,16 @@ flowchart TD
     A["User explicitly invokes the skill"] --> B{"Is the visible session complete and bounded"}
     B -->|Yes| C["Build an evidence ledger"]
     B -->|No or HTTP 413| D["Read a persisted task or transcript"]
-    D --> E["Filter and redact locally"]
+    D --> E["Apply local content policy and redaction"]
     E --> F["Isolated map workers, maximum concurrency 4"]
     F --> G["Tree-shaped reduction"]
     G --> H["Re-read and verify cited sources"]
     C --> I["Select 1–3 related problems"]
     H --> I
     I --> J["Write the fixed article structure"]
-    J --> K["Privacy scan and finalize gate"]
-    K --> L["Publish under session-knowledge"]
+    J --> K["Safety scan and finalize gate"]
+    K --> L["Write under session-knowledge"]
+    L --> M["Publish recoverably to Lark Wiki"]
 ```
 
 The orchestrating agent never loads the complete raw transcript or every intermediate result at once. Each map worker receives one redacted chunk and may return at most eight structured evidence cards.
@@ -196,11 +212,15 @@ An assistant statement such as “fixed” or “done” is not verification. Th
 
 Every transcript is treated as untrusted data, and instructions found inside it are not executed. Before content reaches a worker, the adapter filters or redacts common credentials, authorization headers, cookies, emails, UUIDs, IP addresses, absolute paths, private URLs, long base64 payloads, system and developer instructions, hidden reasoning, world state, compaction summaries, and internal agent communication.
 
+The adapter also drops whole events about Web3, blockchains, digital or virtual assets, decentralized applications, and traditional cryptography, together with linked tool results. The same rule checks evidence cards, reduce and verify artifacts, drafts, filenames, local final articles, and Lark content. Detection applies Unicode NFKC and case normalization before deterministic word-boundary matching; ambiguous words such as `token`, `chain`, `wallet`, `hash`, and `mining` require matching context. Deterministic rules cannot identify every new code word or implication without recognizable terms, so human review remains required.
+
 Checkpoint data is stored under:
 
 ```text
-session-knowledge/.work/<source-hash>-v1/
+session-knowledge/.work/<source-hash>-v2/
 ```
+
+`v1` checkpoints are never resumed; run `prepare` again to create new `v2` state.
 
 It contains redacted chunks, source locations, and evidence cards, not a copy of the raw transcript. Automatic redaction cannot identify every project-specific secret and does not replace human review or permission to publish.
 
@@ -210,6 +230,7 @@ Inspect the complete command interface:
 
 ```bash
 python3 scripts/session_source.py --help
+python3 scripts/lark_publish.py --help
 ```
 
 Main subcommands include `locate`, `prepare`, `claim`, `mark`, `bisect`, `requeue`, `status`, `confirm`, `scan`, `finalize`, and `clean`.
@@ -226,7 +247,7 @@ Run the company repository validator from the `tranfu-skills` root:
 npm run validate -- --target own-skills/session-to-knowledge
 ```
 
-The synthetic suite covers event allowlisting, internal-content exclusion, message deduplication, archived lookup, damaged JSONL tails, oversized single events, chunk bisection, resumable state, redaction, evidence validation, and final publication gates.
+The synthetic suite covers event allowlisting, internal-content exclusion, message deduplication, archived lookup, damaged JSONL tails, oversized single events, chunk bisection, resumable state, content policy, redaction, evidence validation, idempotent Lark publishing, and final publication gates.
 
 ## Repository Structure
 
@@ -238,11 +259,13 @@ The synthetic suite covers event allowlisting, internal-content exclusion, messa
 ├── SKILL.md
 ├── agents/openai.yaml
 ├── references/oversized-sessions.md
+├── scripts/lark_publish.py
 ├── scripts/session_source.py
+├── tests/test_lark_publish.py
 └── tests/test_session_source.py
 ```
 
-`SKILL.md` is the portable behavior contract; `agents/openai.yaml` provides Codex interface metadata; `references/oversized-sessions.md` defines the 413 recovery protocol; the standard-library script implements the source adapter and resumable state machine.
+`SKILL.md` is the portable behavior contract; `agents/openai.yaml` provides Codex interface metadata; `references/oversized-sessions.md` defines the 413 recovery protocol; the standard-library scripts implement the source adapter, resumable state machine, and Lark publication ledger.
 
 ## Known Limitations
 
@@ -252,6 +275,9 @@ The synthetic suite covers event allowlisting, internal-content exclusion, messa
 - Oversized processing requires isolated workers and never switches model providers automatically
 - Regular `.json` inputs are limited to 16 MiB
 - Unstructured text without attributable machine success or explicit user confirmation cannot pass the publication gate
+- Deterministic topic rules may miss a new code word or implication with no recognizable term
+- Lark publishing binds an existing Wiki Docx parent and does not create the root page
+- Lark failures preserve the local file; unknown creation or conflicting remote content requires manual resolution
 - Automatic redaction may miss project-specific sensitive data; human review is required before publication
 - No article index is maintained under `session-knowledge/`
 

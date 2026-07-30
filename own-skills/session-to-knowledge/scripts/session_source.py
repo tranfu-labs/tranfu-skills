@@ -13,14 +13,15 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+import unicodedata
 from collections import Counter, deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Sequence
 
 
-PIPELINE_VERSION = "v1"
-MANIFEST_SCHEMA = "session-to-knowledge-run/v1"
+PIPELINE_VERSION = "v2"
+MANIFEST_SCHEMA = "session-to-knowledge-run/v2"
 DEFAULT_UNKNOWN_BUDGET = 4096
 MAX_DEFAULT_BUDGET = 32 * 1024
 MIN_CHUNK_BYTES = 512
@@ -145,7 +146,7 @@ class Redactor:
 
     @classmethod
     def scan(cls, text: str) -> dict[str, int]:
-        text = cls._placeholder.sub("", text)
+        text = cls._placeholder.sub("\n", text)
         patterns = {
             "pem": cls._pem,
             "sensitive_header": cls._sensitive_header,
@@ -166,6 +167,86 @@ class Redactor:
             "long_id": cls._long_id,
         }
         return {name: len(pattern.findall(text)) for name, pattern in patterns.items() if pattern.search(text)}
+
+
+class ProhibitedTopicPolicy:
+    """Detect prohibited digital-asset and cryptography topics without retaining matches."""
+
+    _explicit = tuple(
+        re.compile(pattern)
+        for pattern in (
+            r"(?<![^\W_])web[\s_-]*3(?:\.0)?(?![^\W_])",
+            r"(?<![^\W_])(?:block[\s_-]?chain|crypto(?:currenc(?:y|ies)|asset(?:s)?|coin(?:s)?)?)(?![^\W_])",
+            r"(?<![^\W_])(?:digital|virtual)[\s_-]+(?:asset(?:s)?|currenc(?:y|ies))(?![^\W_])",
+            r"(?<![^\W_])(?:decentralized[\s_-]+finance|defi|non[\s_-]+fungible[\s_-]+token(?:s)?|nfts?)(?![^\W_])",
+            r"(?<![^\W_])(?:smart[\s_-]+contract(?:s)?|distributed[\s_-]+ledger(?:s)?|dapps?|tokenomics)(?![^\W_])",
+            r"(?<![^\W_])(?:bitcoin|btc|ethereum|eth|solana|dogecoin|litecoin|stablecoin(?:s)?|altcoin(?:s)?|memecoin(?:s)?|(?:erc|bep)[\s_-]?20)(?![^\W_])",
+            r"(?<![^\W_])(?:decentralized[\s_-]+autonomous[\s_-]+organization(?:s)?|proof[\s_-]+of[\s_-]+(?:work|stake)|zero[\s_-]+knowledge[\s_-]+proof(?:s)?)(?![^\W_])",
+            r"(?<![^\W_])(?:cryptograph(?:y|ic|ical)|cryptanalysis|encrypt(?:ion|ed|ing)?|decrypt(?:ion|ed|ing)?|cipher(?:text|s)?)(?![^\W_])",
+            r"(?<![^\W_])(?:digital[\s_-]+signature(?:s)?|key[\s_-]+exchange|public[\s_-]+key|private[\s_-]+key|elliptic[\s_-]+curve|diffie[\s_-]+hellman)(?![^\W_])",
+            r"(?<![^\W_])(?:message[\s_-]+authentication[\s_-]+code|certificate[\s_-]+authorit(?:y|ies)|end[\s_-]+to[\s_-]+end[\s_-]+encryption)(?![^\W_])",
+            r"(?<![^\W_])(?:aes|rsa|tls|ssl|hmac|pki|md5|sha[\s_-]?(?:1|3|224|256|384|512)|x\.?509|ed25519|x25519|chacha20|argon2|bcrypt|scrypt)(?![^\W_])",
+            r"区块链|加密货币|数字货币|虚拟货币|数字资产|去中心化金融|非同质化代币|智能合约|分布式账本",
+            r"比特币|以太坊|稳定币|山寨币|迷因币|代币经济学|去中心化自治组织|去中心化应用|零知识证明",
+            r"密码学|密码分析|加密|解密|密钥|公钥|私钥|数字签名|密钥交换|椭圆曲线|消息认证码|证书颁发机构|哈希算法|散列算法|摘要算法|密文",
+        )
+    )
+    _contextual = tuple(
+        (re.compile(term), re.compile(context))
+        for term, context in (
+            (
+                r"(?<![^\W_])tokens?(?![^\W_])|代币",
+                r"(?<![^\W_])(?:mint(?:ed|ing)?|burn(?:ed|ing)?|airdrop(?:s)?|staking|vesting|liquidity[\s_-]+pool|token[\s_-]+holder(?:s)?|token[\s_-]+transfer(?:s|red|ring)?)(?![^\W_])|铸造|销毁|空投|质押|归属期|流动性池|持币人|代币转账",
+            ),
+            (
+                r"(?<![^\W_])chains?(?![^\W_])|(?<!供应)链",
+                r"(?<![^\W_])(?:consensus|validator(?:s)?|block[\s_-]+height|gas[\s_-]+fee(?:s)?|merkle|on[\s_-]+chain|(?<!supply[\s_-])chain[\s_-]+transactions?)(?![^\W_])|链上|链下|共识|验证者|区块高度|燃料费|默克尔",
+            ),
+            (
+                r"(?<![^\W_])wallets?(?![^\W_])|钱包",
+                r"(?<![^\W_])(?:seed[\s_-]+phrase|mnemonic|wallet[\s_-]+address|wallet[\s_-]+balance|sign[\s_-]+transaction|connect[\s_-]+wallet)(?![^\W_])|助记词|种子短语|钱包地址|钱包余额|签署交易|连接钱包",
+            ),
+            (
+                r"(?<![^\W_])hash(?:es|ed|ing)?(?![^\W_])|哈希|散列",
+                r"(?<![^\W_])(?:hash[\s_-]+rate|nonce|merkle|block[\s_-]+header|proof[\s_-]+of[\s_-]+work|preimage)(?![^\W_])|算力|随机数|默克尔|区块头|工作量证明|原像",
+            ),
+            (
+                r"(?<![^\W_])(?:mining|miners?|mined)(?![^\W_])|挖矿|矿工",
+                r"(?<![^\W_])(?:mining[\s_-]+pool|mining[\s_-]+rig|mining[\s_-]+difficulty|block[\s_-]+reward|hash[\s_-]+rate|proof[\s_-]+of[\s_-]+work)(?![^\W_])|矿池|矿机|挖矿难度|区块奖励|算力|工作量证明",
+            ),
+        )
+    )
+
+    @staticmethod
+    def normalize(text: str) -> str:
+        return unicodedata.normalize("NFKC", text).casefold()
+
+    @classmethod
+    def scan(cls, text: str) -> int:
+        normalized = cls.normalize(text)
+        count = sum(len(pattern.findall(normalized)) for pattern in cls._explicit)
+        count += sum(
+            1
+            for term, context in cls._contextual
+            if term.search(normalized) and context.search(normalized)
+        )
+        return count
+
+    @classmethod
+    def contains(cls, text: str) -> bool:
+        return cls.scan(text) > 0
+
+
+class SafetyScanner:
+    """Combine credential/privacy scanning with prohibited-topic scanning."""
+
+    @classmethod
+    def scan(cls, text: str) -> dict[str, int]:
+        findings = Redactor.scan(text)
+        prohibited = ProhibitedTopicPolicy.scan(text)
+        if prohibited:
+            findings["prohibited_topic"] = prohibited
+        return findings
 
 
 def _json_dump(value: Any) -> str:
@@ -870,13 +951,30 @@ def _redacted_events(info: SourceInfo, context: ParseContext, redactor: Redactor
         events = _iter_generic_json(info.path, info.snapshot_size, context)
     else:
         events = _iter_text(info.path, info.snapshot_size, context)
+    prohibited_call_ids = _CallIdFilter()
     for event in events:
+        call_id = event.get("call_id")
+        if (
+            event.get("kind") == "tool_result"
+            and isinstance(call_id, str)
+            and call_id in prohibited_call_ids
+        ):
+            context.ignored["prohibited_topic"] += 1
+            continue
+        content = str(event.get("content", ""))
+        if ProhibitedTopicPolicy.contains(content):
+            if event.get("kind") == "tool_call" and isinstance(call_id, str):
+                prohibited_call_ids.add(call_id)
+            context.ignored["prohibited_topic"] += 1
+            continue
         redacted = dict(event)
-        redacted["content"] = redactor.redact(str(event.get("content", "")))
+        redacted["content"] = redactor.redact(content)
         if "turn_id" in redacted:
             redacted["turn_id"] = redactor._stable("id", str(redacted["turn_id"]))
         if "call_id" in redacted:
             redacted["call_id"] = redactor._stable("id", str(redacted["call_id"]))
+        if event.get("kind") != "turn_status":
+            context.metadata["safe_event_count"] = int(context.metadata.get("safe_event_count", 0)) + 1
         yield redacted
 
 
@@ -903,6 +1001,10 @@ def _event_units(events: Iterable[dict[str, Any]], max_bytes: int) -> Iterator[l
 
 def _write_chunk(path: Path, records: Sequence[dict[str, Any]]) -> dict[str, Any]:
     body = "".join(_json_dump(record) + "\n" for record in records)
+    findings = SafetyScanner.scan(body)
+    if findings:
+        categories = ", ".join(sorted(findings))
+        raise SourceError(f"prepared chunk safety scan failed ({categories})")
     try:
         with path.open("x", encoding="utf-8") as handle:
             handle.write(body)
@@ -1204,10 +1306,10 @@ def _safe_artifact(
                 allowed_ordinals or set(),
                 call_ids_by_ordinal or {},
             )
-        privacy_text = body.decode("utf-8")
+        privacy_text = f"{body.decode('utf-8')}\n{_json_dump(value)}"
         for literal in privacy_safe_literals:
             privacy_text = privacy_text.replace(literal, "")
-        findings = Redactor.scan(privacy_text)
+        findings = SafetyScanner.scan(privacy_text)
         if findings:
             categories = ", ".join(sorted(findings))
             raise SourceError(f"artifact privacy scan failed ({categories}): {relative}")
@@ -1356,6 +1458,18 @@ def _validate_evidence_reference(
     return events
 
 
+def _supports_problem_evidence(event: dict[str, Any]) -> bool:
+    return event.get("kind") == "message" or (
+        event.get("kind") == "tool_result" and not _tool_result_succeeded(event)
+    )
+
+
+def _supports_action_evidence(event: dict[str, Any]) -> bool:
+    return event.get("kind") == "tool_call" or (
+        event.get("role") == "assistant" and event.get("kind") == "message"
+    )
+
+
 def _validate_verify_package(
     run_dir: Path,
     manifest: dict[str, Any],
@@ -1398,6 +1512,8 @@ def _validate_verify_package(
             raise SourceError("verify artifact candidate is absent from the reduce result")
         if candidate.get("contradictions") != []:
             raise SourceError("verify artifact contains unresolved contradictions")
+        validated_events: dict[str, list[dict[str, Any]]] = {}
+        reference_keys: dict[str, set[tuple[int, str | None]]] = {}
         for field_name in reference_fields:
             evidence_items = candidate.get(field_name)
             if not isinstance(evidence_items, list) or not evidence_items:
@@ -1407,6 +1523,10 @@ def _validate_verify_package(
                     evidence,
                     f"verify {field_name}",
                     source_events,
+                )
+                validated_events.setdefault(field_name, []).extend(events)
+                reference_keys.setdefault(field_name, set()).add(
+                    (evidence["ordinal"], evidence.get("call_id"))
                 )
                 if field_name != "verification_evidence":
                     continue
@@ -1418,6 +1538,22 @@ def _validate_verify_package(
                 ):
                     continue
                 raise SourceError("verification evidence is not a successful tool result or user confirmation")
+        if not any(
+            _supports_problem_evidence(event)
+            for event in validated_events.get("problem_evidence", [])
+        ):
+            raise SourceError("problem evidence does not identify an observed problem")
+        if not any(
+            _supports_action_evidence(event)
+            for event in validated_events.get("action_evidence", [])
+        ):
+            raise SourceError("action evidence does not identify an agent or tool action")
+        verification_keys = reference_keys.get("verification_evidence", set())
+        if verification_keys & (
+            reference_keys.get("problem_evidence", set())
+            | reference_keys.get("action_evidence", set())
+        ):
+            raise SourceError("verification evidence must be distinct from problem and action evidence")
 
 
 def _safe_stage_artifact(
@@ -1428,7 +1564,10 @@ def _safe_stage_artifact(
 ) -> dict[str, Any]:
     safe_literals: tuple[str, ...] = ()
     if stage == "reduce":
-        safe_literals = (str(_coverage_commitment(manifest)["leaf_ids_sha256"]),)
+        safe_literals = (
+            "leaf_ids_sha256",
+            str(_coverage_commitment(manifest)["leaf_ids_sha256"]),
+        )
     metadata = _safe_artifact(
         run_dir,
         relative,
@@ -1463,6 +1602,14 @@ def _validate_chunk_file(run_dir: Path, manifest: dict[str, Any], chunk: dict[st
     body = path.read_bytes()
     if hashlib.sha256(body).hexdigest() != chunk["sha256"]:
         raise SourceError(f"prepared chunk failed integrity validation: {chunk.get('id')}")
+    try:
+        chunk_text = body.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise SourceError(f"prepared chunk is not UTF-8: {chunk.get('id')}") from error
+    findings = SafetyScanner.scan(chunk_text)
+    if findings:
+        categories = ", ".join(sorted(findings))
+        raise SourceError(f"prepared chunk safety scan failed ({categories}): {chunk.get('id')}")
     artifact = chunk.get("artifact")
     if chunk.get("status") == "completed":
         if not isinstance(artifact, dict):
@@ -1539,8 +1686,8 @@ def prepare(source: str, work_root: Path, codex_home: Path | None, max_bytes: in
         context = ParseContext()
         redactor = Redactor()
         chunks = _chunk_events(_redacted_events(info, context, redactor), chunks_dir, budget)
-        if not chunks:
-            raise SourceError("no user-visible transcript events were found")
+        if not chunks or not context.metadata.get("safe_event_count"):
+            raise SourceError("no policy-safe user-visible transcript events were found")
         current_size = info.path.stat().st_size
         if current_size < info.snapshot_size:
             raise SourceError("source was truncated while it was being prepared")
@@ -1917,7 +2064,7 @@ def _validate_article_body(body: bytes) -> str:
         text = body.decode("utf-8")
     except UnicodeDecodeError as error:
         raise SourceError("article must be UTF-8 Markdown") from error
-    findings = Redactor.scan(text)
+    findings = SafetyScanner.scan(text)
     if findings:
         categories = ", ".join(sorted(findings))
         raise SourceError(f"privacy scan failed; resolve these categories: {categories}")
@@ -1964,7 +2111,7 @@ def finalize(run_dir: Path, article: Path, output: Path) -> dict[str, Any]:
         output_path.name,
     ):
         raise SourceError("final output must use YYYY-MM-DD-HHmm-<ascii-slug>.md")
-    filename_findings = Redactor.scan(output_path.name)
+    filename_findings = SafetyScanner.scan(output_path.name)
     if filename_findings:
         categories = ", ".join(sorted(filename_findings))
         raise SourceError(f"final filename privacy scan failed: {categories}")
@@ -2171,7 +2318,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = confirm(args.run_dir)
         elif args.command == "scan":
             path = args.path.expanduser().resolve(strict=True)
-            findings = Redactor.scan(path.read_text(encoding="utf-8"))
+            findings = SafetyScanner.scan(path.read_text(encoding="utf-8"))
             result = {"path": str(path), "safe": not findings, "finding_counts": findings}
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if not findings else 3
