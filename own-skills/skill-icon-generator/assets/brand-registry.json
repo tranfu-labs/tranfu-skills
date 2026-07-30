@@ -1,0 +1,58 @@
+{
+  "coolify": {
+    "aliases": ["coolify"],
+    "default_family": "operations",
+    "default_icon": "brand-coolify",
+    "metaphor": "Coolify 品牌标志",
+    "foreground": "#6B16ED",
+    "background": "#F0F0F0"
+  },
+  "github": {
+    "aliases": ["github"],
+    "default_family": "engineering",
+    "default_icon": "brand-github",
+    "metaphor": "GitHub 品牌标志",
+    "foreground": "#181717",
+    "background": "#F0F0F0"
+  },
+  "lark": {
+    "aliases": ["lark", "feishu", "飞书"],
+    "default_family": "operations",
+    "default_icon": "brand-lark",
+    "metaphor": "Lark/飞书品牌标志",
+    "foreground": "#3370FF",
+    "background": "#F0F0F0"
+  },
+  "privy": {
+    "aliases": ["privy"],
+    "default_family": "engineering",
+    "default_icon": "brand-privy",
+    "metaphor": "Privy 品牌标志",
+    "foreground": "#010110",
+    "background": "#F0F0F0"
+  },
+  "sina-weibo": {
+    "aliases": ["sina-weibo", "sinaweibo", "weibo", "微博"],
+    "default_family": "content",
+    "default_icon": "brand-sina-weibo",
+    "metaphor": "Sina Weibo 品牌标志",
+    "foreground": "#E6162D",
+    "background": "#F0F0F0"
+  },
+  "wechat": {
+    "aliases": ["wechat", "weixin", "微信"],
+    "default_family": "content",
+    "default_icon": "brand-wechat",
+    "metaphor": "WeChat/微信品牌标志",
+    "foreground": "#07C160",
+    "background": "#F0F0F0"
+  },
+  "xiaohongshu": {
+    "aliases": ["xiaohongshu", "rednote", "小红书"],
+    "default_family": "content",
+    "default_icon": "brand-xiaohongshu",
+    "metaphor": "小红书品牌标志",
+    "foreground": "#FF2442",
+    "background": "#F0F0F0"
+  }
+}
