@@ -2,5 +2,5 @@ interface:
   icon_large: "./assets/icon.png"
   icon_small: "./assets/icon.svg"
   display_name: "Session to Knowledge"
-  short_description: "将 Agent 会话提炼为可验证、可分享的实战经验文档"
-  default_prompt: "Use $session-to-knowledge to turn the current agent session into a verified, privacy-safe practical knowledge article."
+  short_description: "将 Agent 会话过滤并沉淀为本地及 Lark 实战知识"
+  default_prompt: "Use $session-to-knowledge to create a policy-filtered, evidence-grounded local article and publish it to Lark when configured and available."

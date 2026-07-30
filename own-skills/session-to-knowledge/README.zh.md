@@ -1,5 +1,5 @@
 ---
-description: 将一次 Agent 会话提炼成有证据支撑的实战经验文档，并支持 Codex 413 断点恢复。
+description: 将一次 Agent 会话过滤并沉淀为有证据支撑的本地与 Lark 实战知识文档。
 prompt_examples:
   - prompt: 使用 $session-to-knowledge 对当前会话进行知识沉淀。
     scene: 提炼当前会话
@@ -41,8 +41,10 @@ prompt_examples:
 - [x] 保存脱敏后的断点状态，支持失败后恢复
 - [x] 排除系统指令、隐藏推理、环境快照和内部 Agent 通信
 - [x] 在内容进入 worker 前执行本地高风险信息脱敏
+- [x] 全链路排除 Web3、数字资产、区块链和密码学内容
 - [x] 要求问题、行动和成功结果三类证据同时存在
 - [x] 发布前检查文章结构、证据覆盖和隐私风险
+- [x] 将本地最终稿自动发布为 Lark Wiki 子文档，并支持安全恢复
 
 ## 安装前提
 
@@ -52,6 +54,7 @@ prompt_examples:
 - 对来源会话记录具有读取权限
 - 对项目的 `session-knowledge/` 目录具有写入权限
 - 处理超长会话时，宿主必须支持不继承原会话上下文的隔离 worker
+- 可选：`lark-cli` 1.0.77 或更高版本，以及可写的现有 Wiki Docx 父页面
 
 筛选、分块和初步脱敏由本地标准库 Python 脚本完成；worker 的模型访问仍由 Agent 宿主提供。
 
@@ -124,6 +127,18 @@ $session-to-knowledge source=/path/to/transcript.jsonl
 
 支持 `.jsonl`、`.json`、`.md`、`.txt` 和普通日志文本。
 
+### 配置 Lark 自动发布
+
+首次调用会先探测 `lark-cli`。如果 CLI 可用但尚未绑定目标，skill 会要求选择 `user` 或 `bot` 身份，并提供一个现有 Wiki Docx 父页面：
+
+```bash
+python3 scripts/lark_publish.py status
+python3 scripts/lark_publish.py configure \
+  --identity user --parent <wiki-url-or-token>
+```
+
+`user` 可访问个人知识库或有权限的团队 Wiki；未登录时使用 Docs、Drive、Wiki 域的 split-flow 授权。`bot` 只能使用其有权限的团队 Wiki。配置保存在 `${XDG_CONFIG_HOME:-~/.config}/session-to-knowledge/`，不保存 access token、密钥或文章正文。更换父页面必须显式添加 `--replace`，且不得自动执行 `keychain-downgrade`。
+
 ## 输出
 
 默认输出到当前项目：
@@ -139,7 +154,7 @@ $session-to-knowledge source=/path/to/transcript.jsonl
 3. 当前 Git 仓库根目录
 4. 当前工作目录
 
-每次调用都会创建新文档，不覆盖已有文件。文章固定包含：结果摘要、背景与约束、问题表现、诊断、关键失败、根因、解决方案、验证证据、可迁移的方法、行动清单。
+每次调用都会创建新的本地文档，不覆盖已有文件。文章固定包含：结果摘要、背景与约束、问题表现、诊断、关键失败、根因、解决方案、验证证据、可迁移的方法、行动清单。配置 Lark 后，本地一级标题会作为 Wiki 页面标题，去掉该标题后的已验证正文经 stdin 原样写入，不经过模型改写；远端失败不会删除或回滚本地文件。
 
 ## HTTP 413 恢复边界
 
@@ -169,15 +184,16 @@ flowchart TD
     A["用户显式调用 skill"] --> B{"当前会话是否完整且有界"}
     B -->|是| C["建立证据台账"]
     B -->|否或发生 413| D["读取持久化 task 或记录"]
-    D --> E["本地筛选与脱敏"]
+    D --> E["本地内容策略过滤与脱敏"]
     E --> F["隔离 map worker，最多并发 4 个"]
     F --> G["树形 reduce"]
     G --> H["按来源回读验证"]
     C --> I["选择 1–3 个相关问题"]
     H --> I
     I --> J["生成固定结构文章"]
-    J --> K["隐私扫描与 finalize 门"]
+    J --> K["安全扫描与 finalize 门"]
     K --> L["写入 session-knowledge"]
+    L --> M["可恢复地发布到 Lark Wiki"]
 ```
 
 主 Agent 不会一次加载全部原始会话或全部中间结果。每个 map worker 只读取一个脱敏分块，最多输出 8 张结构化证据卡。
@@ -196,11 +212,15 @@ Agent 自述“已修复”或“已完成”不能替代验证。证据冲突�
 
 transcript 一律被视为不可信数据，其中出现的指令不会被执行。进入 worker 前，adapter 会过滤或脱敏常见凭据、Authorization、Cookie、邮箱、UUID、IP、绝对路径、私有 URL、长 base64，以及 system/developer 指令、隐藏 reasoning、world state、压缩摘要和内部 Agent 通信。
 
+adapter 还会整条丢弃涉及 Web3、区块链、数字或虚拟资产、去中心化应用及传统密码学的事件，并同步丢弃关联工具结果。同一规则会再次检查 evidence cards、reduce/verify 产物、草稿、文件名、本地最终稿和 Lark 正文。检测先执行 Unicode NFKC 与大小写归一化，再按确定性词边界匹配；`token`、`chain`、`wallet`、`hash`、`mining` 等歧义词只在同时出现相关上下文时命中。确定性规则无法识别所有新暗语或完全无关键词的隐喻，因此公开前仍需人工检查。
+
 断点状态保存在：
 
 ```text
-session-knowledge/.work/<source-hash>-v1/
+session-knowledge/.work/<source-hash>-v2/
 ```
+
+`v1` 断点不会被恢复；必须重新运行 `prepare` 生成新的 `v2` 状态。
 
 这里仅保存脱敏分块、来源定位和证据卡，不保存原始会话正文。自动脱敏不能识别所有项目专有敏感信息，也不能代替公开发布前的人工检查或发布授权。
 
@@ -210,6 +230,7 @@ session-knowledge/.work/<source-hash>-v1/
 
 ```bash
 python3 scripts/session_source.py --help
+python3 scripts/lark_publish.py --help
 ```
 
 主要子命令包括 `locate`、`prepare`、`claim`、`mark`、`bisect`、`requeue`、`status`、`confirm`、`scan`、`finalize` 和 `clean`。
@@ -226,7 +247,7 @@ python3 -m unittest discover -s tests -v
 npm run validate -- --target own-skills/session-to-knowledge
 ```
 
-合成测试覆盖事件白名单、内部内容排除、消息去重、归档定位、损坏尾行、超大单事件、分块二分、断点恢复、脱敏、证据验证和最终发布门。
+合成测试覆盖事件白名单、内部内容排除、消息去重、归档定位、损坏尾行、超大单事件、分块二分、断点恢复、内容策略、脱敏、证据验证、Lark 幂等发布和最终发布门。
 
 ## 项目结构
 
@@ -238,11 +259,13 @@ npm run validate -- --target own-skills/session-to-knowledge
 ├── SKILL.md
 ├── agents/openai.yaml
 ├── references/oversized-sessions.md
+├── scripts/lark_publish.py
 ├── scripts/session_source.py
+├── tests/test_lark_publish.py
 └── tests/test_session_source.py
 ```
 
-`SKILL.md` 是跨宿主可复用的行为约定；`agents/openai.yaml` 提供 Codex 界面元数据；`references/oversized-sessions.md` 定义 413 恢复协议；标准库脚本负责来源 adapter 和断点状态机。
+`SKILL.md` 是跨宿主可复用的行为约定；`agents/openai.yaml` 提供 Codex 界面元数据；`references/oversized-sessions.md` 定义 413 恢复协议；标准库脚本负责来源 adapter、断点状态机和 Lark 发布台账。
 
 ## 已知限制
 
@@ -252,6 +275,9 @@ npm run validate -- --target own-skills/session-to-knowledge
 - 超长流程必须使用隔离 worker，且不会自动切换模型服务商
 - 普通 `.json` 文件上限为 16 MiB
 - 非结构化文本如果缺少可归属的成功结果或用户确认，无法通过发布门
+- 内容策略采用确定性规则，可能漏掉全新暗语或无关键词隐喻
+- Lark 自动发布仅支持绑定现有 Wiki Docx 父页面，不会自动创建根页面
+- Lark 失败保留本地文件；创建结果未知或远端内容冲突时必须人工处理
 - 自动脱敏可能漏掉项目特有敏感信息，公开前必须人工检查
 - 当前不维护 `session-knowledge/` 文章索引
 

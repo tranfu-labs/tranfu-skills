@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import hashlib
+import io
 import json
 import os
 import sqlite3
@@ -338,6 +339,287 @@ class SessionSourceTests(unittest.TestCase):
         for secret in ("opaque-token-123456", "session=one", "refresh=two", "sword fish", "abcdefghijkl"):
             self.assertNotIn(secret, redacted)
         self.assertFalse(session_source.Redactor.scan(redacted))
+        self.assertFalse(
+            session_source.Redactor.scan(session_source._json_dump({"content": redacted}))
+        )
+
+    def test_prohibited_topic_policy_normalizes_and_limits_ambiguous_terms(self) -> None:
+        positives = (
+            "A Web3 wallet architecture",
+            "BLOCKCHAIN indexing",
+            "digital assets and stablecoins",
+            "DeFi, NFT, and smart contracts",
+            "RSA digital signatures over TLS",
+            "elliptic-curve key exchange",
+            "Ｗｅｂ３ 与区块链",
+            "加密算法与密钥交换",
+            "token minting and vesting",
+            "chain consensus validators",
+            "wallet address generation",
+            "hash rate and block header",
+            "mining pool rewards",
+            "SHA-3 with Diffie-Hellman",
+            "ERC-20 transfers in BTC and ETH",
+            "block_chain and digital_asset modules",
+            "crypto_tool integration",
+            "token_transfer processing",
+            "chain transaction finality",
+            "wallet_balance reconciliation",
+            "mining_difficulty adjustment",
+        )
+        for text in positives:
+            with self.subTest(text=text):
+                self.assertTrue(session_source.ProhibitedTopicPolicy.contains(text))
+
+        negatives = (
+            "Refresh the API token after authentication.",
+            "Trace the retail supply chain transaction.",
+            "Open the boarding pass in Apple Wallet.",
+            "Use a hash map to resolve collisions.",
+            "Run data mining over the customer table.",
+        )
+        for text in negatives:
+            with self.subTest(text=text):
+                self.assertFalse(session_source.ProhibitedTopicPolicy.contains(text))
+
+    def test_prepare_drops_whole_prohibited_events_and_linked_tool_results(self) -> None:
+        source = self.root / "prohibited.jsonl"
+        write_jsonl(
+            source,
+            [
+                {"type": "user", "content": "Fix cache invalidation."},
+                {
+                    "type": "tool_call",
+                    "name": "search",
+                    "call_id": "prohibited-call",
+                    "arguments": "Find blockchain material.",
+                },
+                {
+                    "type": "tool_result",
+                    "call_id": "prohibited-call",
+                    "output": "LINKED_RESULT_MUST_NOT_SURVIVE",
+                },
+                {
+                    "type": "user",
+                    "content": "SAFE_FRAGMENT_MUST_NOT_SURVIVE together with Web3 guidance.",
+                },
+                {"type": "assistant", "content": "Cache tests passed."},
+            ],
+        )
+        summary = session_source.prepare(
+            str(source), self.root / "filtered-project" / "session-knowledge" / ".work", None, 4096
+        )
+        run_dir = Path(summary["run_dir"])
+        manifest = self.load_manifest(run_dir)
+        text = self.chunk_text(run_dir, manifest)
+
+        self.assertIn("Fix cache invalidation.", text)
+        self.assertIn("Cache tests passed.", text)
+        self.assertNotIn("blockchain", text.lower())
+        self.assertNotIn("LINKED_RESULT_MUST_NOT_SURVIVE", text)
+        self.assertNotIn("SAFE_FRAGMENT_MUST_NOT_SURVIVE", text)
+        self.assertEqual(manifest["ignored_event_counts"], {"prohibited_topic": 3})
+
+    def test_prohibited_topics_fail_closed_at_artifact_article_filename_and_cli_gates(self) -> None:
+        run_dir, _summary = self.prepare_codex(max_bytes=32768)
+        manifest = self.load_manifest(run_dir)
+        chunk = session_source._active_chunks(manifest)[0]
+
+        unsafe_chunk = run_dir / "chunks" / "unsafe-write.jsonl"
+        unsafe_event = {
+            "ordinal": 999,
+            "role": "user",
+            "kind": "message",
+            "content": "Authorization: Bearer secret-token-123456",
+        }
+        with self.assertRaisesRegex(session_source.SourceError, "safety scan"):
+            session_source._write_chunk(unsafe_chunk, [unsafe_event])
+        self.assertFalse(unsafe_chunk.exists())
+
+        unsafe_body = (session_source._json_dump(unsafe_event) + "\n").encode("utf-8")
+        unsafe_chunk.write_bytes(unsafe_body)
+        unsafe_metadata = {
+            "id": "unsafe-existing",
+            "file": "chunks/unsafe-write.jsonl",
+            "bytes": len(unsafe_body),
+            "sha256": hashlib.sha256(unsafe_body).hexdigest(),
+            "status": "pending",
+        }
+        with self.assertRaisesRegex(session_source.SourceError, "safety scan"):
+            session_source._validate_chunk_file(run_dir, manifest, unsafe_metadata)
+
+        unsafe_card = run_dir / "cards" / "unsafe.json"
+        unsafe_card.write_text(
+            json.dumps(
+                {
+                    "chunk_id": chunk["id"],
+                    "coverage": {"complete": True, "note": "Web3"},
+                    "cards": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(session_source.SourceError, "prohibited_topic"):
+            session_source.mark(run_dir, chunk["id"], None, "completed", "cards/unsafe.json")
+
+        escaped_card = {
+            "chunk_id": chunk["id"],
+            "coverage": {"complete": True, "note": "区块链"},
+            "cards": [],
+        }
+        unsafe_card.write_text(json.dumps(escaped_card), encoding="utf-8")
+        self.assertNotIn("区块链", unsafe_card.read_text(encoding="utf-8"))
+        with self.assertRaisesRegex(session_source.SourceError, "prohibited_topic"):
+            session_source.mark(run_dir, chunk["id"], None, "completed", "cards/unsafe.json")
+
+        session_source.mark(
+            run_dir, chunk["id"], None, "completed", self.write_card(run_dir, chunk["id"])
+        )
+        session_source.mark(run_dir, None, "map", "completed", None)
+        reduce_relative, verify_relative = self.write_valid_stage_artifacts(run_dir)
+        reduce_path = run_dir / reduce_relative
+        reduce_value = json.loads(reduce_path.read_text(encoding="utf-8"))
+        reduce_value["note"] = "TLS key exchange"
+        reduce_path.write_text(json.dumps(reduce_value), encoding="utf-8")
+        with self.assertRaisesRegex(session_source.SourceError, "prohibited_topic"):
+            session_source.mark(run_dir, None, "reduce", "completed", reduce_relative)
+
+        reduce_relative, verify_relative = self.write_valid_stage_artifacts(run_dir)
+        session_source.mark(run_dir, None, "reduce", "completed", reduce_relative)
+        verify_path = run_dir / verify_relative
+        verify_value = json.loads(verify_path.read_text(encoding="utf-8"))
+        verify_value["note"] = "NFT"
+        verify_path.write_text(json.dumps(verify_value), encoding="utf-8")
+        with self.assertRaisesRegex(session_source.SourceError, "prohibited_topic"):
+            session_source.mark(run_dir, None, "verify", "completed", verify_relative)
+
+        knowledge_dir = run_dir.parent.parent
+        unsafe_article = knowledge_dir / ".session-to-knowledge-unsafe-topic.draft.md"
+        unsafe_article.write_text(
+            self.article_body().replace("Verified content.", "Blockchain content.", 1),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(session_source.SourceError, "prohibited_topic"):
+            session_source._validate_article_body(unsafe_article.read_bytes())
+
+        clean_article = knowledge_dir / ".session-to-knowledge-clean-topic.draft.md"
+        clean_article.write_text(self.article_body(), encoding="utf-8")
+        with self.assertRaisesRegex(session_source.SourceError, "filename privacy scan"):
+            session_source.finalize(
+                run_dir, clean_article, knowledge_dir / "2026-07-23-1200-web3-result.md"
+            )
+
+        output = io.StringIO()
+        with mock.patch.object(session_source.sys, "stdout", output):
+            exit_code = session_source.main(["scan", str(unsafe_article)])
+        self.assertEqual(exit_code, 3)
+        self.assertIn('"prohibited_topic"', output.getvalue())
+
+    def test_all_prohibited_input_creates_no_run_and_v1_state_is_not_resumed(self) -> None:
+        source = self.root / "all-prohibited.txt"
+        source.write_text("Discuss Ｗｅｂ３, digital assets, and RSA.", encoding="utf-8")
+        work_root = self.root / "policy-project" / "session-knowledge" / ".work"
+        with self.assertRaisesRegex(session_source.SourceError, "no policy-safe"):
+            session_source.prepare(str(source), work_root, None, 4096)
+        self.assertFalse(any(work_root.glob("*-v2")))
+
+        safe_source = self.root / "safe-v2.txt"
+        safe_source.write_text("Diagnose an ordinary cache invalidation bug.", encoding="utf-8")
+        safe_work = self.root / "version-project" / "session-knowledge" / ".work"
+        safe_work.mkdir(parents=True)
+        source_hash = session_source._source_hash(safe_source, safe_source.stat().st_size)
+        old_run = safe_work / f"{source_hash[:16]}-v1"
+        old_run.mkdir()
+        session_source._atomic_json(
+            old_run / "manifest.json",
+            {"schema": "session-to-knowledge-run/v1", "pipeline_version": "v1"},
+        )
+
+        summary = session_source.prepare(str(safe_source), safe_work, None, 4096)
+        self.assertFalse(summary["resumed"])
+        self.assertTrue(summary["run_dir"].endswith("-v2"))
+        self.assertEqual(session_source.PIPELINE_VERSION, "v2")
+        with self.assertRaisesRegex(session_source.SourceError, "unknown run directory"):
+            session_source._load_manifest(old_run)
+
+    def test_verify_rejects_an_isolated_success_result_as_complete_evidence(self) -> None:
+        source = self.root / "filtered-evidence.jsonl"
+        write_jsonl(
+            source,
+            [
+                {"type": "user", "content": "Investigate a blockchain failure."},
+                {
+                    "type": "tool_result",
+                    "call_id": "safe-result",
+                    "output": "tests passed",
+                    "status": "passed",
+                    "exit_code": 0,
+                },
+            ],
+        )
+        summary = session_source.prepare(
+            str(source), self.root / "evidence-project" / "session-knowledge" / ".work", None, 4096
+        )
+        run_dir = Path(summary["run_dir"])
+        manifest = self.load_manifest(run_dir)
+        chunk = session_source._active_chunks(manifest)[0]
+        session_source.mark(run_dir, chunk["id"], None, "completed", self.write_card(run_dir, chunk["id"]))
+        session_source.mark(run_dir, None, "map", "completed", None)
+
+        event = self.prepared_events(run_dir)[0]
+        reference = {
+            "ordinal": event["ordinal"],
+            "call_id": event["call_id"],
+            "fact": "The result passed.",
+        }
+        card = {
+            "candidate": "isolated result",
+            "problem_type": "task",
+            "problem_evidence": [reference],
+            "constraints": [],
+            "actions": [reference],
+            "root_cause_evidence": [reference],
+            "solution_evidence": [reference],
+            "verification_evidence": [],
+            "important_failures": [],
+            "open_questions": [],
+            "confidence": "high",
+        }
+        reduce_relative = "reductions/isolated.json"
+        (run_dir / reduce_relative).write_text(
+            json.dumps(
+                {
+                    "coverage": {"complete": True, **session_source._coverage_commitment(manifest)},
+                    "cards": [card],
+                }
+            ),
+            encoding="utf-8",
+        )
+        session_source.mark(run_dir, None, "reduce", "completed", reduce_relative)
+        verify_relative = "reductions/isolated-verified.json"
+        verification = {**reference, "verification_kind": "tool_result"}
+        (run_dir / verify_relative).write_text(
+            json.dumps(
+                {
+                    "coverage": {"complete": True},
+                    "candidates": [
+                        {
+                            "candidate": "isolated result",
+                            "accepted": True,
+                            "problem_evidence": [reference],
+                            "action_evidence": [reference],
+                            "root_cause_evidence": [reference],
+                            "solution_evidence": [reference],
+                            "verification_evidence": [verification],
+                            "contradictions": [],
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(session_source.SourceError, "problem evidence"):
+            session_source.mark(run_dir, None, "verify", "completed", verify_relative)
 
     def test_incomplete_tail_and_malformed_middle_fail_closed(self) -> None:
         with self.assertRaisesRegex(session_source.SourceError, "incomplete trailing JSON"):
