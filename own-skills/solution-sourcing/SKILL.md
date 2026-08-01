@@ -1,5 +1,7 @@
 ---
 name: solution-sourcing
+display_name: Solution Sourcing Method
+display_name_zh: 方案来源方法
 description: >-
   当你要为项目引入新模块或新能力、实现途中撞上具体技术障碍、发现代码结构退化或维护性下降、或进入没有成熟方案的新领域时使用：先判定方案来源类型（A 引入型 / B 障碍型 / C 退化型 / D 探索型），按对应的最小动作清单完成来源扫描、候选取舍和最小验证，再落盘决策。任何"写技术方案"的任务都应先过一遍判型。Do NOT trigger when：纯查询、按既有方案执行实施、或与技术方案无关的产品需求讨论。
 version: 0.1.0
