@@ -1,0 +1,46 @@
+{
+  "id": "tranfu",
+  "name": "TranFu",
+  "official_site": "https://tranfu.com/",
+  "public_sources": [
+    {
+      "platform": "website",
+      "url": "https://tranfu.com/",
+      "status": "active"
+    },
+    {
+      "platform": "wechat",
+      "url": "https://mp.weixin.qq.com/s/uKte2z3CtMu3S31yXNrgSw",
+      "status": "access-may-require-verification"
+    },
+    {
+      "platform": "zhihu",
+      "url": "https://www.zhihu.com/org/agentgong-si-yang-cheng-ji",
+      "status": "active-partial"
+    },
+    {
+      "platform": "toutiao",
+      "url": "https://www.toutiao.com/c/user/token/CiwwTWIMPSdwhLU0LY1bY8iipNbkmwK-h3k5FB-DUvDRPqoqZx1ZNdXvXWWcZxpJCjwAAAAAAAAAAAAAUIac4SMnfWMhqK5qb72i4q0jeWe4RJOjKJgnt7T0mvPtzQicoycA_YVG9FsPl1ZnoVcQ8-2TDhjDxYPqBCIBAyLy_Q8=/",
+      "status": "active"
+    },
+    {
+      "platform": "xiaohongshu",
+      "url": "https://www.xiaohongshu.com/user/profile/6460f30c0000000012037dbe",
+      "status": "active"
+    },
+    {
+      "platform": "douyin",
+      "status": "not-opened"
+    },
+    {
+      "platform": "bilibili",
+      "status": "not-opened"
+    },
+    {
+      "platform": "public-analytics",
+      "url": "https://social-media-analytics-app.tranfu.com/",
+      "status": "active-read-only"
+    }
+  ],
+  "read_policy": "public-read-only"
+}
