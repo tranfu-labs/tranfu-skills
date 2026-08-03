@@ -36,6 +36,8 @@ export function writeSkill(rootDir, {
     author: "t",
     updated_at: "2026-01-01",
     origin: "own",
+    display_name: "Demo Skill",
+    display_name_zh: "演示 Skill",
     ...frontmatter,
   };
   const yamlLines = Object.entries(fm).map(([k, v]) => `${k}: ${v}`);

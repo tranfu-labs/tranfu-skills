@@ -8,6 +8,7 @@ import {
   hasErrors,
   makeError,
 } from "./lib/validator-types.mjs";
+import { parseFrontmatter } from "./validate-frontmatter.mjs";
 
 const ROOTS = ["meta-skills", "own-skills", "external-skills"];
 const VALIDATOR = "presentation-metadata";
@@ -46,8 +47,39 @@ function hasYamlIconField(openaiYaml, field, expected) {
   return re.test(openaiYaml);
 }
 
+function readMarkdownFrontmatter(path) {
+  if (!existsSync(path)) return { data: {}, error: "missing file" };
+  return parseFrontmatter(readFileSync(path, "utf8"));
+}
+
+function hasNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function validateReadmePromptExamples(value) {
+  if (!Array.isArray(value)) return "prompt_examples must be a YAML array";
+  if (value.length === 0) return "prompt_examples must contain at least one example";
+  if (value.length > 3) return "prompt_examples must contain at most 3 examples";
+  for (const [index, item] of value.entries()) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return `prompt_examples[${index}] must be a map with prompt and scene`;
+    }
+    if (!hasNonEmptyString(item.prompt)) return `prompt_examples[${index}].prompt must be a non-empty string`;
+    if (!hasNonEmptyString(item.scene)) return `prompt_examples[${index}].scene must be a non-empty string`;
+  }
+  return "";
+}
+
 function missingPresentationItems(skillDir) {
   const missing = [];
+  const skillFrontmatter = readMarkdownFrontmatter(join(skillDir, "SKILL.md"));
+  if (!hasNonEmptyString(skillFrontmatter.data.display_name)) {
+    missing.push("SKILL.md:display_name");
+  }
+  if (!hasNonEmptyString(skillFrontmatter.data.display_name_zh)) {
+    missing.push("SKILL.md:display_name_zh");
+  }
+
   for (const relPath of ["README.md", "README.zh.md", "assets/icon.svg", "assets/icon.png"]) {
     const full = join(skillDir, relPath);
     if (!existsSync(full)) {
@@ -56,6 +88,20 @@ function missingPresentationItems(skillDir) {
     }
     if (statSync(full).isFile() && statSync(full).size === 0) {
       missing.push(`${relPath}:non_empty`);
+    }
+    if (relPath === "README.md" || relPath === "README.zh.md") {
+      const { data, error } = readMarkdownFrontmatter(full);
+      if (error) {
+        missing.push(`${relPath}:frontmatter`);
+      } else {
+        if (!hasNonEmptyString(data.description)) {
+          missing.push(`${relPath}:description`);
+        }
+        const promptExamplesError = validateReadmePromptExamples(data.prompt_examples);
+        if (promptExamplesError) {
+          missing.push(`${relPath}:prompt_examples`);
+        }
+      }
     }
   }
 
@@ -96,7 +142,7 @@ export function validateSkillPresentationMetadata(skillDir, rootDir = process.cw
       rule,
       severity,
       message: `skill presentation metadata incomplete: ${missingText}`,
-      fix_hint: "add README.md, README.zh.md, assets/icon.svg, assets/icon.png, and agents/openai.yaml interface.icon_small/interface.icon_large before merge",
+      fix_hint: "add SKILL.md display_name/display_name_zh, README.md/README.zh.md frontmatter description + prompt_examples array, assets/icon.svg, assets/icon.png, and agents/openai.yaml interface.icon_small/interface.icon_large before merge",
     }),
   ];
 }
