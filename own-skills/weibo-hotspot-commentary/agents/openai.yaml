@@ -1,4 +1,6 @@
 interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
   display_name: "微博热点评论"
   short_description: "通俗化深度评论微博热点，并完成AI分析、配图与统一交付"
   default_prompt: "使用 $weibo-hotspot-commentary 围绕当前热点创作通俗易懂的深度微博长文和配图，并统一交付。"
