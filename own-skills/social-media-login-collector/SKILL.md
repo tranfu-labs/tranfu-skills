@@ -1,5 +1,7 @@
 ---
 name: social-media-login-collector
+display_name: Social Analytics Collector
+display_name_zh: 社媒数据采集
 description: >-
   Use when the user explicitly asks Codex to log in to, collect, export, or download
   authenticated analytics from WeChat Official Accounts, Xiaohongshu, Zhihu, Toutiao,

@@ -1,5 +1,7 @@
 ---
 name: build-marketing-outline
+display_name: Launch Marketing Outline
+display_name_zh: 发布营销大纲
 description: >-
   Use when a TranFu product URL, local product project, current project, or URL-plus-source
   needs an evidence-bound formal-launch marketing strategy and Chinese editor-level outlines

@@ -7,8 +7,6 @@ prompt_examples:
     scene: Update a component
   - prompt: Review src/app/components/Hero.tsx against the TranFu website design rules — findings only, don't edit.
     scene: Review the design
-  - prompt: Add responsive behavior to the card component while preserving the original TranFu website style. Adapt the card width, layout, spacing, typography, and stacking behavior across desktop, tablet, and mobile breakpoints.
-    scene: Responsive adaptation
 ---
 
 # TranFu Website Design

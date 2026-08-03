@@ -1,0 +1,6 @@
+interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
+  display_name: "方案来源方法"
+  short_description: "按问题类型扫描、比较并验证技术方案来源"
+  default_prompt: "Use $solution-sourcing to classify this technical decision, scan viable solution sources, compare candidates, and record the decision."

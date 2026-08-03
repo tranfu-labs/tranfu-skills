@@ -1,5 +1,7 @@
 ---
 name: skill-icon-generator
+display_name: Skill Icon Generator
+display_name_zh: Skill 图标生成
 description: >-
   为单个 Codex 或 Claude Skill 生成语义准确、彼此可区分的 48×48 SVG 与 PNG
   图标，并更新该 Skill 的 agents/openai.yaml。用户说“给这个 Skill

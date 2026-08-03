@@ -1,5 +1,7 @@
 ---
 name: privy-mcp
+display_name: Privy Docs MCP
+display_name_zh: Privy 文档 MCP
 description: Use Privy's official documentation MCP to research and implement Privy authentication, embedded wallets, wallet ownership, controls, policies, transactions, funding, webhooks, SDK migrations, or related integrations. Trigger for requests such as "用 Privy MCP 查文档", "对接 Privy", "检查 Privy 官方 API", and Privy-related code or architecture work. Do not trigger for generic wallet/blockchain work that does not involve Privy, Privy dashboard administration, production credential operations, or product support. Treat the MCP as public documentation only; never send secrets or call its feedback-writing tool.
 version: 0.1.0
 author: griffithkk3-del

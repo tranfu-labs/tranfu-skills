@@ -1,0 +1,6 @@
+interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
+  display_name: "PRD 需求采访"
+  short_description: "用高杠杆问题陪用户从零聊清页面或流程 PRD"
+  default_prompt: "Use $prd-interview to interview me and define the product requirements for this page or flow."
