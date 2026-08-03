@@ -1,5 +1,12 @@
 ---
 description: Collect authenticated analytics from WeChat Official Accounts, Xiaohongshu, Zhihu, Toutiao, and Weibo through the Codex in-app browser, producing validated JSON, CSV, Excel, and optional dashboard-compatible exports.
+prompt_examples:
+  - prompt: Collect the last 30 days of WeChat Official Account analytics.
+    scene: WeChat analytics
+  - prompt: Collect Xiaohongshu account and note analytics for this month.
+    scene: Xiaohongshu data
+  - prompt: Collect analytics from all five supported social platforms.
+    scene: Multi-platform export
 ---
 
 # Social Media Login Collector

@@ -1,5 +1,7 @@
 ---
 name: tranfu-practice-cover
+display_name: TranFu Practice Cover
+display_name_zh: TranFu 实践封面
 description: >-
   Generate, revise, typeset, optimize, and visually verify TranFu `/practice`
   article-cover images with a deterministic left-title/right-subject layout.

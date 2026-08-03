@@ -1,4 +1,6 @@
 interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
   display_name: "TranFu 实践页封面"
   short_description: "生成并验收左标题、右主体的 TranFu 实践页文章封面"
   default_prompt: "Use $tranfu-practice-cover to generate a TranFu practice-page article cover from my title and topic."

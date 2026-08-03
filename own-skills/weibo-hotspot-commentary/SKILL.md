@@ -1,5 +1,7 @@
 ---
 name: weibo-hotspot-commentary
+display_name: Weibo Hotspot Commentary
+display_name_zh: 微博热点评论
 description: 当用户明确要求写微博、微博长文，或围绕固定主题、明确选题创作微博时使用；也匹配“帮我写微博”“帮我进行微博生成”“根据xxx创作微博帖子”。未指定公司时默认使用望船夫 TranFu，但公司和产品只作为可选证据，不是创作前提。自动执行热点证据、AI 编辑联系、通俗易懂的深度长文、网络图片、生成图片与统一交付。Do NOT trigger when 用户只要微博短文、其他平台文案、只查热点、只做公司调研、只要发布或数据分析；只读公开资料，不登录、不发布微博。
 version: "0.8.0"
 author: Stupides9169

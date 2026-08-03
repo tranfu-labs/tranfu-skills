@@ -1,5 +1,7 @@
 ---
 name: weibo-writer
+display_name: Weibo Post Writer
+display_name_zh: 微博短帖写作
 description: >-
   生成和改写中文微博短帖，支持直接写作、长文转微博和润色草稿。用于“写条微博”“把文章转成微博”“根据要点整理微博”“润色这条微博”等请求。Do NOT trigger when 用户只要普通摘要、其他平台文案、热点调研、广告销售、文学创作、配图、发布、长微博或头条文章，或需要专业审核的医疗、法律、金融结论。不得虚构事实、来源、引语或亲身经历。
 version: 0.1.0

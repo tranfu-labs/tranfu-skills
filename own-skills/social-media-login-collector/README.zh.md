@@ -1,5 +1,12 @@
 ---
 description: 登录社交媒体后台后，通过 Codex 内置浏览器只读采集微信公众号、小红书、知乎、今日头条和微博数据，生成经校验的 JSON、CSV、Excel 报告及可选的看板兼容文件。
+prompt_examples:
+  - prompt: 采集微信公众号最近 30 天的数据。
+    scene: 微信数据采集
+  - prompt: 采集这个月的小红书账号和笔记数据。
+    scene: 小红书数据
+  - prompt: 采集全部五个平台的社媒数据。
+    scene: 多平台导出
 ---
 
 # Social Media Login Collector

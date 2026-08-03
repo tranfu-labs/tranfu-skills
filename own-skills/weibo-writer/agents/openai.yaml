@@ -1,4 +1,6 @@
 interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
   display_name: "微博写作"
   short_description: "将主题、素材、长文或已有草稿改写为高传播潜力微博正文"
   default_prompt: "Use $weibo-writer to turn my topic, source article, or draft into a publish-ready Weibo post."
