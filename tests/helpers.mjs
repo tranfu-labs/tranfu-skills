@@ -23,6 +23,7 @@ export function writeSkill(rootDir, {
   frontmatter = {},
   body = "# x\n",
   readme = null,
+  presentation = true,
   files = {},
 }) {
   const skillDir = join(rootDir, root, name);
@@ -41,7 +42,18 @@ export function writeSkill(rootDir, {
   const skillMd = `---\n${yamlLines.join("\n")}\n---\n\n${body}`;
   writeFileSync(join(skillDir, "SKILL.md"), skillMd);
 
-  if (readme != null) writeFileSync(join(skillDir, "README.md"), readme);
+  if (presentation) {
+    const defaultReadme = `---\ndescription: Human readable description.\nprompt_examples:\n  - prompt: Please do the thing.\n    scene: Thing\n---\n\n# ${name}\n\nBody.\n`;
+    writeFileSync(join(skillDir, "README.md"), readme ?? defaultReadme);
+    writeFileSync(join(skillDir, "README.zh.md"), readme ?? defaultReadme);
+    mkdirSync(join(skillDir, "assets"), { recursive: true });
+    writeFileSync(join(skillDir, "assets/icon.svg"), "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"></svg>\n");
+    writeFileSync(join(skillDir, "assets/icon.png"), "not-empty\n");
+    mkdirSync(join(skillDir, "agents"), { recursive: true });
+    writeFileSync(join(skillDir, "agents/openai.yaml"), `interface:\n  icon_small: \"./assets/icon.svg\"\n  icon_large: \"./assets/icon.png\"\n  display_name: \"${name}\"\n`);
+  } else if (readme != null) {
+    writeFileSync(join(skillDir, "README.md"), readme);
+  }
 
   for (const [relPath, content] of Object.entries(files)) {
     const full = join(skillDir, relPath);
