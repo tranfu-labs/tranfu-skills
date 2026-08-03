@@ -1,0 +1,147 @@
+{
+  "own-skills/prd-interview": [
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "own-skills/privy-mcp": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml:interface.icon_small",
+    "agents/openai.yaml:interface.icon_large"
+  ],
+  "own-skills/skill-icon-generator": [
+    "README.md",
+    "README.zh.md"
+  ],
+  "own-skills/solution-sourcing": [
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "own-skills/tranfu-practice-cover": [
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml:interface.icon_small",
+    "agents/openai.yaml:interface.icon_large"
+  ],
+  "own-skills/weibo-writer": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml:interface.icon_small",
+    "agents/openai.yaml:interface.icon_large"
+  ],
+  "meta-skills/tranfu-publish": [
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "meta-skills/tranfu-router": [
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/andrej-karpathy-skills": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/animation-vocabulary": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/claude-design-system": [
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/emil-design-eng": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/fireworks-tech-graph": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/humanizer-zh": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/make-interfaces-feel-better": [
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/openspec": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/review-animations": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/seo-audit": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/seo-audit-full": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/superpowers": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/ui-ux-pro-max": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ],
+  "external-skills/web-design-guidelines": [
+    "README.md",
+    "README.zh.md",
+    "assets/icon.svg",
+    "assets/icon.png",
+    "agents/openai.yaml"
+  ]
+}

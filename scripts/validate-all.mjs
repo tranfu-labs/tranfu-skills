@@ -13,6 +13,7 @@ import {
 import { validateSkillFile, findSkillFiles } from "./validate-frontmatter.mjs";
 import { validateSkillCases, findSkillDirs as findCasesSkillDirs } from "./validate-cases.mjs";
 import { validateSkillSecurity, findSkillDirs as findSecuritySkillDirs } from "./validate-security.mjs";
+import { validateSkillPresentationMetadata, findSkillDirs as findPresentationSkillDirs } from "./validate-presentation-metadata.mjs";
 
 const ROOTS = ["meta-skills", "own-skills", "external-skills"];
 
@@ -41,6 +42,7 @@ function discoverAllSkillDirs(rootDir) {
   }
   for (const d of findCasesSkillDirs(rootDir)) set.add(d);
   for (const d of findSecuritySkillDirs(rootDir)) set.add(d);
+  for (const d of findPresentationSkillDirs(rootDir)) set.add(d);
   return [...set].sort();
 }
 
@@ -124,6 +126,7 @@ function validateOne(skillDir, rootDir) {
   }
   results.push(...validateSkillCases(skillDir, rootDir));
   results.push(...validateSkillSecurity(skillDir, rootDir));
+  results.push(...validateSkillPresentationMetadata(skillDir, rootDir));
   return results;
 }
 
