@@ -1,0 +1,6 @@
+interface:
+  display_name: "Yao GEO 全景诊断"
+  short_description: "官网证据驱动的 GEO 全景诊断与机会地图"
+  default_prompt: "使用 $yao-geo-panorama-audit 抓取品牌官网、交叉核验公开事实，完整诊断 GEO 资产缺口，并输出有优先级的站内和站外机会地图。"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
