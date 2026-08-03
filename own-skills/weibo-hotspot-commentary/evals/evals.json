@@ -1,0 +1,133 @@
+{
+  "skill_name": "weibo-hotspot-commentary",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "写微博",
+      "expected_output": "自动使用望船夫 TranFu 作为可选产品证据源，从当前微博前 50 完成热点审查和 AI 编辑联系，再完成通俗化深度长文、图片与统一交付。",
+      "files": [],
+      "expectations": [
+        "未指定公司时默认记录望船夫 TranFu，但不把公司联系当作创作前提",
+        "使用 live-discovery，在任何产品判断前获取并审查微博前 50",
+        "为通过的热点建立 editorial_bridge，只有 no_ai_editorial_angle 才因缺少 AI 评论价值取消",
+        "先生成 1500-2000 字长文，event_context 不超过 40%，hotspot_analysis 不低于 35%，两者合计 75%-85%，末尾 ai_analysis 占 15%-25%",
+        "长文通过后先搜索网络图片，再生成缺图并统一交付；不派生固定三条短微博"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "以企业 AI 落地为固定主题，给 TranFu 写微博。",
+      "expected_output": "走 fixed-theme，不要求命中热榜前 50；先寻找近期可核验事件，再完成 AI 编辑联系、通俗化深度长文、图片和统一交付。",
+      "files": [],
+      "expectations": [
+        "固定主题触发本 Skill，但不调用 Top 50 作为准入条件",
+        "先搜索 7 天内相关事件，无合格事件时才扩展到 30 天",
+        "30 天内仍无当前事件锚点时返回 BLOCKED_TOPIC_EVIDENCE",
+        "公司资料不可读时 promotion_evidence_status 为 unavailable、产品决策为 none，并继续创作",
+        "长文热点部分占 75%-85%、末尾 AI 分析占 15%-25%，完成后统一交付"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "围绕刚发布的某企业机器人工作流写一篇微博长文。",
+      "expected_output": "走 fixed-event，核验用户给定事件而非要求它出现在 Top 50；通过后围绕同一事件完成通俗化深度长文和图片。",
+      "files": [],
+      "expectations": [
+        "识别为 fixed-event，并用当前公开来源核验事件、日期和风险",
+        "固定事件不强制 7 天或 30 天搜索窗口，也不要求命中 Top 50",
+        "事件证据不通过时停止，不凭用户描述补写事实",
+        "事件通过后必须建立 editorial_bridge，产品判断是后置且可选的",
+        "长文按事件背景、深度评论和末尾 AI 分析组织，关键术语首次出现时使用白话解释"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "写一篇微博长文并配图，网上能直接发布的图先用，不够再生成。",
+      "expected_output": "长文 QA 后先收集可发布网络图片并分类权属，再为缺口生成图片并统一交付。",
+      "files": [],
+      "expectations": [
+        "网络图片搜索发生在任何图片生成之前",
+        "publish-ready 图片需要明确复用依据；权属不清标记 verification_required 且不得发布",
+        "可发布网络图片为 0 仍可进入生成阶段",
+        "图片总数只从 1、2、3、4、6、9 中自动选择",
+        "一篇长文只使用一个通过权属与文件检查的图片组"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "把 TranFu 官网这段产品介绍改成小红书笔记，再给三个标题。",
+      "expected_output": "不触发微博热点内容生产 Skill。",
+      "files": [],
+      "expectations": [
+        "识别目标平台不是微博，因此不触发本 Skill",
+        "不启动微博热点证据、长文、图片或统一交付流程",
+        "不声称使用 weibo-hotspot-commentary"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "围绕一条与 TranFu 公司方向有关、但与任何具体产品都没有充分证据联系的 AI 热点写微博。",
+      "expected_output": "继续创作；长微博完整评论热点，末尾紧扣事件分析 AI 含义，不提 TranFu 或产品。",
+      "files": [],
+      "expectations": [
+        "一般 AI 联系足以支持 editorial_bridge，但不自动授权产品露出",
+        "product_mention_decision 必须为 none，全文不提产品",
+        "event_context 不超过 40%，不能用起因经过结果填满热点部分",
+        "hotspot_analysis 同时包含 mechanism、impact、judgment 和 boundary_or_counterpoint",
+        "末尾 AI 分析占 15%-25%，并明确回应同一热点"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "这个热点与 TranFu 完全没有关系，但它暴露了 AI 自动决策的责任边界。请写一篇微博长文。",
+      "expected_output": "只要事件可信且 AI 评论角度具体，就继续写成无品牌深度评论；不尝试强行连接 TranFu。",
+      "files": [],
+      "expectations": [
+        "没有公司联系不是取消原因",
+        "热点能够形成具体 AI 责任分析时继续，不能形成时才使用 no_ai_editorial_angle",
+        "product_mention_decision 为 none，全文不得出现公司名、品牌、产品或 CTA",
+        "正文 100% 都在评论该热点及其 AI 含义",
+        "完成文稿与图片后只进行一次统一交付"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "评论一条企业知识库泄露热点；只有在 TranFu 某项公开能力能提供具体解决价值时才提产品。",
+      "expected_output": "先独立完成热点和 AI 分析；只有公开证据支持且产品能自然解决该热点中的具体问题时，才在 AI 段简短出现。",
+      "files": [],
+      "expectations": [
+        "产品出现不是任务完成条件，没有必要时选择 none",
+        "allowed 只授权公开证据支持的具体主张，不扩写效果、案例或数据",
+        "产品内容完全位于 ai_analysis，且不超过 AI 段的 25%",
+        "产品内容计入 15%-25% AI 比例，不额外侵占热点 75%-85%",
+        "删除产品片段后热点的核心观点仍然成立"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "这篇热点长微博基本只复述了起因经过结果，请重写得有深度并保留最后的 AI 分析。",
+      "expected_output": "定向重写热点分析，使其解释机制、利益和影响，给出明确判断与反方边界，而不是把事件换一种说法。",
+      "files": [],
+      "expectations": [
+        "event_context 不超过正文 40%",
+        "hotspot_analysis 不低于正文 35%",
+        "mechanism 解释事件为何发生而不是重复时间线",
+        "impact、judgment、boundary_or_counterpoint 分别提供影响、立场和边界",
+        "语义 QA 仍判定为复述时只允许一次定向重写，第二次失败返回 FAILED_DRAFT_QA"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "从两个合适热点各生产一套微博长文和图片；如果其中一个题目的图片失败，完成后一起交付可用内容。",
+      "expected_output": "等待两个题目结束后统一交付；只打包完整题目，把运行状态标记为 PARTIAL，并列出失败题目的阶段和原因。",
+      "files": [],
+      "expectations": [
+        "生产过程中不零散交付任何可发布草稿或单张成品图",
+        "一个题目完整、另一个失败时状态为 PARTIAL",
+        "final-delivery 只包含完整题目的长文和可发布图片，不包含固定派生短微博",
+        "verification_required 图片只进入内部参考清单，不复制到发布目录",
+        "manifest 记录失败题目的 failure_stage 和 failure_reason，并完成统一交付"
+      ]
+    }
+  ]
+}
