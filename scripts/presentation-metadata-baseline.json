@@ -1,10 +1,16 @@
 {
+  "own-skills/build-marketing-outline": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh"
+  ],
   "own-skills/prd-interview": [
     "assets/icon.svg",
     "assets/icon.png",
     "agents/openai.yaml"
   ],
   "own-skills/privy-mcp": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -13,8 +19,16 @@
     "agents/openai.yaml:interface.icon_large"
   ],
   "own-skills/skill-icon-generator": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md"
+  ],
+  "own-skills/social-media-login-collector": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
+    "README.md:prompt_examples",
+    "README.zh.md:prompt_examples"
   ],
   "own-skills/solution-sourcing": [
     "assets/icon.svg",
@@ -22,13 +36,21 @@
     "agents/openai.yaml"
   ],
   "own-skills/tranfu-practice-cover": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.zh.md",
     "assets/icon.svg",
     "assets/icon.png",
     "agents/openai.yaml:interface.icon_small",
     "agents/openai.yaml:interface.icon_large"
   ],
+  "own-skills/weibo-hotspot-commentary": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh"
+  ],
   "own-skills/weibo-writer": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -37,18 +59,22 @@
     "agents/openai.yaml:interface.icon_large"
   ],
   "meta-skills/tranfu-publish": [
+    "README.md:frontmatter",
     "README.zh.md",
     "assets/icon.svg",
     "assets/icon.png",
     "agents/openai.yaml"
   ],
   "meta-skills/tranfu-router": [
+    "README.md:frontmatter",
     "README.zh.md",
     "assets/icon.svg",
     "assets/icon.png",
     "agents/openai.yaml"
   ],
   "external-skills/andrej-karpathy-skills": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -56,6 +82,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/animation-vocabulary": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -63,12 +91,17 @@
     "agents/openai.yaml"
   ],
   "external-skills/claude-design-system": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
+    "README.md:frontmatter",
     "README.zh.md",
     "assets/icon.svg",
     "assets/icon.png",
     "agents/openai.yaml"
   ],
   "external-skills/emil-design-eng": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -76,6 +109,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/fireworks-tech-graph": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -83,6 +118,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/humanizer-zh": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -90,12 +127,17 @@
     "agents/openai.yaml"
   ],
   "external-skills/make-interfaces-feel-better": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
+    "README.md:frontmatter",
     "README.zh.md",
     "assets/icon.svg",
     "assets/icon.png",
     "agents/openai.yaml"
   ],
   "external-skills/openspec": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -103,6 +145,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/review-animations": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -110,6 +154,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/seo-audit": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -117,6 +163,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/seo-audit-full": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -124,6 +172,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/superpowers": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -131,6 +181,8 @@
     "agents/openai.yaml"
   ],
   "external-skills/ui-ux-pro-max": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
@@ -138,10 +190,16 @@
     "agents/openai.yaml"
   ],
   "external-skills/web-design-guidelines": [
+    "SKILL.md:display_name",
+    "SKILL.md:display_name_zh",
     "README.md",
     "README.zh.md",
     "assets/icon.svg",
     "assets/icon.png",
     "agents/openai.yaml"
+  ],
+  "own-skills/tranfu-website-design": [
+    "README.md:prompt_examples",
+    "README.zh.md:prompt_examples"
   ]
 }
