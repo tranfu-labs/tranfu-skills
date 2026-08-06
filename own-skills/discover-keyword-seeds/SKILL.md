@@ -1,15 +1,15 @@
 ---
-name: discover-web3-keyword-seeds
-display_name: Web3 Keyword Seed Discovery
-display_name_zh: Web3 种子词发现
-description: 当用户提供 Web3 机会锚点、用户任务、产品类别、竞品网址或 Search Console 查询，并要求生成或扩展英文种子词、任务词、产品词、问题词、价格词、比较词、替代词、角色词或场景词时使用。该 Skill 将机会锚点拆成用户、任务、结果与付费角色，输出结构化种子词簇、假设和后续调研交接材料；种子词不是有效关键词。Do NOT trigger when 用户已经要求查询 Semrush 或 Search Console 数据、验证搜索量和收入证据、填写关键词调研表（改用 research-web3-keywords），也不要用于普通 SEO 页面审计或最终立项审批。
-version: 0.1.0
+name: discover-keyword-seeds
+display_name: Keyword Seed Discovery
+display_name_zh: 种子词发现
+description: 当用户提供机会锚点、用户任务、产品类别、竞品网址或 Search Console 查询，并要求生成或扩展英文种子词、任务词、产品词、问题词、价格词、比较词、替代词、角色词或场景词时使用。该 Skill 将机会锚点拆成用户、任务、结果与付费角色，输出结构化种子词簇、假设和后续调研交接材料；种子词不是有效关键词。Do NOT trigger when 用户已经要求查询 Semrush 或 Search Console 数据、验证搜索量和收入证据、填写关键词调研表（改用 research-keywords），也不要用于普通 SEO 页面审计或最终立项审批。
+version: "0.1.0"
 author: "06666666"
-updated_at: 2026-08-06
-origin: own
+updated_at: "2026-08-06"
+origin: "own"
 ---
 
-# Web3 种子词发现
+# 种子词发现
 
 把一条模糊机会线索转成可供 Semrush、Search Console 和搜索引擎验证的英文种子词簇。保持“生成假设”和“验证证据”分离。
 
@@ -26,7 +26,7 @@ origin: own
 - [elite-market-researcher](../../own-skills/elite-market-researcher/SKILL.md) — 提供深度市场研究心智与决策报告；**本 skill 区别**：输出轻量、结构化的搜索探针。
 
 ### 外部世界
-- [ecommerce-keyword-research](https://github.com/nexscope-ai/eCommerce-Skills/blob/56f3288dd1ba3ae7cae43d369115a915229e510b/ecommerce-keyword-research/SKILL.md) — 面向电商平台生成高转化关键词；**本 skill 区别**：覆盖全球 Web3 多种产品和服务形态。
+- [ecommerce-keyword-research](https://github.com/nexscope-ai/eCommerce-Skills/blob/56f3288dd1ba3ae7cae43d369115a915229e510b/ecommerce-keyword-research/SKILL.md) — 面向电商平台生成高转化关键词；**本 skill 区别**：不限定行业、平台或产品形态。
 - [etsy-keyword-research](https://github.com/nexscope-ai/eCommerce-Skills/blob/56f3288dd1ba3ae7cae43d369115a915229e510b/etsy-keyword-research/SKILL.md) — 面向 Etsy 标签、长尾词和季节趋势；**本 skill 区别**：从用户任务与付费结果开始，不绑定平台。
 
 ### 本 skill 独特价值
@@ -93,7 +93,7 @@ origin: own
 | 比较词 | best、vs、compare、review、top、fastest、safest |
 | 替代词 | alternative、replacement、without、manual service |
 | 角色词 | developer、trader、project owner、compliance team 等 |
-| 场景词 | 公链、钱包、交易所、API、企业采购或具体事件场景 |
+| 场景词 | 行业、平台、设备、地区、API、企业采购或具体事件场景 |
 
 根据机会锚点调整用词，不要求每类机械地产出相同数量。没有真实含义的组合不要生成。
 
@@ -109,8 +109,8 @@ origin: own
 
 - 不填写搜索量、KD、趋势、CPC 或竞品收入，除非用户提供了可验证来源。
 - 不因词听起来合理就称其为“有效关键词”。
-- 不把代币名称、行情热度或融资新闻自动视为商业需求。
-- 不生成与机会锚点用户任务无关的泛 Web3 热词。
+- 不把品牌名称、短期热点、融资新闻或流量事件自动视为商业需求。
+- 不生成与机会锚点用户任务无关的泛行业热词。
 
 ## 输出格式
 
@@ -122,18 +122,18 @@ origin: own
 4. **八类种子词簇**：每个词包含英文种子词、词簇类型、对应用户任务、搜索目的假设和生成依据。
 5. **排除项**：记录被删除的泛词、新闻词、品牌导航词或不匹配词。
 6. **待验证问题**：列出后续调研必须确认的搜索与商业假设。
-7. **交接包**：输出给 `research-web3-keywords` 的机会锚点、主题、代表词、长尾词、假设和排除范围。
+7. **交接包**：输出给 `research-keywords` 的机会锚点、主题、代表词、长尾词、假设和排除范围。
 
 不要输出“优先、进入验证、继续观察、淘汰”等最终关键词结论。
 
 ## 交接示例
 
-输入：`项目方需要快速检查 Solana 代币权限，避免上线后仍可增发或冻结。`
+输入：`跨境电商卖家需要批量压缩商品图片，以满足平台大小限制，同时尽量保持画质。`
 
 交接包应包含：
 
-- 用户：Solana 项目方、代币发行负责人。
-- 任务：检查 mint authority、freeze authority 和 metadata update authority。
-- 结果：上线前确认权限状态并降低风险。
-- 代表词：`solana token authority checker`、`check solana mint authority`。
+- 用户：跨境电商卖家、商品内容运营。
+- 任务：批量压缩商品图片并满足平台上传限制。
+- 结果：减少人工处理时间，同时保持可接受的图片质量。
+- 代表词：`bulk product image compressor`、`compress product images without losing quality`。
 - 后续验证：搜索量、Search Console 真实查询、直接竞品、收费页面和收入来源。

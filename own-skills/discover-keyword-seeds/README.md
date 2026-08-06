@@ -1,7 +1,7 @@
 ---
-description: "Turn a Web3 opportunity anchor into structured English seed keyword clusters without confusing hypotheses with validated demand."
+description: "Turn an opportunity anchor into structured English seed keyword clusters without confusing hypotheses with validated demand."
 prompt_examples:
-  - prompt: Turn this Web3 product idea into English seed keyword clusters for research.
+  - prompt: Turn this product idea into English seed keyword clusters for research.
     scene: Expand an opportunity anchor
   - prompt: Generate task, product, question, price, comparison, alternative, role, and scenario keywords from this competitor.
     scene: Reverse a competitor into search probes
@@ -9,9 +9,9 @@ prompt_examples:
     scene: Prepare a research handoff
 ---
 
-# Web3 Keyword Seed Discovery
+# Keyword Seed Discovery
 
-Turn a Web3 opportunity anchor into English search probes that can later be checked in Semrush, Search Console, and search engines.
+Turn an opportunity anchor into English search probes that can later be checked in Semrush, Search Console, and search engines.
 
 ## When to use it
 
@@ -25,7 +25,7 @@ It first identifies the user, trigger, task, desired result, current risk, and l
 - A user-task-result breakdown
 - English seed keyword clusters grouped by search intent
 - Exclusions and unverified assumptions
-- A structured handoff for `research-web3-keywords`
+- A structured handoff for `research-keywords`
 
 ## Important boundary
 
