@@ -1,0 +1,6 @@
+interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
+  display_name: "Web3 种子词发现"
+  short_description: "从机会锚点拆解用户任务结果并生成结构化英文种子词簇清单"
+  default_prompt: "Use $discover-web3-keyword-seeds to turn this Web3 opportunity anchor into structured English seed keyword clusters."
