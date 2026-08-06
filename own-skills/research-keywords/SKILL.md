@@ -1,35 +1,35 @@
 ---
-name: research-web3-keywords
-display_name: Web3 Keyword Research
-display_name_zh: Web3 关键词调研
-description: 当用户要求调研 Web3 关键词、查询 Semrush 或 Search Console、分析搜索量与趋势、核对搜索结果和竞品、验证对应项目收入与付费证据、填写关键词调研表，或判断关键词主题应当优先、进入验证、继续观察还是淘汰时使用。该 Skill 把种子词聚成用户问题主题，收集搜索与商业证据，按统一字段写入调研表，并在满足条件时创建待评审候选项目。Do NOT trigger when 用户只需要从机会锚点生成种子词（改用 discover-web3-keyword-seeds）、只做技术 SEO 页面审计，或要求直接批准最终立项。
-version: 0.1.0
+name: research-keywords
+display_name: Keyword Research
+display_name_zh: 关键词调研
+description: 当用户要求调研关键词、查询 Semrush 或 Search Console、分析搜索量与趋势、核对搜索结果和竞品、验证对应项目收入与付费证据、填写关键词调研表，或判断关键词主题应当优先、进入验证、继续观察还是淘汰时使用。该 Skill 把种子词聚成用户问题主题，收集搜索与商业证据，按统一字段写入调研表，并在满足条件时创建待评审候选项目。Do NOT trigger when 用户只需要从机会锚点生成种子词（改用 discover-keyword-seeds）、只做技术 SEO 页面审计，或要求直接批准最终立项。
+version: "0.1.0"
 author: "06666666"
-updated_at: 2026-08-06
-origin: own
+updated_at: "2026-08-06"
+origin: "own"
 ---
 
-# Web3 关键词调研
+# 关键词调研
 
-把英文种子词或已有关键词主题转成可复核的搜索、竞品和收入证据，并给出是否进入候选项目的处理结论。默认研究全球 Web3 英文市场，不限公链和产品形态。
+把英文种子词或已有关键词主题转成可复核的搜索、竞品和收入证据，并给出是否进入候选项目的处理结论。默认先研究全球英文市场，不限定行业或产品形态。
 
 ## When to use
 
-处理关键词证据验证、竞品与收入调查、Lark 调研表填写和候选项目交接。它可以接收 `discover-web3-keyword-seeds` 的交接包，也可以从用户给出的现成关键词、竞品网址或 Search Console 查询开始。
+处理关键词证据验证、竞品与收入调查、Lark 调研表填写和候选项目交接。它可以接收 `discover-keyword-seeds` 的交接包，也可以从用户给出的现成关键词、竞品网址或 Search Console 查询开始。
 
 ## 同类 Skill 对比
 
 > 由 tranfu-publish 起草，作者签字。帮助阅读者横向决定要装哪个或跳到更合适的同类。
 
 ### 公司库内
-- [discover-web3-keyword-seeds](../discover-web3-keyword-seeds/SKILL.md) — 从机会锚点生成结构化种子词；**本 skill 区别**：继续收集真实证据并填写调研表。
+- [discover-keyword-seeds](../discover-keyword-seeds/SKILL.md) — 从机会锚点生成结构化种子词；**本 skill 区别**：继续收集真实证据并填写调研表。
 - [market-analysis](../../own-skills/market-analysis/SKILL.md) — 做行业规模、竞争格局和市场机会分析；**本 skill 区别**：按关键词主题和固定字段形成可立项输入。
 - [seo-audit](../../external-skills/seo-audit/SKILL.md) — 审计单页面技术和内容 SEO；**本 skill 区别**：研究做什么产品，不审计已有页面质量。
 
 ### 外部世界
 - [semrush-seo](https://github.com/ClawLink-HQ/clawlink/blob/508ca43f457495eaf589ca6c1e58446a4dcba910/clawhub-skills/semrush-seo/SKILL.md) — 通过 Semrush API 查询关键词和竞品数据；**本 skill 区别**：同时纳入 Search Console、收入证据和候选项目规则。
 - [Agentic SEO Skill](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blob/69199160e18372bc5cdf9ddec20ccb9fb1b509f1/SKILL.md) — 做网站与页面 SEO 审计；**本 skill 区别**：在开发前判断关键词商业机会。
-- [ecommerce-keyword-research](https://github.com/nexscope-ai/eCommerce-Skills/blob/56f3288dd1ba3ae7cae43d369115a915229e510b/ecommerce-keyword-research/SKILL.md) — 研究电商平台关键词；**本 skill 区别**：覆盖 Web3 工具、API、企业服务和人工服务。
+- [ecommerce-keyword-research](https://github.com/nexscope-ai/eCommerce-Skills/blob/56f3288dd1ba3ae7cae43d369115a915229e510b/ecommerce-keyword-research/SKILL.md) — 研究电商平台关键词；**本 skill 区别**：覆盖工具、API、企业服务、报告、撮合和人工服务。
 
 ### 本 skill 独特价值
 - 搜索和收入证据同时判断
@@ -127,7 +127,7 @@ origin: own
 | 待核实 | 暂时查不到公开收入或付费资料，需要继续调查 |
 | 不匹配 | 项目有收入但来自其他产品，或只有非收入指标 |
 
-区分用户支付金额、平台总手续费、协议或公司实际收入，以及扣除成本后的利润。TVL、交易量、代币市值、融资、空投、返佣和补贴不直接算经营收入。
+区分用户支付金额、平台总成交额或手续费、公司实际收入，以及扣除成本后的利润。流量、用户数、交易量、GMV、融资、返佣和补贴不直接算经营收入。
 
 ### 5. 得出处理结论
 

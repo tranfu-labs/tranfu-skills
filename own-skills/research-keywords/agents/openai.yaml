@@ -1,0 +1,6 @@
+interface:
+  display_name: "关键词调研"
+  short_description: "结合搜索竞品和收入证据完成关键词调研及候选项目判断"
+  default_prompt: "Use $research-keywords to research this keyword theme, verify demand and revenue evidence, and decide the next action."
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
