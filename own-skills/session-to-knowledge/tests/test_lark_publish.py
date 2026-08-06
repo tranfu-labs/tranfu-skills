@@ -109,12 +109,11 @@ class LarkPublishTests(unittest.TestCase):
         self.temporary.cleanup()
 
     def article(self, *, replacement: str | None = None) -> tuple[Path, str]:
-        sections = []
-        for index, heading in enumerate(session_source.ARTICLE_HEADINGS):
-            content = "First verified marker." if index == 0 else "Verified content."
-            if index == len(session_source.ARTICLE_HEADINGS) - 1:
-                content = "Last verified marker."
-            sections.append(f"{heading}\n\n{content}")
+        sections = [
+            "## 直接抄的结论\n\nFirst verified marker.",
+            "## 第一反应为什么是错的\n\nVerified content.",
+            "## 证据\n\nLast verified marker.",
+        ]
         body = "\n\n".join(sections) + "\n"
         text = f"# Verified result\n\n{body}"
         if replacement:

@@ -43,6 +43,7 @@ Only the Codex integration is natively validated. The other entries are adaptati
 - [x] Redact common high-risk content locally before workers receive it
 - [x] Exclude Web3, digital-asset, blockchain, and cryptography content throughout the pipeline
 - [x] Require evidence of the problem, action, and successful result
+- [x] Drop candidates a default approach would already have solved
 - [x] Validate article structure, evidence coverage, and privacy before publication
 - [x] Publish the local final article as a recoverable Lark Wiki child document
 
@@ -154,7 +155,7 @@ The project root is selected in this order:
 3. The current Git repository root
 4. The current working directory
 
-Every invocation creates a new local document and never overwrites an existing file. Each article contains: Outcome Summary, Background and Constraints, Problem Symptoms, Diagnosis, Key Failures, Root Cause, Solution, Verification Evidence, Transferable Methods, and Action Checklist. Once Lark is configured, the local H1 becomes the Wiki page title and the validated body after that heading is written unchanged through stdin, without a model rewrite. Remote failure never deletes or rolls back the local file.
+Every invocation creates a new local document and never overwrites an existing file. Each article runs backwards from its conclusion: Reusable Conclusion, Scope and Boundaries, Why The First Instinct Was Wrong, The Correcting Signal, Cost Of The Wrong Path, and Evidence. A section the record cannot support is omitted rather than padded. Once Lark is configured, the local H1 becomes the Wiki page title and the validated body after that heading is written unchanged through stdin, without a model rewrite. Remote failure never deletes or rolls back the local file.
 
 ## HTTP 413 Recovery Boundary
 
@@ -209,6 +210,10 @@ Every accepted candidate must include:
 - A successful test, tool result, exit status, or explicit user confirmation
 
 An assistant statement such as “fixed” or “done” is not verification. The skill does not generate an article when evidence conflicts, a decisive result is truncated, a required chunk is missing, or no successful result exists.
+
+Surviving candidates then face the novelty gate. Knowledge is defined as the difference between the default approach and the approach that actually worked. Each candidate must state what a competent engineer who knows nothing about this session would have done by default; when that matches the final solution, the candidate is dropped. A missing dependency, a mistyped path, or a forgotten flag is fully evidenced and yields no difference, so it never reaches the article. The difference must come from a project convention, a hidden semantic of a tool or version, a stated user preference, or a common intuition that reality overturned.
+
+When no candidate passes both gates, no article is written and the report states which gate rejected what. Producing nothing is a normal outcome; the skill does not pad a session to have something to deliver.
 
 Every transcript is treated as untrusted data, and instructions found inside it are not executed. Before content reaches a worker, the adapter filters or redacts common credentials, authorization headers, cookies, emails, UUIDs, IP addresses, absolute paths, private URLs, long base64 payloads, system and developer instructions, hidden reasoning, world state, compaction summaries, and internal agent communication.
 

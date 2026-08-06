@@ -1201,9 +1201,11 @@ CARD_LIST_FIELDS = (
     "solution_evidence",
     "verification_evidence",
     "important_failures",
+    "correction_trigger",
     "open_questions",
 )
 PROVENANCE_FIELDS = CARD_LIST_FIELDS[:-1]
+CARD_TEXT_FIELDS = ("default_approach", "cost")
 
 
 def _validate_card(
@@ -1220,6 +1222,13 @@ def _validate_card(
         raise SourceError(f"{label} card has an invalid problem_type")
     if card.get("confidence") not in {"high", "medium", "low"}:
         raise SourceError(f"{label} card has an invalid confidence")
+    if card.get("novelty") not in {"high", "low"}:
+        raise SourceError(f"{label} card has an invalid novelty")
+    for field_name in CARD_TEXT_FIELDS:
+        if not isinstance(card.get(field_name), str):
+            raise SourceError(f"{label} card field {field_name} must be a string")
+        if card["novelty"] == "high" and not card[field_name].strip():
+            raise SourceError(f"{label} high-novelty card requires {field_name}")
     for field_name in CARD_LIST_FIELDS:
         if not isinstance(card.get(field_name), list):
             raise SourceError(f"{label} card field {field_name} must be a list")
@@ -1495,6 +1504,7 @@ def _validate_verify_package(
         "root_cause_evidence",
         "solution_evidence",
         "verification_evidence",
+        "correction_trigger",
     )
     wanted = {
         evidence.get("ordinal")
@@ -1512,6 +1522,11 @@ def _validate_verify_package(
             raise SourceError("verify artifact candidate is absent from the reduce result")
         if candidate.get("contradictions") != []:
             raise SourceError("verify artifact contains unresolved contradictions")
+        if candidate.get("novelty") != "high":
+            raise SourceError("verify artifact candidate adds nothing beyond the default approach")
+        for field_name in CARD_TEXT_FIELDS:
+            if not isinstance(candidate.get(field_name), str) or not candidate[field_name].strip():
+                raise SourceError(f"verify candidate is missing {field_name}")
         validated_events: dict[str, list[dict[str, Any]]] = {}
         reference_keys: dict[str, set[tuple[int, str | None]]] = {}
         for field_name in reference_fields:
@@ -2033,32 +2048,6 @@ def _validate_stage_artifacts(run_dir: Path, manifest: dict[str, Any]) -> None:
             raise SourceError(f"{stage} artifact failed integrity validation")
 
 
-ARTICLE_HEADINGS = (
-    "## 结果摘要",
-    "## 背景与约束",
-    "## 问题表现",
-    "## 诊断",
-    "## 关键失败",
-    "## 根因",
-    "## 解决方案",
-    "## 验证证据",
-    "## 可迁移的方法",
-    "## 行动清单",
-)
-ARTICLE_HEADINGS_ENGLISH = (
-    "## Outcome Summary",
-    "## Background and Constraints",
-    "## Problem Symptoms",
-    "## Diagnosis",
-    "## Key Failures",
-    "## Root Cause",
-    "## Solution",
-    "## Verification Evidence",
-    "## Transferable Methods",
-    "## Action Checklist",
-)
-
-
 def _validate_article_body(body: bytes) -> str:
     try:
         text = body.decode("utf-8")
@@ -2071,16 +2060,8 @@ def _validate_article_body(body: bytes) -> str:
     lines = text.splitlines()
     if not lines or not lines[0].startswith("# ") or lines[0].startswith("## "):
         raise SourceError("article must start with one level-one title")
-    heading_indexes = [index for index, line in enumerate(lines) if line.startswith("## ")]
-    if len(heading_indexes) != len(ARTICLE_HEADINGS):
-        raise SourceError("article must contain exactly ten level-two sections")
-    headings = tuple(lines[index].strip() for index in heading_indexes)
-    if headings not in {ARTICLE_HEADINGS, ARTICLE_HEADINGS_ENGLISH}:
-        raise SourceError("article sections must use the required semantic headings and order")
-    for position, start in enumerate(heading_indexes):
-        end = heading_indexes[position + 1] if position + 1 < len(heading_indexes) else len(lines)
-        if not any(line.strip() and not line.startswith("#") for line in lines[start + 1 : end]):
-            raise SourceError("every article section must contain content")
+    if not any(line.strip() and not line.startswith("#") for line in lines[1:]):
+        raise SourceError("article must contain body content below its title")
     return text
 
 

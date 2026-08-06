@@ -192,9 +192,13 @@ class SessionSourceTests(unittest.TestCase):
         card = {
             "candidate": candidate_name,
             "problem_type": "task",
+            "novelty": "high",
+            "default_approach": "Restart the service and retry the login.",
+            "cost": "Two rounds of rework before the real cause surfaced.",
             "problem_evidence": [{"ordinal": problem["ordinal"], "fact": "Login was broken."}],
             "constraints": [],
             "actions": [{"ordinal": action["ordinal"], "action": "Investigated.", "result": "Found cause."}],
+            "correction_trigger": [{"ordinal": action["ordinal"], "fact": "The restart changed nothing."}],
             "root_cause_evidence": [{"ordinal": action["ordinal"], "fact": "The cause was isolated."}],
             "solution_evidence": [{"ordinal": solution["ordinal"], "fact": "The fix was applied."}],
             "verification_evidence": [],
@@ -229,8 +233,12 @@ class SessionSourceTests(unittest.TestCase):
                         {
                             "candidate": candidate_name,
                             "accepted": True,
+                            "novelty": "high",
+                            "default_approach": "Restart the service and retry the login.",
+                            "cost": "Two rounds of rework before the real cause surfaced.",
                             "problem_evidence": [reference(problem, "Login was broken.")],
                             "action_evidence": [reference(action, "The issue was investigated.")],
+                            "correction_trigger": [reference(action, "The restart changed nothing.")],
                             "root_cause_evidence": [reference(action, "The root cause was identified.")],
                             "solution_evidence": [reference(solution, "The fix was applied.")],
                             "verification_evidence": [verification_reference],
@@ -244,18 +252,19 @@ class SessionSourceTests(unittest.TestCase):
         return reduce_relative, verify_relative
 
     def article_body(self) -> str:
-        sections = "\n\n".join(f"{heading}\n\nVerified content." for heading in session_source.ARTICLE_HEADINGS)
-        return f"# Verified result\n\n{sections}\n"
+        return "# Verified result\n\n## 直接抄的结论\n\nVerified content.\n"
 
-    def test_article_structure_requires_semantic_headings_in_order(self) -> None:
-        wrong = self.article_body().replace(session_source.ARTICLE_HEADINGS[3], "## Arbitrary Section")
-        with self.assertRaisesRegex(session_source.SourceError, "semantic headings"):
-            session_source._validate_article_body(wrong.encode("utf-8"))
+    def test_article_requires_a_title_and_body_without_enforcing_sections(self) -> None:
+        session_source._validate_article_body(self.article_body().encode("utf-8"))
 
-        english = "# Verified result\n\n" + "\n\n".join(
-            f"{heading}\n\nVerified content." for heading in session_source.ARTICLE_HEADINGS_ENGLISH
-        )
-        session_source._validate_article_body(english.encode("utf-8"))
+        free_form = "# Verified result\n\n## Any Section\n\nVerified content.\n\n## Another\n\nMore.\n"
+        session_source._validate_article_body(free_form.encode("utf-8"))
+
+        with self.assertRaisesRegex(session_source.SourceError, "level-one title"):
+            session_source._validate_article_body(b"## Missing title\n\nVerified content.\n")
+
+        with self.assertRaisesRegex(session_source.SourceError, "body content"):
+            session_source._validate_article_body(b"# Title only\n\n## Empty section\n")
 
     def complete_pipeline(self, run_dir: Path) -> tuple[str, str]:
         manifest = self.load_manifest(run_dir)
@@ -267,6 +276,30 @@ class SessionSourceTests(unittest.TestCase):
         session_source.mark(run_dir, None, "reduce", "completed", reduce_relative)
         session_source.mark(run_dir, None, "verify", "completed", verify_relative)
         return reduce_relative, verify_relative
+
+    def test_verify_rejects_candidates_the_default_approach_already_solved(self) -> None:
+        run_dir, _summary = self.prepare_codex()
+        session_source.confirm(run_dir)
+        manifest = self.load_manifest(run_dir)
+        for chunk in session_source._active_chunks(manifest):
+            card = self.write_card(run_dir, chunk["id"])
+            session_source.mark(run_dir, chunk["id"], None, "completed", card)
+        session_source.mark(run_dir, None, "map", "completed", None)
+        reduce_relative, verify_relative = self.write_valid_stage_artifacts(run_dir)
+        session_source.mark(run_dir, None, "reduce", "completed", reduce_relative)
+
+        path = run_dir / verify_relative
+        package = json.loads(path.read_text(encoding="utf-8"))
+        package["candidates"][0]["novelty"] = "low"
+        path.write_text(json.dumps(package), encoding="utf-8")
+        with self.assertRaisesRegex(session_source.SourceError, "nothing beyond the default approach"):
+            session_source.mark(run_dir, None, "verify", "completed", verify_relative)
+
+        package["candidates"][0]["novelty"] = "high"
+        package["candidates"][0]["default_approach"] = "   "
+        path.write_text(json.dumps(package), encoding="utf-8")
+        with self.assertRaisesRegex(session_source.SourceError, "missing default_approach"):
+            session_source.mark(run_dir, None, "verify", "completed", verify_relative)
 
     def test_prepare_filters_redacts_deduplicates_and_preserves_machine_status(self) -> None:
         run_dir, summary = self.prepare_codex()
@@ -575,9 +608,13 @@ class SessionSourceTests(unittest.TestCase):
         card = {
             "candidate": "isolated result",
             "problem_type": "task",
+            "novelty": "high",
+            "default_approach": "Accept the reported success at face value.",
+            "cost": "One round spent on an unverified claim.",
             "problem_evidence": [reference],
             "constraints": [],
             "actions": [reference],
+            "correction_trigger": [reference],
             "root_cause_evidence": [reference],
             "solution_evidence": [reference],
             "verification_evidence": [],
@@ -606,8 +643,12 @@ class SessionSourceTests(unittest.TestCase):
                         {
                             "candidate": "isolated result",
                             "accepted": True,
+                            "novelty": "high",
+                            "default_approach": "Accept the reported success at face value.",
+                            "cost": "One round spent on an unverified claim.",
                             "problem_evidence": [reference],
                             "action_evidence": [reference],
+                            "correction_trigger": [reference],
                             "root_cause_evidence": [reference],
                             "solution_evidence": [reference],
                             "verification_evidence": [verification],
@@ -792,9 +833,13 @@ class SessionSourceTests(unittest.TestCase):
                 {
                     "candidate": "bounded coverage",
                     "problem_type": "agent",
+                    "novelty": "low",
+                    "default_approach": "",
+                    "cost": "",
                     "problem_evidence": [],
                     "constraints": [],
                     "actions": [],
+                    "correction_trigger": [],
                     "root_cause_evidence": [],
                     "solution_evidence": [],
                     "verification_evidence": [],
@@ -857,9 +902,13 @@ class SessionSourceTests(unittest.TestCase):
         malformed_card = {
             "candidate": "missing provenance",
             "problem_type": "task",
+            "novelty": "low",
+            "default_approach": "",
+            "cost": "",
             "problem_evidence": [],
             "constraints": [],
             "actions": [{"ordinal": tool_result["ordinal"], "action": "Ran tests.", "result": "Done."}],
+            "correction_trigger": [],
             "root_cause_evidence": [],
             "solution_evidence": [],
             "verification_evidence": [],
