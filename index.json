@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-06T06:28:16.604Z",
+  "generated_at": "2026-08-06T06:32:19.661Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -1148,6 +1148,7 @@
         }
       ],
       "type": "own",
+      "published_at": "2026-08-06T06:16:58.000Z",
       "path": "own-skills/discover-keyword-seeds",
       "files": [
         "README.md",
@@ -1157,7 +1158,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": ""
+      "sha": "8940b8708713bbf7e814acc31b35ba082b47df7d"
     },
     {
       "name": "draft-content",
@@ -2532,10 +2533,10 @@
       "sha": "3f27792f313564bb20a92c290b0fe376b6248bd9"
     },
     {
-      "name": "research-web3-keywords",
-      "display_name": "Web3 Keyword Research",
-      "display_name_zh": "Web3 关键词调研",
-      "description": "当用户要求调研 Web3 关键词、查询 Semrush 或 Search Console、分析搜索量与趋势、核对搜索结果和竞品、验证对应项目收入与付费证据、填写关键词调研表，或判断关键词主题应当优先、进入验证、继续观察还是淘汰时使用。该 Skill 把种子词聚成用户问题主题，收集搜索与商业证据，按统一字段写入调研表，并在满足条件时创建待评审候选项目。Do NOT trigger when 用户只需要从机会锚点生成种子词（改用 discover-web3-keyword-seeds）、只做技术 SEO 页面审计，或要求直接批准最终立项。",
+      "name": "research-keywords",
+      "display_name": "Keyword Research",
+      "display_name_zh": "关键词调研",
+      "description": "当用户要求调研关键词、查询 Semrush 或 Search Console、分析搜索量与趋势、核对搜索结果和竞品、验证对应项目收入与付费证据、填写关键词调研表，或判断关键词主题应当优先、进入验证、继续观察还是淘汰时使用。该 Skill 把种子词聚成用户问题主题，收集搜索与商业证据，按统一字段写入调研表，并在满足条件时创建待评审候选项目。Do NOT trigger when 用户只需要从机会锚点生成种子词（改用 discover-keyword-seeds）、只做技术 SEO 页面审计，或要求直接批准最终立项。",
       "version": "0.1.0",
       "author": "06666666",
       "updated_at": "2026-08-06",
@@ -2544,10 +2545,10 @@
         "en": "README.md",
         "zh": "README.zh.md"
       },
-      "description_en": "Research Web3 keyword themes with direct search data, competitors, pricing, and revenue evidence before creating a candidate project.",
+      "description_en": "Research keyword themes with direct search data, competitors, pricing, and revenue evidence before creating a candidate project.",
       "prompt_examples_en": [
         {
-          "prompt": "Research this Web3 keyword theme with Semrush, Search Console, competitors, pricing, and revenue evidence.",
+          "prompt": "Research this keyword theme with Semrush, Search Console, competitors, pricing, and revenue evidence.",
           "scene": "Validate a keyword theme"
         },
         {
@@ -2559,10 +2560,10 @@
           "scene": "Apply the candidate-project gate"
         }
       ],
-      "description_zh": "结合直接搜索数据、竞品、收费和收入证据调研 Web3 关键词主题，并判断是否进入候选项目。",
+      "description_zh": "结合直接搜索数据、竞品、收费和收入证据调研关键词主题，并判断是否进入候选项目。",
       "prompt_examples_zh": [
         {
-          "prompt": "调研这个 Web3 关键词主题，核对 Semrush、Search Console、竞品、收费和收入证据。",
+          "prompt": "调研这个关键词主题，核对 Semrush、Search Console、竞品、收费和收入证据。",
           "scene": "验证关键词主题"
         },
         {
@@ -2575,8 +2576,7 @@
         }
       ],
       "type": "own",
-      "published_at": "2026-08-06T06:19:51.000Z",
-      "path": "own-skills/research-web3-keywords",
+      "path": "own-skills/research-keywords",
       "files": [
         "README.md",
         "README.zh.md",
@@ -2585,7 +2585,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "f8ae23dea41eb06267c44883b2eaef1ec6e0b068"
+      "sha": ""
     },
     {
       "name": "reversible-ops",

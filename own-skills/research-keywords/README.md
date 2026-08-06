@@ -1,7 +1,7 @@
 ---
-description: "Research Web3 keyword themes with direct search data, competitors, pricing, and revenue evidence before creating a candidate project."
+description: "Research keyword themes with direct search data, competitors, pricing, and revenue evidence before creating a candidate project."
 prompt_examples:
-  - prompt: Research this Web3 keyword theme with Semrush, Search Console, competitors, pricing, and revenue evidence.
+  - prompt: Research this keyword theme with Semrush, Search Console, competitors, pricing, and revenue evidence.
     scene: Validate a keyword theme
   - prompt: Fill the keyword research fields for these English seed keywords and decide the correct branch.
     scene: Prepare Lark research records
@@ -9,7 +9,7 @@ prompt_examples:
     scene: Apply the candidate-project gate
 ---
 
-# Web3 Keyword Research
+# Keyword Research
 
 Turn English seed keywords or an existing keyword theme into reviewable search, competitor, pricing, and revenue evidence.
 
@@ -23,7 +23,7 @@ The Skill groups terms by the user problem they solve, checks direct search evid
 
 A keyword theme can create a pending-review candidate project only when direct keyword evidence is strong and payment evidence is strong or medium.
 
-At least one verifiable direct search source is required: recent Semrush data or real Search Console query data. Pricing pages, enterprise cases, regulatory requirements, funding, TVL, and competitor counts cannot replace keyword evidence.
+At least one verifiable direct search source is required: recent Semrush data or real Search Console query data. Pricing pages, enterprise cases, regulatory requirements, funding, traffic, transaction volume, and competitor counts cannot replace keyword evidence.
 
 ## What it produces
 
