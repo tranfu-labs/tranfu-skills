@@ -11,9 +11,9 @@ description: >
   an oversized or HTTP 413-rejected session from a Codex task UUID or transcript path. Do NOT trigger
   for ordinary chat summaries without explicit knowledge-capture intent, or when an oversized source
   cannot be processed by isolated workers.
-version: 0.2.0
+version: 0.3.0
 author: BruceL017
-updated_at: 2026-07-30
+updated_at: 2026-08-05
 origin: own
 ---
 
@@ -60,8 +60,11 @@ Identify both task problems and agent-execution problems. For every candidate, r
 
 - the observed problem or symptom;
 - relevant constraints;
+- the default approach: what a competent engineer or agent would have done knowing nothing specific to this session;
 - actions or hypotheses tried;
 - the result of each important action;
+- the correction trigger: the specific observation that overturned the default approach;
+- the cost of the wrong path: rework, wasted rounds, or misled downstream decisions;
 - the root cause supported by the record;
 - the final solution;
 - the evidence that the solution worked.
@@ -74,43 +77,57 @@ Rank evidence as follows:
 
 Require evidence of the problem, the action, and the successful result. Assistant statements such as “fixed” or “done” are not verification. Drop a candidate when evidence conflicts, a decisive result is truncated, or the root cause cannot be established.
 
-Select one to three related candidates with the strongest verification and the greatest value outside the original project. Keep only failed attempts that explain the diagnosis, establish a boundary, or prevent recurrence.
+## Apply The Novelty Gate
 
-If no candidate passes the evidence gate, do not create an article. State which evidence is missing.
+Knowledge is the difference between the default approach and the approach that actually worked. A candidate with no such difference is not knowledge, however well evidenced.
+
+State the default approach explicitly for every candidate that survived the evidence gate, then compare it with the final solution:
+
+- If they match, discard the candidate. It teaches the reader nothing they did not already know.
+- If they differ, that difference is the article. Record which source produced it: a project or team convention, a hidden semantic of a tool or version, a stated user preference, or a common intuition that reality overturned.
+
+Ordinary mistakes with obvious fixes — a missing dependency, a mistyped path, a forgotten flag — pass the evidence gate and fail this one. Discard them.
+
+Select one to three related candidates that pass both gates, preferring the strongest verification and the greatest value outside the original project. Keep only failed attempts that explain the correction, establish a boundary, or prevent recurrence.
+
+Producing no article is a normal and correct outcome. When every candidate fails one of the two gates, create no article and state which gate rejected what: missing evidence, or nothing beyond the default approach. Never pad a session into an article in order to deliver something.
 
 ## Write The Article
 
 Write for an external reader who has no access to the original project or conversation. Follow the user's requested language; otherwise use the session's primary language.
 
-Use this semantic structure and order exactly for Chinese articles:
+Lead with the reusable conclusion, then work backwards into why it was not obvious. Use this semantic structure and order for Chinese articles:
 
 ```markdown
-# [Problem-oriented title]
+# [Solution-oriented title]
 
-## 结果摘要
+## 直接抄的结论
 
-## 背景与约束
+## 适用条件与边界
 
-## 问题表现
+## 第一反应为什么是错的
 
-## 诊断
+## 纠偏信号
 
-## 关键失败
+## 走错的代价
 
-## 根因
-
-## 解决方案
-
-## 验证证据
-
-## 可迁移的方法
-
-## 行动清单
+## 证据
 ```
 
-For non-Chinese articles, use these exact English headings in the same order: `Outcome Summary`, `Background and Constraints`, `Problem Symptoms`, `Diagnosis`, `Key Failures`, `Root Cause`, `Solution`, `Verification Evidence`, `Transferable Methods`, and `Action Checklist`. Write the section bodies in the user's requested language.
+For non-Chinese articles, use these headings in the same order: `Reusable Conclusion`, `Scope and Boundaries`, `Why The First Instinct Was Wrong`, `The Correcting Signal`, `Cost Of The Wrong Path`, and `Evidence`. Write the section bodies in the user's requested language.
 
-Lead with the outcome. Explain necessary terms on first use. Include only minimal code, commands, or log excerpts that materially teach the solution. Do not narrate the chat turn by turn and do not mention private source locations.
+Write each section to this contract:
+
+- **Conclusion**: the finished, copyable result — the rule, configuration, command, or code as the reader would apply it. Open with one line naming the triggering scenario so a reader searching by symptom still lands here.
+- **Scope and Boundaries**: where this holds, and explicitly where it does not. A rule without a stated boundary is either too narrow to transfer or too vague to act on.
+- **Why The First Instinct Was Wrong**: the default approach and why it looked reasonable. This is the core of the article, not preamble.
+- **The Correcting Signal**: the single observation that overturned the default approach. Not a replay of every attempt.
+- **Cost Of The Wrong Path**: what the wrong path actually cost. This section may cite conversation facts such as wasted rounds or the scope of rework without machine output; every other factual claim keeps its evidence rank.
+- **Evidence**: the verification that the final solution worked.
+
+Assume a reader at your own level. Explain only what is specific to this session — a project convention, a tool's undocumented behavior, a version-specific detail. Never explain general concepts, standard tooling, or common terminology; a reader who needs that explanation is not this article's reader.
+
+Omit a section entirely when the record supports nothing for it. There is no minimum length and no requirement to fill every section; padding is worse than omission. Include only minimal code, commands, or log excerpts that materially teach the solution. Do not narrate the chat turn by turn and do not mention private source locations.
 
 ## Protect The Reader And The Source
 
