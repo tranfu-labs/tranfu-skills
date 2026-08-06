@@ -1,0 +1,6 @@
+interface:
+  icon_large: "./assets/icon.png"
+  icon_small: "./assets/icon.svg"
+  display_name: "产品 UI 风险审查"
+  short_description: "审查并完善高风险 UI 流程"
+  default_prompt: "使用 $product-ui-risk-review 审查并完善这个产品 UI 流程的上线风险。"
