@@ -1,7 +1,7 @@
 ---
-description: "把 Web3 机会锚点转换为结构化英文种子词簇，并严格区分待验证假设与真实需求证据。"
+description: "把机会锚点转换为结构化英文种子词簇，并严格区分待验证假设与真实需求证据。"
 prompt_examples:
-  - prompt: 把这个 Web3 产品想法拆成可调研的英文种子词簇。
+  - prompt: 把这个产品想法拆成可调研的英文种子词簇。
     scene: 扩展机会锚点
   - prompt: 从这个竞品生成任务词、产品词、问题词、价格词、比较词、替代词、角色词和场景词。
     scene: 从竞品反推搜索探针
@@ -9,9 +9,9 @@ prompt_examples:
     scene: 准备调研交接
 ---
 
-# Web3 种子词发现
+# 种子词发现
 
-把一条 Web3 机会锚点转换为可供 Semrush、Search Console 和搜索引擎验证的英文搜索探针。
+把一条机会锚点转换为可供 Semrush、Search Console 和搜索引擎验证的英文搜索探针。
 
 ## 什么时候使用
 
@@ -25,7 +25,7 @@ prompt_examples:
 - 用户—任务—结果拆解
 - 按搜索目的分类的英文种子词簇
 - 排除项和待验证假设
-- 交给 `research-web3-keywords` 的结构化材料
+- 交给 `research-keywords` 的结构化材料
 
 ## 重要边界
 

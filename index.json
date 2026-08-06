@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-06T06:18:03.732Z",
+  "generated_at": "2026-08-06T06:28:16.604Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -1105,10 +1105,10 @@
       "sha": "8df398688d07185f383b8a68430b2f8a41781cc7"
     },
     {
-      "name": "discover-web3-keyword-seeds",
-      "display_name": "Web3 Keyword Seed Discovery",
-      "display_name_zh": "Web3 种子词发现",
-      "description": "当用户提供 Web3 机会锚点、用户任务、产品类别、竞品网址或 Search Console 查询，并要求生成或扩展英文种子词、任务词、产品词、问题词、价格词、比较词、替代词、角色词或场景词时使用。该 Skill 将机会锚点拆成用户、任务、结果与付费角色，输出结构化种子词簇、假设和后续调研交接材料；种子词不是有效关键词。Do NOT trigger when 用户已经要求查询 Semrush 或 Search Console 数据、验证搜索量和收入证据、填写关键词调研表（改用 research-web3-keywords），也不要用于普通 SEO 页面审计或最终立项审批。",
+      "name": "discover-keyword-seeds",
+      "display_name": "Keyword Seed Discovery",
+      "display_name_zh": "种子词发现",
+      "description": "当用户提供机会锚点、用户任务、产品类别、竞品网址或 Search Console 查询，并要求生成或扩展英文种子词、任务词、产品词、问题词、价格词、比较词、替代词、角色词或场景词时使用。该 Skill 将机会锚点拆成用户、任务、结果与付费角色，输出结构化种子词簇、假设和后续调研交接材料；种子词不是有效关键词。Do NOT trigger when 用户已经要求查询 Semrush 或 Search Console 数据、验证搜索量和收入证据、填写关键词调研表（改用 research-keywords），也不要用于普通 SEO 页面审计或最终立项审批。",
       "version": "0.1.0",
       "author": "06666666",
       "updated_at": "2026-08-06",
@@ -1117,10 +1117,10 @@
         "en": "README.md",
         "zh": "README.zh.md"
       },
-      "description_en": "Turn a Web3 opportunity anchor into structured English seed keyword clusters without confusing hypotheses with validated demand.",
+      "description_en": "Turn an opportunity anchor into structured English seed keyword clusters without confusing hypotheses with validated demand.",
       "prompt_examples_en": [
         {
-          "prompt": "Turn this Web3 product idea into English seed keyword clusters for research.",
+          "prompt": "Turn this product idea into English seed keyword clusters for research.",
           "scene": "Expand an opportunity anchor"
         },
         {
@@ -1132,10 +1132,10 @@
           "scene": "Prepare a research handoff"
         }
       ],
-      "description_zh": "把 Web3 机会锚点转换为结构化英文种子词簇，并严格区分待验证假设与真实需求证据。",
+      "description_zh": "把机会锚点转换为结构化英文种子词簇，并严格区分待验证假设与真实需求证据。",
       "prompt_examples_zh": [
         {
-          "prompt": "把这个 Web3 产品想法拆成可调研的英文种子词簇。",
+          "prompt": "把这个产品想法拆成可调研的英文种子词簇。",
           "scene": "扩展机会锚点"
         },
         {
@@ -1148,7 +1148,7 @@
         }
       ],
       "type": "own",
-      "path": "own-skills/discover-web3-keyword-seeds",
+      "path": "own-skills/discover-keyword-seeds",
       "files": [
         "README.md",
         "README.zh.md",
@@ -2575,7 +2575,7 @@
         }
       ],
       "type": "own",
-      "published_at": "2026-08-06T06:16:24.000Z",
+      "published_at": "2026-08-06T06:19:51.000Z",
       "path": "own-skills/research-web3-keywords",
       "files": [
         "README.md",
