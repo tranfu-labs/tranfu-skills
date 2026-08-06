@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-06T06:18:03.732Z",
+  "generated_at": "2026-08-06T06:13:33.659Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -2530,62 +2530,6 @@
         "references/platform-registers.md"
       ],
       "sha": "3f27792f313564bb20a92c290b0fe376b6248bd9"
-    },
-    {
-      "name": "research-web3-keywords",
-      "display_name": "Web3 Keyword Research",
-      "display_name_zh": "Web3 关键词调研",
-      "description": "当用户要求调研 Web3 关键词、查询 Semrush 或 Search Console、分析搜索量与趋势、核对搜索结果和竞品、验证对应项目收入与付费证据、填写关键词调研表，或判断关键词主题应当优先、进入验证、继续观察还是淘汰时使用。该 Skill 把种子词聚成用户问题主题，收集搜索与商业证据，按统一字段写入调研表，并在满足条件时创建待评审候选项目。Do NOT trigger when 用户只需要从机会锚点生成种子词（改用 discover-web3-keyword-seeds）、只做技术 SEO 页面审计，或要求直接批准最终立项。",
-      "version": "0.1.0",
-      "author": "06666666",
-      "updated_at": "2026-08-06",
-      "origin": "own",
-      "readme": {
-        "en": "README.md",
-        "zh": "README.zh.md"
-      },
-      "description_en": "Research Web3 keyword themes with direct search data, competitors, pricing, and revenue evidence before creating a candidate project.",
-      "prompt_examples_en": [
-        {
-          "prompt": "Research this Web3 keyword theme with Semrush, Search Console, competitors, pricing, and revenue evidence.",
-          "scene": "Validate a keyword theme"
-        },
-        {
-          "prompt": "Fill the keyword research fields for these English seed keywords and decide the correct branch.",
-          "scene": "Prepare Lark research records"
-        },
-        {
-          "prompt": "Check whether this keyword should become a pending-review candidate project.",
-          "scene": "Apply the candidate-project gate"
-        }
-      ],
-      "description_zh": "结合直接搜索数据、竞品、收费和收入证据调研 Web3 关键词主题，并判断是否进入候选项目。",
-      "prompt_examples_zh": [
-        {
-          "prompt": "调研这个 Web3 关键词主题，核对 Semrush、Search Console、竞品、收费和收入证据。",
-          "scene": "验证关键词主题"
-        },
-        {
-          "prompt": "按关键词调研表字段整理这些英文种子词，并给出正确分支结论。",
-          "scene": "准备 Lark 调研记录"
-        },
-        {
-          "prompt": "判断这个关键词是否可以创建待评审候选项目。",
-          "scene": "执行候选项目门槛"
-        }
-      ],
-      "type": "own",
-      "published_at": "2026-08-06T06:16:24.000Z",
-      "path": "own-skills/research-web3-keywords",
-      "files": [
-        "README.md",
-        "README.zh.md",
-        "SKILL.md",
-        "agents/openai.yaml",
-        "assets/icon.png",
-        "assets/icon.svg"
-      ],
-      "sha": "f8ae23dea41eb06267c44883b2eaef1ec6e0b068"
     },
     {
       "name": "reversible-ops",
