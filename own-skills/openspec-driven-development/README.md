@@ -11,16 +11,56 @@ prompt_examples:
 
 # openspec-driven-development
 
-Orchestrates development in repositories that already use `openspec/`. It stays intentionally thin: the repository defines change tiers, artifacts, archiving, documentation, and commits; the active team defines review and handoff authority.
+Orchestrates work only when a repository already uses `openspec/` and the user's goal is to change, implement, diagnose, or verify executable software behavior. It stays intentionally thin: the repository defines change tiers, artifacts, archiving, documentation, and commits; the active team defines review and handoff authority.
 
 ## When to use it
 
-- Building a feature, fixing a bug, refactoring, or changing an interaction in an OpenSpec repository
+- Building a software feature, fixing a software defect, refactoring code, or changing executable interaction behavior in an OpenSpec repository
 - Implementing an existing `openspec/changes/<id>`
 - Checking completed code against a specific change
-- Discussing or diagnosing a development issue that may lead to a repository change
+- Discussing or diagnosing an issue in executable software behavior that may lead to implementation
 
-Do not use it for pure lookup, research, broad compliance audits detached from a change, standalone git operations, releases, or tagging.
+Do not use it for competitor research, webpage screenshots, reports, README or copy editing, data editing, or other content-only changes. Also exclude pure lookup, research, broad compliance audits detached from a software change, standalone git operations, releases, and tagging. A file being inside a development repository, or an operation changing repository files, is not by itself a trigger.
+
+## 同类 Skill 对比
+
+> 由 tranfu-publish 起草，帮助阅读者横向决定要安装哪个或跳到更合适的同类。
+
+### 公司库内
+
+- [openspec](../../external-skills/openspec/SKILL.md) — 提供 OpenSpec 原始工作流；**本 Skill 区别**：服从现有项目和团队契约推进开发闭环
+- [strategy-first-development](../strategy-first-development/SKILL.md) — 负责复杂项目前期战略与选型；**本 Skill 区别**：处理范围已明确的软件行为变更
+- [prd-to-parallel-loop](../prd-to-parallel-loop/SKILL.md) — 把产品文档编排成并行任务；**本 Skill 区别**：推进单个 change 或开发任务
+
+### 外部世界
+
+- 暂无
+
+### 本 skill 独特价值
+
+- 以软件可执行行为作为触发判据
+- 一次判定实现授权，不重复索权
+- 服从项目契约完成事实源闭环
+
+## 使用技巧
+
+> 由 tranfu-publish 引导起草，帮助阅读者纵向上手；横向选择见上方“同类 Skill 对比”。
+
+### 材料方案
+
+- 优先读取仓库和团队的可信契约
+- 将 change 分档与归档留给项目定义
+
+### 推荐用法
+
+- 用于单个 change 或明确的软件行为改动
+- 请求中直接说明是否授权实现
+
+### 已知限制
+
+- 不为普通仓库自动建立 OpenSpec 约定
+- 不处理报告、截图和文案等内容修改
+- push、部署和发布仍需单独授权
 
 ## Core behavior
 

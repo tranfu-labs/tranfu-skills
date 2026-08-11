@@ -2,11 +2,11 @@
 name: openspec-driven-development
 display_name: OpenSpec-Driven Development
 display_name_zh: OpenSpec 驱动开发
-version: 0.7.0
+version: 0.7.1
 description: >-
-  在已经采用 openspec/ 约定的仓库中处理功能、修复、重构、交互调整、实施既有 change、按 change 复核实现，以及可能导向仓库改动的开发讨论或故障诊断时触发。它读取项目和团队的可信契约，统一判断实现授权并把任务推进到实现、验证与事实源闭环。Do NOT trigger when 请求是纯查询、资料研究、与具体变更无关的泛合规审计、单独的 git 操作、发版或打 tag。
+  仅当以下两项同时成立时触发：仓库已经采用 openspec/ 约定；用户目标是改变、实现、诊断或验证软件的可执行行为，例如新增软件功能、修复软件缺陷、代码重构、交互行为调整、实施既有 change 或按 change 复核实现。它读取项目和团队的可信契约，统一判断实现授权，并把软件开发任务推进到实现、验证与事实源闭环。Do NOT trigger when 任务只是竞品研究、网页截图、报告、README、文案、数据编辑或其他内容型修改，也不要用于纯查询、资料研究、与具体软件变更无关的泛合规审计、单独的 git 操作、发版或打 tag；文件位于开发仓库或操作会产生仓库改动，本身都不是触发条件。
 author: aquarius-wing
-updated_at: 2026-07-27
+updated_at: 2026-08-11
 origin: own
 userInvocable: true
 ---
