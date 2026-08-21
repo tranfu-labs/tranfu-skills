@@ -144,6 +144,11 @@
     "tag-plus",
     "产品标题生成"
   ],
+  "product-website-copy-review": [
+    "content",
+    "align-left",
+    "网站文案层级审查"
+  ],
   "project-init-docs": [
     "engineering",
     "folder-cog",
