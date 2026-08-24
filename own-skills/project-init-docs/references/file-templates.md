@@ -7,6 +7,16 @@
 - **static（纯静态）**：内容与仓库无关，全文以 `scripts/fill.sh` 为唯一事实源；缺失/为空时脚本写死，AI 不手敲、不在此另存第二份。下文标 **【static · fill.sh】**。
 - **repo-fact（真实事实）**：缺失/为空时脚本只铺「小节标题 + `TODO: 需人工确认`」骨架，正文由 AI 按本文件的小节契约填真实仓库事实。下文标 **【repo-fact · AI 填正文】**。
 
+目录：
+[1 根 AGENTS.md](#1-根-agentsmd-repo-fact--ai-填正文) ·
+[2 CLAUDE.md](#2-claudemd根--各目录static--fillsh) ·
+[3 docs/architecture/module-map.md](#3-docsarchitecturemodule-mapmd-repo-fact--ai-填正文) ·
+[4 openspec/specs/&lt;domain&gt;/spec.md](#4-openspecspecsdomainspecmd-repo-fact--ai-填正文) ·
+[5 openspec/changes/](#5-openspecchanges-static--fillsh) ·
+[6 docs/adr/](#6-docsadr-static--fillsh) ·
+[7 根 DEPLOY.md](#7-根-deploymd-repo-fact--ai-填正文) ·
+[8 docs/wireframes/](#8-docswireframes--字符图线框默认生成)
+
 填法路由由 `scripts/probe.sh` 的 `状态 × 类别` 决定（见 SKILL.md 工作流）。
 
 ## 通用规则
@@ -48,6 +58,7 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 - `## 修改前检查`：读 `docs/architecture/module-map.md` 确认依赖边界；读相关 `openspec/specs/<domain>/spec.md`；确认禁止依赖。
 - `## 修改后检查`：跑测试 / lint / 构建；更新受影响的 spec 与 ADR；必要时在 `openspec/changes/` 记录变更。
 - `## 禁止事项`：禁止依赖关系、禁止改动的目录、禁止提交的内容（密钥、生成物等），来自真实约束。
+- `## 线框图`：脚本写死（版式事实源定位 + 删除规则），保留不改。
 
 ## 2. CLAUDE.md（根 + 各目录）【static · fill.sh】
 
@@ -82,32 +93,15 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 
 ## 5. openspec/changes/ 【static · fill.sh】
 
-变更工作区——先设计再实现。本节全部文件全文以 `scripts/fill.sh` 为准；下方小节说明仅供理解结构。
+变更工作区——先设计再实现。本节全部文件全文以 `scripts/fill.sh` 为准（含变更工作流、目录内容、推进顺序与「归档（change 完成后必做）」的完整规则）；下面只列目录结构：
 
-### openspec/changes/AGENTS.md
-
-- `## 变更工作流`：一次需求/业务变更建一个 `openspec/changes/<change-id>/` 目录。
-- `## 目录内容`：
-  - `proposal.md`：为什么改、改什么、影响面。
-  - `design.md`：怎么实现、方案与权衡（**不含字符图**）。
-  - `tasks.md`：可勾选的任务清单。
-  - `spec-delta/`：对 `openspec/specs/` 的增删改（先写 delta，实现后再合并回 specs）。
-  - `wireframes.md`（可选，本项目扩展）：仅当本次 change 涉及前端路由 / 页面 / 版式变化时新建；基线 MUST 引用 `docs/wireframes/pages/<page>.md`；多页用 `## pages/<page>.md` 小节区分。`_template/` 不含它，按需新建。
-- `## 推进顺序`：proposal → design（+ 必要时 wireframes.md）→ tasks → 实现 → 归档；spec-delta 与 wireframes.md 都在归档时才合并回事实源。
-- `## 归档（change 完成后必做）`：三步等价并列——① `changes/<id>/` 移到 `changes/archive/<YYYY-MM-DD>-<id>/`；② spec-delta 合并回 `openspec/specs/<domain>/spec.md`；③ 若有 `wireframes.md`，字符图回流到 `docs/wireframes/pages/<page>.md` 与 `flow.md`。归档动作 MUST 写在本文件，NEVER 写进每个 change 的 `tasks.md`。
-
-### openspec/changes/CLAUDE.md
-
-一行指针（见通用规则）。
-
-### openspec/changes/_template/
-
-供后续变更复制的空模板：
-
-- `proposal.md`：含 `## 背景` / `## 提案` / `## 影响` 小节。
-- `design.md`：含 `## 方案` / `## 权衡` / `## 风险` 小节。
-- `tasks.md`：含一个 `- [ ]` 任务示例。
-- `spec-delta/.gitkeep`：占位，说明此处放对 specs 的增删改。
+- `AGENTS.md`：变更工作流总纲（`## 变更工作流` / `## 目录内容` / `## 推进顺序` / `## 归档（change 完成后必做）` 四节）。
+- `CLAUDE.md`：一行指针（见通用规则）。
+- `_template/proposal.md`：变更提案模板（背景 / 提案 / 影响）。
+- `_template/design.md`：设计方案模板（方案 / 权衡 / 风险）。
+- `_template/tasks.md`：任务清单模板（`- [ ]` 示例）。
+- `_template/spec-delta/.gitkeep`：占位，此处放对 specs 的增删改。
+- 各 change 目录下的 `wireframes.md`（可选，本项目扩展，`_template/` 不含它、按需新建）：change 涉及页面/版式变化时使用，规则见 `AGENTS.md`。
 
 ## 6. docs/adr/ 【static · fill.sh】
 
@@ -160,18 +154,15 @@ AI 的项目操作手册。脚本铺好下列小节骨架（`修改前检查` / 
 
 **定位**：`docs/wireframes/` 是项目的**版式事实源**，与 `openspec/specs/`（行为事实源）并列。靠 `openspec/changes/` 流转更新——改页面的 change 在 `changes/<id>/wireframes.md` 画字符图，归档时回流。归档约定写在 `openspec/changes/AGENTS.md`（init 阶段由 `fill.sh` 生成），**不在每个 change 的 `tasks.md` 重复**。
 
-是否保留由仓库根 `AGENTS.md` 的「线框图」一节决定：无界面的工具/库类项目后续按该规则删除整个目录。init 阶段只负责铺好、不替用户判断。
+保留与否见 SKILL.md「脚本与引用文件」一节的线框图规则。
 
 归类：
 - `docs/wireframes/{AGENTS.md, CLAUDE.md, legend.md, _template/page.md}` 是 **static**，全文以 `scripts/fill.sh` 引用的 `assets/wireframes/` 为唯一事实源，AI 不手敲、不另存。默认无条件生成。
 - `docs/wireframes/flow.md`（页面流转图）和 `docs/wireframes/pages/<page>.md` 是 **repo-fact**：脚本铺骨架（flow.md 写死说明+流程示例+TODO 步骤表；page.md 复制 `_template/page.md` 并替换页面名），正文由 AI 填。flow.md 默认铺；页面文件探测到路由时才生成。
 
-### 比例尺（逐字契约，写死在 docs/wireframes/AGENTS.md）
+### 比例尺
 
-- 单位是**显示列**（等宽字体实际占的列数），不是字符个数（codepoint）。横向 1 显示列 = 12px：**全角字符（中日韩，东亚宽度 W/F）占 2 列，其余（半角、框线、歧义宽 A 类如 `①◯·—`）一律占 1 列**；纵向 1 行 = 24px。
-- 断点换算：桌面 1440×900 → 120 列 × 38 行；平板 768×1024 → 64 列 × 43 行；手机 375×812 → 31 列 × 34 行。行数为版面上限、不强制填满。
-- 每行补齐到右边框正好落在目标列，框线才真对齐（一行纯中文 = 60 字 × 2 列 = 120 列）。
-- 校验唯一推荐 Python `east_asian_width`（W/F 记 2、其余记 1，脚本见 `assets/wireframes/AGENTS.md`）；**禁用 `awk '{print length}'`、codepoint 计数、以及 `wc -L`（macOS/BSD 不可靠）**。
+逐字契约（列宽换算、校验脚本与禁用清单）写死在生成的 `docs/wireframes/AGENTS.md`（事实源 `assets/wireframes/AGENTS.md`），按它画、用它的校验脚本核验。断点显示列数速查：桌面 120 / 平板 64 / 手机 31。
 
 ### page.md 结构契约
 

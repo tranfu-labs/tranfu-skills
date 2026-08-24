@@ -4,7 +4,7 @@
 # 目标清单来自 fill.sh --list（唯一事实源），probe 只追加状态判定。
 #
 # 用法（在仓库根运行）：
-#   probe.sh [domain...]
+#   probe.sh [domain...] [--pages <页...>]
 #
 # 输出每行三列（TAB 分隔），供按表分流：
 #   STATUS   PATH                          CATEGORY

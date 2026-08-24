@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-24T09:46:34.696Z",
+  "generated_at": "2026-08-24T10:19:31.849Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -2527,7 +2527,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "34093ce9efbc46cb80eba21e7c82aa754d614824"
+      "sha": "bd67ec979926c87ba7bddacbc1091d18763ae62a"
     },
     {
       "name": "proofread-content",
