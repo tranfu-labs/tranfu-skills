@@ -3,9 +3,9 @@ name: github-delivery-check
 display_name: GitHub Delivery Check
 display_name_zh: GitHub 交付检查
 description: 'Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like "推到 GitHub", "创建 GitHub 仓库", "首次提交", "整理成可部署项目", or "用 GitHub交付规范 Skill". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.'
-version: 0.1.3
+version: 0.1.4
 author: 06666666
-updated_at: 2026-07-10
+updated_at: 2026-08-24
 origin: own
 ---
 
@@ -97,6 +97,7 @@ Keep only a short internal checklist while executing:
 - secret check result
 - README deployment-doc result
 - local verification commands and results
+- update summary for this delivery
 - GitHub authorization and push result
 - deployment config fields for the final card
 
@@ -112,7 +113,7 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 4. Run pre-push safety checks.
 5. Complete README deployment instructions.
 6. Run local verification.
-7. Push to GitHub main branch.
+7. Prepare update summary, then push to GitHub main branch.
 8. Produce the GitHub Delivery Card.
 
 Done means:
@@ -123,6 +124,7 @@ Done means:
 - README.md exists and explains setup, configuration, deployment, and verification
 - no real secret will be pushed to GitHub
 - required local verification passed, was fixed and re-run, or is clearly not applicable
+- this delivery has a 1-5 bullet update summary, used in the commit and final card
 - GitHub has been pushed to main, or the final card gives a precise non-push reason
 
 ## Step 1: Inspect Project And Git State
@@ -281,7 +283,9 @@ Before pushing:
 1. Verify first-push metadata is complete when there is no existing remote.
 2. Verify required local checks passed or are not applicable.
 3. Verify target owner/repo is known.
-4. For first push, check whether `owner/repo` already exists.
+4. Prepare a 1-5 bullet update summary from the actual diff, README/config changes, verification result, and delivery actions.
+5. If the project already has `CHANGELOG.md`, `RELEASE_NOTES.md`, or an equivalent changelog file, add the update summary there. Do not create a changelog by default unless the project already uses one.
+6. For first push, check whether `owner/repo` already exists.
    - If it belongs to this project -> treat as existing repository.
    - If it may be a different project -> stop with `未推送：需先修复` and ask for confirmation.
    - If it does not exist -> create it.
@@ -304,7 +308,7 @@ Existing repository procedure:
 1. Confirm remote and current branch.
 2. Check remote state to avoid overwriting teammate changes.
 3. If remote diverges, pull/rebase only when safe; otherwise stop with `未推送：需先修复`.
-4. Commit delivery changes.
+4. Commit delivery changes with a clear subject and a short body containing the update summary.
 5. Push to main branch.
 
 First push procedure:
@@ -312,7 +316,7 @@ First push procedure:
 1. Initialize Git when needed.
 2. Create the GitHub repository after repo-existence check passes.
 3. Add remote.
-4. Commit intended delivery files.
+4. Commit intended delivery files with a clear subject and a short body containing the update summary.
 5. Push to main branch.
 
 Create a tag or release only when the project needs a downloadable/deployable version artifact. Do not create releases by default.
@@ -340,6 +344,12 @@ Success shape:
 README 部署说明：已补齐
 安全检查：未发现会提交到 GitHub 的密钥
 GitHub 状态：已推送到主分支
+
+本次更新：
+- 补齐 README 部署说明
+- 增加或校准环境变量占位配置
+- 完成本地构建/启动/测试验证
+- 推送到 GitHub 主分支
 
 部署配置：
 - SERVER_API_BASE_URL：配置到服务器环境变量，例如 https://api.example.com

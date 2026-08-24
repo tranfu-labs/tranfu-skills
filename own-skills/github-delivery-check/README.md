@@ -35,7 +35,7 @@ I want it to run real commands to prove the project can install, build, start, a
 
 An engineer is going to deploy this. I want the skill to emit a GitHub Delivery Card that lists env-var field names and target locations clearly, while real secret values move through a private channel.
 
-**Not this skill**: ordinary code changes → normal coding workflow; code review → `review`; production deployment not tied to GitHub delivery → `deploy`; tagging / version bumps → `release`; explicit "discuss only / don't push" → the skill reports without touching Git.
+**Not this skill**: ordinary code changes → normal coding workflow; code review → `review`; production deployment not tied to GitHub delivery → `deploy`; formal tagging / version bumps / release packaging → `release`; explicit "discuss only / don't push" → the skill reports without touching Git.
 
 ## What it produces
 
@@ -46,7 +46,8 @@ An engineer is going to deploy this. I want the skill to emit a GitHub Delivery 
 - **Pre-push secret scan**: tracked files, staged files, and hidden files (excluding `.git`, dependency directories, and build output); a secret already in Git history is called `暂不建议推送` and stops.
 - **README deployment gate**: install, run locally, build, env vars, port, deploy, production URL, health check — any missing piece is completed before pushing.
 - **Real local verification**: Node runs build/test/lint, Web hits HTTP 200, API hits the health endpoint, Docker runs build/compose — failures are fixed and re-run; nothing runnable means verdict `未推送: 需先修复`.
-- **GitHub Delivery Card**: the conclusion is exactly one of `已推送完成` / `未推送: 待 GitHub 授权` / `未推送: 需先修复` / `暂不建议推送`; the card lists env-var names + target location and says real values are "provided privately."
+- **Update summary**: every delivery includes 1-5 bullets describing what changed; the same summary is used in the commit body and the final card, and is added to an existing changelog when the project already has one.
+- **GitHub Delivery Card**: the conclusion is exactly one of `已推送完成` / `未推送: 待 GitHub 授权` / `未推送: 需先修复` / `暂不建议推送`; the card lists this delivery's update summary, env-var names + target location, and says real values are "provided privately."
 - **Never does**: claim a GitHub push equals production; invent auth codes / repo URLs / production URLs; commit `.env` / private keys / DB files / dependency dirs / build caches; open a PR to replace a direct push without permission.
 
 ## Prerequisites & boundaries
