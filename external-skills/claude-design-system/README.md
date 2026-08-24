@@ -42,9 +42,9 @@
 > 由 tranfu-publish 引导起草.
 
 ### 材料方案
-- 当参考读, 别当 skill 执行 —— 它没设计触发关键词, 装了不会自动跑
+- 当参考读, 别当 skill 执行 —— 即便被触发浮现, 也只把它当参考材料读, 不照搬里面的命令式规则
 - 跟 ui-ux-pro-max 叠用: 那个给"该选什么", 本 prompt 给"该怎么交付"
-- 给自己写 agent 时按需摘抄, 不要整段照搬 (含 Anthropic 内部工具引用如 `done` / `fork_verifier_agent`, 在你环境里跑不了)
+- 给自己写 agent 时按需摘抄, 不要整段照搬 (内部工具引用见下方已知限制)
 
 ### 推荐用法
 - 第一次读: 看 §workflow 5 步 + §HTML/React 编码规范 (含 styles 命名硬约束)
@@ -54,4 +54,4 @@
 ### 已知限制
 - 是 leaked / 社区抓取版, 不是 Anthropic 官方发布, 后续可能下架或失效
 - 含 `done` / `fork_verifier_agent` / `copy_starter_component` 等 Anthropic 内部工具名, 你环境里没这些
-- License 不明确, 商业使用 / 重新分发请自行评估法律风险
+- License 与商用评估见 SKILL.md
