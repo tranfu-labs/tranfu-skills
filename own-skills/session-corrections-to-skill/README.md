@@ -5,8 +5,6 @@ prompt_examples:
     scene: Capture session corrections
   - prompt: Record the pitfall we just hit into skill XX.
     scene: Capture a pitfall
-  - prompt: Which of my corrections this session belong in skills, and which shouldn't be stored?
-    scene: Route corrections
 ---
 
 # session-corrections-to-skill
@@ -21,7 +19,6 @@ When routing, the target skill's scope (the task domain its description draws) i
 
 - At the end of a session where you corrected a skill's behavior several times and want it to stick
 - After hitting a pitfall in a session, with the root cause understood and the correct way verified, and you want the lesson recorded in the matching skill
-- When you want a clean split between "this belongs in the skill" and "this is just my general preference"
 
 ## What you get back
 
