@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-24T12:03:36.065Z",
+  "generated_at": "2026-08-25T01:44:53.054Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -2707,9 +2707,9 @@
       "display_name": "Session Corrections to Skill",
       "display_name_zh": "会话修正沉淀",
       "description": "把一次会话中用户对具体 skill 行为的历次修正提炼成「场景 → 期望输出」表格行， 逐条追加进对应 SKILL 文件的用户修正沉淀表。Use when 用户说“把这次会话的修正 沉淀到 skill”“把刚才的纠偏记进对应 skill”“会话修正入库”“把这几条修正写进 XX skill 的沉淀表”，或一次会话中出现多次针对某 skill 行为的纠正且用户要求固化， 即使用户没用“沉淀”这个词。Also use when the user asks in English to distill or capture this session's corrections into the matching skills. Do NOT trigger when: 会话复盘要产出知识文章； 对 skill 做整体质量审查或提升；创建全新 skill；修正只涉及 agent 通用工作方式 （那归 memory，不落任何 SKILL）。",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-08-24",
+      "updated_at": "2026-08-25",
       "origin": "own",
       "readme": {
         "en": "README.md",
@@ -2746,13 +2746,14 @@
         }
       ],
       "type": "own",
+      "published_at": "2026-08-24T12:03:36.000Z",
       "path": "own-skills/session-corrections-to-skill",
       "files": [
         "README.md",
         "README.zh.md",
         "SKILL.md"
       ],
-      "sha": ""
+      "sha": "4d1b6f5549a51a5a5d1bfc84703832dd81d37c5b"
     },
     {
       "name": "session-to-knowledge",
@@ -4719,7 +4720,7 @@
       "name": "write-social-preview-head",
       "display_name": "Social Preview Head Writer",
       "display_name_zh": "社交分享 Head 编写",
-      "description": "编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。",
+      "description": "编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。即使用户只描述症状也触发：链接发到飞书/Slack 没有卡片图或显示旧图/旧 icon、换了新 logo 平台一直返回旧缓存、favicon 还挂着旧 logo。不要用于 logo 视觉重设计、完整 SEO/GEO 站点审计，或依赖 JS-SDK 的私域分享（如微信 wx.share）——本 skill 只管静态 HTML head 与可抓取资源。",
       "version": "0.1.0",
       "author": "aquarius-wing",
       "updated_at": "2026-07-10",
