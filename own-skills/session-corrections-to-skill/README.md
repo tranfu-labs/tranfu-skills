@@ -3,8 +3,6 @@ description: "Distill a session's corrections into table rows appended to the ma
 prompt_examples:
   - prompt: Distill this session's corrections into the matching skills.
     scene: Capture session corrections
-  - prompt: Add the corrections I just made to the skill's table.
-    scene: Append to one skill
   - prompt: Record the pitfall we just hit into skill XX.
     scene: Capture a pitfall
   - prompt: Which of my corrections this session belong in skills vs memory?

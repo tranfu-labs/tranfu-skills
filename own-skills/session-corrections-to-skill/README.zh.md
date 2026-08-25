@@ -3,8 +3,6 @@ description: "把一次会话中的两类纠正沉淀进对应 SKILL 文件：�
 prompt_examples:
   - prompt: 把这次会话里我的修正沉淀到对应的 skill。
     scene: 沉淀会话修正
-  - prompt: 把刚才那几条纠偏记进这个 skill 的沉淀表。
-    scene: 追加到单个 skill
   - prompt: 把这次踩的这个坑记进 XX skill。
     scene: 沉淀踩坑经验
   - prompt: 我这次的修正哪些该进 skill、哪些该进 memory？
