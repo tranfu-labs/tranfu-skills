@@ -5,8 +5,6 @@ prompt_examples:
     scene: 沉淀会话修正
   - prompt: 把这次踩的这个坑记进 XX skill。
     scene: 沉淀踩坑经验
-  - prompt: 我这次的修正哪些该进 skill、哪些不该存？
-    scene: 修正分流
 ---
 
 # session-corrections-to-skill 会话修正沉淀
@@ -21,7 +19,6 @@ prompt_examples:
 
 - 一次会话里多次纠正了某个 skill 的行为，想让它记住
 - 会话中踩了坑、查明了根因和正确做法，想把经验记进对应 skill
-- 想把"该进 skill 的"和"只是我的通用偏好"干净分开
 
 ## 你会得到什么
 
