@@ -2,7 +2,7 @@
 name: write-social-preview-head
 display_name: Social Preview Head Writer
 display_name_zh: 社交分享 Head 编写
-description: 编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。即使用户只描述症状也触发：链接发到飞书/Slack 没有卡片图或显示旧图/旧 icon、换了新 logo 平台一直返回旧缓存、favicon 还挂着旧 logo。不要用于 logo 视觉重设计、完整 SEO/GEO 站点审计，或依赖 JS-SDK 的私域分享（如微信 wx.share）——本 skill 只管静态 HTML head 与可抓取资源。
+description: 编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。即使用户只描述症状也触发：链接发到飞书/Slack 没有卡片图或显示旧图/旧 icon、换了新 logo 平台一直返回旧缓存、favicon 还挂着旧 logo。不要用于 logo 视觉重设计、完整 SEO/GEO 站点审计，或依赖 JS-SDK 的私域分享（如微信 wx.share）——本 skill 只管静态 HTML head 与可抓取资源。
 version: 0.1.0
 author: aquarius-wing
 updated_at: 2026-07-10
@@ -79,7 +79,7 @@ origin: own
 
 - `og:image`、`og:image:secure_url`、`twitter:image`、`image_src`
 - `shortcut icon`、`icon`、`apple-touch-icon`、`apple-touch-icon-precomposed`
-- JSON-LD Organization `logo`
+- JSON-LD Organization `logo`（仅当页面已有 JSON-LD 时同步，不新增；JSON-LD 不参与 IM 预览渲染）
 - `manifest.json` / `site.webmanifest` 里的 icons
 - 服务器/CDN 对新 `.ico`、`.png`、`.webmanifest` 文件的 `Content-Type`
 
