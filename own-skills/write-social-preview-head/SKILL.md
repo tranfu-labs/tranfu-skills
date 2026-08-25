@@ -45,7 +45,7 @@ origin: own
 <meta name="twitter:image" content="https://example.com/og-image-1200x630-YYYYMMDD.png" />
 
 <link rel="image_src" href="https://example.com/og-image-1200x630-YYYYMMDD.png" />
-<link rel="shortcut icon" href="https://example.com/favicon-YYYYMMDD.ico" />
+<link rel="shortcut icon" href="/favicon-YYYYMMDD.ico" sizes="32x32" type="image/x-icon" />
 <link rel="icon" type="image/png" sizes="32x32" href="https://example.com/favicon-32x32-YYYYMMDD.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="https://example.com/favicon-16x16-YYYYMMDD.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="https://example.com/apple-touch-icon-YYYYMMDD.png" />
@@ -61,7 +61,9 @@ origin: own
 
 ## 资源命名
 
-预览主图、touch icon、favicon 和 manifest icon 一律使用绝对 HTTPS URL。
+预览主图、touch icon、PNG favicon 和 manifest icon 一律使用绝对 HTTPS URL。
+`shortcut icon` 的 `.ico` 例外——用站点根相对路径（如 `/favicon-YYYYMMDD.ico`）并带
+`sizes` / `type`，写绝对 HTTPS URL 会识别不到。
 
 刷新 IM/social 平台缓存时，优先换全新实体文件名：
 
