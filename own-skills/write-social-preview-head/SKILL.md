@@ -2,7 +2,7 @@
 name: write-social-preview-head
 display_name: Social Preview Head Writer
 display_name_zh: 社交分享 Head 编写
-description: 编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。
+description: 编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。即使用户只描述症状也触发：链接发到飞书/Slack 没有卡片图或显示旧图/旧 icon、换了新 logo 平台一直返回旧缓存、favicon 还挂着旧 logo。不要用于 logo 视觉重设计、完整 SEO/GEO 站点审计，或依赖 JS-SDK 的私域分享（如微信 wx.share）——本 skill 只管静态 HTML head 与可抓取资源。
 version: 0.1.0
 author: aquarius-wing
 updated_at: 2026-07-10
@@ -45,8 +45,9 @@ origin: own
 <meta name="twitter:image" content="https://example.com/og-image-1200x630-YYYYMMDD.png" />
 
 <link rel="image_src" href="https://example.com/og-image-1200x630-YYYYMMDD.png" />
-<link rel="shortcut icon" href="https://example.com/favicon-YYYYMMDD.ico" />
+<link rel="shortcut icon" href="/favicon-YYYYMMDD.ico" sizes="32x32" type="image/x-icon" />
 <link rel="icon" type="image/png" sizes="32x32" href="https://example.com/favicon-32x32-YYYYMMDD.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="https://example.com/favicon-16x16-YYYYMMDD.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="https://example.com/apple-touch-icon-YYYYMMDD.png" />
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="https://example.com/apple-touch-icon-YYYYMMDD.png" />
 <link rel="manifest" href="https://example.com/manifest.json" />
@@ -60,7 +61,9 @@ origin: own
 
 ## 资源命名
 
-预览主图、touch icon、favicon 和 manifest icon 一律使用绝对 HTTPS URL。
+预览主图、touch icon、PNG favicon 和 manifest icon 一律使用绝对 HTTPS URL。
+`shortcut icon` 的 `.ico` 例外——用站点根相对路径（如 `/favicon-YYYYMMDD.ico`）并带
+`sizes` / `type`，写绝对 HTTPS URL 会识别不到。
 
 刷新 IM/social 平台缓存时，优先换全新实体文件名：
 
@@ -68,6 +71,7 @@ origin: own
 - `apple-touch-icon-YYYYMMDD.png`
 - `favicon-YYYYMMDD.ico`
 - `favicon-32x32-YYYYMMDD.png`
+- `favicon-16x16-YYYYMMDD.png`
 
 不要把 `?v=YYYYMMDD` 当作刷新手段。部分平台可能按页面 URL、canonical、原始资源 URL 或资源 URL 做缓存/负缓存，query 参数不稳定。
 
@@ -75,7 +79,6 @@ origin: own
 
 - `og:image`、`og:image:secure_url`、`twitter:image`、`image_src`
 - `shortcut icon`、`icon`、`apple-touch-icon`、`apple-touch-icon-precomposed`
-- JSON-LD Organization `logo`
 - `manifest.json` / `site.webmanifest` 里的 icons
 - 服务器/CDN 对新 `.ico`、`.png`、`.webmanifest` 文件的 `Content-Type`
 

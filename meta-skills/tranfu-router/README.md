@@ -20,7 +20,7 @@
 ## 使用技巧
 
 - **显式 `--runtime`**: AI agent 应该清楚自己是 Claude Code 还是 Codex, 调命令时显式传 `--runtime=claude-code` 或 `--runtime=codex`, 不要让 `tfs` 自己探测。
-- **永远 `--json`**: search / list / installed / update 都支持 `--json`, 拿结构化结果 parse, 不要 grep stdout。
+- **永远 `--json`**: search / catalog / list / installed / update / doctor 都支持 `--json`, 拿结构化结果 parse, 不要 grep stdout。
 - **scope 默认 user**: 用户没说装到哪就 `--scope=user`; 仅 "装到这个仓库 / project" 才 `--scope=project`。
 - **错误渲染**: `tfs` 非 0 退出时 stderr 是 JSON `{error, message, hint, exit_code}`, parse 后把 message + hint 给用户看人话, 不原样吐 JSON。
 
@@ -40,4 +40,3 @@
 - 不接 publish 意图 (`发布 / 推 X 上库 / 加 case` 都不接, 那是 `tranfu-publish`)
 - 依赖本地装了 `tfs` CLI (`npm i -g tranfu-skills`); 未装直接挂, 让用户先装
 - 不缓存 search 结果跨对话; 每轮用户问"装第 N 个"需要 router 记住上轮 search 的 name, 否则要求用户复述
-- `tfs doctor` 没 `--json`, 文本输出原样转给用户

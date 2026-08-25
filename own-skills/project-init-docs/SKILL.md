@@ -28,7 +28,7 @@ origin: own
 
 任务不是拷贝空白模板，而是把真实仓库的事实——语言、命令、目录、模块、业务域、部署方式——写进一套固定的目录契约。基线建立后，任何 AI 拿到 `AGENTS.md` 就知道结构/命令/禁区，拿到 `DEPLOY.md` 就知道部署到哪/怎么建/怎么发/怎么退/怎么验，拿到 `module-map.md` 就知道依赖边界，拿到 `openspec/` 和 `docs/adr/` 就知道"先设计再实现"的契约与既有决策，拿到 `docs/wireframes/` 就知道每个页面当前的版式事实。
 
-**两套事实源并列**：`openspec/specs/<domain>/spec.md` 是行为事实源，`docs/wireframes/` 是版式事实源。两者都靠 `openspec/changes/` 流转更新——改业务逻辑的 change 写 `spec-delta/`，改页面版式的 change 写 `wireframes.md`（本项目扩展，按需新建），归档时分别回流到 `specs/` 和 `docs/wireframes/`。归档动作由 `openspec/changes/AGENTS.md` 统一定义（由本 skill 生成），不在每个 change 的 `tasks.md` 重复。
+**两套事实源并列**：`openspec/specs/<domain>/spec.md` 是行为事实源，`docs/wireframes/` 是版式事实源。两者都靠 `openspec/changes/` 流转更新——改业务逻辑的 change 写 `spec-delta/`，改页面版式的 change 写 `wireframes.md`（本项目扩展，按需新建），归档时分别回流到 `specs/` 和 `docs/wireframes/`，归档动作由 `openspec/changes/AGENTS.md`（本 skill 生成）统一定义。
 
 ## 核心原则
 
@@ -49,7 +49,7 @@ origin: own
 
 确定性骨架由脚本铺设，AI 只填真实仓库事实。脚本在仓库根运行：
 
-- `scripts/probe.sh [domain...]`：只读探针，扫描全部基线目标，输出路由表 `状态<TAB>路径<TAB>类别`（状态 = MISSING/EMPTY/PRESENT，类别 = static/repo-fact）。不写盘。
+- `scripts/probe.sh [domain...] [--pages <页...>]`：只读探针，扫描全部基线目标，输出路由表 `状态<TAB>路径<TAB>类别`（状态 = MISSING/EMPTY/PRESENT，类别 = static/repo-fact）。不写盘。
 - `scripts/fill.sh`：基线产物的唯一事实源。`--list` 列目标清单；`--auto [domain...]` 对所有缺失/为空目标自动填充；`<target>` 只填单个目标。已存在且非空的目标一律 SKIP，绝不覆盖。
 
 产物分两类：
@@ -71,7 +71,7 @@ origin: own
    - 模块：顶层源码目录或包边界。
    - 业务域：从代码组织（领域目录、服务、模型）归纳出真实业务域，作为 `openspec/specs/<domain>` 的 `<domain>`。
    - 部署方式：探测 `Dockerfile` / `docker-compose*.yml` / `.github/workflows/*.yml`（尤其含 `deploy` / `release` / `publish` 的）/ `.gitlab-ci.yml` / `Jenkinsfile` / `.circleci/config.yml` / `vercel.json` / `netlify.toml` / `fly.toml` / `render.yaml` / `railway.toml` / `app.yaml` / `serverless.yml` / `Procfile` / `k8s/` / `kubernetes/` / `helm/`；以及 `.env.example` / `.env.sample` / config 样例；确定部署形态（VPS / 容器编排 / 平台即服务 / Serverless / 纯发布库），供 `DEPLOY.md` 填正文。探测不到就整节留 `TODO`，绝不编造平台或命令。
-   - 页面：检测前端框架/路由（Next.js `app/`·`pages/`、React Router、Vue Router、SvelteKit `src/routes`、多个顶层 `.html` 等）。检测到则从真实路由归纳页面名，作为 `--pages` 的入参。线框图静态骨架默认都会铺，**不在此判定 UI 与否、不跳过**；是否最终保留留给根 `AGENTS.md` 的规则在后续决定。
+   - 页面：检测前端框架/路由（Next.js `app/`·`pages/`、React Router、Vue Router、SvelteKit `src/routes`、多个顶层 `.html` 等）。检测到则从真实路由归纳页面名，作为 `--pages` 的入参。线框图静态骨架默认都会铺，**不在此判定 UI 与否、不跳过**；保留与否见「脚本与引用文件」一节的线框图规则。
 
 2. **确认范围与边界**
    - MUST 在执行任何文件写入前，向用户输出执行前小结：探测到的技术栈、模块、业务域、部署形态（若探测到）、页面清单（若探测到路由），和计划生成的文件清单（含默认生成的 `DEPLOY.md` 与 `docs/wireframes/`）。
@@ -81,7 +81,7 @@ origin: own
    - 若任何已存在文件会被触及，先读它并向用户说明，确认后再处理。
 
 3. **跑探针，拿路由表**
-   - `scripts/probe.sh <探测到的业务域...> [--pages <页面...>]`，得到每个目标的 `状态 × 类别`。`docs/wireframes/` 静态骨架默认就在路由表里；探测到路由就带 `--pages` 追加各页面文件，没探测到就只铺静态骨架。后续按表分流，不再凭记忆判断哪些文件该建。
+   - `scripts/probe.sh <探测到的业务域...> [--pages <页...>]`，得到每个目标的 `状态 × 类别`。`docs/wireframes/` 静态骨架默认就在路由表里；探测到路由就带 `--pages` 追加各页面文件，没探测到就只铺静态骨架。后续按表分流，不再凭记忆判断哪些文件该建。
 
 4. **按路由表分流填充**
    - `static + MISSING/EMPTY` → `scripts/fill.sh <path>` 直接写死，AI 不碰。
@@ -92,39 +92,38 @@ origin: own
 5. **填 repo-fact 骨架的正文**
    - 先读 `references/file-templates.md` 的小节契约。
    - 根 `AGENTS.md`：把「项目概览/项目结构/常用命令/编码规范/禁止事项」的 `TODO` 替换成真实事实（修改前后检查两节脚本已写死，保留）。
-   - 根 `DEPLOY.md`：按 7 节契约（部署目标 / 环境要求 / 环境变量 / 构建与部署命令 / 部署流程 / 回滚 / 健康检查）填真实事实；命令抄真实 `Dockerfile` / CI workflow / scripts，环境变量只列名字与用途（**NEVER 写真实值/密钥**）。探测不到的字段留 `TODO: 需人工确认`，绝不用 `<平台>`、`docker push <image>` 这类占位符。纯库/SDK 项目 `## 部署目标` 写成「发布到 npm/PyPI/…（发布不是部署）」并指向真实发布配置。
+   - 根 `DEPLOY.md`：按 `references/file-templates.md` §7 的 7 节契约与探测来源清单填真实事实；探测不到的字段留 `TODO: 需人工确认`。
    - `docs/architecture/module-map.md`：按真实模块复制扩展骨架那一节，逐个填职责边界/入口/上游/下游/禁止依赖。
    - `openspec/specs/<domain>/spec.md`：填域定位、可验证的业务规则、场景、可验证行为；探测不到的保留 `TODO: 需人工确认`，不硬造。
-   - `docs/wireframes/pages/<page>.md`（探测到路由时）：按真实路由填字符图——页首写比例尺+断点清单，每个断点框写真实 px 与显示列尺寸（**显示列数 = 真实px ÷ 比例尺，全角字符按 2 列、歧义/半角按 1 列；用 Python `east_asian_width` 校验，禁用 `awk length`、codepoint、`wc -L`**），区块/容器照 `legend.md` 与消歧义规则画并打编号，注释表逐条对应；版式推不出的标 `TODO`，不硬造。
+   - `docs/wireframes/pages/<page>.md`（探测到路由时）：按真实路由填字符图——按生成的 `docs/wireframes/AGENTS.md` 比例尺契约画并用其校验脚本核验，区块/容器照 `legend.md` 与消歧义规则画并打编号，注释表逐条对应；版式推不出的标 `TODO`，不硬造。
    - `docs/wireframes/flow.md`：按用户流程分节（登录流程、忘记密码流程…）填页面流转图，节点=真实页面（指向其 `page.md`）、同页态用虚线框、边打编号对应步骤表；流程推不出的标 `TODO`，不硬造。
-   - 根 `AGENTS.md` 的「线框图」一节是脚本写死的双重契约（版式事实源定位 + 无界面项目的删除规则），保留不删——它既告诉后续 AI「`docs/wireframes/` 与 `specs/` 并列、靠 change 流转更新」，又指导项目性质明确后决定是否删除 `docs/wireframes/`。
+   - 根 `AGENTS.md` 的「线框图」一节脚本已写死，保留不删；规则内容见「脚本与引用文件」一节的线框图规则。
 
 6. **核对 PRESENT 文件 + 幂等校验 + 产出清单**
    - 对第 4 步登记的 PRESENT 文件：读现有内容，只补缺失小节或报差异，覆盖前经用户确认。
    - 核对验收标准，输出 WROTE / SKIP / 待 AI 填正文 / 标注 TODO 的文件清单。
+   - 任一验收项不合格 → 修正该文件后重跑对应校验；无法修正的列入产出清单的「未达标」项报告用户。
 
 ## 验收标准
 
-- `AGENTS.md`、`CLAUDE.md`、`DEPLOY.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`、`openspec/changes/`、`docs/adr/` 全部就位。
-- 各文件的小节标题与 `references/file-templates.md` 的约定标题逐字一致；repo-fact 文件填完正文后，除标注 `TODO: 需人工确认` 处外不含占位符（如 `<xxx>`、`npm run <command>`）。static 模板（`_template/`、骨架里的 `<change-id>` / `<项目名>` 等）的占位符是设计如此，不在此限。
-- `DEPLOY.md` 含 7 节固定契约（部署目标 / 环境要求 / 环境变量 / 构建与部署命令 / 部署流程 / 回滚 / 健康检查），命令来自真实 Dockerfile / CI workflow / scripts；`## 环境变量` 只出现变量名与一句话用途，**NEVER 出现真实值或密钥**；探测不到的整节留 `TODO: 需人工确认`，绝不编造平台或命令。
-- 每个 `CLAUDE.md` 只含指向同目录 `AGENTS.md` 的一行。
-- 目录级说明文件都是 `AGENTS.md` + `CLAUDE.md`，无 README 充当目录指南。
+- 文件清单齐备：`AGENTS.md`、`CLAUDE.md`、`DEPLOY.md`、`docs/architecture/module-map.md`、`openspec/specs/<domain>/spec.md`、`openspec/changes/`、`docs/adr/`、`docs/wireframes/{AGENTS.md,CLAUDE.md,legend.md,_template/page.md,flow.md}` 全部就位（探测到路由时另有 `pages/<page>.md`）。
+- 各文件的小节标题与 `references/file-templates.md` 的约定标题逐字一致。
+- repo-fact 文件填完正文后，除标注 `TODO: 需人工确认` 处外不含占位符（如 `<xxx>`、`npm run <command>`）。static 模板（`_template/`、骨架里的 `<change-id>` / `<项目名>` 等）的占位符是设计如此，不在此限。
+- `DEPLOY.md` 7 节齐全，`## 环境变量` 节只有变量名与用途、无值，全文无占位符；逐节契约见 `references/file-templates.md` §7。
+- 探测到路由时，每个 `pages/<page>.md` 每框显示列宽经 `docs/wireframes/AGENTS.md` 的校验脚本核对通过；`pages/<page>.md` 与 `flow.md` 编号与注释表/步骤表一一对应、无孤儿编号。
+- 每个 `CLAUDE.md` 只含指向同目录 `AGENTS.md` 的一行；无 README 充当目录指南。
 - 已存在文件未被破坏性覆盖；无法填充处显式标注 `TODO`，无编造命令/依赖。
-- `docs/wireframes/{AGENTS.md,CLAUDE.md,legend.md,_template/page.md,flow.md}` 默认就位（不分 UI 与否）；探测到路由时每个 `pages/<page>.md` 有页首比例尺+断点声明、每框尺寸条，且**每框实际显示列宽 = 真实px ÷ 比例尺**（桌面 120 / 平板 64 / 手机 31，全角按 2 列、歧义/半角按 1 列，用 Python `east_asian_width` 量，对不上即不合格）；容器均按消歧义规则标明身份；编号与注释表一一对应、无孤儿编号。
-- `flow.md` 按用户流程分节，节点为真实页面并指向其 `page.md`，每节图中编号与步骤表一一对应、无孤儿编号。
-- 根 `AGENTS.md` 含脚本写死的「线框图」一节（版式事实源定位 + 默认生成说明 + 无界面项目的删除规则），保留未删。
-- `openspec/changes/AGENTS.md` 含脚本写死的四个小节——`## 变更工作流`、`## 目录内容`（含 `wireframes.md` 可选项）、`## 推进顺序`、`## 归档`；「归档」节三步并列：移动 change 目录、合并 spec-delta、若有 `wireframes.md` 则回流到 `docs/wireframes/`——其中第 3 步只针对有 `wireframes.md` 的 change，归档动作 NEVER 写进单个 change 的 `tasks.md`。
+- 根 `AGENTS.md` 含脚本写死的「线框图」一节，保留未删（规则见「脚本与引用文件」一节的线框图规则）。
+- `openspec/changes/AGENTS.md` 由 `fill.sh` 写死且未被改坏（含 `## 归档（change 完成后必做）` 一节）。
 
 ## 失败路径
 
 - **非代码仓库 / 空仓库**：不要假装有结构。生成最小 `AGENTS.md`，把结构/命令/模块小节标注 `TODO: 需人工确认`，并提示用户补充。
 - **命令或模块探测不到**：标注 `TODO: 需人工确认`，绝不编造。
-- **部署配置探测不到 / 非可部署项目**：`DEPLOY.md` 仍生成 7 节骨架，探测不到的整节留 `TODO: 需人工确认`；纯库/SDK/工具包/CLI 类项目 `## 部署目标` 填成「发布到 npm/PyPI/crates.io/…（发布不是部署）」并指向真实发布配置（如 `.github/workflows/publish.yml`、`.npmrc`）；NEVER 因为"不是 web 应用"跳过 `DEPLOY.md`——发布流程本身也值得写清楚。
+- **部署配置探测不到 / 非可部署项目**：`DEPLOY.md` 仍生成 7 节骨架，探测不到的整节留 `TODO: 需人工确认`；非可部署项目按 `references/file-templates.md` §7 的「非可部署项目」段处理。
 - **目标文件已存在**：默认跳过覆盖。读出现有内容，只补缺失小节或报告差异，覆盖前必须经用户确认。
 - **业务域不清晰**：建一个起步 `spec.md` 并标注 `TODO`，不硬造业务规则。
-- **路由探测不到 / 项目性质未明**：不传 `--pages`，只铺 `docs/wireframes/` 静态骨架（含 `_template/page.md`），`pages/` 留空，并依赖根 `AGENTS.md` 的「线框图」规则供后续决定保留还是删除——init 阶段不替用户判断、不删除。
-- **后续确认为无界面的工具/库类**：照根 `AGENTS.md` 的「线框图」规则删除整个 `docs/wireframes/` 并删除该节（这是后续编辑，不在 init 范围内）。
+- **路由探测不到 / 项目性质未明**：不传 `--pages`，只铺 `docs/wireframes/` 静态骨架（含 `_template/page.md`），`pages/` 留空；保留与否见「脚本与引用文件」一节的线框图规则。
 
 <example>
 用户在一个 Node + TypeScript 仓库里说"初始化"。

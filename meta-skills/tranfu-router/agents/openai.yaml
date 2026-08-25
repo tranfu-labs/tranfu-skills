@@ -1,0 +1,3 @@
+interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"

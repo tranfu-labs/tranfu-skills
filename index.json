@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-06T06:32:19.661Z",
+  "generated_at": "2026-08-25T01:55:54.108Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -33,7 +33,7 @@
       "name": "tranfu-router",
       "display_name": "TranFu Skill Router",
       "display_name_zh": "TranFu Skill 路由",
-      "description": "当用户说\"搜公司 skill 关于 X / 装 X 到 user / project / 列公司库 skill / 列已装的公司 skill / 升级公司 skill / 卸载公司 skill X / 诊断 tfs 环境\"时, 调本地 tranfu-skills CLI (二进制 tfs) 完成. 自动识别当前 runtime (Claude Code / Codex CLI) 通过 --runtime 传给 tfs, 用 --json 解析结果. Do NOT 接发布 / publish / 推 skill 到公司库意图 (那走 tranfu-publish skill).",
+      "description": "当用户说\"搜公司 skill 关于 X / 装 X 到 user / project / 列公司库 skill / 列已装的公司 skill / 升级公司 skill / 卸载公司 skill X / 诊断 tfs 环境\"时, 调本地 tranfu-skills CLI (二进制 tfs) 完成. 也匹配口语变体 \"tranfu-skills 有没有 X / 公司库有没有 X\" / \"公司库都有什么 skill\" / \"拉最新\" / \"检查环境\". 自动识别当前 runtime (Claude Code / Codex CLI) 通过 --runtime 传给 tfs, 用 --json 解析结果. Do NOT 接发布 / publish / 推 skill 到公司库意图 (那走 tranfu-publish skill).",
       "version": "0.1.0",
       "author": "aquarius-wing",
       "updated_at": "2026-07-10",
@@ -48,7 +48,7 @@
         "README.md",
         "SKILL.md"
       ],
-      "sha": "7c01992c59525125cca8b8d4ec2d4d007bb45964"
+      "sha": "fbaaea951c6911d31cf6345f1ee11283c9a56f4c"
     },
     {
       "name": "agent-architecture-decision",
@@ -1783,10 +1783,10 @@
       "name": "openspec-driven-development",
       "display_name": "OpenSpec-Driven Development",
       "display_name_zh": "OpenSpec 驱动开发",
-      "version": "0.7.0",
-      "description": "在已经采用 openspec/ 约定的仓库中处理功能、修复、重构、交互调整、实施既有 change、按 change 复核实现，以及可能导向仓库改动的开发讨论或故障诊断时触发。它读取项目和团队的可信契约，统一判断实现授权并把任务推进到实现、验证与事实源闭环。Do NOT trigger when 请求是纯查询、资料研究、与具体变更无关的泛合规审计、单独的 git 操作、发版或打 tag。",
+      "version": "0.7.1",
+      "description": "仅当以下两项同时成立时触发：仓库已经采用 openspec/ 约定；用户目标是改变、实现、诊断或验证软件的可执行行为，例如新增软件功能、修复软件缺陷、代码重构、交互行为调整、实施既有 change 或按 change 复核实现。它读取项目和团队的可信契约，统一判断实现授权，并把软件开发任务推进到实现、验证与事实源闭环。Do NOT trigger when 任务只是竞品研究、网页截图、报告、README、文案、数据编辑或其他内容型修改，也不要用于纯查询、资料研究、与具体软件变更无关的泛合规审计、单独的 git 操作、发版或打 tag；文件位于开发仓库或操作会产生仓库改动，本身都不是触发条件。",
       "author": "aquarius-wing",
-      "updated_at": "2026-07-27",
+      "updated_at": "2026-08-11",
       "origin": "own",
       "userInvocable": true,
       "readme": {
@@ -1834,7 +1834,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "0842d7d5fbf38b8f2e1e06c0640da6df3d073151"
+      "sha": "0b46bcdc4b90aa6f8f26e487370c0a7553b96a49"
     },
     {
       "name": "opportunity-hunter",
@@ -2290,6 +2290,62 @@
       "sha": "7c79941128307820604823a44c9555e2ad840905"
     },
     {
+      "name": "product-website-copy-review",
+      "display_name": "Product Website Copy Review",
+      "display_name_zh": "产品网站文案审查",
+      "description": "当用户要求审查、review 或 audit 产品网站、Landing Page 文案时使用。识别页面与全站问题并克制优化。Do NOT trigger when 仅翻译文本或检查代码、视觉实现。",
+      "version": "0.1.0",
+      "author": "Ocean-312",
+      "updated_at": "2026-08-21",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Review product website copy systematically, then make only the changes that clearly improve clarity, consistency, and trust.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Review the copy across this product website before we rewrite anything.",
+          "scene": "Review a full website"
+        },
+        {
+          "prompt": "Quickly audit this landing page and suggest only necessary edits.",
+          "scene": "Audit one page"
+        },
+        {
+          "prompt": "Check these pages for inconsistent terms, CTAs, and product claims.",
+          "scene": "Check site consistency"
+        }
+      ],
+      "description_zh": "系统审查产品网站文案，只修改真正影响清晰度、一致性与信任的问题。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "先审查这个产品网站的整站文案，不要一上来就重写。",
+          "scene": "审查整站文案"
+        },
+        {
+          "prompt": "快速检查这个落地页，只建议真正有必要的修改。",
+          "scene": "检查单个页面"
+        },
+        {
+          "prompt": "检查这些页面的术语、行动按钮和产品承诺是否一致。",
+          "scene": "检查全站一致性"
+        }
+      ],
+      "type": "own",
+      "published_at": "2026-08-21T03:44:10.000Z",
+      "path": "own-skills/product-website-copy-review",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
+      ],
+      "sha": "e6f1b09563550c3db9221132ca5dc497d768e2b4"
+    },
+    {
       "name": "project-init-docs",
       "display_name": "Project Docs Initialization",
       "display_name_zh": "项目文档初始化",
@@ -2336,6 +2392,7 @@
       "published_at": "2026-06-12T10:07:31.000Z",
       "path": "own-skills/project-init-docs",
       "files": [
+        ".DS_Store",
         "README.md",
         "README.zh.md",
         "SKILL.md",
@@ -2351,7 +2408,7 @@
         "scripts/fill.sh",
         "scripts/probe.sh"
       ],
-      "sha": "eff6df74c081ed7f91973a33b6096580b08b500e"
+      "sha": "2d54fadbee6db3ec4b5b082dcddc0606b604b6f3"
     },
     {
       "name": "project-scoring",
@@ -2420,10 +2477,10 @@
       "name": "prompt-review",
       "display_name": "Prompt Review",
       "display_name_zh": "提示词审查",
-      "description": "当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、 agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、 “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。 不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、 发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。 安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET （direct 型给改法案例、think 型给作者思考的问题）， 从不编辑提示词 / SKILL / 文件；委派工作必须有边界；不要求网络访问。",
-      "version": "0.9.0",
+      "description": "当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、 agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、 “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。 不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、 发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。 安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET （direct 型给改法、think 型给作者思考的问题），从不编辑提示词 / SKILL / 文件。",
+      "version": "1.0.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-07-10",
+      "updated_at": "2026-08-24",
       "origin": "own",
       "readme": {
         "en": "README.md",
@@ -2470,7 +2527,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "34093ce9efbc46cb80eba21e7c82aa754d614824"
+      "sha": "bd67ec979926c87ba7bddacbc1091d18763ae62a"
     },
     {
       "name": "proofread-content",
@@ -2576,6 +2633,7 @@
         }
       ],
       "type": "own",
+      "published_at": "2026-08-06T06:19:51.000Z",
       "path": "own-skills/research-keywords",
       "files": [
         "README.md",
@@ -2585,7 +2643,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": ""
+      "sha": "084194f281df01e4b16dc94981334af30f33e5c2"
     },
     {
       "name": "reversible-ops",
@@ -2645,6 +2703,59 @@
       "sha": "04a4c5b5bdb0a2ea4db3fdeb5f129c0c12dbfbe4"
     },
     {
+      "name": "session-corrections-to-skill",
+      "display_name": "Session Corrections to Skill",
+      "display_name_zh": "会话修正沉淀",
+      "description": "把一次会话中用户对具体 skill 行为的历次修正提炼成「场景 → 期望输出」表格行， 逐条追加进对应 SKILL 文件的用户修正沉淀表。Use when 用户说“把这次会话的修正 沉淀到 skill”“把刚才的纠偏记进对应 skill”“会话修正入库”“把这几条修正写进 XX skill 的沉淀表”，或一次会话中出现多次针对某 skill 行为的纠正且用户要求固化， 即使用户没用“沉淀”这个词。Also use when the user asks in English to distill or capture this session's corrections into the matching skills. Do NOT trigger when: 会话复盘要产出知识文章； 对 skill 做整体质量审查或提升；创建全新 skill；修正只涉及 agent 通用工作方式 （那归 memory，不落任何 SKILL）。",
+      "version": "0.2.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-08-25",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Distill a session's user corrections into scenario → expected-output table rows appended to the matching SKILL files, listing general preferences separately for memory.",
+      "prompt_examples_en": [
+        {
+          "prompt": "Distill this session's corrections into the matching skills.",
+          "scene": "Capture session corrections"
+        },
+        {
+          "prompt": "Add the corrections I just made to the skill's table.",
+          "scene": "Append to one skill"
+        },
+        {
+          "prompt": "Which of my corrections this session belong in skills vs memory?",
+          "scene": "Route corrections"
+        }
+      ],
+      "description_zh": "把一次会话中用户的修正提炼成「场景 → 期望输出」表格行，追加进对应 SKILL 文件；通用偏好分流到 memory，不落 SKILL。",
+      "prompt_examples_zh": [
+        {
+          "prompt": "把这次会话里我的修正沉淀到对应的 skill。",
+          "scene": "沉淀会话修正"
+        },
+        {
+          "prompt": "把刚才那几条纠偏记进这个 skill 的沉淀表。",
+          "scene": "追加到单个 skill"
+        },
+        {
+          "prompt": "我这次的修正哪些该进 skill、哪些该进 memory？",
+          "scene": "修正分流"
+        }
+      ],
+      "type": "own",
+      "published_at": "2026-08-24T12:03:36.000Z",
+      "path": "own-skills/session-corrections-to-skill",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md"
+      ],
+      "sha": "4d1b6f5549a51a5a5d1bfc84703832dd81d37c5b"
+    },
+    {
       "name": "session-to-knowledge",
       "display_name": "Session To Knowledge",
       "display_name_zh": "会话知识沉淀",
@@ -2702,8 +2813,8 @@
       "name": "share-heatmap-defaults",
       "display_name": "Share Heatmap Defaults",
       "display_name_zh": "占比热力图默认判断",
-      "description": "当用户要求为某领域/数据集做\"热力图\"，且描述里出现\"占比\"\"分布\"\"份额\"\"谁大谁小\"\"谁占多少\"等语义词时触发， 用来判断该用 Treemap（面积编码）还是传统色块网格热力图，避免把\"热力图\"想当然地直译成颜色深浅的均匀网格。 也覆盖\"数据有多个统计口径（累计/24h/周/月/年等）时该怎么设计切换控件\"这个连带判断。 Also trigger for casual phrasing: \"画个占比热力图\", \"各板块/各渠道/各业务线占比可视化\", \"谁占大头一眼看出来\". Do NOT trigger when: 描述里没有占比/份额语义，格子大小本身没有业务含义（比如日历热力图配色、相关系数矩阵、 按天/按小时排列的固定网格）；用户在纯图表类型初选之间做决定（柱状图 vs 折线图等）；用户要的是具体的 Treemap 算法实现、CSS 布局写法或验证脚本怎么写——这些交给模型临场处理，不在本 skill 判断范围内。",
-      "version": "0.1.1",
+      "description": "当用户要求为某领域/数据集做\"热力图\"，且描述里出现\"占比\"\"分布\"\"份额\"\"谁大谁小\"\"谁占多少\"等语义词时触发， 用来判断该用 Treemap（面积编码）还是传统色块网格热力图，避免把\"热力图\"想当然地直译成颜色深浅的均匀网格。 也覆盖\"数据有多个统计口径（累计/24h/周/月/年等）时该怎么设计切换控件\"这个连带判断， 以及\"某个口径数据覆盖率不齐\"\"比较对象体量差几个数量级\"时该怎么处理这两类连带判断。 实现默认用 Apache ECharts，并记录了 leafDepth 下钻出空白、颜色自动分配、children 摊平导致 \"白色碎块\"这三个真实踩过的坑，触发时一并给出。 Also trigger for casual phrasing: \"画个占比热力图\", \"各板块/各渠道/各业务线占比可视化\", \"谁占大头一眼看出来\". Do NOT trigger when: 描述里没有占比/份额语义，格子大小本身没有业务含义（比如日历热力图配色、相关系数矩阵、 按天/按小时排列的固定网格）；用户在纯图表类型初选之间做决定（柱状图 vs 折线图等）；用户不用 ECharts、 自己手写布局算法的坐标计算细节——这些交给模型临场处理，不在本 skill 判断范围内。",
+      "version": "0.3.0",
       "author": "aquarius-wing",
       "updated_at": "2026-08-06",
       "origin": "own",
@@ -2752,7 +2863,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "4ac8f7abfd4fb13903ecfeef532052921b67ad42"
+      "sha": "10619a00d4f5e8c26ce6d00380f0dbb12f28fbb6"
     },
     {
       "name": "skill-content-fit",
@@ -3053,133 +3164,6 @@
         "assets/lucide/waypoints.svg",
         "assets/lucide/workflow.svg",
         "assets/lucide/wrench.svg",
-        "node_modules/.bin/semver",
-        "node_modules/.package-lock.json",
-        "node_modules/@img/colour/LICENSE.md",
-        "node_modules/@img/colour/README.md",
-        "node_modules/@img/colour/color.cjs",
-        "node_modules/@img/colour/index.cjs",
-        "node_modules/@img/colour/index.d.ts",
-        "node_modules/@img/colour/package.json",
-        "node_modules/@img/sharp-darwin-arm64/LICENSE",
-        "node_modules/@img/sharp-darwin-arm64/README.md",
-        "node_modules/@img/sharp-darwin-arm64/index.cjs",
-        "node_modules/@img/sharp-darwin-arm64/lib/sharp-darwin-arm64-0.35.3.node",
-        "node_modules/@img/sharp-darwin-arm64/package.json",
-        "node_modules/@img/sharp-libvips-darwin-arm64/README.md",
-        "node_modules/@img/sharp-libvips-darwin-arm64/lib/glib-2.0/include/glibconfig.h",
-        "node_modules/@img/sharp-libvips-darwin-arm64/lib/index.js",
-        "node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
-        "node_modules/@img/sharp-libvips-darwin-arm64/package.json",
-        "node_modules/@img/sharp-libvips-darwin-arm64/versions.json",
-        "node_modules/detect-libc/LICENSE",
-        "node_modules/detect-libc/README.md",
-        "node_modules/detect-libc/index.d.ts",
-        "node_modules/detect-libc/lib/detect-libc.js",
-        "node_modules/detect-libc/lib/elf.js",
-        "node_modules/detect-libc/lib/filesystem.js",
-        "node_modules/detect-libc/lib/process.js",
-        "node_modules/detect-libc/package.json",
-        "node_modules/semver/LICENSE",
-        "node_modules/semver/README.md",
-        "node_modules/semver/bin/semver.js",
-        "node_modules/semver/classes/comparator.js",
-        "node_modules/semver/classes/index.js",
-        "node_modules/semver/classes/range.js",
-        "node_modules/semver/classes/semver.js",
-        "node_modules/semver/functions/clean.js",
-        "node_modules/semver/functions/cmp.js",
-        "node_modules/semver/functions/coerce.js",
-        "node_modules/semver/functions/compare-build.js",
-        "node_modules/semver/functions/compare-loose.js",
-        "node_modules/semver/functions/compare.js",
-        "node_modules/semver/functions/diff.js",
-        "node_modules/semver/functions/eq.js",
-        "node_modules/semver/functions/gt.js",
-        "node_modules/semver/functions/gte.js",
-        "node_modules/semver/functions/inc.js",
-        "node_modules/semver/functions/lt.js",
-        "node_modules/semver/functions/lte.js",
-        "node_modules/semver/functions/major.js",
-        "node_modules/semver/functions/minor.js",
-        "node_modules/semver/functions/neq.js",
-        "node_modules/semver/functions/parse.js",
-        "node_modules/semver/functions/patch.js",
-        "node_modules/semver/functions/prerelease.js",
-        "node_modules/semver/functions/rcompare.js",
-        "node_modules/semver/functions/rsort.js",
-        "node_modules/semver/functions/satisfies.js",
-        "node_modules/semver/functions/sort.js",
-        "node_modules/semver/functions/truncate.js",
-        "node_modules/semver/functions/valid.js",
-        "node_modules/semver/index.js",
-        "node_modules/semver/internal/constants.js",
-        "node_modules/semver/internal/debug.js",
-        "node_modules/semver/internal/identifiers.js",
-        "node_modules/semver/internal/lrucache.js",
-        "node_modules/semver/internal/parse-options.js",
-        "node_modules/semver/internal/re.js",
-        "node_modules/semver/package.json",
-        "node_modules/semver/preload.js",
-        "node_modules/semver/range.bnf",
-        "node_modules/semver/ranges/gtr.js",
-        "node_modules/semver/ranges/intersects.js",
-        "node_modules/semver/ranges/ltr.js",
-        "node_modules/semver/ranges/max-satisfying.js",
-        "node_modules/semver/ranges/min-satisfying.js",
-        "node_modules/semver/ranges/min-version.js",
-        "node_modules/semver/ranges/outside.js",
-        "node_modules/semver/ranges/simplify.js",
-        "node_modules/semver/ranges/subset.js",
-        "node_modules/semver/ranges/to-comparators.js",
-        "node_modules/semver/ranges/valid.js",
-        "node_modules/sharp/LICENSE",
-        "node_modules/sharp/README.md",
-        "node_modules/sharp/dist/channel.cjs",
-        "node_modules/sharp/dist/channel.mjs",
-        "node_modules/sharp/dist/colour.cjs",
-        "node_modules/sharp/dist/colour.mjs",
-        "node_modules/sharp/dist/composite.cjs",
-        "node_modules/sharp/dist/composite.mjs",
-        "node_modules/sharp/dist/constructor.cjs",
-        "node_modules/sharp/dist/constructor.mjs",
-        "node_modules/sharp/dist/index.cjs",
-        "node_modules/sharp/dist/index.d.cts",
-        "node_modules/sharp/dist/index.d.mts",
-        "node_modules/sharp/dist/index.mjs",
-        "node_modules/sharp/dist/input.cjs",
-        "node_modules/sharp/dist/input.mjs",
-        "node_modules/sharp/dist/is.cjs",
-        "node_modules/sharp/dist/is.mjs",
-        "node_modules/sharp/dist/libvips.cjs",
-        "node_modules/sharp/dist/libvips.mjs",
-        "node_modules/sharp/dist/operation.cjs",
-        "node_modules/sharp/dist/operation.mjs",
-        "node_modules/sharp/dist/output.cjs",
-        "node_modules/sharp/dist/output.mjs",
-        "node_modules/sharp/dist/resize.cjs",
-        "node_modules/sharp/dist/resize.mjs",
-        "node_modules/sharp/dist/sharp.cjs",
-        "node_modules/sharp/dist/sharp.mjs",
-        "node_modules/sharp/dist/utility.cjs",
-        "node_modules/sharp/dist/utility.mjs",
-        "node_modules/sharp/install/build.js",
-        "node_modules/sharp/lib/index.d.ts",
-        "node_modules/sharp/package.json",
-        "node_modules/sharp/src/binding.gyp",
-        "node_modules/sharp/src/common.cc",
-        "node_modules/sharp/src/common.h",
-        "node_modules/sharp/src/metadata.cc",
-        "node_modules/sharp/src/metadata.h",
-        "node_modules/sharp/src/operations.cc",
-        "node_modules/sharp/src/operations.h",
-        "node_modules/sharp/src/pipeline.cc",
-        "node_modules/sharp/src/pipeline.h",
-        "node_modules/sharp/src/sharp.cc",
-        "node_modules/sharp/src/stats.cc",
-        "node_modules/sharp/src/stats.h",
-        "node_modules/sharp/src/utilities.cc",
-        "node_modules/sharp/src/utilities.h",
         "package-lock.json",
         "package.json",
         "scripts/generate_icon.mjs",
@@ -4736,7 +4720,7 @@
       "name": "write-social-preview-head",
       "display_name": "Social Preview Head Writer",
       "display_name_zh": "社交分享 Head 编写",
-      "description": "编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest/JSON-LD 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。",
+      "description": "编写网页 head 以便 Lark/飞书、Slack、微信等 IM/social 分享场景稳定显示标题、描述、icon 和卡片图。用于新建或修改官网/落地页/分享页的 OG/Twitter/meta/link/icon/manifest 头部标签，尤其是需要兼容 Lark 图像优先级、避免 query 参数缓存失效、或要求社交预览资源可被爬虫稳定抓取时。即使用户只描述症状也触发：链接发到飞书/Slack 没有卡片图或显示旧图/旧 icon、换了新 logo 平台一直返回旧缓存、favicon 还挂着旧 logo。不要用于 logo 视觉重设计、完整 SEO/GEO 站点审计，或依赖 JS-SDK 的私域分享（如微信 wx.share）——本 skill 只管静态 HTML head 与可抓取资源。",
       "version": "0.1.0",
       "author": "aquarius-wing",
       "updated_at": "2026-07-10",
@@ -4786,7 +4770,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "d314535d5f03ec8185ac77b2a94b96486bc71e26"
+      "sha": "5a22fcb78b4d63c802ec7e64e2c076bde4e1499f"
     },
     {
       "name": "write-spec",
@@ -5024,7 +5008,7 @@
     },
     {
       "name": "claude-design-system",
-      "description": "Anthropic 内部 Claude 设计制品工具的 system prompt 镜像 (社区抓取), 422 行讲清 Claude 怎么做 HTML 原型 / React 组件 / 幻灯片 / 动画 / 设计系统适配. 当用户问 \"Claude 怎么出高质量设计 / 我要给自己的 Claude 设计 agent 抄一份基线 prompt / 为什么 Claude 输出的 React 总因 const styles 冲突 / Claude 做幻灯片为什么会 1-indexed slide label\" 时, 读这份 prompt 当参考材料. Do NOT trigger when: 用户要真做设计实现 (走 ui-ux-pro-max) / 审 UI 代码 (走 web-design-guidelines) / 只画架构图 (走 fireworks-tech-graph) / 单纯用 Claude.ai 不需要装它.",
+      "description": "Anthropic 内部 Claude 设计制品工具的 system prompt 镜像 (社区抓取), 422 行讲清 Claude 怎么做 HTML 原型 / React 组件 / 幻灯片 / 动画 / 设计系统适配. 当用户问 \"Claude 怎么出高质量设计 / 我要给自己的 Claude 设计 agent 抄一份基线 prompt / 为什么 Claude 输出的 React 总因 const styles 冲突 / Claude 做幻灯片为什么会 1-indexed slide label\" 时, 读这份 prompt 当参考材料. Do NOT trigger when: 用户要真做设计实现 / 审 UI 代码合规 / 只画架构流程图 / 单纯用 Claude.ai 不需要装它.",
       "version": "1.0.0",
       "author": "elder-plinius",
       "updated_at": "2026-05-22",
@@ -5037,7 +5021,7 @@
         "README.md",
         "SKILL.md"
       ],
-      "sha": "73a9067601a8d93c67c42ae443666b4f91d79a4f"
+      "sha": "cd957b27d344343a8349069160ee81bffcf8e6e5"
     },
     {
       "name": "emil-design-eng",

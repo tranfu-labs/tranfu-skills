@@ -37,7 +37,7 @@ The head is written and I want to run `curl` header checks plus image encoding c
 
 **Replace all icon files**:
 
-The favicon still shows the old logo. I want to swap the whole set — favicon, apple-touch-icon, manifest icons, JSON-LD Organization logo — in one coordinated push with no stragglers.
+The favicon still shows the old logo. I want to swap the whole set — favicon, apple-touch-icon, manifest icons — in one coordinated push with no stragglers.
 
 **Not for**:
 
@@ -51,7 +51,7 @@ The favicon still shows the old logo. I want to swap the whole set — favicon, 
 
 - **Full head tag set**: title / description / canonical + `og:*` (including `secure_url` / `width` / `height` / `type` / `alt`) + `twitter:*` + link (`image_src` / `icon` / `apple-touch-icon` / `manifest`)
 - **Naming and format rules**: OG image at `1200x630` PNG 8-bit; apple-touch-icon `180x180` PNG; favicon 16 / 32; root `.ico` single 32×32 at 32 bits/pixel; manifest served as `application/manifest+json`
-- **Coordinated rename checklist**: `og:image` / `og:image:secure_url` / `twitter:image` / `image_src` / every icon link / manifest icons / JSON-LD `logo` / CDN `Content-Type` — miss one and a stale asset lingers
+- **Coordinated rename checklist**: `og:image` / `og:image:secure_url` / `twitter:image` / `image_src` / every icon link / manifest icons / CDN `Content-Type` — miss one and a stale asset lingers
 - **Probe page recipe**: an isolated minimal page that skips the full-site layout, holds only the head six-pack plus a first big body image, used to isolate platform recognition issues
 - **Verification recipe**: `curl -L -I` for response headers, `file` and `identify` for image encoding and bit depth, plus a real IM client sending the link once end-to-end
 - **Will never**: redesign the logo or produce brand visual assets; cover a full SEO / GEO checklist; handle `wx.share` or other JS-SDK private-channel sharing
