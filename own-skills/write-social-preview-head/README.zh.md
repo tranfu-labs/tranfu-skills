@@ -37,7 +37,7 @@ head 写完了, 想跑 curl 头检查 + 图片元数据检查, 上线前确认�
 
 **批量更换图标文件**:
 
-favicon 还挂着旧 logo, 想把 favicon、apple-touch-icon、manifest icon（页面已有 JSON-LD 时含其 logo）一次成组换新, 不留旧资源。
+favicon 还挂着旧 logo, 想把 favicon、apple-touch-icon、manifest icon 一次成组换新, 不留旧资源。
 
 **不接**:
 
@@ -51,7 +51,7 @@ favicon 还挂着旧 logo, 想把 favicon、apple-touch-icon、manifest icon（�
 
 - **head 标签全套**: title / description / canonical + `og:*` 全套 (含 `secure_url` / `width` / `height` / `type` / `alt`) + `twitter:*` + link (`image_src` / `icon` / `apple-touch-icon` / `manifest`)
 - **命名与格式规则**: OG 图 `1200x630` PNG 8-bit; apple-touch-icon `180x180` PNG; favicon 16 / 32; 根 `.ico` 单图 32×32 且 32 位/像素; manifest 服务端返回 `application/manifest+json`
-- **成组换名清单**: `og:image` / `og:image:secure_url` / `twitter:image` / `image_src` / 全套 icon link / manifest icons / 已有 JSON-LD 时的 `logo` / CDN 上新文件的 `Content-Type` 一起换, 少一个就有残留
+- **成组换名清单**: `og:image` / `og:image:secure_url` / `twitter:image` / `image_src` / 全套 icon link / manifest icons / CDN 上新文件的 `Content-Type` 一起换, 少一个就有残留
 - **探针页方案**: 一个隔离的最小页, 不走全站的整体布局, 只包含 head 六件套 + body 首张大图, 用来孤立平台识别问题
 - **验证脚本**: `curl -L -I` 查响应头, `file` / `identify` 查图片编码与位深, 最后要求用真实即时通讯客户端发一次链接端到端跑通
 - **绝不会做**: 重新设计 logo / 出品牌视觉资产; 覆盖完整 SEO / GEO 清单; 处理 `wx.share` 这类 JS-SDK 私域分享

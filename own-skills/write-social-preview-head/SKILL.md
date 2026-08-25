@@ -79,7 +79,6 @@ origin: own
 
 - `og:image`、`og:image:secure_url`、`twitter:image`、`image_src`
 - `shortcut icon`、`icon`、`apple-touch-icon`、`apple-touch-icon-precomposed`
-- JSON-LD Organization `logo`（仅当页面已有 JSON-LD 时同步，不新增；JSON-LD 不参与 IM 预览渲染）
 - `manifest.json` / `site.webmanifest` 里的 icons
 - 服务器/CDN 对新 `.ico`、`.png`、`.webmanifest` 文件的 `Content-Type`
 
