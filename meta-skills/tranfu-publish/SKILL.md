@@ -101,8 +101,8 @@ README 的 `## 同类 Skill 对比` / `## 使用技巧` 段名照 templates/ 保
 ### 3. 起草内容 (按 path)
 
 **SKILL.md frontmatter**:
-- own (`own-skills/<name>/SKILL.md`): `name`(=目录名, kebab) / `description`(含触发词 + "Do NOT trigger when", ≥2 句) / `version`(默认 `0.1.0`) / `author`(`gh api user -q .login`) / `updated_at`(`date -u +%Y-%m-%d`) / `origin: own` (无 source_url)
-- external (`external-skills/<name>/SKILL.md`): `name` / `description` 同上 / `origin: external` / `source_url` **必填** (HTTP 200) / `author`(上游) / `version`·`updated_at`(上游有则填); body = 薄指针, 含 "完整内容见 source_url"
+- own (`own-skills/<name>/SKILL.md`): `name`(=目录名, kebab) / `description` / `version`(默认 `0.1.0`) / `author`(`gh api user -q .login`) / `updated_at`(`date -u +%Y-%m-%d`) / `origin: own` (无 source_url)
+- external (`external-skills/<name>/SKILL.md`): `name` / `description` / `origin: external` / `source_url` **必填** (HTTP 200) / `author`(上游) / `version`·`updated_at`(上游有则填); body = 薄指针, 含 "完整内容见 source_url"
 - case: 不动 SKILL.md
 
 **README.md §同类对比 + §使用技巧** (仅 external 跑, own/case 跳过, 按模板渲染落 **README.md** 不落 SKILL.md):
