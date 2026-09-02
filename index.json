@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-25T01:55:54.108Z",
+  "generated_at": "2026-09-02T03:35:09.340Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -46,7 +46,10 @@
       "path": "meta-skills/tranfu-router",
       "files": [
         "README.md",
-        "SKILL.md"
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
       "sha": "fbaaea951c6911d31cf6345f1ee11283c9a56f4c"
     },
@@ -1161,6 +1164,62 @@
       "sha": "8940b8708713bbf7e814acc31b35ba082b47df7d"
     },
     {
+      "name": "document-content-quality",
+      "display_name": "Document Content Quality",
+      "display_name_zh": "文档内容处理",
+      "description": "当用户需要创建、改写、整理、审视、优化或正式交付文档内容时使用，覆盖 Lark、Word、Markdown、PDF，以及方案、制度、通知、报告、报价、操作说明、任务书、交接文档、JD 和客户材料；输入可以是零散想法、聊天记录、会议内容、多个参考链接或现有文档，目标是产出清晰、易懂、可执行、可验收、可直接发布的内容。Do NOT trigger when 用户只需普通简短问答、单句轻量润色或翻译、纯代码、单纯表格数据处理、只读查询、只讨论想法但暂不形成正式内容，或只执行文件转换而不处理内容质量。",
+      "version": "0.1.0",
+      "author": "06666666",
+      "updated_at": "2026-09-02",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Turn formal content into a clear, executable, verifiable document without inventing missing facts.",
+      "prompt_examples_en": [
+        {
+          "scene": "Organize meeting notes",
+          "prompt": "Turn these meeting notes into a project brief the team can execute directly."
+        },
+        {
+          "scene": "Improve a formal document",
+          "prompt": "Rewrite this proposal so the client can understand scope, cost, responsibilities, and acceptance."
+        },
+        {
+          "scene": "Improve Lark readability",
+          "prompt": "Restructure this text-heavy Lark policy so employees can read and follow it easily."
+        }
+      ],
+      "description_zh": "把正式内容整理成清晰、易懂、可执行、可验收的文档，不补造缺失事实。",
+      "prompt_examples_zh": [
+        {
+          "scene": "整理会议记录",
+          "prompt": "把这些会议记录整理成项目组可以直接执行的任务书。"
+        },
+        {
+          "scene": "优化正式文档",
+          "prompt": "优化这份报价，让客户看懂范围、费用、责任和验收标准。"
+        },
+        {
+          "scene": "优化 Lark 阅读体验",
+          "prompt": "把这份全是文字的 Lark 制度整理得更容易阅读和执行。"
+        }
+      ],
+      "type": "own",
+      "published_at": "2026-09-02T03:34:38.000Z",
+      "path": "own-skills/document-content-quality",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
+      ],
+      "sha": "bb9a4cf461d7708a68dfd6236bcceac097a09bf4"
+    },
+    {
       "name": "draft-content",
       "display_name": "Multiplatform Drafting Workflow",
       "display_name_zh": "多平台写作流程",
@@ -1415,9 +1474,9 @@
       "display_name": "GitHub Delivery Check",
       "display_name_zh": "GitHub 交付检查",
       "description": "Use when the user asks to push a product project to GitHub, create a GitHub repository, prepare a deployable project, complete README deployment instructions, or hand off deployment details to engineers. Also trigger for Chinese requests like \"推到 GitHub\", \"创建 GitHub 仓库\", \"首次提交\", \"整理成可部署项目\", or \"用 GitHub交付规范 Skill\". Do NOT trigger when the user only wants ordinary code changes, code review, production deployment without GitHub delivery, or discussion-only planning; route those to the coding, review, deploy, or normal discussion workflow.",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "author": "06666666",
-      "updated_at": "2026-07-10",
+      "updated_at": "2026-08-24",
       "origin": "own",
       "readme": {
         "en": "README.md",
@@ -1464,7 +1523,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "76e5a543376905f8394d964ccc37277fe182edab"
+      "sha": "8a89623b52fab8a4e3f6d0b12d9ed03f1c65b39d"
     },
     {
       "name": "github-repo-completeness",
@@ -2392,7 +2451,6 @@
       "published_at": "2026-06-12T10:07:31.000Z",
       "path": "own-skills/project-init-docs",
       "files": [
-        ".DS_Store",
         "README.md",
         "README.zh.md",
         "SKILL.md",
@@ -2706,8 +2764,8 @@
       "name": "session-corrections-to-skill",
       "display_name": "Session Corrections to Skill",
       "display_name_zh": "会话修正沉淀",
-      "description": "把一次会话中用户对具体 skill 行为的历次修正提炼成「场景 → 期望输出」表格行， 逐条追加进对应 SKILL 文件的用户修正沉淀表。Use when 用户说“把这次会话的修正 沉淀到 skill”“把刚才的纠偏记进对应 skill”“会话修正入库”“把这几条修正写进 XX skill 的沉淀表”，或一次会话中出现多次针对某 skill 行为的纠正且用户要求固化， 即使用户没用“沉淀”这个词。Also use when the user asks in English to distill or capture this session's corrections into the matching skills. Do NOT trigger when: 会话复盘要产出知识文章； 对 skill 做整体质量审查或提升；创建全新 skill；修正只涉及 agent 通用工作方式 （那归 memory，不落任何 SKILL）。",
-      "version": "0.2.0",
+      "description": "把一次会话中的两类纠正沉淀进对应 SKILL 文件：用户纠正提炼成「场景 → 期望输出」 表格行；现实纠正（报错 / 踩坑后确立的正确做法）提炼成「触发场景 → 正确做法 → 因果链」表格行，因果链复盘落 references/，SKILL 文件不放因果链本体。 Use when 用户说“把这次会话的修正沉淀到 skill”“把刚才的纠偏记进对应 skill” “会话修正入库”“把这几条修正写进 XX skill 的沉淀表”“把这个坑记进 XX skill” “把这次踩的坑沉淀一下”，或一次会话中出现多次针对某 skill 行为的纠正且用户 要求固化，即使用户没用“沉淀”这个词。Also use when the user asks in English to distill or capture this session's corrections or pitfalls into the matching skills. Do NOT trigger when: 会话复盘要产出知识文章； 对 skill 做整体质量审查或提升；创建全新 skill；修正只涉及 agent 通用工作方式 （直接打回不沉淀，不落任何 SKILL）。",
+      "version": "0.5.0",
       "author": "aquarius-wing",
       "updated_at": "2026-08-25",
       "origin": "own",
@@ -2715,45 +2773,40 @@
         "en": "README.md",
         "zh": "README.zh.md"
       },
-      "description_en": "Distill a session's user corrections into scenario → expected-output table rows appended to the matching SKILL files, listing general preferences separately for memory.",
+      "description_en": "Distill a session's corrections into table rows appended to the matching SKILL files: user corrections as scenario → expected-output rows, reality corrections (the correct way established after an error or pitfall) as trigger → correct-way → causal-chain rows with the postmortem in references/; general preferences are rejected outright and never land in a SKILL.",
       "prompt_examples_en": [
         {
           "prompt": "Distill this session's corrections into the matching skills.",
           "scene": "Capture session corrections"
         },
         {
-          "prompt": "Add the corrections I just made to the skill's table.",
-          "scene": "Append to one skill"
-        },
-        {
-          "prompt": "Which of my corrections this session belong in skills vs memory?",
-          "scene": "Route corrections"
+          "prompt": "Record the pitfall we just hit into skill XX.",
+          "scene": "Capture a pitfall"
         }
       ],
-      "description_zh": "把一次会话中用户的修正提炼成「场景 → 期望输出」表格行，追加进对应 SKILL 文件；通用偏好分流到 memory，不落 SKILL。",
+      "description_zh": "把一次会话中的两类纠正沉淀进对应 SKILL 文件：用户纠正提炼成「场景 → 期望输出」表格行；现实纠正（报错/踩坑后确立的正确做法）提炼成「触发场景 → 正确做法 → 因果链」表格行，因果链复盘落 references/；通用偏好直接打回不沉淀，不落 SKILL。",
       "prompt_examples_zh": [
         {
           "prompt": "把这次会话里我的修正沉淀到对应的 skill。",
           "scene": "沉淀会话修正"
         },
         {
-          "prompt": "把刚才那几条纠偏记进这个 skill 的沉淀表。",
-          "scene": "追加到单个 skill"
-        },
-        {
-          "prompt": "我这次的修正哪些该进 skill、哪些该进 memory？",
-          "scene": "修正分流"
+          "prompt": "把这次踩的这个坑记进 XX skill。",
+          "scene": "沉淀踩坑经验"
         }
       ],
       "type": "own",
-      "published_at": "2026-08-24T12:03:36.000Z",
+      "published_at": "2026-08-25T02:25:19.000Z",
       "path": "own-skills/session-corrections-to-skill",
       "files": [
         "README.md",
         "README.zh.md",
-        "SKILL.md"
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "4d1b6f5549a51a5a5d1bfc84703832dd81d37c5b"
+      "sha": "28dc5377ccf842a37ccbee5556f856f57a282364"
     },
     {
       "name": "session-to-knowledge",
@@ -3164,6 +3217,133 @@
         "assets/lucide/waypoints.svg",
         "assets/lucide/workflow.svg",
         "assets/lucide/wrench.svg",
+        "node_modules/.bin/semver",
+        "node_modules/.package-lock.json",
+        "node_modules/@img/colour/LICENSE.md",
+        "node_modules/@img/colour/README.md",
+        "node_modules/@img/colour/color.cjs",
+        "node_modules/@img/colour/index.cjs",
+        "node_modules/@img/colour/index.d.ts",
+        "node_modules/@img/colour/package.json",
+        "node_modules/@img/sharp-darwin-arm64/LICENSE",
+        "node_modules/@img/sharp-darwin-arm64/README.md",
+        "node_modules/@img/sharp-darwin-arm64/index.cjs",
+        "node_modules/@img/sharp-darwin-arm64/lib/sharp-darwin-arm64-0.35.3.node",
+        "node_modules/@img/sharp-darwin-arm64/package.json",
+        "node_modules/@img/sharp-libvips-darwin-arm64/README.md",
+        "node_modules/@img/sharp-libvips-darwin-arm64/lib/glib-2.0/include/glibconfig.h",
+        "node_modules/@img/sharp-libvips-darwin-arm64/lib/index.js",
+        "node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
+        "node_modules/@img/sharp-libvips-darwin-arm64/package.json",
+        "node_modules/@img/sharp-libvips-darwin-arm64/versions.json",
+        "node_modules/detect-libc/LICENSE",
+        "node_modules/detect-libc/README.md",
+        "node_modules/detect-libc/index.d.ts",
+        "node_modules/detect-libc/lib/detect-libc.js",
+        "node_modules/detect-libc/lib/elf.js",
+        "node_modules/detect-libc/lib/filesystem.js",
+        "node_modules/detect-libc/lib/process.js",
+        "node_modules/detect-libc/package.json",
+        "node_modules/semver/LICENSE",
+        "node_modules/semver/README.md",
+        "node_modules/semver/bin/semver.js",
+        "node_modules/semver/classes/comparator.js",
+        "node_modules/semver/classes/index.js",
+        "node_modules/semver/classes/range.js",
+        "node_modules/semver/classes/semver.js",
+        "node_modules/semver/functions/clean.js",
+        "node_modules/semver/functions/cmp.js",
+        "node_modules/semver/functions/coerce.js",
+        "node_modules/semver/functions/compare-build.js",
+        "node_modules/semver/functions/compare-loose.js",
+        "node_modules/semver/functions/compare.js",
+        "node_modules/semver/functions/diff.js",
+        "node_modules/semver/functions/eq.js",
+        "node_modules/semver/functions/gt.js",
+        "node_modules/semver/functions/gte.js",
+        "node_modules/semver/functions/inc.js",
+        "node_modules/semver/functions/lt.js",
+        "node_modules/semver/functions/lte.js",
+        "node_modules/semver/functions/major.js",
+        "node_modules/semver/functions/minor.js",
+        "node_modules/semver/functions/neq.js",
+        "node_modules/semver/functions/parse.js",
+        "node_modules/semver/functions/patch.js",
+        "node_modules/semver/functions/prerelease.js",
+        "node_modules/semver/functions/rcompare.js",
+        "node_modules/semver/functions/rsort.js",
+        "node_modules/semver/functions/satisfies.js",
+        "node_modules/semver/functions/sort.js",
+        "node_modules/semver/functions/truncate.js",
+        "node_modules/semver/functions/valid.js",
+        "node_modules/semver/index.js",
+        "node_modules/semver/internal/constants.js",
+        "node_modules/semver/internal/debug.js",
+        "node_modules/semver/internal/identifiers.js",
+        "node_modules/semver/internal/lrucache.js",
+        "node_modules/semver/internal/parse-options.js",
+        "node_modules/semver/internal/re.js",
+        "node_modules/semver/package.json",
+        "node_modules/semver/preload.js",
+        "node_modules/semver/range.bnf",
+        "node_modules/semver/ranges/gtr.js",
+        "node_modules/semver/ranges/intersects.js",
+        "node_modules/semver/ranges/ltr.js",
+        "node_modules/semver/ranges/max-satisfying.js",
+        "node_modules/semver/ranges/min-satisfying.js",
+        "node_modules/semver/ranges/min-version.js",
+        "node_modules/semver/ranges/outside.js",
+        "node_modules/semver/ranges/simplify.js",
+        "node_modules/semver/ranges/subset.js",
+        "node_modules/semver/ranges/to-comparators.js",
+        "node_modules/semver/ranges/valid.js",
+        "node_modules/sharp/LICENSE",
+        "node_modules/sharp/README.md",
+        "node_modules/sharp/dist/channel.cjs",
+        "node_modules/sharp/dist/channel.mjs",
+        "node_modules/sharp/dist/colour.cjs",
+        "node_modules/sharp/dist/colour.mjs",
+        "node_modules/sharp/dist/composite.cjs",
+        "node_modules/sharp/dist/composite.mjs",
+        "node_modules/sharp/dist/constructor.cjs",
+        "node_modules/sharp/dist/constructor.mjs",
+        "node_modules/sharp/dist/index.cjs",
+        "node_modules/sharp/dist/index.d.cts",
+        "node_modules/sharp/dist/index.d.mts",
+        "node_modules/sharp/dist/index.mjs",
+        "node_modules/sharp/dist/input.cjs",
+        "node_modules/sharp/dist/input.mjs",
+        "node_modules/sharp/dist/is.cjs",
+        "node_modules/sharp/dist/is.mjs",
+        "node_modules/sharp/dist/libvips.cjs",
+        "node_modules/sharp/dist/libvips.mjs",
+        "node_modules/sharp/dist/operation.cjs",
+        "node_modules/sharp/dist/operation.mjs",
+        "node_modules/sharp/dist/output.cjs",
+        "node_modules/sharp/dist/output.mjs",
+        "node_modules/sharp/dist/resize.cjs",
+        "node_modules/sharp/dist/resize.mjs",
+        "node_modules/sharp/dist/sharp.cjs",
+        "node_modules/sharp/dist/sharp.mjs",
+        "node_modules/sharp/dist/utility.cjs",
+        "node_modules/sharp/dist/utility.mjs",
+        "node_modules/sharp/install/build.js",
+        "node_modules/sharp/lib/index.d.ts",
+        "node_modules/sharp/package.json",
+        "node_modules/sharp/src/binding.gyp",
+        "node_modules/sharp/src/common.cc",
+        "node_modules/sharp/src/common.h",
+        "node_modules/sharp/src/metadata.cc",
+        "node_modules/sharp/src/metadata.h",
+        "node_modules/sharp/src/operations.cc",
+        "node_modules/sharp/src/operations.h",
+        "node_modules/sharp/src/pipeline.cc",
+        "node_modules/sharp/src/pipeline.h",
+        "node_modules/sharp/src/sharp.cc",
+        "node_modules/sharp/src/stats.cc",
+        "node_modules/sharp/src/stats.h",
+        "node_modules/sharp/src/utilities.cc",
+        "node_modules/sharp/src/utilities.h",
         "package-lock.json",
         "package.json",
         "scripts/generate_icon.mjs",
@@ -4770,7 +4950,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "5a22fcb78b4d63c802ec7e64e2c076bde4e1499f"
+      "sha": "aee2be4e5877a9fe8a57cfdc4499e1da8abc2e42"
     },
     {
       "name": "write-spec",
@@ -5008,6 +5188,7 @@
     },
     {
       "name": "claude-design-system",
+      "display_name": "Claude Design System Prompt",
       "description": "Anthropic 内部 Claude 设计制品工具的 system prompt 镜像 (社区抓取), 422 行讲清 Claude 怎么做 HTML 原型 / React 组件 / 幻灯片 / 动画 / 设计系统适配. 当用户问 \"Claude 怎么出高质量设计 / 我要给自己的 Claude 设计 agent 抄一份基线 prompt / 为什么 Claude 输出的 React 总因 const styles 冲突 / Claude 做幻灯片为什么会 1-indexed slide label\" 时, 读这份 prompt 当参考材料. Do NOT trigger when: 用户要真做设计实现 / 审 UI 代码合规 / 只画架构流程图 / 单纯用 Claude.ai 不需要装它.",
       "version": "1.0.0",
       "author": "elder-plinius",
@@ -5019,9 +5200,12 @@
       "path": "external-skills/claude-design-system",
       "files": [
         "README.md",
-        "SKILL.md"
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg"
       ],
-      "sha": "cd957b27d344343a8349069160ee81bffcf8e6e5"
+      "sha": "0ce37d29f613b15119da745afde27f08aa7a4b42"
     },
     {
       "name": "emil-design-eng",

@@ -1,0 +1,6 @@
+interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
+  display_name: "文档内容处理"
+  short_description: "把正式文档整理成清晰、易懂、可执行、可验收且便于阅读的内容"
+  default_prompt: "使用 $document-content-quality 把这份内容整理成别人能看懂并直接执行的正式文档。"
