@@ -1,0 +1,6 @@
+interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
+  display_name: "Excalidraw PRD 原型规范"
+  short_description: "规范页面 frame、产品标注卡和页面跳转关系"
+  default_prompt: "使用 $excalidraw-prd 把这份产品需求绘制成结构清晰、标注完整的 Excalidraw PRD 原型。"
