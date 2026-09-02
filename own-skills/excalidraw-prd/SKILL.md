@@ -1,13 +1,6 @@
 ---
 name: excalidraw-prd
-display_name: Excalidraw PRD
-display_name_zh: Excalidraw PRD 原型规范
-description: >-
-  用 Excalidraw 绘制或调整 PRD 页面原型、产品标注和页面跳转时，遵循统一的 frame、标注卡与连线规范。用户要求「用 Excalidraw 画 PRD」「制作或修改产品原型」「补充页面标注」「整理页面跳转关系」，且交付物是 Excalidraw PRD 图时触发。Do NOT trigger when 用户只是在撰写或评审文字 PRD、实现前端页面、绘制纯技术架构图，或没有使用 Excalidraw 的需求。
-version: 0.1.0
-author: aquarius-wing
-updated_at: 2026-09-02
-origin: own
+description: 用 Excalidraw 绘制 PRD 时需要遵循的规范和执行方式。
 ---
 
 # 定义
