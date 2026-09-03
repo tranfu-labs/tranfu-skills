@@ -37,7 +37,7 @@ I point at a peer skill that already has a good README and say "give this one th
 
 **Won't take**:
 
-Editing one paragraph of an existing README — plain editing is enough; building a `SKILL.md` or a whole skill from scratch → **skill-create-workflow**; naming a skill (`display_name` / `display_name_zh`) → **skill-name-generation**; picking the English directory slug → **skill-domain-framing**; deciding whether a piece of content deserves to become a skill → **skill-content-fit**; the target's `SKILL.md` is too thin and needs a full review → **skill-improve-workflow**.
+Editing one paragraph of an existing README — plain editing is enough; building a `SKILL.md` or a whole skill from scratch → **skill-create-workflow**; naming a skill (`display_name` / `display_name_zh`) → **skill-name-generation**; picking the English directory slug → **skill-domain-framing**; deciding whether a piece of content deserves to become a skill → **skill-content-fit**; a thin existing `SKILL.md` should be improved with the platform's skill editor first.
 
 ## What it produces
 
@@ -65,7 +65,7 @@ Target is a skill directory containing `SKILL.md` with complete top matter and a
 | Name a skill (`display_name` / `display_name_zh`) | **skill-name-generation** |
 | Pick the English directory slug (kebab-case) | **skill-domain-framing** |
 | Decide whether a piece of content deserves a skill | **skill-content-fit** |
-| SKILL.md too thin — needs a full quality review | **skill-improve-workflow** |
+| SKILL.md too thin — needs improvement | Platform skill editor / direct edit |
 
 **Won't take**:
 
@@ -76,5 +76,5 @@ Target is a skill directory containing `SKILL.md` with complete top matter and a
 **Fine-grained boundaries**:
 
 - Target already has `README.md` or `README.zh.md` and the user didn't say "regenerate / overwrite" → ask once, don't clobber
-- Target `SKILL.md` too thin to yield four solid sections → stop and route to **skill-improve-workflow** first, rather than pad with hollow text
+- Target `SKILL.md` too thin to yield four solid sections → stop and improve it with the platform's skill editor first, rather than pad with hollow text
 - Target skill has no `display_name` → still generate the README, and flag the routing to **skill-name-generation** in the report

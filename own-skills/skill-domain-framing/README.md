@@ -37,7 +37,7 @@ A guardrail block in `AGENTS.md`, a PR discussion, an issue thread — I want th
 
 **Not for**:
 
-Input is already a skill / `SKILL.md` / installed skill → **skill-improve-workflow**; judging whether the material even qualifies as a skill → **skill-content-fit**; naming the paired `display_name` / `display_name_zh` → **skill-name-generation**; writing the SKILL.md body after the container is chosen → **skill-create-workflow**.
+Input is already a skill / `SKILL.md` / installed skill → use the platform's skill editor directly; judging whether the material even qualifies as a skill → **skill-content-fit**; naming the paired `display_name` / `display_name_zh` → **skill-name-generation**; writing the SKILL.md body after the container is chosen → **skill-create-workflow**.
 
 ## What it produces
 
@@ -63,7 +63,7 @@ A piece of raw material to read — postmortem, guardrail note, issue / PR discu
 | Judge whether material qualifies as a skill at all | **skill-content-fit** |
 | Write the SKILL.md scaffold after the container is chosen | **skill-create-workflow** |
 | Name paired `display_name` / `display_name_zh` | **skill-name-generation** |
-| Review or refine an existing skill | **skill-improve-workflow** |
+| Review or refine an existing skill | Platform skill editor / direct edit |
 
 **Out of scope**:
 
