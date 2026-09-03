@@ -1,73 +1,36 @@
 ---
-description: "Decide whether a document, prompt, or experience is complete enough to turn into a reusable skill, and list what is missing if it is not."
+description: "Decide whether reusable material is a good fit for a Claude or Codex skill."
 prompt_examples:
-  - prompt: I want to crystallize this postmortem into a skill — is it good enough?
+  - prompt: I want to crystallize this postmortem into a skill — is it a good fit?
     scene: Learn from an incident
-  - prompt: I hit a snag on this project and wrote a summary — is it worth turning into a skill?
-    scene: Capture a lesson
-  - prompt: This user-preference block in AGENTS.md — can it be crystallized into a skill?
-    scene: Review a document excerpt
+  - prompt: Is this project convention worth packaging as a skill?
+    scene: Reuse project knowledge
+  - prompt: Could this style guide become a skill?
+    scene: Package reference material
 ---
 
 # Skill Content Fit Check
 
-Judge whether a piece of raw material qualifies as a reusable skill — verdict is **pass / reject**, and on reject the skill only lists what's missing rather than inventing a fake workflow.
+Decides whether source material belongs in a reusable skill.
 
-## When to use it
+## Good fits
 
-**Postmortem crystallization**:
+- Project conventions, domain knowledge, patterns, style guides, terminology, and rules.
+- Deployment, commit, code-generation, or other recognizable task guidance.
+- Material that will be useful across similar future requests.
 
-I just wrapped a production postmortem and I have the corrective pattern in hand — I want the skill to judge whether this is a reusable process or a one-off fact before I decide whether to crystallize it.
+## What it considers
 
-**Lesson-learned reuse**:
+- The material is reusable rather than one-off context.
+- It adds knowledge Claude would not reliably infer on its own.
+- The task or situation that should activate it is recognizable.
 
-The project hit a snag, I've written up a summary — I want a plain answer on whether it qualifies as a skill. If yes, route it downstream; if no, tell me exactly what's missing.
+A skill does not need a workflow, examples, validation steps, boundaries, or acceptance criteria. Add those only when the task benefits from them. Keep `SKILL.md` concise and move detailed material into referenced files when useful.
 
-**Doc snippet upgrade**:
+## Related skills
 
-A chunk of project docs / `AGENTS.md` / an issue discussion feels like it could be crystallized into a capability, but I'm not sure — I'd rather run the acceptance check first than jump straight into writing.
-
-**Screen several ideas**:
-
-I have a pile of incident notes / feedback / lesson fragments and I want the skill to filter which ones deserve crystallization, so the rest can just be archived.
-
-**Not for**:
-
-Content is already a skill / `SKILL.md` / installed skill → use the platform's skill editor directly; naming a skill's slug (lowercase, hyphenated) → **skill-domain-framing**; paired display names → **skill-name-generation**; writing `SKILL.md` after a pass verdict → **skill-create-workflow**.
-
-## What it produces
-
-**On reject, never fabricates a fake workflow — only lists what's missing.** That's the most counterintuitive part.
-
-- **Verdict**: two states only — **pass** (all six acceptance checks met) / **reject** (any hard condition missing)
-- **Six-axis judgement**: repeatability / trigger / executable flow / verification / boundary & counter-example — each must have at least one piece of evidence extractable from the input
-- **Reject comes with a missing-fields list**: what's absent from the input plus what the user needs to supply, so the next round can pass in one go
-- **Pass comes with crystallization notes**: draft points on trigger / workflow / counter-example / acceptance criteria for the downstream skill author
-- **Will never**: invent a workflow to force a reject into a pass, nor decide what to do with disqualified content (keep, archive, delete — that's your call)
-
-## Prerequisites & boundaries
-
-**Prerequisites**:
-
-A piece of content to paste in — postmortem, lesson summary, doc snippet, or feedback log. Too-short input or pure background material gets rejected on sight.
-
-**Adjacent skills**:
-
-| Task | Route to |
+| Task | Skill |
 |---|---|
-| Write `SKILL.md` scaffold after a pass verdict | **skill-create-workflow** |
-| Name a skill's slug (lowercase, hyphenated) | **skill-domain-framing** |
-| Paired English + Chinese display names | **skill-name-generation** |
-| Generate README after a pass verdict | **skill-readme-generation** |
-| Content is already a skill, review / refine it | Platform skill editor / direct edit |
-
-**Out of scope**:
-
-- Input is already a skill / `SKILL.md` / installed skill content
-- Just a snippet of code / a command with a "make it a skill" wrapper — no trigger scene, no boundary
-- Rewriting disqualified content into something acceptable (that's the skill author's job)
-
-**Subtle edges**:
-
-- High-risk scenes (legal / finance / compliance / production release) relax the repeatability count, but flow and verification stay mandatory
-- One-off facts / single-user preferences / emotional feedback → always rejected, no soft-pass "check again later"
+| Create the new skill | `skill-create-workflow` |
+| Clarify an uncertain task domain or name | `skill-domain-framing` |
+| Review an existing skill | Platform skill editor |
