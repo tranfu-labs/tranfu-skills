@@ -1,6 +1,6 @@
 interface:
   icon_large: "./assets/icon.png"
   icon_small: "./assets/icon.svg"
-  display_name: "Skill 创建工作流"
-  short_description: "在平台编写前门禁 skill 创建和更新请求"
-  default_prompt: "使用 $skill-create-workflow，让这个 skill 请求依次经过内容适配、领域框定和平台创建流程。"
+  display_name: "Skill 创建"
+  short_description: "从想法、文档或经验创建简洁的 skill"
+  default_prompt: "使用 $skill-create-workflow，把这份材料创建成一个简洁、可复用的 skill。"

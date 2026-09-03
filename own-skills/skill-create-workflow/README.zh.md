@@ -1,5 +1,5 @@
 ---
-description: "把可复用的素材依次经过内容准入、任务域框定、创建与提示词检查，生成一个新 skill。"
+description: "把想法、文档、经验或上文内容创建为简洁的 Codex / Claude Code skill。"
 prompt_examples:
   - prompt: 把 docs/postmortem.md 沉淀成一个项目内 skill
     scene: 从文件创建 Skill
@@ -13,13 +13,13 @@ prompt_examples:
 
 把想法、文档、检查清单、事故复盘或上文讨论首次封装成 Codex / Claude Code skill。
 
-## 工作流
+## 如何工作
 
-1. `skill-content-fit` 判断素材是否可复用、可执行、可验证且有边界；打回即停止。
-2. `skill-domain-framing` 决定名称、范围和内容放置位置；候选接近或与用户指定冲突时交给用户选择。
-3. 平台的 `skill-creator` 创建 skill 文件。
-4. `prompt-review` 检查生成的提示词文件是否存在不必要的硬强调词。
-5. 最终汇报文件路径、验证结果和未解决风险；只有用户明确要求时才发布。
+- 用 `skill-content-fit` 判断材料是否适合做成 skill。
+- 只在名称或任务域不清楚时使用 `skill-domain-framing`。
+- 用平台原生 `skill-creator` 创建简洁的 skill，并运行现有的基础结构校验。
+- 流程、示例、脚本、引用和资产均按任务需要添加。
+- 只在用户明确要求时评审或发布。
 
 ## 边界
 
