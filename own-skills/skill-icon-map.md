@@ -43,7 +43,6 @@
 | `skill-content-fit` | Skill 内容适配 | [SVG](./skill-content-fit/assets/icon.svg) | [PNG](./skill-content-fit/assets/icon.png) |
 | `skill-create-workflow` | Skill 能力创建 | [SVG](./skill-create-workflow/assets/icon.svg) | [PNG](./skill-create-workflow/assets/icon.png) |
 | `skill-domain-framing` | Skill 领域框定 | [SVG](./skill-domain-framing/assets/icon.svg) | [PNG](./skill-domain-framing/assets/icon.png) |
-| `skill-improve-workflow` | Skill 工作流改进 | [SVG](./skill-improve-workflow/assets/icon.svg) | [PNG](./skill-improve-workflow/assets/icon.png) |
 | `skill-name-generation` | Skill 名称生成 | [SVG](./skill-name-generation/assets/icon.svg) | [PNG](./skill-name-generation/assets/icon.png) |
 | `skill-readme-generation` | Skill README 生成 | [SVG](./skill-readme-generation/assets/icon.svg) | [PNG](./skill-readme-generation/assets/icon.png) |
 | `skill-reverse-engineer` | Skill 反向解析 | [SVG](./skill-reverse-engineer/assets/icon.svg) | [PNG](./skill-reverse-engineer/assets/icon.png) |

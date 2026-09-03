@@ -37,7 +37,7 @@ prompt_examples:
 
 **不接**:
 
-输入已经是 skill / `SKILL.md` / 已装 skill → **skill-improve-workflow**; 判断素材够不够格沉淀成 skill → **skill-content-fit**; 起中英文成对显示名 → **skill-name-generation**; 定完容器后写 `SKILL.md` 正文 → **skill-create-workflow**。
+输入已经是 skill / `SKILL.md` / 已装 skill → 直接使用平台的 skill 编辑能力；判断素材够不够格沉淀成 skill → **skill-content-fit**；起中英文成对显示名 → **skill-name-generation**；定完容器后写 `SKILL.md` 正文 → **skill-create-workflow**。
 
 ## 它会产出什么
 
@@ -63,7 +63,7 @@ prompt_examples:
 | 判断素材够不够格沉淀成 skill | **skill-content-fit** |
 | 定完容器后写 `SKILL.md` 骨架 | **skill-create-workflow** |
 | 起中英文成对显示名 | **skill-name-generation** |
-| 审 / 改进已有 skill | **skill-improve-workflow** |
+| 审 / 改进已有 skill | 平台 skill 编辑能力 / 直接编辑 |
 
 **不接的场景**:
 

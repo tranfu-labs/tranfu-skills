@@ -33,7 +33,7 @@ prompt_examples:
 
 **不接**:
 
-内容已经是 skill / `SKILL.md` / 已安装 skill → **skill-improve-workflow**; 起 skill 的英文目录名 (小写加连字符) → **skill-domain-framing**; 起中英文显示名 → **skill-name-generation**; 判断通过后写 `SKILL.md` → **skill-create-workflow**。
+内容已经是 skill / `SKILL.md` / 已安装 skill → 直接使用平台的 skill 编辑能力；起 skill 的英文目录名 (小写加连字符) → **skill-domain-framing**；起中英文显示名 → **skill-name-generation**；判断通过后写 `SKILL.md` → **skill-create-workflow**。
 
 ## 它会产出什么
 
@@ -59,7 +59,7 @@ prompt_examples:
 | 起 skill 的英文目录名 (小写加连字符) | **skill-domain-framing** |
 | 起中英文显示名 | **skill-name-generation** |
 | 判断通过后生成 README | **skill-readme-generation** |
-| 内容已经是 skill, 想审 / 改进 | **skill-improve-workflow** |
+| 内容已经是 skill，想审 / 改进 | 平台 skill 编辑能力 / 直接编辑 |
 
 **不接的场景**:
 

@@ -444,18 +444,6 @@
     "stroke_width": 2
   },
   {
-    "slug": "skill-improve-workflow",
-    "family": "engineering",
-    "lucide_icon": "wrench",
-    "metaphor": "Skill 工作流改进",
-    "description": "当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量提升时触发—— 用 skill-create-workflow 创建时的同一套门禁反向检验并把它改到合格: 四门反检出问题后, 确定类改法征同意即改、判断类采访用户拍板。",
-    "selection_source": "curated",
-    "icon_small": "own-skills/skill-improve-workflow/assets/icon.svg",
-    "icon_large": "own-skills/skill-improve-workflow/assets/icon.png",
-    "dimensions": "48x48",
-    "stroke_width": 2
-  },
-  {
     "slug": "skill-name-generation",
     "family": "engineering",
     "lucide_icon": "tags",

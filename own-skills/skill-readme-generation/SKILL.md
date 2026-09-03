@@ -32,7 +32,7 @@ MUST 只处理**已有 skill 目录 (含 SKILL.md) 的 README 生成**——生�
 - `skill-domain-framing`: 决定 skill 的 slug (kebab-case 容器名)。属于 skill 生成流程的更早阶段, 与本 skill 无直接调用。
 - `skill-create-workflow`: 创建一个全新的 skill (含 SKILL.md 骨架)。本 skill 在其之后启动——skill 骨架已在, 才生成 README。
 - `skill-content-fit`: 判断某段素材是否值得沉淀成 skill。是本 skill 的上游判断, 通过之后才走到"创建 skill → 起显示名 → 生成 README"这条链。
-- `skill-improve-workflow`: 对已有 skill 做整体质量审查与修复。若目标 skill 的 SKILL.md 太简陋、连触发场景都提炼不出四段内容 → 本 skill 进入失败路径 F2, 建议用户先路由 `skill-improve-workflow` 把 SKILL.md 补齐, 再回来生成 README。
+- 平台 skill 编辑能力：若目标 skill 的 SKILL.md 太简陋、连触发场景都提炼不出四段内容，本 skill 进入失败路径 F2，建议用户先补齐 SKILL.md，再回来生成 README。
 
 ## 主流程
 
@@ -202,7 +202,7 @@ prompt_examples: <M> 条, 覆盖场景: <逗号分隔的 scene 列表>
 ## 失败路径
 
 - **F1 目标目录没有 SKILL.md**: 输入路径不指向一个含 `SKILL.md` 的目录, 或路径不存在 → 停下, 请用户提供正确路径, NEVER 猜。
-- **F2 SKILL.md 太简陋**: 目标 SKILL.md 缺 description 或触发场景 / 主流程 / 副作用信息不足以提炼四段正文 → 停下, 建议用户先用 `skill-improve-workflow` 把 SKILL.md 补齐, 再回来生成 README; 不硬凑一份内容单薄的 README。
+- **F2 SKILL.md 太简陋**: 目标 SKILL.md 缺 description 或触发场景 / 主流程 / 副作用信息不足以提炼四段正文 → 停下，建议用户先用平台的 skill 编辑能力补齐 SKILL.md，再回来生成 README；不硬凑一份内容单薄的 README。
 - **F3 目标已有 README 且用户没明说重生成**: 目标目录已存在 `README.md`, 而用户请求里没写"重生成 / 覆盖 / 重写" → 询问一次: "目标已有 README, 要覆盖重生成还是保留?" 用户不确认 → 保留现状, 停止。
 - **F4 skill 类型判不出**: description 首个能力动词模糊 (既像审查又像生成又像编排), 主流程结构也判不清 → 询问用户: "这个 skill 主职偏 [写码闭环 / 内容审查 / 视觉设计 / meta / 普通生成] 哪一类?" 得到答复再定进场点覆盖模式; 用户不答 → 按"普通生成型"兜底, 并在汇报的"拿不准之处"里注明。
 

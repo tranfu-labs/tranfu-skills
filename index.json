@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-09-02T03:35:09.340Z",
+  "generated_at": "2026-09-03T06:10:41.970Z",
   "skills": [
     {
       "name": "tranfu-publish",
@@ -27,7 +27,7 @@
         "templates/section-使用技巧.md",
         "templates/section-同类对比.md"
       ],
-      "sha": "59bcb57438772d32e65d2265bb9a84e6a7cc5688"
+      "sha": "5c429e0f807fd04f236dc9f12e046edb611338a3"
     },
     {
       "name": "tranfu-router",
@@ -1207,7 +1207,7 @@
         }
       ],
       "type": "own",
-      "published_at": "2026-09-02T03:34:38.000Z",
+      "published_at": "2026-09-02T03:37:50.000Z",
       "path": "own-skills/document-content-quality",
       "files": [
         "README.md",
@@ -1217,7 +1217,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "bb9a4cf461d7708a68dfd6236bcceac097a09bf4"
+      "sha": "4e4c5f549c94901a64a28f3436ad0d630ab5b46b"
     },
     {
       "name": "draft-content",
@@ -1355,6 +1355,63 @@
         "references/six-principles-deep-dive.md"
       ],
       "sha": "f4e20d692c651c2d97dcf0ee16267b382646e7b6"
+    },
+    {
+      "name": "excalidraw-prd",
+      "description": "用 Excalidraw 绘制 PRD 时需要遵循的规范和执行方式。",
+      "display_name": "Excalidraw PRD",
+      "display_name_zh": "Excalidraw PRD 原型规范",
+      "version": "0.1.0",
+      "author": "aquarius-wing",
+      "updated_at": "2026-09-02",
+      "origin": "own",
+      "readme": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "description_en": "Draw consistent Excalidraw PRD prototypes with explicit page boundaries, structured product annotations, and direct navigation arrows.",
+      "prompt_examples_en": [
+        {
+          "scene": "Draw a PRD prototype",
+          "prompt": "Use $excalidraw-prd to turn this PRD into an annotated Excalidraw prototype."
+        },
+        {
+          "scene": "Improve an existing board",
+          "prompt": "Use $excalidraw-prd to fix the page frames, annotations, and navigation arrows in this Excalidraw PRD."
+        },
+        {
+          "scene": "Add product annotations",
+          "prompt": "Use $excalidraw-prd to add structured product annotation cards around these page designs."
+        }
+      ],
+      "description_zh": "用统一的页面边界、产品标注卡和跳转箭头绘制规范化的 Excalidraw PRD 原型。",
+      "prompt_examples_zh": [
+        {
+          "scene": "绘制 PRD 原型",
+          "prompt": "使用 $excalidraw-prd 把这份 PRD 绘制成带产品标注的 Excalidraw 原型。"
+        },
+        {
+          "scene": "整理现有画板",
+          "prompt": "使用 $excalidraw-prd 修正这个 Excalidraw PRD 的页面 frame、产品标注和跳转箭头。"
+        },
+        {
+          "scene": "补充产品标注",
+          "prompt": "使用 $excalidraw-prd 为这些页面设计补齐结构化产品标注卡。"
+        }
+      ],
+      "type": "own",
+      "published_at": "2026-09-02T10:33:23.000Z",
+      "path": "own-skills/excalidraw-prd",
+      "files": [
+        "README.md",
+        "README.zh.md",
+        "SKILL.md",
+        "agents/openai.yaml",
+        "assets/icon.png",
+        "assets/icon.svg",
+        "assets/todo-home-prd-example.png"
+      ],
+      "sha": "02672ec33ddbcc55aa419d7817f7d457f1923538"
     },
     {
       "name": "format-content",
@@ -2535,43 +2592,35 @@
       "name": "prompt-review",
       "display_name": "Prompt Review",
       "display_name_zh": "提示词审查",
-      "description": "当用户要求 review、audit、optimize、lint 或 engineering-check 某段提示词、SKILL.md、 agent 定义、subagent 模板或内联 prompt 文本时触发；也匹配“帮我审一下这个 prompt”、 “检查提示词质量”、“评审这个 agent 定义”、“这个 skill 写得怎么样”或“优化提示词”。 不要用于代码审查（走 code-review）、功能 QA / 单元测试 / 运行时 bug 修复（走 verify）、 发版（走 release）、benchmark、仅产品文案，或与 prompt/skill/agent 行为无关的普通润色。 安全边界：本 Skill 只审不改——即便用户说“优化 / 改写”，也只产出 REVIEW_PACKET （direct 型给改法、think 型给作者思考的问题），从不编辑提示词 / SKILL / 文件。",
-      "version": "1.0.0",
+      "description": "检查 prompt、SKILL.md 或 agent 定义里的 MUST、NEVER、ALWAYS、CRITICAL、 “必须”、“绝不”、“始终”、“务必”等硬强调词，并给出更普通、直接的替换措辞。",
+      "version": "2.0.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-08-24",
+      "updated_at": "2026-09-03",
       "origin": "own",
       "readme": {
         "en": "README.md",
         "zh": "README.zh.md"
       },
-      "description_en": "Review a prompt, skill, or agent definition and explain each problem, why it matters, and how to fix it, without editing the original file.",
+      "description_en": "Review MUST-style hard emphasis when asked to review, audit, optimize, or lint a prompt, skill, or agent definition, and suggest plain replacements.",
       "prompt_examples_en": [
         {
-          "prompt": "Review this prompt and point out the engineering problems.",
+          "prompt": "Review this prompt and replace any overused hard-emphasis wording.",
           "scene": "Review a prompt"
         },
         {
-          "prompt": "Review own-skills/example/SKILL.md and give me actionable findings.",
-          "scene": "Review a skill"
-        },
-        {
-          "prompt": "Check whether this agent definition has conflicting instructions.",
-          "scene": "Review an agent"
+          "prompt": "Review own-skills/example/SKILL.md for MUST-style wording.",
+          "scene": "Check a skill"
         }
       ],
-      "description_zh": "检查提示词、skill 或 agent 定义里的问题，逐条说明影响和改法，但不会直接修改原文件。",
+      "description_zh": "当用户要求审查、优化或检查 prompt、skill、agent 定义时，检查其中 MUST 一类硬强调词并给出普通替换措辞。",
       "prompt_examples_zh": [
         {
-          "prompt": "检查这段提示词有哪些工程问题。",
+          "prompt": "帮我审一下这段 prompt，把滥用的硬强调词换掉。",
           "scene": "检查提示词"
         },
         {
-          "prompt": "检查 own-skills/example/SKILL.md，给我一份可执行的问题清单。",
+          "prompt": "检查 own-skills/example/SKILL.md 里的 MUST 一类用词。",
           "scene": "检查 Skill"
-        },
-        {
-          "prompt": "检查这个 Agent 定义里有没有互相冲突的指令。",
-          "scene": "检查 Agent"
         }
       ],
       "type": "own",
@@ -2585,7 +2634,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "bd67ec979926c87ba7bddacbc1091d18763ae62a"
+      "sha": "9840503db7ff195c9fa6888cdec220423cad71d4"
     },
     {
       "name": "proofread-content",
@@ -2764,34 +2813,34 @@
       "name": "session-corrections-to-skill",
       "display_name": "Session Corrections to Skill",
       "display_name_zh": "会话修正沉淀",
-      "description": "把一次会话中的两类纠正沉淀进对应 SKILL 文件：用户纠正提炼成「场景 → 期望输出」 表格行；现实纠正（报错 / 踩坑后确立的正确做法）提炼成「触发场景 → 正确做法 → 因果链」表格行，因果链复盘落 references/，SKILL 文件不放因果链本体。 Use when 用户说“把这次会话的修正沉淀到 skill”“把刚才的纠偏记进对应 skill” “会话修正入库”“把这几条修正写进 XX skill 的沉淀表”“把这个坑记进 XX skill” “把这次踩的坑沉淀一下”，或一次会话中出现多次针对某 skill 行为的纠正且用户 要求固化，即使用户没用“沉淀”这个词。Also use when the user asks in English to distill or capture this session's corrections or pitfalls into the matching skills. Do NOT trigger when: 会话复盘要产出知识文章； 对 skill 做整体质量审查或提升；创建全新 skill；修正只涉及 agent 通用工作方式 （直接打回不沉淀，不落任何 SKILL）。",
-      "version": "0.5.0",
+      "description": "把会话中对既有 skill 行为的用户纠正或已经验证的现实纠正，沉淀到对应 SKILL 文件。Use when 用户要求“把这次会话的修正沉淀到 skill”“把刚才的纠偏 记进对应 skill”“会话修正入库”“把这个坑记进 skill”，即使用户没有使用 “沉淀”一词。Also use when the user asks to capture this session's corrections or verified pitfalls in the matching skills. Do NOT trigger for 会话知识文章、skill 整体 审查或提升、创建全新 skill，或只涉及 agent 通用工作方式的修正。写入前必须先 向用户展示拟写内容并获得确认。",
+      "version": "0.6.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-08-25",
+      "updated_at": "2026-09-03",
       "origin": "own",
       "readme": {
         "en": "README.md",
         "zh": "README.zh.md"
       },
-      "description_en": "Distill a session's corrections into table rows appended to the matching SKILL files: user corrections as scenario → expected-output rows, reality corrections (the correct way established after an error or pitfall) as trigger → correct-way → causal-chain rows with the postmortem in references/; general preferences are rejected outright and never land in a SKILL.",
+      "description_en": "Distills a session's user corrections and verified reality corrections into the matching SKILL as one or more definitions (name + requirement), implementation details (scenario + action), or error cases (scenario + error); nothing is written before user confirmation.",
       "prompt_examples_en": [
         {
           "prompt": "Distill this session's corrections into the matching skills.",
           "scene": "Capture session corrections"
         },
         {
-          "prompt": "Record the pitfall we just hit into skill XX.",
+          "prompt": "Record the verified pitfall we just hit into skill XX.",
           "scene": "Capture a pitfall"
         }
       ],
-      "description_zh": "把一次会话中的两类纠正沉淀进对应 SKILL 文件：用户纠正提炼成「场景 → 期望输出」表格行；现实纠正（报错/踩坑后确立的正确做法）提炼成「触发场景 → 正确做法 → 因果链」表格行，因果链复盘落 references/；通用偏好直接打回不沉淀，不落 SKILL。",
+      "description_zh": "把会话中的用户纠正和已经验证的现实纠正沉淀到对应 SKILL；一条纠正可以产出定义（名字 + 要求）、实施细则（场景 + 操作）或错误案例（场景 + 错误）中的一种或多种，用户确认前不写文件。",
       "prompt_examples_zh": [
         {
           "prompt": "把这次会话里我的修正沉淀到对应的 skill。",
           "scene": "沉淀会话修正"
         },
         {
-          "prompt": "把这次踩的这个坑记进 XX skill。",
+          "prompt": "把这次已经验证的坑记进 XX skill。",
           "scene": "沉淀踩坑经验"
         }
       ],
@@ -2806,7 +2855,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "28dc5377ccf842a37ccbee5556f856f57a282364"
+      "sha": "827c8632efb1e6c0f569de1853b42b0df877c36f"
     },
     {
       "name": "session-to-knowledge",
@@ -2979,16 +3028,16 @@
       "display_name": "Skill Creation Workflow",
       "display_name_zh": "Skill 创建工作流",
       "description": "当用户的最终意图是产出一个全新的 Codex / Claude Code skill (一个新的 SKILL.md / skill 目录) 时触发。 \"新\" 包括从零创建, 以及把尚未成型的文档、规则、事故复盘、经验教训、agent 工作流首次封装成 skill。 触发判定按 \"意图 + 上下文\", 不按短语字典匹配: - 任何 \"产生式动词 + skill\" 的表达都算: 创建 / 新建 / 写 / 写成 / 做 / 做成 / 整成 / 封装成 / 包 / 起 / 转成 / 沉淀成 + skill。同义动词由你自己泛化, 不必出现在本说明里。 - 承接确认 算同一个意图: 上一轮对话已经在讨论某段内容是否值得做成 skill, 用户用 \"好 / 行 / 可以 / OK / 那就 / 嗯\" 等承接词 + 产生式表达 (例如「好, 把它写成 skill」「行, 做成 skill 吧」 「那就封装成 skill」) 给出同意时, 视同显式触发, 上文讨论的对象即为源材料。 - 代词指代 (\"它 / 这个 / 那个 / 这段 / 上面那个\") + 产生式表达 已经把意图锚定到上文, 不要因为 \"没指定文件路径\" 而拒绝触发, 应回头解析上下文。 - 英文同理: turn X into a skill / make X a skill / let's skill-ify this / yeah make that a skill 等。 代表性例子 (覆盖正式 / 口语 / 承接三种形态, 其余交给语义泛化): - \"帮我把 docs/postmortem.md 创建成一个 skill\" - \"把它写成 skill\"  (代词承接, 源在上文) - \"好, 那就做成 skill 吧\"  (承接确认 + 产生式动词) Do NOT trigger when: 用户只要 install / list / upgrade / uninstall skills, 创建 plugin, 改普通项目代码, 写非 skill 文档, 或管理自动化任务。",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "author": "aquarius-wing",
-      "updated_at": "2026-07-10",
+      "updated_at": "2026-09-03",
       "origin": "own",
       "userInvocable": true,
       "readme": {
         "en": "README.md",
         "zh": "README.zh.md"
       },
-      "description_en": "Turn a reusable idea, postmortem, or prompt into a new skill — three gates (content-fit, naming, prompt review) run before anything hits disk.",
+      "description_en": "Turn reusable source material into a new skill through content fit, domain framing, creation, and prompt review.",
       "prompt_examples_en": [
         {
           "prompt": "Turn docs/postmortem.md into a project-level skill.",
@@ -2999,18 +3048,18 @@
           "scene": "Continue from earlier context"
         },
         {
-          "prompt": "Let's skill-ify the release checklist we just talked about.",
+          "prompt": "Let's skill-ify the release checklist we just discussed.",
           "scene": "Turn an idea into a skill"
         }
       ],
-      "description_zh": "把一段值得复用的经验 / 复盘 / 提示词做成一个新 skill——先过内容准入 / 命名 / 提示词复审三道门, 合格才落盘发布。",
+      "description_zh": "把可复用的素材依次经过内容准入、任务域框定、创建与提示词检查，生成一个新 skill。",
       "prompt_examples_zh": [
         {
           "prompt": "把 docs/postmortem.md 沉淀成一个项目内 skill",
           "scene": "从文件创建 Skill"
         },
         {
-          "prompt": "好, 那就做成 skill 吧",
+          "prompt": "好，那就做成 skill 吧",
           "scene": "接着上文创建"
         },
         {
@@ -3029,7 +3078,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "bc8ea80cf73d4b9c0299c99ac2dc875bb504a037"
+      "sha": "b276f6e52d3c65b114bf1d46ca4bf5ef3826dea9"
     },
     {
       "name": "skill-domain-framing",
@@ -3217,133 +3266,6 @@
         "assets/lucide/waypoints.svg",
         "assets/lucide/workflow.svg",
         "assets/lucide/wrench.svg",
-        "node_modules/.bin/semver",
-        "node_modules/.package-lock.json",
-        "node_modules/@img/colour/LICENSE.md",
-        "node_modules/@img/colour/README.md",
-        "node_modules/@img/colour/color.cjs",
-        "node_modules/@img/colour/index.cjs",
-        "node_modules/@img/colour/index.d.ts",
-        "node_modules/@img/colour/package.json",
-        "node_modules/@img/sharp-darwin-arm64/LICENSE",
-        "node_modules/@img/sharp-darwin-arm64/README.md",
-        "node_modules/@img/sharp-darwin-arm64/index.cjs",
-        "node_modules/@img/sharp-darwin-arm64/lib/sharp-darwin-arm64-0.35.3.node",
-        "node_modules/@img/sharp-darwin-arm64/package.json",
-        "node_modules/@img/sharp-libvips-darwin-arm64/README.md",
-        "node_modules/@img/sharp-libvips-darwin-arm64/lib/glib-2.0/include/glibconfig.h",
-        "node_modules/@img/sharp-libvips-darwin-arm64/lib/index.js",
-        "node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
-        "node_modules/@img/sharp-libvips-darwin-arm64/package.json",
-        "node_modules/@img/sharp-libvips-darwin-arm64/versions.json",
-        "node_modules/detect-libc/LICENSE",
-        "node_modules/detect-libc/README.md",
-        "node_modules/detect-libc/index.d.ts",
-        "node_modules/detect-libc/lib/detect-libc.js",
-        "node_modules/detect-libc/lib/elf.js",
-        "node_modules/detect-libc/lib/filesystem.js",
-        "node_modules/detect-libc/lib/process.js",
-        "node_modules/detect-libc/package.json",
-        "node_modules/semver/LICENSE",
-        "node_modules/semver/README.md",
-        "node_modules/semver/bin/semver.js",
-        "node_modules/semver/classes/comparator.js",
-        "node_modules/semver/classes/index.js",
-        "node_modules/semver/classes/range.js",
-        "node_modules/semver/classes/semver.js",
-        "node_modules/semver/functions/clean.js",
-        "node_modules/semver/functions/cmp.js",
-        "node_modules/semver/functions/coerce.js",
-        "node_modules/semver/functions/compare-build.js",
-        "node_modules/semver/functions/compare-loose.js",
-        "node_modules/semver/functions/compare.js",
-        "node_modules/semver/functions/diff.js",
-        "node_modules/semver/functions/eq.js",
-        "node_modules/semver/functions/gt.js",
-        "node_modules/semver/functions/gte.js",
-        "node_modules/semver/functions/inc.js",
-        "node_modules/semver/functions/lt.js",
-        "node_modules/semver/functions/lte.js",
-        "node_modules/semver/functions/major.js",
-        "node_modules/semver/functions/minor.js",
-        "node_modules/semver/functions/neq.js",
-        "node_modules/semver/functions/parse.js",
-        "node_modules/semver/functions/patch.js",
-        "node_modules/semver/functions/prerelease.js",
-        "node_modules/semver/functions/rcompare.js",
-        "node_modules/semver/functions/rsort.js",
-        "node_modules/semver/functions/satisfies.js",
-        "node_modules/semver/functions/sort.js",
-        "node_modules/semver/functions/truncate.js",
-        "node_modules/semver/functions/valid.js",
-        "node_modules/semver/index.js",
-        "node_modules/semver/internal/constants.js",
-        "node_modules/semver/internal/debug.js",
-        "node_modules/semver/internal/identifiers.js",
-        "node_modules/semver/internal/lrucache.js",
-        "node_modules/semver/internal/parse-options.js",
-        "node_modules/semver/internal/re.js",
-        "node_modules/semver/package.json",
-        "node_modules/semver/preload.js",
-        "node_modules/semver/range.bnf",
-        "node_modules/semver/ranges/gtr.js",
-        "node_modules/semver/ranges/intersects.js",
-        "node_modules/semver/ranges/ltr.js",
-        "node_modules/semver/ranges/max-satisfying.js",
-        "node_modules/semver/ranges/min-satisfying.js",
-        "node_modules/semver/ranges/min-version.js",
-        "node_modules/semver/ranges/outside.js",
-        "node_modules/semver/ranges/simplify.js",
-        "node_modules/semver/ranges/subset.js",
-        "node_modules/semver/ranges/to-comparators.js",
-        "node_modules/semver/ranges/valid.js",
-        "node_modules/sharp/LICENSE",
-        "node_modules/sharp/README.md",
-        "node_modules/sharp/dist/channel.cjs",
-        "node_modules/sharp/dist/channel.mjs",
-        "node_modules/sharp/dist/colour.cjs",
-        "node_modules/sharp/dist/colour.mjs",
-        "node_modules/sharp/dist/composite.cjs",
-        "node_modules/sharp/dist/composite.mjs",
-        "node_modules/sharp/dist/constructor.cjs",
-        "node_modules/sharp/dist/constructor.mjs",
-        "node_modules/sharp/dist/index.cjs",
-        "node_modules/sharp/dist/index.d.cts",
-        "node_modules/sharp/dist/index.d.mts",
-        "node_modules/sharp/dist/index.mjs",
-        "node_modules/sharp/dist/input.cjs",
-        "node_modules/sharp/dist/input.mjs",
-        "node_modules/sharp/dist/is.cjs",
-        "node_modules/sharp/dist/is.mjs",
-        "node_modules/sharp/dist/libvips.cjs",
-        "node_modules/sharp/dist/libvips.mjs",
-        "node_modules/sharp/dist/operation.cjs",
-        "node_modules/sharp/dist/operation.mjs",
-        "node_modules/sharp/dist/output.cjs",
-        "node_modules/sharp/dist/output.mjs",
-        "node_modules/sharp/dist/resize.cjs",
-        "node_modules/sharp/dist/resize.mjs",
-        "node_modules/sharp/dist/sharp.cjs",
-        "node_modules/sharp/dist/sharp.mjs",
-        "node_modules/sharp/dist/utility.cjs",
-        "node_modules/sharp/dist/utility.mjs",
-        "node_modules/sharp/install/build.js",
-        "node_modules/sharp/lib/index.d.ts",
-        "node_modules/sharp/package.json",
-        "node_modules/sharp/src/binding.gyp",
-        "node_modules/sharp/src/common.cc",
-        "node_modules/sharp/src/common.h",
-        "node_modules/sharp/src/metadata.cc",
-        "node_modules/sharp/src/metadata.h",
-        "node_modules/sharp/src/operations.cc",
-        "node_modules/sharp/src/operations.h",
-        "node_modules/sharp/src/pipeline.cc",
-        "node_modules/sharp/src/pipeline.h",
-        "node_modules/sharp/src/sharp.cc",
-        "node_modules/sharp/src/stats.cc",
-        "node_modules/sharp/src/stats.h",
-        "node_modules/sharp/src/utilities.cc",
-        "node_modules/sharp/src/utilities.h",
         "package-lock.json",
         "package.json",
         "scripts/generate_icon.mjs",
@@ -3351,64 +3273,6 @@
         "scripts/self_check.mjs"
       ],
       "sha": "a020df97d04066382bd054a2d45ab9fa8d538b84"
-    },
-    {
-      "name": "skill-improve-workflow",
-      "name_zh": "技能提升工作流",
-      "display_name": "Skill Improvement Workflow",
-      "display_name_zh": "Skill 提升工作流",
-      "description": "当用户要对一个已有的 skill (SKILL.md / skill 目录 / 已安装 skill) 做整体质量提升时触发—— 用 skill-create-workflow 创建时的同一套门禁反向检验并把它改到合格: 四门反检出问题后, 确定类改法征同意即改、判断类采访用户拍板。 触发判定按 \"提升 / 审查意图 + 完整 skill 目标\", 不按短语字典匹配: - 任何 \"提升式或审查式动词 + 已有 skill\" 都算: 提升 / 改进 / 完善 / 优化 / 打磨 / 精炼 / 审查 / 审 / 评审 / 检查 / 体检 / 把关 / improve / review / audit + 一个已存在的 skill。 - 口语说法同理: \"帮我把这个 skill 提升一下\"、\"完善下 own-skills/xxx\"、 \"这个 skill 写得怎么样\"、\"这 skill 要不要重构\"、\"它还够格当 skill 吗\"。 - 代词承接同理: 上文在讨论某个已有 skill 时, \"提升一下它 / 审一下它\" 即触发, 目标取上文。 Do NOT trigger when: 创建全新 skill (走 skill-create-workflow); 目标只是一段 prompt / agent 定义文本而非完整 skill 目录 (直接走 prompt-review); 用户点名给 skill 加某功能 / 改某个 具体行为、不要质量审查 (走 skill-create-workflow update / repair); install / list / upgrade / uninstall 已装 skill (走 tranfu-router)。 安全边界: 审查阶段只审不改; 仅在审后修复阶段, 对有确定改法的问题逐条或批量征得用户 同意后才落盘, 判断类问题一律采访用户拍板, NEVER 擅自替用户决定或未经同意改文件。",
-      "version": "0.7.0",
-      "author": "aquarius-wing",
-      "updated_at": "2026-07-10",
-      "origin": "own",
-      "userInvocable": true,
-      "readme": {
-        "en": "README.md",
-        "zh": "README.zh.md"
-      },
-      "description_en": "Review an existing skill, identify what is missing or unclear, and fix the issues that have a clear answer.",
-      "prompt_examples_en": [
-        {
-          "prompt": "Improve the own-skills/daily-report skill",
-          "scene": "Improve an existing skill"
-        },
-        {
-          "prompt": "Does own-skills/foo still qualify as a skill?",
-          "scene": "Check whether it should stay"
-        },
-        {
-          "prompt": "Health check own-skills/bar before I merge, fix what fits",
-          "scene": "Check before merging"
-        }
-      ],
-      "description_zh": "检查已有 skill 缺什么、哪里不清楚，并直接修复有明确答案的问题。",
-      "prompt_examples_zh": [
-        {
-          "prompt": "帮我提升下 own-skills/daily-report 这个 skill",
-          "scene": "改进现有 Skill"
-        },
-        {
-          "prompt": "这个 skill 还够格当 skill 吗? own-skills/foo",
-          "scene": "判断是否值得保留"
-        },
-        {
-          "prompt": "合入前给 own-skills/bar 做次体检, 能改的顺手改",
-          "scene": "合并前检查"
-        }
-      ],
-      "type": "own",
-      "published_at": "2026-07-03T10:08:58.000Z",
-      "path": "own-skills/skill-improve-workflow",
-      "files": [
-        "README.md",
-        "README.zh.md",
-        "SKILL.md",
-        "agents/openai.yaml",
-        "assets/icon.png",
-        "assets/icon.svg"
-      ],
-      "sha": "12c05becc9ff54d945978ceed580451254f12311"
     },
     {
       "name": "skill-name-generation",
@@ -3523,7 +3387,7 @@
         "assets/icon.png",
         "assets/icon.svg"
       ],
-      "sha": "cda123c733aea95dca9b9a50df6dc122498632e3"
+      "sha": "0f4be357e5216c378fa16a695ba47d44733c2702"
     },
     {
       "name": "skill-reverse-engineer",

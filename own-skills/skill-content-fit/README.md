@@ -33,7 +33,7 @@ I have a pile of incident notes / feedback / lesson fragments and I want the ski
 
 **Not for**:
 
-Content is already a skill / `SKILL.md` / installed skill → **skill-improve-workflow**; naming a skill's slug (lowercase, hyphenated) → **skill-domain-framing**; paired display names → **skill-name-generation**; writing `SKILL.md` after a pass verdict → **skill-create-workflow**.
+Content is already a skill / `SKILL.md` / installed skill → use the platform's skill editor directly; naming a skill's slug (lowercase, hyphenated) → **skill-domain-framing**; paired display names → **skill-name-generation**; writing `SKILL.md` after a pass verdict → **skill-create-workflow**.
 
 ## What it produces
 
@@ -59,7 +59,7 @@ A piece of content to paste in — postmortem, lesson summary, doc snippet, or f
 | Name a skill's slug (lowercase, hyphenated) | **skill-domain-framing** |
 | Paired English + Chinese display names | **skill-name-generation** |
 | Generate README after a pass verdict | **skill-readme-generation** |
-| Content is already a skill, review / refine it | **skill-improve-workflow** |
+| Content is already a skill, review / refine it | Platform skill editor / direct edit |
 
 **Out of scope**:
 

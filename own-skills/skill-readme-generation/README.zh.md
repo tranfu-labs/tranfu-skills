@@ -37,7 +37,7 @@ prompt_examples:
 
 **不接**:
 
-只想改现有 README 里的某一段 → 普通编辑就够, 不用 skill; 从零建 `SKILL.md` 或整个 skill → **skill-create-workflow**; 只给 skill 起显示名或英文目录名 → **skill-name-generation** / **skill-domain-framing**; 判断某段素材值不值得做成 skill → **skill-content-fit**; `SKILL.md` 太简陋想整体审修 → **skill-improve-workflow**。
+只想改现有 README 里的某一段 → 普通编辑就够，不用 skill；从零建 `SKILL.md` 或整个 skill → **skill-create-workflow**；只给 skill 起显示名或英文目录名 → **skill-name-generation** / **skill-domain-framing**；判断某段素材值不值得做成 skill → **skill-content-fit**；`SKILL.md` 太简陋时先用平台的 skill 编辑能力补齐。
 
 ## 它会产出什么
 
@@ -65,7 +65,7 @@ prompt_examples:
 | 起 skill 显示名 (中英文) | **skill-name-generation** |
 | 起 skill 英文名 / 目录名 | **skill-domain-framing** |
 | 判断素材值不值得做成 skill | **skill-content-fit** |
-| 整体审查修复已有 skill 质量 | **skill-improve-workflow** |
+| 补齐过于简陋的已有 SKILL.md | 平台 skill 编辑能力 / 直接编辑 |
 
 **不接的场景**:
 
@@ -76,5 +76,5 @@ prompt_examples:
 **微妙边界**:
 
 - 目标目录已有 `README.md` 或 `README.zh.md`, 用户没明说要「重生成 / 覆盖」→ 询问一次, 绝不擅自覆盖
-- 目标 `SKILL.md` 太简陋 (缺触发场景 / 主流程) → 停下, 建议先用 **skill-improve-workflow** 把 `SKILL.md` 补齐再回来生成, 不硬凑一份内容单薄的 README
+- 目标 `SKILL.md` 太简陋（缺触发场景 / 主流程）→ 停下，建议先用平台的 skill 编辑能力补齐再回来生成，不硬凑一份内容单薄的 README
 - 目标 skill 没定显示名 → 照常生成 README, 汇报里提醒用户可路由 **skill-name-generation**
