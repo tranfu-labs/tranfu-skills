@@ -1,5 +1,5 @@
 ---
-description: "Turn reusable source material into a new skill through content fit, domain framing, creation, and prompt review."
+description: "Create a concise Codex or Claude Code skill from an idea, document, experience, or prior conversation."
 prompt_examples:
   - prompt: Turn docs/postmortem.md into a project-level skill.
     scene: Build from a source file
@@ -13,13 +13,13 @@ prompt_examples:
 
 Creates a new Codex or Claude Code skill from an idea, document, checklist, postmortem, or earlier conversation.
 
-## Workflow
+## How it works
 
-1. `skill-content-fit` checks whether the source is reusable, executable, verifiable, and bounded. A rejection stops the flow.
-2. `skill-domain-framing` selects the skill name, scope, and placement. Close or conflicting candidates are returned to you for a decision.
-3. The platform `skill-creator` writes the skill files.
-4. `prompt-review` checks generated prompt-bearing files for unnecessary hard-emphasis wording.
-5. The workflow reports the paths, validation result, and unresolved risks. Publishing runs only when requested.
+- Uses `skill-content-fit` to decide whether the material belongs in a skill.
+- Uses `skill-domain-framing` only when the name or task domain is unclear.
+- Uses the platform's native `skill-creator` to write a concise skill and runs the available structural validation.
+- Adds workflows, examples, scripts, references, and assets only when the task needs them.
+- Reviews or publishes the skill only when explicitly requested.
 
 ## Boundaries
 
