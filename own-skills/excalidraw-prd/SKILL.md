@@ -1,6 +1,6 @@
 ---
 name: excalidraw-prd
-description: 用 Excalidraw 绘制 PRD 时需要遵循的规范和执行方式。
+description: 用 Excalidraw 绘制 PRD 时需要遵循的规范和执行方式。不适用于其它除了 PRD 之外的其它场景。
 display_name: Excalidraw PRD
 display_name_zh: Excalidraw PRD 原型规范
 version: 0.1.0
