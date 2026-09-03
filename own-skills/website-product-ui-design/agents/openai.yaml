@@ -1,0 +1,9 @@
+interface:
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
+  display_name: "网站与产品 UI 设计"
+  short_description: "面向任意品牌与技术栈的网站和产品 UI 设计、实现与验证。"
+  default_prompt: "使用 $website-product-ui-design 创建、修改、评审或视觉验证网站与产品 UI。"
+
+policy:
+  allow_implicit_invocation: true
