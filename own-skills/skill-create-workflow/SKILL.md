@@ -47,10 +47,9 @@ CREATE A TODO LIST FOR THE TASKS BELOW:
 2. 检查必需能力是否可用。
 3. 运行 `skill-content-fit` 做准入门禁。
 4. 运行 `skill-domain-framing` 选择 skill 容器、命名轴和边界。
-5. 补齐细节、边界、反例和验收标准。
-6. 运行 `skill-creator` 创建或更新 skill 文件。
-7. 运行 `prompt-review` 审核生成的 skill。
-8. 运行 `tranfu-publish` 发布 Skill 到 Tranfu Skills。
-9. 输出最终状态、路径、变更摘要和未验证项。
+5. 运行 `skill-creator` 创建或更新 skill 文件。
+6. 运行 `prompt-review` 审核生成的 skill。
+7. 运行 `tranfu-publish` 发布 Skill 到 Tranfu Skills。
+8. 输出最终状态、路径、变更摘要和未验证项。
 
 MUST update the TODO list after each step. NEVER report completion until step 7 returns `评审通过, 无进一步建议` or the user explicitly asks to stop early.
