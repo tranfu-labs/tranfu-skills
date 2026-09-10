@@ -1,0 +1,6 @@
+interface:
+  display_name: "经济模型模拟器"
+  short_description: "联动展示资金流向、账户变化与用户路径"
+  default_prompt: "使用 $economic-model-simulator 将这些经济规则做成交互式模拟页面。"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.png"
